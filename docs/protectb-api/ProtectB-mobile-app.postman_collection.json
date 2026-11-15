@@ -1,0 +1,3580 @@
+{
+  "info": {
+    "name": "ProtectB mobile app API",
+    "description": "For the developers of the client's mobile app. Every route the app can call, in the order the app meets them, with example answers. The full guide is `app-api-guide.md`, beside this file; how to build the app on it, step by step, is `app-build-guide.md`.\n\n## Start here\n\n1. **Import** this collection and the environment `ProtectB-mobile-app.test-server.postman_environment.json` (our test server's demo client; `ProtectB-mobile-app.postman_environment.json` is the blank one), and pick that environment (top right).\n2. **Fill in the environment:** `mobileBase` (the app API's address we give you) and `mobilePassword` (from the test sheet we give you; `mobileSlug` and `mobileEmail` are filled in), and `mobileNewPassword` (one to change to: 12+ characters, not containing the part of the email before the @). Emailed codes arrive on the test server's mail page.\n3. **Work down from \"Logging in ▸ 1. Log in\".** The passes, the challenge, the check reference and every id are saved for you, and the access pass is sent in the `Authorization` header of every request. A phone ID is made for you on the first request.\n4. On a new phone the login answers `code_sent`: put the emailed code into `mobileCode`, then run *2. Verify the phone*.\n\n## The app's screens, in order\n\n```\nLogin ──(code_sent)──► Code screen ──► (must_change_password?) ──► Change password ──► Home\n  │                                        │\n  └──(logged_in)───────────────────────────┘\nHome: Profile decides what to show (permissions) ─► Look up · Bulk · History · Reports · Retail users\nAny 401 token_expired ─► Renew the passes, retry once ─► 401 unauthenticated ─► Login\n```\n\n## Every request\n\n- Address: `{mobileBase}/v1/clients/{mobileSlug}/…`. A client whose app is switched off, or an unknown client, answers **404** on every route.\n- Bodies are JSON (`Content-Type: application/json`), at most 64 KB; the one exception is a report's photo (the file itself, up to 1 MB). An unknown field, a missing one, a wrong type or an unknown query parameter is **400**.\n- After logging in: `Authorization: Bearer <access_token>`. **No cookies**: the API sets none and reads none.\n- Times are ISO 8601 in UTC (`2026-10-28T10:04:37.512+00:00` or `…Z`; the digits after the seconds vary): read them with a date library. Dates are `YYYY-MM-DD`.\n- New fields can appear in answers: ignore any you do not know. A change that would break the app comes as `/v2/`.\n\n## The answer\n\n```json\n{ \"success\": true, \"message\": \"Lookup done.\", \"data\": { … } }\n{ \"success\": false, \"message\": \"Authentication required.\",\n  \"error\": { \"code\": \"unauthenticated\", \"message\": \"Authentication required.\", \"request_id\": \"6f1c…\" } }\n```\n\nDecide by `error.code`, **never by the message**. Show `request_id` on an error screen (\"Reference: 6f1c…\"): with it we find the request in our logs.\n\n| HTTP | `error.code` | Meaning | In the app |\n|---|---|---|---|\n| 400, 413, 415 | `validation_failed` | malformed, too large, or the wrong type | a bug: log it |\n| 401 | `token_expired` | the access pass ran out (15 minutes) | renew once, retry |\n| 401 | `unauthenticated` | wrong login details, or the login ended | the login screen |\n| 403 | `password_change_required` | a new password must be set first | the change-password screen |\n| 403 | `policy_denied` | the new password breaks a rule | show the rules |\n| 403 | `forbidden` | the role lacks the permission | hide what the role cannot do |\n| 404 | `not_found` | unknown route or client, the app switched off, or the thing named | \"Not available\" / the message |\n| 409 | `conflict` | conflicts with the current state | show the message |\n| 429 | `rate_limited` | too many requests | wait the seconds in `Retry-After` |\n| 503 | `app_preparing` | the client's app was just switched on and is being prepared | \"The app is being prepared. Try again later.\" |\n| 503 | `service_unavailable` | a part of our service is down or busy | \"Try again shortly\" |\n| 5xx | `internal_error` | anything else | a general error with the reference |\n\n## The phone ID\n\nThe app makes one the first time it runs: 22 to 128 characters of `A–Z a–z 0–9 _ -` (32 random bytes in base64url is ideal). Keep it in secure storage (Keychain / Keystore) and send the same one every time. The first login on a phone needs an emailed code; after that the phone is **trusted** (at most 3 per official). A reinstall makes a new phone ID, so a code again.\n\n## The two passes\n\n| Pass | Lives | Goes |\n|---|---|---|\n| `access_token` | 15 minutes | `Authorization: Bearer` on every request |\n| `refresh_token` | 30 days unused; replaced at every use | only the body of *Renew the passes* |\n\nKeep both in secure storage, never in plain storage or logs. A login ends after 30 days unused (a year at most), at logout, when the client's admin blocks the official, logs out their phones, moves them to another role or sets their password, at a password reset (every phone), and at a password change (every **other** phone). Then any request answers 401 `unauthenticated`.\n\n## Permissions\n\nThe client's admin gives each role its permissions; *Profile* lists them. Hide what the role lacks (it would answer 403 `forbidden`). A change takes effect within a minute.\n\n| Permission | Opens |\n|---|---|\n| `item:lookup` | Look up one item |\n| `item:bulk_lookup` | Look up many items |\n| `history:own` | History of the official's own checks |\n| `history:all` | Everyone's history (`scope=all`), and who made earlier checks |\n| `incident:report` | Reports and photos, and picking a retail user |\n| `retail_user:add` | Adding retail users and emailing their first password |\n\n## Limits\n\n120 requests a minute per official; 3,000 looked-up items a minute; 50 reports an hour; 30 retail users added or passwords emailed an hour; 1,200 requests a minute per network address. Logging in has lower ones. Over a limit: **429** with `Retry-After`: go by that header, never by a number in the app.\n\n## Testing\n\nUse the test server and its test client, never a live client: every check is kept for good. Questions: send us the `request_id` of the answer you are asking about.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// A phone ID the first time: 32 random bytes in base64url (guide §2).",
+          "const phone = pm.variables.get('mobilePhoneId');",
+          "if (!phone || phone.startsWith('<')) {",
+          "  const id = CryptoJS.lib.WordArray.random(32).toString(CryptoJS.enc.Base64).replace(/\\+/g, '-').replace(/\\//g, '_').replace(/=+$/, '');",
+          "  pm.collectionVariables.set('mobilePhoneId', id);",
+          "  if (pm.environment.has('mobilePhoneId')) pm.environment.set('mobilePhoneId', id);",
+          "}",
+          "// The access pass on every request but the ones that log in.",
+          "const open = /\\/auth\\/(login|verify-phone|resend-code|refresh|password\\/forgot|password\\/reset)$/.test(pm.request.url.getPath());",
+          "const token = pm.collectionVariables.get('mobileAccessToken');",
+          "if (token && !open && !pm.request.headers.has('Authorization')) pm.request.headers.upsert({ key: 'Authorization', value: 'Bearer ' + token });"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Keeps what the next request needs.",
+          "let body;",
+          "try { body = pm.response.json(); } catch (e) {}",
+          "const data = body && body.success === true ? body.data : null;",
+          "if (data && data.challenge_id) pm.collectionVariables.set('mobileChallengeId', data.challenge_id);",
+          "if (data && data.access_token) pm.collectionVariables.set('mobileAccessToken', data.access_token);",
+          "if (data && data.refresh_token) pm.collectionVariables.set('mobileRefreshToken', data.refresh_token);",
+          "if (data && typeof data.ref === 'string') pm.collectionVariables.set('mobileCheckRef', data.ref);",
+          "// What to do next, in the Postman console.",
+          "const code = body && body.error ? body.error.code : null;",
+          "if (code === 'token_expired') console.log('The access pass ran out: run Session ▸ Renew the passes, then this request again.');",
+          "if (code === 'password_change_required') console.log('Run Session ▸ Change the password first.');",
+          "if (data && data.status === 'code_sent') console.log('A code was emailed: put it in mobileCode and run 2. Verify the phone.');"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Logging in",
+      "description": "The login screen and the code screen. No pass is needed here. On a trusted phone *1. Log in* is all it takes; on a new phone a code is emailed (*2. Verify the phone*).",
+      "item": [
+        {
+          "name": "1. Log in",
+          "protocolProfileBehavior": {
+            "disableCookies": true
+          },
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/auth/login",
+              "host": [
+                "{{mobileBase}}"
+              ],
+              "path": [
+                "v1",
+                "clients",
+                "{{mobileSlug}}",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "The first screen. Sends the email, the password and this phone's **phone ID** (the collection makes one for you; in the app, see the collection's overview ▸ *The phone ID*).\n\n**Two answers, both 200, told apart by `data.status`** (never by the message, which is the same):\n- `logged_in`: this phone is trusted. `data` holds the two passes (saved for you). Go to the app's home screen, or to the change-password screen when `must_change_password` is true.\n- `code_sent`: a new phone. A 6-digit code was emailed to the official; `challenge_id` is saved. Show the code screen and call **2. Verify the phone**.\n\n| Field | Rule |\n|---|---|\n| `email` | the official's login email |\n| `password` | their password |\n| `phone_id` | 22 to 128 characters of `A–Z a–z 0–9 _ -`, the same every time on one phone |\n\n| HTTP | `error.code` | When | In the app |\n|---|---|---|---|\n| 401 | `unauthenticated` | unknown email, wrong password, blocked official or locked account: one answer for all, on purpose | show \"Email or password is incorrect.\" |\n| 429 | `rate_limited` | too many tries for this email or from this network address; 5 wrong passwords lock the account 15 minutes (still answered 401) | count down the `Retry-After` header (seconds) |\n| 400 | `validation_failed` | a field missing or malformed | a bug in the app |\n\nGuide §3.1.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{mobileEmail}}\",\n  \"password\": \"{{mobilePassword}}\",\n  \"phone_id\": \"{{mobilePhoneId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 Trusted phone: logged in",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/auth/login",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "auth",
+                    "login"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{mobileEmail}}\",\n  \"password\": \"{{mobilePassword}}\",\n  \"phone_id\": \"{{mobilePhoneId}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Login accepted.\",\n  \"data\": {\n    \"status\": \"logged_in\",\n    \"access_token\": \"eyJhbGciOiJFZERTQSIsImtpZCI6Im0tMjIifQ.eyJzdWIiOiI1YjFj…\",\n    \"access_expires_in\": 900,\n    \"refresh_token\": \"Xk2pQ9r…\",\n    \"refresh_expires_in\": 2592000,\n    \"must_change_password\": false\n  }\n}"
+            },
+            {
+              "name": "200 New phone: a code was emailed",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/auth/login",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "auth",
+                    "login"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{mobileEmail}}\",\n  \"password\": \"{{mobilePassword}}\",\n  \"phone_id\": \"{{mobilePhoneId}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Login accepted.\",\n  \"data\": {\n    \"status\": \"code_sent\",\n    \"challenge_id\": \"0b6e4f2a-9d1c-4b7e-8f3a-2c5d6e7f8a90\"\n  }\n}"
+            },
+            {
+              "name": "401 Email or password is incorrect",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/auth/login",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "auth",
+                    "login"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{mobileEmail}}\",\n  \"password\": \"{{mobilePassword}}\",\n  \"phone_id\": \"{{mobilePhoneId}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Authentication required.\",\n  \"error\": {\n    \"code\": \"unauthenticated\",\n    \"message\": \"Authentication required.\",\n    \"request_id\": \"6f1c2a90-3b7e-4d1a-9c55-0e2f7a1b8c34\"\n  }\n}"
+            },
+            {
+              "name": "429 Too many requests",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/auth/login",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "auth",
+                    "login"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{mobileEmail}}\",\n  \"password\": \"{{mobilePassword}}\",\n  \"phone_id\": \"{{mobilePhoneId}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Too Many Requests",
+              "code": 429,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Retry-After",
+                  "value": "42"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Too many requests.\",\n  \"error\": {\n    \"code\": \"rate_limited\",\n    \"message\": \"Too many requests.\",\n    \"request_id\": \"6f1c2a90-3b7e-4d1a-9c55-0e2f7a1b8c34\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "2. Verify the phone with the emailed code",
+          "protocolProfileBehavior": {
+            "disableCookies": true
+          },
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/auth/verify-phone",
+              "host": [
+                "{{mobileBase}}"
+              ],
+              "path": [
+                "v1",
+                "clients",
+                "{{mobileSlug}}",
+                "auth",
+                "verify-phone"
+              ]
+            },
+            "description": "After **1. Log in** answered `code_sent`. Put the 6 digits from the email into the `mobileCode` variable first.\n\n**200**: the same `data` as a login on a trusted phone (the passes, saved for you). The phone is trusted from now on: the next login on it needs no code.\n\nWhen `must_change_password` is **true**, the official's password was set by someone else (a new account's first password, one their admin replaced, or one emailed again). Until **Session ▸ Change the password** is called, every route except *Profile*, *Change the password* and *Log out* answers 403 `password_change_required`: show only the change-password screen.\n\nA code lives **5 minutes** and allows **5 tries**; 10 wrong codes in an hour lock the account 15 minutes.\n\n| HTTP | `error.code` | When | In the app |\n|---|---|---|---|\n| 401 | `unauthenticated` | a wrong, expired or used code | say so; after 5 tries go back to the login screen |\n| 400 | `validation_failed` | `code` is not exactly 6 digits | check the input before sending |\n\nGuide §3.2.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"challenge_id\": \"{{mobileChallengeId}}\",\n  \"code\": \"{{mobileCode}}\",\n  \"phone_id\": \"{{mobilePhoneId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 Logged in, the phone is now trusted",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/auth/verify-phone",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "auth",
+                    "verify-phone"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"challenge_id\": \"{{mobileChallengeId}}\",\n  \"code\": \"{{mobileCode}}\",\n  \"phone_id\": \"{{mobilePhoneId}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Logged in successfully.\",\n  \"data\": {\n    \"status\": \"logged_in\",\n    \"access_token\": \"eyJhbGciOiJFZERTQSIsImtpZCI6Im0tMjIifQ.eyJzdWIiOiI1YjFj…\",\n    \"access_expires_in\": 900,\n    \"refresh_token\": \"Xk2pQ9r…\",\n    \"refresh_expires_in\": 2592000,\n    \"must_change_password\": false\n  }\n}"
+            },
+            {
+              "name": "200 Logged in, a new password must be set",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/auth/verify-phone",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "auth",
+                    "verify-phone"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"challenge_id\": \"{{mobileChallengeId}}\",\n  \"code\": \"{{mobileCode}}\",\n  \"phone_id\": \"{{mobilePhoneId}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Logged in successfully.\",\n  \"data\": {\n    \"status\": \"logged_in\",\n    \"access_token\": \"eyJhbGciOiJFZERTQSIsImtpZCI6Im0tMjIifQ.eyJzdWIiOiI1YjFj…\",\n    \"access_expires_in\": 900,\n    \"refresh_token\": \"Xk2pQ9r…\",\n    \"refresh_expires_in\": 2592000,\n    \"must_change_password\": true\n  }\n}"
+            },
+            {
+              "name": "401 Wrong, expired or used code",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/auth/verify-phone",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "auth",
+                    "verify-phone"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"challenge_id\": \"{{mobileChallengeId}}\",\n  \"code\": \"{{mobileCode}}\",\n  \"phone_id\": \"{{mobilePhoneId}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Authentication required.\",\n  \"error\": {\n    \"code\": \"unauthenticated\",\n    \"message\": \"Authentication required.\",\n    \"request_id\": \"6f1c2a90-3b7e-4d1a-9c55-0e2f7a1b8c34\"\n  }\n}"
+            },
+            {
+              "name": "400 Invalid request",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/auth/verify-phone",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "auth",
+                    "verify-phone"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"challenge_id\": \"{{mobileChallengeId}}\",\n  \"code\": \"{{mobileCode}}\",\n  \"phone_id\": \"{{mobilePhoneId}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Invalid request.\",\n  \"error\": {\n    \"code\": \"validation_failed\",\n    \"message\": \"Invalid request.\",\n    \"request_id\": \"6f1c2a90-3b7e-4d1a-9c55-0e2f7a1b8c34\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "3. Send the code again",
+          "protocolProfileBehavior": {
+            "disableCookies": true
+          },
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/auth/resend-code",
+              "host": [
+                "{{mobileBase}}"
+              ],
+              "path": [
+                "v1",
+                "clients",
+                "{{mobileSlug}}",
+                "auth",
+                "resend-code"
+              ]
+            },
+            "description": "The code screen's \"Send again\" button. A new code is emailed and the old one stops working.\n\nAt most **one a minute** (429 with `Retry-After`) and **3 in all** (then 401: start again at **1. Log in**).\n\nGuide §3.2.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"challenge_id\": \"{{mobileChallengeId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 A new code was emailed",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/auth/resend-code",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "auth",
+                    "resend-code"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"challenge_id\": \"{{mobileChallengeId}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Verification code sent successfully.\",\n  \"data\": {\n    \"status\": \"sent\"\n  }\n}"
+            },
+            {
+              "name": "429 Wait before sending again",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/auth/resend-code",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "auth",
+                    "resend-code"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"challenge_id\": \"{{mobileChallengeId}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Too Many Requests",
+              "code": 429,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Retry-After",
+                  "value": "42"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Too many requests.\",\n  \"error\": {\n    \"code\": \"rate_limited\",\n    \"message\": \"Too many requests.\",\n    \"request_id\": \"6f1c2a90-3b7e-4d1a-9c55-0e2f7a1b8c34\"\n  }\n}"
+            },
+            {
+              "name": "401 No more resends: log in again",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/auth/resend-code",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "auth",
+                    "resend-code"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"challenge_id\": \"{{mobileChallengeId}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Authentication required.\",\n  \"error\": {\n    \"code\": \"unauthenticated\",\n    \"message\": \"Authentication required.\",\n    \"request_id\": \"6f1c2a90-3b7e-4d1a-9c55-0e2f7a1b8c34\"\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Session",
+      "description": "Who is logged in, changing the password, renewing the passes and logging out.",
+      "item": [
+        {
+          "name": "Profile",
+          "protocolProfileBehavior": {
+            "disableCookies": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/me",
+              "host": [
+                "{{mobileBase}}"
+              ],
+              "path": [
+                "v1",
+                "clients",
+                "{{mobileSlug}}",
+                "me"
+              ]
+            },
+            "description": "Who is logged in, what their role allows, and the client's support contact. **Call it when the app starts**: 401 means the login ended. Answered during a forced password change too.\n\n| Field | Meaning |\n|---|---|\n| `permissions` | what the role allows, sorted (collection overview ▸ *Permissions*). Hide every screen the role cannot use. An empty list: the role allows nothing yet. |\n| `organisation` | the client's name; can be `null` |\n| `support` | the contact the client's admin set, `{ email, phone }`; either can be `null` |\n| `must_change_password` | true: show only the change-password screen |\n\n| HTTP | `error.code` | When | In the app |\n|---|---|---|---|\n| 401 | `token_expired` | the access pass ran out | renew it (Session ▸ Renew the passes) and retry once |\n| 401 | `unauthenticated` | the login ended | the login screen |\n\nGuide §3.8."
+          },
+          "response": [
+            {
+              "name": "200 The profile",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/me",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "me"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Profile fetched successfully.\",\n  \"data\": {\n    \"id\": \"5b1c8e2d-6f4a-4c3b-9e1d-7a2b3c4d5e6f\",\n    \"name\": \"Asha Rao\",\n    \"email\": \"official@example.com\",\n    \"role\": \"Field inspector\",\n    \"permissions\": [\n      \"history:own\",\n      \"incident:report\",\n      \"item:bulk_lookup\",\n      \"item:lookup\"\n    ],\n    \"organisation\": \"Ziska Pharma\",\n    \"support\": {\n      \"email\": \"help@ziska.example\",\n      \"phone\": \"+91 80 0000 0000\"\n    },\n    \"must_change_password\": false\n  }\n}"
+            },
+            {
+              "name": "401 The access pass ran out: renew it",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/me",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "me"
+                  ]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Session expired.\",\n  \"error\": {\n    \"code\": \"token_expired\",\n    \"message\": \"Session expired.\",\n    \"request_id\": \"6f1c2a90-3b7e-4d1a-9c55-0e2f7a1b8c34\"\n  }\n}"
+            },
+            {
+              "name": "401 Not logged in, or the login ended",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/me",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "me"
+                  ]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Authentication required.\",\n  \"error\": {\n    \"code\": \"unauthenticated\",\n    \"message\": \"Authentication required.\",\n    \"request_id\": \"6f1c2a90-3b7e-4d1a-9c55-0e2f7a1b8c34\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Change the password",
+          "protocolProfileBehavior": {
+            "disableCookies": true
+          },
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/me/password",
+              "host": [
+                "{{mobileBase}}"
+              ],
+              "path": [
+                "v1",
+                "clients",
+                "{{mobileSlug}}",
+                "me",
+                "password"
+              ]
+            },
+            "description": "The change-password screen, and the **forced first change** after `must_change_password: true`.\n\n**200**: a new access pass (saved for you; the refresh pass stays). Every **other** phone of the official is logged out; this one stays logged in. Afterwards copy `mobileNewPassword` into `mobilePassword` in your environment.\n\n**The password rule:** at least 8 characters (at most 128), at least one letter and at least one number. Letters and numbers of any alphabet count; spaces and symbols are allowed, never required; line breaks and tabs are refused. No other rule. Show the three parts under the field (\"8 characters or more\", \"a letter\", \"a number\") with a tick as each is met, and keep the button disabled until all three are; the answer never says which part failed.\n\n| HTTP | `error.code` | When | In the app |\n|---|---|---|---|\n| 401 | `unauthenticated` | the old password is wrong | say so |\n| 403 | `policy_denied` | the new password breaks a rule | show the three rules |\n| 401 | `token_expired` | the access pass ran out | renew and retry once |\n\nGuide §3.6.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"old_password\": \"{{mobilePassword}}\",\n  \"new_password\": \"{{mobileNewPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 Changed: a new access pass",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/me/password",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "me",
+                    "password"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"old_password\": \"{{mobilePassword}}\",\n  \"new_password\": \"{{mobileNewPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Password changed successfully.\",\n  \"data\": {\n    \"access_token\": \"eyJhbGciOiJFZERTQSIsImtpZCI6Im0tMjIifQ.eyJzdWIiOiI1YjFj…\",\n    \"access_expires_in\": 900,\n    \"must_change_password\": false\n  }\n}"
+            },
+            {
+              "name": "403 The new password breaks a rule",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/me/password",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "me",
+                    "password"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"old_password\": \"{{mobilePassword}}\",\n  \"new_password\": \"{{mobileNewPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"The request breaks a rule.\",\n  \"error\": {\n    \"code\": \"policy_denied\",\n    \"message\": \"The request breaks a rule.\",\n    \"request_id\": \"6f1c2a90-3b7e-4d1a-9c55-0e2f7a1b8c34\"\n  }\n}"
+            },
+            {
+              "name": "401 The old password is wrong",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/me/password",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "me",
+                    "password"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"old_password\": \"{{mobilePassword}}\",\n  \"new_password\": \"{{mobileNewPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Authentication required.\",\n  \"error\": {\n    \"code\": \"unauthenticated\",\n    \"message\": \"Authentication required.\",\n    \"request_id\": \"6f1c2a90-3b7e-4d1a-9c55-0e2f7a1b8c34\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Renew the passes",
+          "protocolProfileBehavior": {
+            "disableCookies": true
+          },
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/auth/refresh",
+              "host": [
+                "{{mobileBase}}"
+              ],
+              "path": [
+                "v1",
+                "clients",
+                "{{mobileSlug}}",
+                "auth",
+                "refresh"
+              ]
+            },
+            "description": "When any request answers **401 `token_expired`**: renew, then send that request again, once. No `Authorization` header is needed.\n\n**200**: a new access pass **and a new refresh pass** (both saved for you). In the app, store both before anything else.\n\n**Renew once at a time.** A refresh pass works exactly once: sending one again ends the login (we must assume it was copied). When several requests fail together, they all wait for the same single renewal:\n\n```ts\nlet renewing: Promise<boolean> | null = null;\nfunction renewOnce(): Promise<boolean> {\n  renewing ??= api('auth/refresh', { refresh_token: store.refreshToken })\n    .then(async (r) => { if (!r.ok) return false; await store.save((await r.json()).data); return true; })\n    .finally(() => { renewing = null; });\n  return renewing;\n}\n```\n\n| HTTP | `error.code` | When | In the app |\n|---|---|---|---|\n| 401 | `unauthenticated` | the login ended (30 days unused, logged out, blocked, password changed elsewhere, a pass used twice) | the login screen |\n\nGuide §3.3, §3.4.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh_token\": \"{{mobileRefreshToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 Renewed: two new passes",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/auth/refresh",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "auth",
+                    "refresh"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"refresh_token\": \"{{mobileRefreshToken}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Session refreshed successfully.\",\n  \"data\": {\n    \"status\": \"logged_in\",\n    \"access_token\": \"eyJhbGciOiJFZERTQSIsImtpZCI6Im0tMjIifQ.eyJzdWIiOiI1YjFj…\",\n    \"access_expires_in\": 900,\n    \"refresh_token\": \"Xk2pQ9r…\",\n    \"refresh_expires_in\": 2592000,\n    \"must_change_password\": false\n  }\n}"
+            },
+            {
+              "name": "401 The login has ended",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/auth/refresh",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "auth",
+                    "refresh"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"refresh_token\": \"{{mobileRefreshToken}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Authentication required.\",\n  \"error\": {\n    \"code\": \"unauthenticated\",\n    \"message\": \"Authentication required.\",\n    \"request_id\": \"6f1c2a90-3b7e-4d1a-9c55-0e2f7a1b8c34\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Log out (this phone)",
+          "protocolProfileBehavior": {
+            "disableCookies": true
+          },
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/auth/logout",
+              "host": [
+                "{{mobileBase}}"
+              ],
+              "path": [
+                "v1",
+                "clients",
+                "{{mobileSlug}}",
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Ends the login on this phone. Delete both passes from the phone afterwards. The phone stays **trusted**: the next login on it needs no code.\n\nGuide §3.5."
+          },
+          "response": [
+            {
+              "name": "200 Logged out",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/auth/logout",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "auth",
+                    "logout"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Logged out successfully.\",\n  \"data\": null\n}"
+            },
+            {
+              "name": "401 Not logged in, or the login ended",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/auth/logout",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "auth",
+                    "logout"
+                  ]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Authentication required.\",\n  \"error\": {\n    \"code\": \"unauthenticated\",\n    \"message\": \"Authentication required.\",\n    \"request_id\": \"6f1c2a90-3b7e-4d1a-9c55-0e2f7a1b8c34\"\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Forgotten password",
+      "description": "The \"Forgot password?\" screens. No pass is needed.",
+      "item": [
+        {
+          "name": "1. Email a reset code",
+          "protocolProfileBehavior": {
+            "disableCookies": true
+          },
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/auth/password/forgot",
+              "host": [
+                "{{mobileBase}}"
+              ],
+              "path": [
+                "v1",
+                "clients",
+                "{{mobileSlug}}",
+                "auth",
+                "password",
+                "forgot"
+              ]
+            },
+            "description": "The \"Forgot password?\" screen. **Always 200**, whether or not the email has an account (so nobody can find out which addresses do). If it has one, a 6-digit code is emailed: it lives 5 minutes and allows 5 tries. A new request replaces the code.\n\nGuide §3.7.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{mobileEmail}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 Always the same answer",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/auth/password/forgot",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "auth",
+                    "password",
+                    "forgot"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{mobileEmail}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"If the address has an account, a code was sent.\",\n  \"data\": null\n}"
+            }
+          ]
+        },
+        {
+          "name": "2. Set a new password with the code",
+          "protocolProfileBehavior": {
+            "disableCookies": true
+          },
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/auth/password/reset",
+              "host": [
+                "{{mobileBase}}"
+              ],
+              "path": [
+                "v1",
+                "clients",
+                "{{mobileSlug}}",
+                "auth",
+                "password",
+                "reset"
+              ]
+            },
+            "description": "Put the emailed code into `mobileCode` first.\n\n**200**: the password is changed, **every** login of the official ends (on every phone), and every trusted phone is forgotten: the next login asks for an emailed code again. Send the official to the login screen.\n\n| HTTP | `error.code` | When | In the app |\n|---|---|---|---|\n| 401 | `unauthenticated` | a wrong, expired or used code; an email without an account; a blocked official (one answer for all) | say the code is wrong |\n| 403 | `policy_denied` | the new password breaks a rule (Session ▸ Change the password) | show the three rules |\n\nGuide §3.7.\n\n**The password rule:** at least 8 characters (at most 128), at least one letter and at least one number. Letters and numbers of any alphabet count; spaces and symbols are allowed, never required; line breaks and tabs are refused. No other rule. Show the three parts under the field (\"8 characters or more\", \"a letter\", \"a number\") with a tick as each is met, and keep the button disabled until all three are; the answer never says which part failed.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{mobileEmail}}\",\n  \"code\": \"{{mobileCode}}\",\n  \"new_password\": \"{{mobileNewPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 Changed: log in again",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/auth/password/reset",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "auth",
+                    "password",
+                    "reset"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{mobileEmail}}\",\n  \"code\": \"{{mobileCode}}\",\n  \"new_password\": \"{{mobileNewPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Password changed successfully.\",\n  \"data\": null\n}"
+            },
+            {
+              "name": "401 Wrong, expired or used code",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/auth/password/reset",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "auth",
+                    "password",
+                    "reset"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{mobileEmail}}\",\n  \"code\": \"{{mobileCode}}\",\n  \"new_password\": \"{{mobileNewPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Authentication required.\",\n  \"error\": {\n    \"code\": \"unauthenticated\",\n    \"message\": \"Authentication required.\",\n    \"request_id\": \"6f1c2a90-3b7e-4d1a-9c55-0e2f7a1b8c34\"\n  }\n}"
+            },
+            {
+              "name": "403 The new password breaks a rule",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/auth/password/reset",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "auth",
+                    "password",
+                    "reset"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{mobileEmail}}\",\n  \"code\": \"{{mobileCode}}\",\n  \"new_password\": \"{{mobileNewPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"The request breaks a rule.\",\n  \"error\": {\n    \"code\": \"policy_denied\",\n    \"message\": \"The request breaks a rule.\",\n    \"request_id\": \"6f1c2a90-3b7e-4d1a-9c55-0e2f7a1b8c34\"\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Looking items up",
+      "description": "The app's main work. **While a client's app is being prepared** (just after it was switched on, up to an hour), every lookup answers **503 `app_preparing`**: show \"The app is being prepared. Try again later.\" Nothing is recorded then.",
+      "item": [
+        {
+          "name": "Input formats",
+          "protocolProfileBehavior": {
+            "disableCookies": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/formats",
+              "host": [
+                "{{mobileBase}}"
+              ],
+              "path": [
+                "v1",
+                "clients",
+                "{{mobileSlug}}",
+                "formats"
+              ]
+            },
+            "description": "What a valid input looks like for **this** client, so the app can check what the official types before sending. Logged in; no permission needed.\n\n- `hidden_code`: every format the client uses (there can be several lengths). Spaces and `-` typed by the official are ignored, and lower-case letters read as capitals.\n- **Never build these numbers into the app**: they differ between clients and can change.\n\nGuide §4.1."
+          },
+          "response": [
+            {
+              "name": "200 The formats",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/formats",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "formats"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Formats fetched successfully.\",\n  \"data\": {\n    \"hidden_code\": [\n      {\n        \"length\": 12,\n        \"characters\": \"0123456789\"\n      }\n    ],\n    \"serial\": {\n      \"max_digits\": 19\n    },\n    \"qr\": {\n      \"length\": 12,\n      \"characters\": \"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\"\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Look up one item",
+          "protocolProfileBehavior": {
+            "disableCookies": true
+          },
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/lookups",
+              "host": [
+                "{{mobileBase}}"
+              ],
+              "path": [
+                "v1",
+                "clients",
+                "{{mobileSlug}}",
+                "lookups"
+              ]
+            },
+            "description": "**Needs `item:lookup`.** The main screen: scan a QR, type a serial, or type the scratched-off hidden code.\n\n| `way` | `value` | Where the official finds it |\n|---|---|---|\n| `serial` | the serial, digits only, as text: `\"1000001\"` | printed on the label |\n| `qr` | the 12 characters after `/q/` in the QR's link | the QR code |\n| `hidden_code` | the code under the scratch layer | scratched off |\n\n**Reading a QR:** it holds a link such as `https://www.ziskaverify.com/q/Q8F2KD91XA7M`. Send the part after the last `/q/`. **Never open the link in the app**: it is the consumers' page.\n\n**`data.result`:**\n\n| `result` | Meaning | Comes with |\n|---|---|---|\n| `valid` | genuine, first check by any official, nothing wrong | `item`, `count` |\n| `warning` | genuine but needs attention: see `reasons` | `item`, `count`, `reasons` |\n| `not_found` | no item of this client has this serial, QR value or hidden code | only `ref` |\n| `unassigned` | the item exists but is in no batch yet | only `ref` |\n\n**`reasons`** (with `warning`, one or more): `checked_before` (officials checked it before; `count` says how often and when), `recalled`, `expired`, `damaged`, `switched_off` (its batch is switched off). A check **never** answers \"invalid\": an item can pass from one seller to another.\n\n- `ref` is the check's reference number (saved as `mobileCheckRef`, for a report). Put it on a certificate: the client's office looks it up.\n- `count.this_check` is this check's number for the item; `count.last_at` the check before, `null` on a first check. With `history:all`, `count.by` names the officials of earlier checks (up to 10).\n- `item.code` is the hidden code masked: `*****` and its last 3 characters. The full code is never sent.\n- `picture_url`, `short_name`, `made` and `expires` can be `null`.\n- A value of the right kind that matches nothing is **not** an error: it answers `not_found`.\n\n| HTTP | `error.code` | When | In the app |\n|---|---|---|---|\n| 403 | `forbidden` | the role lacks the permission | hide the screen (Profile's `permissions`) |\n| 503 | `app_preparing` | the client's app was just switched on; its items are being prepared (up to an hour) | show the message; try later |\n| 400 | `validation_failed` | an unknown `way`; a `value` empty, over 64 characters or with a control character | a bug in the app |\n| 429 | `rate_limited` | over 3,000 items a minute | wait `Retry-After`, send the same request again |\n| 401 | `token_expired` | the access pass ran out | renew it (Session ▸ Renew the passes) and retry once |\n| 401 | `unauthenticated` | the login ended | the login screen |\n| 403 | `password_change_required` | a new password must be set first | the change-password screen |\n\nGuide §4, §4.2.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"way\": \"qr\",\n  \"value\": \"Q8F2KD91XA7M\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 valid: genuine, first check",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/lookups",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "lookups"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"way\": \"serial\",\n  \"value\": \"1000001\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Lookup done.\",\n  \"data\": {\n    \"ref\": \"MA-2026-000123\",\n    \"result\": \"valid\",\n    \"count\": {\n      \"this_check\": 1,\n      \"last_at\": null\n    },\n    \"item\": {\n      \"serial\": \"1000001\",\n      \"code\": \"*****7K2\",\n      \"product\": {\n        \"name\": \"Paracetamol 500\",\n        \"generic_name\": \"Paracetamol\",\n        \"short_name\": \"PCM500\",\n        \"picture_url\": \"https://cdn.example.com/p/pcm500.jpg\"\n      },\n      \"batch\": {\n        \"number\": \"B-1042\",\n        \"made\": \"2026-01-10\",\n        \"expires\": \"2027-09-30\"\n      }\n    }\n  }\n}"
+            },
+            {
+              "name": "200 warning: checked before and expired",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/lookups",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "lookups"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"way\": \"qr\",\n  \"value\": \"Q8F2KD91XA7M\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Lookup done.\",\n  \"data\": {\n    \"ref\": \"MA-2026-000124\",\n    \"result\": \"warning\",\n    \"reasons\": [\n      \"checked_before\",\n      \"expired\"\n    ],\n    \"count\": {\n      \"this_check\": 3,\n      \"last_at\": \"2026-10-12T09:14:00Z\"\n    },\n    \"item\": {\n      \"serial\": \"1000001\",\n      \"code\": \"*****7K2\",\n      \"product\": {\n        \"name\": \"Paracetamol 500\",\n        \"generic_name\": \"Paracetamol\",\n        \"short_name\": \"PCM500\",\n        \"picture_url\": \"https://cdn.example.com/p/pcm500.jpg\"\n      },\n      \"batch\": {\n        \"number\": \"B-1042\",\n        \"made\": \"2026-01-10\",\n        \"expires\": \"2026-09-30\"\n      }\n    }\n  }\n}"
+            },
+            {
+              "name": "200 not_found",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/lookups",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "lookups"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"way\": \"hidden_code\",\n  \"value\": \"481516234200\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Lookup done.\",\n  \"data\": {\n    \"ref\": \"MA-2026-000125\",\n    \"result\": \"not_found\"\n  }\n}"
+            },
+            {
+              "name": "200 unassigned",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/lookups",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "lookups"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"way\": \"serial\",\n  \"value\": \"1999999\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Lookup done.\",\n  \"data\": {\n    \"ref\": \"MA-2026-000126\",\n    \"result\": \"unassigned\"\n  }\n}"
+            },
+            {
+              "name": "403 The official's role lacks the permission",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/lookups",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "lookups"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"way\": \"qr\",\n  \"value\": \"Q8F2KD91XA7M\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"You do not have access to this resource.\",\n  \"error\": {\n    \"code\": \"forbidden\",\n    \"message\": \"You do not have access to this resource.\",\n    \"request_id\": \"6f1c2a90-3b7e-4d1a-9c55-0e2f7a1b8c34\"\n  }\n}"
+            },
+            {
+              "name": "503 The client's app is being prepared",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/lookups",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "lookups"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"way\": \"qr\",\n  \"value\": \"Q8F2KD91XA7M\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Service Unavailable",
+              "code": 503,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"The app is being prepared. Try again later.\",\n  \"error\": {\n    \"code\": \"app_preparing\",\n    \"message\": \"The app is being prepared. Try again later.\",\n    \"request_id\": \"6f1c2a90-3b7e-4d1a-9c55-0e2f7a1b8c34\"\n  }\n}"
+            },
+            {
+              "name": "400 Invalid request",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/lookups",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "lookups"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"way\": \"qr\",\n  \"value\": \"Q8F2KD91XA7M\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Invalid request.\",\n  \"error\": {\n    \"code\": \"validation_failed\",\n    \"message\": \"Invalid request.\",\n    \"request_id\": \"6f1c2a90-3b7e-4d1a-9c55-0e2f7a1b8c34\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Look up many items (bulk)",
+          "protocolProfileBehavior": {
+            "disableCookies": true
+          },
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/lookups/bulk",
+              "host": [
+                "{{mobileBase}}"
+              ],
+              "path": [
+                "v1",
+                "clients",
+                "{{mobileSlug}}",
+                "lookups",
+                "bulk"
+              ]
+            },
+            "description": "**Needs `item:bulk_lookup`** (a supervisor checking a carton, say; hide the screen when *Profile* does not list it). **1 to 500 items** of any ways mixed.\n\n- `results` are **in the order sent**: match by position; what was sent is not repeated. Each result has the same shape as *Look up one item*.\n- `summary.by_reason` counts items, so an item with two reasons counts in both.\n- Every item is its own check with its own `ref`, even the same item twice.\n- **All or nothing:** on 503 `service_unavailable` none of the items was checked or recorded. Send the same request again after a few seconds.\n- **Limit:** 3,000 items a minute per official, a bulk counting as its items. Over it: 429, nothing checked; wait `Retry-After` and send the same request again.\n\n| HTTP | `error.code` | When | In the app |\n|---|---|---|---|\n| 403 | `forbidden` | the role lacks the permission | hide the screen (Profile's `permissions`) |\n| 503 | `app_preparing` | the client's app was just switched on; its items are being prepared (up to an hour) | show the message; try later |\n| 400 | `validation_failed` | an unknown `way`; a `value` empty, over 64 characters or with a control character | a bug in the app |\n| 429 | `rate_limited` | over 3,000 items a minute | wait `Retry-After`, send the same request again |\n| 401 | `token_expired` | the access pass ran out | renew it (Session ▸ Renew the passes) and retry once |\n| 401 | `unauthenticated` | the login ended | the login screen |\n| 403 | `password_change_required` | a new password must be set first | the change-password screen |\n\nGuide §4.3.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"way\": \"serial\",\n      \"value\": \"1000001\"\n    },\n    {\n      \"way\": \"qr\",\n      \"value\": \"Q8F2KD91XA7M\"\n    },\n    {\n      \"way\": \"hidden_code\",\n      \"value\": \"4815 1623 4200\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 Three items",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/lookups/bulk",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "lookups",
+                    "bulk"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"items\": [\n    {\n      \"way\": \"serial\",\n      \"value\": \"1000001\"\n    },\n    {\n      \"way\": \"qr\",\n      \"value\": \"Q8F2KD91XA7M\"\n    },\n    {\n      \"way\": \"hidden_code\",\n      \"value\": \"4815 1623 4200\"\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Lookup done.\",\n  \"data\": {\n    \"summary\": {\n      \"total\": 3,\n      \"valid\": 1,\n      \"warning\": 1,\n      \"by_reason\": {\n        \"checked_before\": 1,\n        \"expired\": 0,\n        \"recalled\": 0,\n        \"damaged\": 0,\n        \"switched_off\": 0\n      },\n      \"not_found\": 1,\n      \"unassigned\": 0\n    },\n    \"results\": [\n      {\n        \"ref\": \"MA-2026-000127\",\n        \"result\": \"valid\",\n        \"count\": {\n          \"this_check\": 1,\n          \"last_at\": null\n        },\n        \"item\": {\n          \"serial\": \"1000001\",\n          \"code\": \"*****7K2\",\n          \"product\": {\n            \"name\": \"Paracetamol 500\",\n            \"generic_name\": \"Paracetamol\",\n            \"short_name\": \"PCM500\",\n            \"picture_url\": \"https://cdn.example.com/p/pcm500.jpg\"\n          },\n          \"batch\": {\n            \"number\": \"B-1042\",\n            \"made\": \"2026-01-10\",\n            \"expires\": \"2027-09-30\"\n          }\n        }\n      },\n      {\n        \"ref\": \"MA-2026-000128\",\n        \"result\": \"warning\",\n        \"reasons\": [\n          \"checked_before\"\n        ],\n        \"count\": {\n          \"this_check\": 2,\n          \"last_at\": \"2026-11-07T15:40:12Z\"\n        },\n        \"item\": {\n          \"serial\": \"1000002\",\n          \"code\": \"*****Q4P\",\n          \"product\": {\n            \"name\": \"Paracetamol 500\",\n            \"generic_name\": \"Paracetamol\",\n            \"short_name\": \"PCM500\",\n            \"picture_url\": \"https://cdn.example.com/p/pcm500.jpg\"\n          },\n          \"batch\": {\n            \"number\": \"B-1042\",\n            \"made\": \"2026-01-10\",\n            \"expires\": \"2027-09-30\"\n          }\n        }\n      },\n      {\n        \"ref\": \"MA-2026-000129\",\n        \"result\": \"not_found\"\n      }\n    ]\n  }\n}"
+            },
+            {
+              "name": "400 Invalid request",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/lookups/bulk",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "lookups",
+                    "bulk"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"items\": [\n    {\n      \"way\": \"serial\",\n      \"value\": \"1000001\"\n    },\n    {\n      \"way\": \"qr\",\n      \"value\": \"Q8F2KD91XA7M\"\n    },\n    {\n      \"way\": \"hidden_code\",\n      \"value\": \"4815 1623 4200\"\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Invalid request.\",\n  \"error\": {\n    \"code\": \"validation_failed\",\n    \"message\": \"Invalid request.\",\n    \"request_id\": \"6f1c2a90-3b7e-4d1a-9c55-0e2f7a1b8c34\"\n  }\n}"
+            },
+            {
+              "name": "503 Our service is busy or a part is down",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/lookups/bulk",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "lookups",
+                    "bulk"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"items\": [\n    {\n      \"way\": \"serial\",\n      \"value\": \"1000001\"\n    },\n    {\n      \"way\": \"qr\",\n      \"value\": \"Q8F2KD91XA7M\"\n    },\n    {\n      \"way\": \"hidden_code\",\n      \"value\": \"4815 1623 4200\"\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Service Unavailable",
+              "code": 503,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Service temporarily unavailable.\",\n  \"error\": {\n    \"code\": \"service_unavailable\",\n    \"message\": \"Service temporarily unavailable.\",\n    \"request_id\": \"6f1c2a90-3b7e-4d1a-9c55-0e2f7a1b8c34\"\n  }\n}"
+            },
+            {
+              "name": "429 Over 3,000 items a minute",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/lookups/bulk",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "lookups",
+                    "bulk"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"items\": [\n    {\n      \"way\": \"serial\",\n      \"value\": \"1000001\"\n    },\n    {\n      \"way\": \"qr\",\n      \"value\": \"Q8F2KD91XA7M\"\n    },\n    {\n      \"way\": \"hidden_code\",\n      \"value\": \"4815 1623 4200\"\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Too Many Requests",
+              "code": 429,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Retry-After",
+                  "value": "42"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Too many requests.\",\n  \"error\": {\n    \"code\": \"rate_limited\",\n    \"message\": \"Too many requests.\",\n    \"request_id\": \"6f1c2a90-3b7e-4d1a-9c55-0e2f7a1b8c34\"\n  }\n}"
+            },
+            {
+              "name": "403 The official's role lacks the permission",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/lookups/bulk",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "lookups",
+                    "bulk"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"items\": [\n    {\n      \"way\": \"serial\",\n      \"value\": \"1000001\"\n    },\n    {\n      \"way\": \"qr\",\n      \"value\": \"Q8F2KD91XA7M\"\n    },\n    {\n      \"way\": \"hidden_code\",\n      \"value\": \"4815 1623 4200\"\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"You do not have access to this resource.\",\n  \"error\": {\n    \"code\": \"forbidden\",\n    \"message\": \"You do not have access to this resource.\",\n    \"request_id\": \"6f1c2a90-3b7e-4d1a-9c55-0e2f7a1b8c34\"\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "History",
+      "description": "Past checks, the official's own or everyone's.",
+      "item": [
+        {
+          "name": "History of checks",
+          "protocolProfileBehavior": {
+            "disableCookies": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/checks?limit=50",
+              "host": [
+                "{{mobileBase}}"
+              ],
+              "path": [
+                "v1",
+                "clients",
+                "{{mobileSlug}}",
+                "checks"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
+              ]
+            },
+            "description": "**Needs `history:own`** for the official's own checks, newest first, or **`history:all`** with `scope=all` for every official's.\n\n| Query | Meaning |\n|---|---|\n| `limit` | 1 to 100, default 50 |\n| `cursor` | the previous page's `next_cursor`, as it is |\n| `result` | `valid`, `warning`, `not_found`, `unassigned` |\n| `way` | `serial`, `qr`, `hidden_code` |\n| `from`, `to` | dates `YYYY-MM-DD`, both included |\n| `search` | a serial or a reference number |\n| `scope` | `own` (default) or `all` (needs `history:all`) |\n\n- `totals` only on the first page (`null` after), counting every check that matches the filters.\n- `serial`, `product`, `batch` are `null` for `not_found`; `product` and `batch` for `unassigned`. `reasons` is empty unless `warning`.\n- `next_cursor` is `null` when the page is not full. A full page always gives one, so the next page may be empty.\n- An unknown or malformed query parameter is 400.\n\nGuide §5."
+          },
+          "response": [
+            {
+              "name": "200 First page",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/checks?limit=50",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "checks"
+                  ],
+                  "query": [
+                    {
+                      "key": "limit",
+                      "value": "50"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Checks fetched successfully.\",\n  \"data\": {\n    \"checks\": [\n      {\n        \"ref\": \"MA-2026-000124\",\n        \"at\": \"2026-10-28T10:02:11Z\",\n        \"way\": \"qr\",\n        \"result\": \"warning\",\n        \"reasons\": [\n          \"checked_before\"\n        ],\n        \"serial\": \"1000001\",\n        \"product\": \"Paracetamol 500\",\n        \"batch\": \"B-1042\",\n        \"official\": \"Asha Rao\"\n      }\n    ],\n    \"totals\": {\n      \"total\": 120,\n      \"valid\": 80,\n      \"warning\": 30,\n      \"not_found\": 9,\n      \"unassigned\": 1\n    },\n    \"next_cursor\": \"3255\"\n  }\n}"
+            },
+            {
+              "name": "200 A later page",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/checks?limit=50",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "checks"
+                  ],
+                  "query": [
+                    {
+                      "key": "limit",
+                      "value": "50"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Checks fetched successfully.\",\n  \"data\": {\n    \"checks\": [],\n    \"totals\": null,\n    \"next_cursor\": null\n  }\n}"
+            },
+            {
+              "name": "400 Invalid request",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/checks?limit=50",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "checks"
+                  ],
+                  "query": [
+                    {
+                      "key": "limit",
+                      "value": "50"
+                    }
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Invalid request.\",\n  \"error\": {\n    \"code\": \"validation_failed\",\n    \"message\": \"Invalid request.\",\n    \"request_id\": \"6f1c2a90-3b7e-4d1a-9c55-0e2f7a1b8c34\"\n  }\n}"
+            },
+            {
+              "name": "403 The official's role lacks the permission",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/checks?limit=50",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "checks"
+                  ],
+                  "query": [
+                    {
+                      "key": "limit",
+                      "value": "50"
+                    }
+                  ]
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"You do not have access to this resource.\",\n  \"error\": {\n    \"code\": \"forbidden\",\n    \"message\": \"You do not have access to this resource.\",\n    \"request_id\": \"6f1c2a90-3b7e-4d1a-9c55-0e2f7a1b8c34\"\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Reports and photos",
+      "description": "**Needs `incident:report`.** A report and its photos are separate requests: file the report, then send each photo.",
+      "item": [
+        {
+          "name": "File a report",
+          "protocolProfileBehavior": {
+            "disableCookies": true
+          },
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/incidents",
+              "host": [
+                "{{mobileBase}}"
+              ],
+              "path": [
+                "v1",
+                "clients",
+                "{{mobileSlug}}",
+                "incidents"
+              ]
+            },
+            "description": "**Needs `incident:report`.** Reports a problem to the client's office: a fake-looking label, a torn seal, a shop selling where it should not. Then add up to 3 photos (*Add a photo*).\n\n**No report is needed for a warning** whose `reasons` include `recalled`, `expired`, `damaged` or `switched_off`: the lookup already told the office.\n\n| Field | Rule |\n|---|---|\n| `note` | 1 to 1,000 characters, required |\n| `check_ref` | optional (`null` or left out): one of **this official's own** checks (`ref` of a lookup; saved as `mobileCheckRef`) |\n| `retail_user_id` | optional (`null` or left out): the `id` of a retail user from *Retail users ▸ Pick a retail user* |\n\n**201** `{ id }` (saved as `mobileIncidentId`). Keep it: the photos are sent to it. If the answer is lost, do **not** file again (that makes a second report).\n\n| HTTP | `error.code` | When | In the app |\n|---|---|---|---|\n| 404 | `not_found` | \"Check not found.\": another official's or an unknown reference | say so |\n| 404 | `not_found` | \"Retail user not found.\": unknown, blocked, or not a retail user | refresh the list |\n| 429 | `rate_limited` | 50 reports an hour per official | wait `Retry-After` |\n| 403 | `forbidden` | the role lacks `incident:report` | hide the screen |\n\nGuide §6, §6.1.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"note\": \"Label print is blurred and the seal is cut.\",\n  \"check_ref\": \"{{mobileCheckRef}}\",\n  \"retail_user_id\": \"{{mobileRetailUserId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "201 Filed",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/incidents",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "incidents"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"note\": \"Label print is blurred and the seal is cut.\",\n  \"check_ref\": \"{{mobileCheckRef}}\",\n  \"retail_user_id\": \"{{mobileRetailUserId}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Report filed successfully.\",\n  \"data\": {\n    \"id\": 1042\n  }\n}"
+            },
+            {
+              "name": "404 Check not found.",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/incidents",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "incidents"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"note\": \"Label print is blurred and the seal is cut.\",\n  \"check_ref\": \"{{mobileCheckRef}}\",\n  \"retail_user_id\": \"{{mobileRetailUserId}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Check not found.\",\n  \"error\": {\n    \"code\": \"not_found\",\n    \"message\": \"Check not found.\",\n    \"request_id\": \"6f1c2a90-3b7e-4d1a-9c55-0e2f7a1b8c34\"\n  }\n}"
+            },
+            {
+              "name": "404 Retail user not found.",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/incidents",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "incidents"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"note\": \"Label print is blurred and the seal is cut.\",\n  \"check_ref\": \"{{mobileCheckRef}}\",\n  \"retail_user_id\": \"{{mobileRetailUserId}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Retail user not found.\",\n  \"error\": {\n    \"code\": \"not_found\",\n    \"message\": \"Retail user not found.\",\n    \"request_id\": \"6f1c2a90-3b7e-4d1a-9c55-0e2f7a1b8c34\"\n  }\n}"
+            },
+            {
+              "name": "400 Invalid request",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/incidents",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "incidents"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"note\": \"Label print is blurred and the seal is cut.\",\n  \"check_ref\": \"{{mobileCheckRef}}\",\n  \"retail_user_id\": \"{{mobileRetailUserId}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Invalid request.\",\n  \"error\": {\n    \"code\": \"validation_failed\",\n    \"message\": \"Invalid request.\",\n    \"request_id\": \"6f1c2a90-3b7e-4d1a-9c55-0e2f7a1b8c34\"\n  }\n}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// check_ref and retail_user_id are optional: left out while their variable is empty.",
+                  "const body = JSON.parse(pm.variables.replaceIn(pm.request.body.raw));",
+                  "for (const k of ['check_ref', 'retail_user_id']) if (!body[k]) delete body[k];",
+                  "pm.request.body.raw = JSON.stringify(body, null, 2);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) pm.collectionVariables.set('mobileIncidentId', String(pm.response.json().data.id));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Add a photo to the report",
+          "protocolProfileBehavior": {
+            "disableCookies": true
+          },
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "image/jpeg"
+              }
+            ],
+            "url": {
+              "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/incidents/{{mobileIncidentId}}/photos",
+              "host": [
+                "{{mobileBase}}"
+              ],
+              "path": [
+                "v1",
+                "clients",
+                "{{mobileSlug}}",
+                "incidents",
+                "{{mobileIncidentId}}",
+                "photos"
+              ]
+            },
+            "description": "**Needs `incident:report`.** In Postman: *Body ▸ binary ▸ Select File*, and set `Content-Type` to `image/jpeg` or `image/png`.\n\n**The body is the photo file itself**: not JSON, not a form.\n\n```\nPOST …/incidents/1042/photos\nAuthorization: Bearer <access_token>\nContent-Type: image/jpeg\nContent-Length: 612480\n\n<the JPEG's bytes>\n```\n\n- **Before sending, shrink** the photo to 2048 pixels on its longer side, JPEG quality 85 (about 400–800 KB; a label's small print stays sharp). The server stores it exactly as sent, including what the phone adds (time, model, place).\n- **At most 1 MB**, JPEG or PNG, judged by the file's own first bytes. Send `Content-Length`.\n- **Only the report's author, within 1 hour of filing it, at most 3 photos**, one at a time.\n- **Sending the same photo again is safe**: after a lost answer, send it again; it answers its `n` once more and is not counted twice. On 503 or a lost connection, keep the photo and send it again; never file the report again.\n\n**201** `{ n }`: the photo's number on the report, 1 to 3.\n\n| HTTP | `error.code` | When | In the app |\n|---|---|---|---|\n| 400 | `validation_failed` | \"The photo must be at most 1 MB.\" (or no `Content-Length`) | shrink it |\n| 400 | `validation_failed` | \"The file is not a JPEG or PNG photo.\" (WebP and HEIC included) | convert to JPEG |\n| 400 | `validation_failed` | \"The photo is empty.\" | a bug in the app |\n| 400 | `validation_failed` | \"Send the photo file itself as the request body, as image/jpeg or image/png.\" | a bug: JSON or no body sent |\n| 415 | `validation_failed` | another `Content-Type` (a form, `image/webp`) | a bug in the app |\n| 404 | `not_found` | \"Report not found.\": no such report, or another official's |  |\n| 409 | `conflict` | \"The report has 3 photos already.\" |  |\n| 409 | `conflict` | \"Photos can be added only within an hour of the report.\" |  |\n| 503 | `service_unavailable` | the photo storage cannot be reached | keep the photo, send it again shortly |\n\nGuide §6.2.",
+            "body": {
+              "mode": "file",
+              "file": {
+                "src": ""
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "201 Uploaded as photo 1",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "image/jpeg"
+                  }
+                ],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/incidents/{{mobileIncidentId}}/photos",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "incidents",
+                    "{{mobileIncidentId}}",
+                    "photos"
+                  ]
+                },
+                "body": {
+                  "mode": "file",
+                  "file": {
+                    "src": ""
+                  }
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Photo uploaded successfully.\",\n  \"data\": {\n    \"n\": 1\n  }\n}"
+            },
+            {
+              "name": "400 Invalid request",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "image/jpeg"
+                  }
+                ],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/incidents/{{mobileIncidentId}}/photos",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "incidents",
+                    "{{mobileIncidentId}}",
+                    "photos"
+                  ]
+                },
+                "body": {
+                  "mode": "file",
+                  "file": {
+                    "src": ""
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"The photo must be at most 1 MB.\",\n  \"error\": {\n    \"code\": \"validation_failed\",\n    \"message\": \"The photo must be at most 1 MB.\",\n    \"request_id\": \"6f1c2a90-3b7e-4d1a-9c55-0e2f7a1b8c34\"\n  }\n}"
+            },
+            {
+              "name": "400 Not a JPEG or PNG",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "image/jpeg"
+                  }
+                ],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/incidents/{{mobileIncidentId}}/photos",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "incidents",
+                    "{{mobileIncidentId}}",
+                    "photos"
+                  ]
+                },
+                "body": {
+                  "mode": "file",
+                  "file": {
+                    "src": ""
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"The file is not a JPEG or PNG photo.\",\n  \"error\": {\n    \"code\": \"validation_failed\",\n    \"message\": \"The file is not a JPEG or PNG photo.\",\n    \"request_id\": \"6f1c2a90-3b7e-4d1a-9c55-0e2f7a1b8c34\"\n  }\n}"
+            },
+            {
+              "name": "409 The report has 3 photos already.",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "image/jpeg"
+                  }
+                ],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/incidents/{{mobileIncidentId}}/photos",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "incidents",
+                    "{{mobileIncidentId}}",
+                    "photos"
+                  ]
+                },
+                "body": {
+                  "mode": "file",
+                  "file": {
+                    "src": ""
+                  }
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"The report has 3 photos already.\",\n  \"error\": {\n    \"code\": \"conflict\",\n    \"message\": \"The report has 3 photos already.\",\n    \"request_id\": \"6f1c2a90-3b7e-4d1a-9c55-0e2f7a1b8c34\"\n  }\n}"
+            },
+            {
+              "name": "409 More than an hour after the report",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "image/jpeg"
+                  }
+                ],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/incidents/{{mobileIncidentId}}/photos",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "incidents",
+                    "{{mobileIncidentId}}",
+                    "photos"
+                  ]
+                },
+                "body": {
+                  "mode": "file",
+                  "file": {
+                    "src": ""
+                  }
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Photos can be added only within an hour of the report.\",\n  \"error\": {\n    \"code\": \"conflict\",\n    \"message\": \"Photos can be added only within an hour of the report.\",\n    \"request_id\": \"6f1c2a90-3b7e-4d1a-9c55-0e2f7a1b8c34\"\n  }\n}"
+            },
+            {
+              "name": "404 Report not found.",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "image/jpeg"
+                  }
+                ],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/incidents/{{mobileIncidentId}}/photos",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "incidents",
+                    "{{mobileIncidentId}}",
+                    "photos"
+                  ]
+                },
+                "body": {
+                  "mode": "file",
+                  "file": {
+                    "src": ""
+                  }
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Report not found.\",\n  \"error\": {\n    \"code\": \"not_found\",\n    \"message\": \"Report not found.\",\n    \"request_id\": \"6f1c2a90-3b7e-4d1a-9c55-0e2f7a1b8c34\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "My own reports",
+          "protocolProfileBehavior": {
+            "disableCookies": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/incidents?limit=50",
+              "host": [
+                "{{mobileBase}}"
+              ],
+              "path": [
+                "v1",
+                "clients",
+                "{{mobileSlug}}",
+                "incidents"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
+              ]
+            },
+            "description": "**Needs `incident:report`.** The reports **this** official filed, newest first; nobody else's, whatever the role.\n\n| Query | Meaning |\n|---|---|\n| `limit` | 1 to 100, default 50 |\n| `cursor` | the previous page's `next_cursor` |\n\n- `photos`: how many, 0 to 3. The app cannot download them; they are for the client's office.\n- `check_ref` and `retail_user` are `null` when the report names none.\n- `next_cursor` is `null` when the page is not full.\n\nGuide §6.3."
+          },
+          "response": [
+            {
+              "name": "200 The reports",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/incidents?limit=50",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "incidents"
+                  ],
+                  "query": [
+                    {
+                      "key": "limit",
+                      "value": "50"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Reports fetched successfully.\",\n  \"data\": {\n    \"reports\": [\n      {\n        \"id\": 1042,\n        \"at\": \"2026-10-28T10:04:37.512+00:00\",\n        \"note\": \"Label print is blurred and the seal is cut.\",\n        \"photos\": 2,\n        \"check_ref\": \"MA-2026-000123\",\n        \"retail_user\": {\n          \"id\": \"9d2e7c1b-3a4f-4e5d-8b6c-1f2a3b4c5d6e\",\n          \"name\": \"Rahim Store\"\n        }\n      }\n    ],\n    \"next_cursor\": null\n  }\n}"
+            },
+            {
+              "name": "403 The official's role lacks the permission",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/incidents?limit=50",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "incidents"
+                  ],
+                  "query": [
+                    {
+                      "key": "limit",
+                      "value": "50"
+                    }
+                  ]
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"You do not have access to this resource.\",\n  \"error\": {\n    \"code\": \"forbidden\",\n    \"message\": \"You do not have access to this resource.\",\n    \"request_id\": \"6f1c2a90-3b7e-4d1a-9c55-0e2f7a1b8c34\"\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Retail users",
+      "description": "A **retail user** is a seller who uses the app: an official in a role the client's office marks as a retail role. They log in and look items up like any official, with what their role allows. A report can name the retail user it is about. A supervisor (`retail_user:add`) can add one on the spot.\n\nLimit: 30 added or passwords emailed an hour per official, together.",
+      "item": [
+        {
+          "name": "Pick a retail user",
+          "protocolProfileBehavior": {
+            "disableCookies": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/retail-users?search=&limit=50",
+              "host": [
+                "{{mobileBase}}"
+              ],
+              "path": [
+                "v1",
+                "clients",
+                "{{mobileSlug}}",
+                "retail-users"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": ""
+                },
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
+              ]
+            },
+            "description": "**Needs `incident:report` or `retail_user:add`.** The picker for a report's retail user. Only the client's retail users who are not blocked, by name. Saves the first one's `id` as `mobileRetailUserId`.\n\n| Query | Meaning |\n|---|---|\n| `search` | part of a name (any case) or a whole email; up to 100 characters |\n| `limit` | 1 to 100, default 50 |\n| `cursor` | the previous page's `next_cursor` |\n\n`email` is **masked** (`ra***@gmail.com`): the whole address is never sent here.\n\nGuide §7, §7.1."
+          },
+          "response": [
+            {
+              "name": "200 The retail users",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/retail-users?search=&limit=50",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "retail-users"
+                  ],
+                  "query": [
+                    {
+                      "key": "search",
+                      "value": ""
+                    },
+                    {
+                      "key": "limit",
+                      "value": "50"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Retail users fetched successfully.\",\n  \"data\": {\n    \"retail_users\": [\n      {\n        \"id\": \"9d2e7c1b-3a4f-4e5d-8b6c-1f2a3b4c5d6e\",\n        \"name\": \"Rahim Store\",\n        \"email\": \"ra***@gmail.com\"\n      }\n    ],\n    \"next_cursor\": null\n  }\n}"
+            },
+            {
+              "name": "403 The official's role lacks the permission",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/retail-users?search=&limit=50",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "retail-users"
+                  ],
+                  "query": [
+                    {
+                      "key": "search",
+                      "value": ""
+                    },
+                    {
+                      "key": "limit",
+                      "value": "50"
+                    }
+                  ]
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"You do not have access to this resource.\",\n  \"error\": {\n    \"code\": \"forbidden\",\n    \"message\": \"You do not have access to this resource.\",\n    \"request_id\": \"6f1c2a90-3b7e-4d1a-9c55-0e2f7a1b8c34\"\n  }\n}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const list = pm.response.code === 200 ? pm.response.json().data.retail_users : [];",
+                  "if (list.length > 0) pm.collectionVariables.set('mobileRetailUserId', list[0].id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Retail roles",
+          "protocolProfileBehavior": {
+            "disableCookies": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/retail-roles",
+              "host": [
+                "{{mobileBase}}"
+              ],
+              "path": [
+                "v1",
+                "clients",
+                "{{mobileSlug}}",
+                "retail-roles"
+              ]
+            },
+            "description": "**Needs `retail_user:add`.** The roles a new retail user can be given. Saves the first one's `id` as `mobileRetailRoleId`. An empty list: the client's office has marked no retail role yet, so no retail user can be added.\n\nGuide §7.2."
+          },
+          "response": [
+            {
+              "name": "200 The retail roles",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/retail-roles",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "retail-roles"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Retail roles fetched successfully.\",\n  \"data\": [\n    {\n      \"id\": 7,\n      \"name\": \"Retail seller\"\n    }\n  ]\n}"
+            },
+            {
+              "name": "200 None marked yet",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/retail-roles",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "retail-roles"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Retail roles fetched successfully.\",\n  \"data\": []\n}"
+            },
+            {
+              "name": "403 The official's role lacks the permission",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/retail-roles",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "retail-roles"
+                  ]
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"You do not have access to this resource.\",\n  \"error\": {\n    \"code\": \"forbidden\",\n    \"message\": \"You do not have access to this resource.\",\n    \"request_id\": \"6f1c2a90-3b7e-4d1a-9c55-0e2f7a1b8c34\"\n  }\n}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const roles = pm.response.code === 200 ? pm.response.json().data : [];",
+                  "if (roles.length > 0) pm.collectionVariables.set('mobileRetailRoleId', String(roles[0].id));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Add a retail user",
+          "protocolProfileBehavior": {
+            "disableCookies": true
+          },
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/retail-users",
+              "host": [
+                "{{mobileBase}}"
+              ],
+              "path": [
+                "v1",
+                "clients",
+                "{{mobileSlug}}",
+                "retail-users"
+              ]
+            },
+            "description": "**Needs `retail_user:add`** (a supervisor adding a shop on the spot).\n\n| Field | Rule |\n|---|---|\n| `name` | 1 to 100 characters |\n| `email` | the address the retail user logs in with and reads mail at: it must be real |\n| `role_id` | one of *Retail roles* |\n| `password` | required, 1 to 128 characters, no control characters, no other rule: it works once and must be changed at the first login |\n| `send_email` | optional, `true` or `false`; left out it is `true`. `false`: no mail, the official gives the password to the retail user personally |\n\n**201**: with `send_email: true` we email the typed password to the retail user with the login details; with `false` we send nothing. The password works until it is used (no end date). `email_sent`: `true` the mail went; `false` the account was made but the mail failed: tell the official to give the password themselves, or use *Email a new first password* a little later; `null` not sent, as asked.\n\nOn the screen: a switch \"Email the login details\" (on by default); when it is off, \"Give the password to the retail user yourself.\"\n\nLimit: 30 retail users added or passwords emailed an hour per official (429).\n\n| HTTP | `error.code` | When | In the app |\n|---|---|---|---|\n| 409 | `conflict` | \"An official with this email already exists.\" | say so |\n| 404 | `not_found` | \"Role not found.\": not a retail role | reload the roles |\n| 400 | `validation_failed` | a field missing or malformed |  |\n\nGuide §7.3.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Rahim Store\",\n  \"email\": \"retail.{{$timestamp}}@example.com\",\n  \"role_id\": \"{{mobileRetailRoleId}}\",\n  \"password\": \"1234567890\",\n  \"send_email\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "201 Added, mail sent",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/retail-users",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "retail-users"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Rahim Store\",\n  \"email\": \"retail.{{$timestamp}}@example.com\",\n  \"role_id\": \"{{mobileRetailRoleId}}\",\n  \"password\": \"1234567890\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Retail user added successfully.\",\n  \"data\": {\n    \"id\": \"9d2e7c1b-3a4f-4e5d-8b6c-1f2a3b4c5d6e\",\n    \"name\": \"Rahim Store\",\n    \"email\": \"rahim.store@gmail.com\",\n    \"email_sent\": true\n  }\n}"
+            },
+            {
+              "name": "201 Added, but the mail failed",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/retail-users",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "retail-users"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Rahim Store\",\n  \"email\": \"retail.{{$timestamp}}@example.com\",\n  \"role_id\": \"{{mobileRetailRoleId}}\",\n  \"password\": \"1234567890\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Retail user added successfully.\",\n  \"data\": {\n    \"id\": \"9d2e7c1b-3a4f-4e5d-8b6c-1f2a3b4c5d6e\",\n    \"name\": \"Rahim Store\",\n    \"email\": \"rahim.store@gmail.com\",\n    \"email_sent\": false\n  }\n}"
+            },
+            {
+              "name": "409 An official with this email already exists.",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/retail-users",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "retail-users"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Rahim Store\",\n  \"email\": \"retail.{{$timestamp}}@example.com\",\n  \"role_id\": \"{{mobileRetailRoleId}}\",\n  \"password\": \"1234567890\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"An official with this email already exists.\",\n  \"error\": {\n    \"code\": \"conflict\",\n    \"message\": \"An official with this email already exists.\",\n    \"request_id\": \"6f1c2a90-3b7e-4d1a-9c55-0e2f7a1b8c34\"\n  }\n}"
+            },
+            {
+              "name": "404 Role not found.",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/retail-users",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "retail-users"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Rahim Store\",\n  \"email\": \"retail.{{$timestamp}}@example.com\",\n  \"role_id\": \"{{mobileRetailRoleId}}\",\n  \"password\": \"1234567890\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Role not found.\",\n  \"error\": {\n    \"code\": \"not_found\",\n    \"message\": \"Role not found.\",\n    \"request_id\": \"6f1c2a90-3b7e-4d1a-9c55-0e2f7a1b8c34\"\n  }\n}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// role_id is a number: run Retail roles first.",
+                  "const body = JSON.parse(pm.variables.replaceIn(pm.request.body.raw));",
+                  "body.role_id = Number(body.role_id);",
+                  "pm.request.body.raw = JSON.stringify(body, null, 2);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) pm.collectionVariables.set('mobileRetailUserId', pm.response.json().data.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Email a new first password",
+          "protocolProfileBehavior": {
+            "disableCookies": true
+          },
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/retail-users/{{mobileRetailUserId}}/password",
+              "host": [
+                "{{mobileBase}}"
+              ],
+              "path": [
+                "v1",
+                "clients",
+                "{{mobileSlug}}",
+                "retail-users",
+                "{{mobileRetailUserId}}",
+                "password"
+              ]
+            },
+            "description": "**Needs `retail_user:add`.** No body. For a retail user whose mail never arrived or was lost, or who was given the password personally and lost it. Always emailed. We make a new one and email it; the official never sees it, and the old one stops working at once.\n\n| HTTP | `error.code` | When | In the app |\n|---|---|---|---|\n| 409 | `conflict` | \"The retail user has set their own password.\": only the client's office can change it now | say so |\n| 404 | `not_found` | \"Retail user not found.\": unknown, blocked, or not a retail user |  |\n\nGuide §7.4."
+          },
+          "response": [
+            {
+              "name": "200 Emailed",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/retail-users/{{mobileRetailUserId}}/password",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "retail-users",
+                    "{{mobileRetailUserId}}",
+                    "password"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Password emailed.\",\n  \"data\": {\n    \"email_sent\": true\n  }\n}"
+            },
+            {
+              "name": "409 The retail user has set their own password.",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/retail-users/{{mobileRetailUserId}}/password",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "retail-users",
+                    "{{mobileRetailUserId}}",
+                    "password"
+                  ]
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"The retail user has set their own password.\",\n  \"error\": {\n    \"code\": \"conflict\",\n    \"message\": \"The retail user has set their own password.\",\n    \"request_id\": \"6f1c2a90-3b7e-4d1a-9c55-0e2f7a1b8c34\"\n  }\n}"
+            },
+            {
+              "name": "404 Retail user not found.",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{mobileBase}}/v1/clients/{{mobileSlug}}/retail-users/{{mobileRetailUserId}}/password",
+                  "host": [
+                    "{{mobileBase}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "clients",
+                    "{{mobileSlug}}",
+                    "retail-users",
+                    "{{mobileRetailUserId}}",
+                    "password"
+                  ]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Retail user not found.\",\n  \"error\": {\n    \"code\": \"not_found\",\n    \"message\": \"Retail user not found.\",\n    \"request_id\": \"6f1c2a90-3b7e-4d1a-9c55-0e2f7a1b8c34\"\n  }\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "mobileBase",
+      "value": "https://<app API host>"
+    },
+    {
+      "key": "mobileSlug",
+      "value": "<client>"
+    },
+    {
+      "key": "mobileEmail",
+      "value": "official@example.com"
+    },
+    {
+      "key": "mobilePassword",
+      "value": ""
+    },
+    {
+      "key": "mobileNewPassword",
+      "value": ""
+    },
+    {
+      "key": "mobileCode",
+      "value": ""
+    },
+    {
+      "key": "mobilePhoneId",
+      "value": ""
+    },
+    {
+      "key": "mobileAccessToken",
+      "value": ""
+    },
+    {
+      "key": "mobileRefreshToken",
+      "value": ""
+    },
+    {
+      "key": "mobileChallengeId",
+      "value": ""
+    },
+    {
+      "key": "mobileCheckRef",
+      "value": ""
+    },
+    {
+      "key": "mobileIncidentId",
+      "value": ""
+    },
+    {
+      "key": "mobileRetailUserId",
+      "value": ""
+    },
+    {
+      "key": "mobileRetailRoleId",
+      "value": ""
+    }
+  ]
+}

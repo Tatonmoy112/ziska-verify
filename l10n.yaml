@@ -1,0 +1,9 @@
+arb-dir: lib/l10n
+template-arb-file: app_en.arb
+output-dir: lib/l10n/generated
+output-localization-file: app_localizations.dart
+output-class: AppLocalizations
+nullable-getter: false
+# Bangla text is supplied by the client (final.md Section 20.3). Until then,
+# missing Bangla messages fall back to English and are listed in this file.
+untranslated-messages-file: l10n_untranslated.json

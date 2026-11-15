@@ -1,0 +1,7 @@
+{
+  "FLAVOR": "live",
+  "API_BASE_URL": "https://replace-with-live-api-host.example",
+  "CLIENT_SLUG": "replace-with-client-slug",
+  "OFFICE_EMAIL": "replace-with-office-email",
+  "OFFICE_PHONE": "replace-with-office-phone"
+}

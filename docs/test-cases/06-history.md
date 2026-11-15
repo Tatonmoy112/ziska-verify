@@ -1,0 +1,63 @@
+# HIST: History and Item Tracking
+
+| Field | Value |
+|---|---|
+| Spec | final.md §8.3, §10, §13.4, §16 |
+| API | `GET checks` |
+| Automated in | `test/flow/history_flow_test.dart`, `history_bloc_test`, `history_contract_test` |
+| Format | [Case format and type tags](README.md#3-case-format) |
+
+| ID | Title | Type | Pri | Run on | Auto | Pre-conditions / Data | Steps | Expected | Source |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-HIST-001 | Empty history | EDGE | P2 | MOCK | ✅ `flow/history_flow_test` | Mock build | Open History on the mock | "No checks" empty state | §13.4 |
+| TC-HIST-002 | First page with totals | POS | P1 | AUTO + STAGE | ✅ `history_contract_test` | Fake backend; Staging build, backend test sheet | Open History with checks | Rows newest first; the result chips count the totals (All N, Valid N, Warning N, Not found N, Not in a batch N) | §13.4, §18.3 History |
+| TC-HIST-003 | Paging to the end | POS | P1 | AUTO + STAGE | ✅ `history_bloc_test` | Fake backend; Staging build, backend test sheet | Scroll to the bottom with more than 50 checks | Next pages load; stops when `next_cursor` is `null` | §10, §18.3 Pagination |
+| TC-HIST-004 | Cursor sent back unchanged | POS | P1 | AUTO | ✅ `history_bloc_test` | Fake backend | Next page request | `cursor` equals the previous `next_cursor` | §10.2 |
+| TC-HIST-005 | Filter starts from page 1 | STATE | P1 | AUTO | ✅ `history_bloc_test` | Fake backend | Change the result filter after paging | New first page, no cursor sent | §10.2 |
+| TC-HIST-006 | Next-page failure keeps items | NET | P2 | AUTO | ✅ `history_bloc_test` | Fake backend | Next page fails | Loaded rows stay; retry footer | §10.6 |
+| TC-HIST-007 | Search waits for typing to stop | STATE | P2 | AUTO | ✅ `history_bloc_test` | Fake backend | Type a serial quickly | One request, 400 ms after the last key | §8.3 |
+| TC-HIST-008 | Item tracking by serial | POS | P2 | STAGE | ✅ `flow/history_flow_test` | Staging build, backend test sheet | Search a serial | "Every check of serial …"; only that item's checks | §13.4.1 |
+| TC-HIST-009 | Everyone's checks only with `history:all` | SEC | P1 | MOCK | ✅ `flow/history_flow_test` | Mock build | Filters as R2, then R1 | R2: no switch; R1: "Everyone's checks" switch; rows show "by {name}" | §13.4, §18.3 History |
+| TC-HIST-010 | Date range | POS | P2 | STAGE | ✋ | Staging build, backend test sheet | Filters → choose dates | Only checks in the range; the backend's day question (final.md 20.2) checked here | §13.4 |
+| TC-HIST-011 | Reset filters | POS | P3 | MOCK | ✅ `flow/history_flow_test` | Mock build | Set filters, tap **Reset** | Filters cleared; the search stays | §13.4 |
+| TC-HIST-012 | Times in Bangladesh time | I18N | P1 | STAGE | ✋ | Staging build, backend test sheet | Phone set to another time zone | Times shown in Bangladesh time | §16 |
+| TC-HIST-013 | Pull to refresh | POS | P3 | MOCK | ✅ `flow/history_flow_test` | Mock build | Pull down on History | Reloads; the list stays until the new page arrives | §10.6 |
+| TC-HIST-014 | Sellers see only their own checks | SEC | P1 | MOCK | ✅ `flow/history_flow_test` | Mock build | As R5, then R4: open History; open Filters; search serial `1000001` | Own checks with totals; no `scope` sent; no "Everyone's checks" switch; no "by {name}"; "Every check of serial 1000001" | §7.2, §13.4, Decision 45 |
+| TC-HIST-015 | `from` after `to` cannot be chosen | NEG | P2 | AUTO | ✅ `flow/history_edge_flow_test` | Fake backend | Filters → **Choose dates**; try to end the range before its start | No range with `from` after `to`; no such request | §13.4 |
+| TC-HIST-016 | One-day range | BVA | P2 | AUTO | ✅ `history_contract_test`, `flow/history_edge_flow_test` | Fake backend | Choose 28 Oct 2026 to 28 Oct 2026; Apply | `from=2026-10-28&to=2026-10-28` | §13.4 (both included) |
+| TC-HIST-017 | Dates sent as `YYYY-MM-DD` | POS | P1 | AUTO | ✅ `history_contract_test`, `flow/history_edge_flow_test` | Fake backend | Choose 1 Oct to 28 Oct 2026; Apply | `from=2026-10-01&to=2026-10-28` | §13.4, §15.1 |
+| TC-HIST-018 | Calendar in Bangladesh time | I18N | P2 | AUTO | ✅ `flow/history_edge_flow_test` | Fake backend; phone time zone UTC−5, 23:30 local (already the next day in Bangladesh) | Open the date picker; choose "today" | Today is the Bangladesh date; that date is sent | §16 |
+| TC-HIST-019 | Empty filters are not sent | POS | P1 | AUTO | ✅ `history_contract_test` | Fake backend | Open History with no search and no filter | `GET checks?limit=50` only: no empty `search=`, `result=`, `way=`, `from=`, `to=`, `scope=` | §10.2 |
+| TC-HIST-020 | Every result filter | POS | P2 | AUTO | ✅ `history_contract_test` | Fake backend | Filter by Valid, then Warning, Not found, Not in a batch | `result=valid`, `warning`, `not_found`, `unassigned` | §13.4 |
+| TC-HIST-021 | Every way filter | POS | P2 | AUTO | ✅ `history_contract_test` | Fake backend | Filter by each way | `way=serial`, `qr`, `hidden_code` | §13.4 |
+| TC-HIST-022 | Filters combined | POS | P2 | AUTO | ✅ `history_contract_test` | Fake backend | Warning + QR + dates + search `1000001` | One first-page request holding all of them; the chips count as answered | §13.4 |
+| TC-HIST-023 | No match for the filters | EDGE | P2 | AUTO | ✅ `flow/history_edge_flow_test` | Fake backend | Set filters; the first page is empty | "No checks" with "No check matches these filters." | §10.4 |
+| TC-HIST-024 | Search by reference number | POS | P2 | AUTO | ✅ `history_contract_test` | Fake backend | Search `MA-2026-000123` | `search=MA-2026-000123`; matching rows; no "Every check of serial" title | §13.4 |
+| TC-HIST-025 | Search of 1 character | BVA | P3 | AUTO | ✅ `flow/history_edge_flow_test` | Fake backend | Type `1` | One request with `search=1`, 400 ms after typing stops | §13.4, §8.3 |
+| TC-HIST-026 | Very long search | BVA | P3 | AUTO | ✅ `flow/history_edge_flow_test` | Fake backend | Paste 200 characters into search | No crash; a `400` answer shows the general error with its reference | §10.2 |
+| TC-HIST-027 | Search with symbols stays one value | SEC | P2 | AUTO | ✅ `history_contract_test` | Fake backend; R2 | Search `1000&scope=all`, then `%`, then `<b>x</b>` | Each sent encoded as the `search` value; no `scope` parameter added; text shown as typed | §10.2 |
+| TC-HIST-028 | Clearing the search | STATE | P2 | AUTO | ✅ `history_contract_test` | Fake backend | Search `1000001`; clear the field | A new first page without `search` | §10.2 |
+| TC-HIST-029 | Empty page after a full page ends the list | BVA | P1 | AUTO | ✅ `history_bloc_test` | Fake backend | Page 1: 50 checks with a cursor; page 2: no checks, `next_cursor: null` | 50 rows and the end marker; no third request | §10.2, §18.3 Pagination |
+| TC-HIST-030 | Numeric-looking cursor stays text | EDGE | P2 | AUTO | ✅ `history_contract_test` | Fake backend | Page 1 answers `next_cursor: "0032"`; scroll to the end | The next request has `cursor=0032` (zeros kept) | §10.2 |
+| TC-HIST-031 | The same cursor answered again | WORST | P2 | AUTO | ✅ `history_bloc_test` | Fake backend | Page 2 answers the same `next_cursor` as page 1 | No automatic loop: a next page is asked only when the official scrolls near the end | §10.6 |
+| TC-HIST-032 | Next page rate limited | NET | P2 | AUTO | ✅ `flow/history_edge_flow_test` | Fake backend | The next page answers `429` with `Retry-After: 10` | Loaded rows kept; a countdown in the footer; not retried by itself; at 0, Retry sends the same cursor | §10.4, §10.6 |
+| TC-HIST-033 | Filter changed while a page loads | WORST | P1 | AUTO | ✅ `history_bloc_test` | Fake backend; slow next page | Scroll to load page 2; change the result filter before it arrives | The old page never appears in the new list; the new first page has no cursor | §8.3, §10.2 |
+| TC-HIST-034 | Refresh while the first page loads | WORST | P3 | AUTO | ✅ `history_bloc_test` | Fake backend; slow first page | Open History; pull to refresh at once | One list, from the latest answer only | §8.3 |
+| TC-HIST-035 | Totals kept while later pages load | STATE | P1 | AUTO | ✅ `history_bloc_test` | Fake backend | Page 1 with totals; page 2 with `totals: null` | The chip counts keep the page 1 values | §10.6 |
+| TC-HIST-036 | Totals missing on the first page | WORST | P3 | AUTO | ✅ `history_bloc_test`, `flow/history_edge_flow_test` | Fake backend | Page 1 answers `totals: null` | Rows shown; the chips without counts; no crash | §10.6 |
+| TC-HIST-037 | First page error, then Try again | NET | P2 | AUTO | ✅ `flow/history_edge_flow_test` | Fake backend | `GET checks` answers `500`; then **Try again** answers `200` | "Something went wrong. Try again." with "Reference: …" and **Try again**; then the rows | §10.4 |
+| TC-HIST-038 | History offline | NET | P2 | AUTO | ✅ `flow/history_edge_flow_test` | Fake backend; no connection | Open History | "No connection. Check the internet and try again." and **Try again** | §10.4, §15.4 |
+| TC-HIST-039 | Rows without serial, product, or batch | EDGE | P1 | AUTO | ✅ `history_contract_test`, `flow/history_edge_flow_test` | Fake backend | A `not_found` row (`serial`, `product`, `batch` `null`) and an `unassigned` row (`product`, `batch` `null`) | The `not_found` row shows its reference instead of a serial; the text "null" never shown | §13.4 |
+| TC-HIST-040 | Every reason on a row | POS | P2 | AUTO | ✅ `flow/history_edge_flow_test` | Fake backend | A warning row with `reasons: ["checked_before", "expired"]` | Both reasons shown on the row | §13.4 |
+| TC-HIST-041 | Long scroll | PERF | P3 | STAGE + DEVICE | ✋ | Staging; an official with 1 000+ checks; real phone | Scroll through 20+ pages | Smooth scrolling; no row twice; memory steady | §10 |
+| TC-HIST-042 | Everyone's checks refused | STATE | P1 | AUTO | ✅ `flow/history_edge_flow_test` | Fake backend; R1 | Turn on "Everyone's checks"; `GET checks` answers `403 forbidden`; the reloaded `GET me` has no `history:all` | Profile reloaded; the "Everyone's checks" switch hidden | §7.2, §13.4 |
+| TC-HIST-043 | Everyone's checks of one serial | POS | P2 | AUTO | ✅ `flow/history_edge_flow_test` | Fake backend; R1 | Everyone's checks on; search `1000001` | `scope=all&search=1000001`; rows with "by {name}" | §13.4.1 |
+| TC-HIST-044 | Times in Bangla digits | I18N | P3 | AUTO | ⛔ | Fake backend; language Bangla | Open History in Bangla | Times in Bangladesh time with Bangla digits | §16 |
+| TC-HIST-045 | No history left after logout | SEC | P1 | AUTO | ✅ `flow/history_edge_flow_test` | Fake backend; R1, then R2 | Load History as R1; log out; log in as R2; open History | None of R1's rows ever shown | §10.6, §1.3 |
+| TC-HIST-046 | Nothing kept on the phone | SEC | P2 | AUTO | ✅ `flow/history_edge_flow_test` | Fake backend | Load History; restart the app offline; open History | An error with Try again, no rows: checks are not stored | §10.6, §12.1 Local data |
+| TC-HIST-047 | The result chips keep their counts | POS | P2 | AUTO | ✅ `flow/history_flow_test`, `features/history/history_bloc_test` | Fake backend; totals 120 / 80 / 30 / 9 / 1 | Open History; pick **Valid**; pick **Warning**; search a serial with a chip picked; pull to refresh | The chips show the totals; picking a chip sends `result` and keeps the counts without another request; a new search with a chip picked asks for the counts once more without `result`, with `limit=1`; a failed count leaves the chips without counts and the list shown; a refresh counts again | §13.4 |
+| TC-HIST-048 | Today and Yesterday in Bangladesh time | POS | P3 | AUTO | ✅ `core/utils/display_time_test` | Clock 12:23 on 15 Nov 2026 in Bangladesh | Rows at 11:00 today, 00:30 today (14 Nov in UTC), 23:59 yesterday, two days ago, last year | "Today · …", "Yesterday · …" up to Bangladesh midnight, then the date | §13.4, §16 |
+
+## Spec gaps in this file
+
+See [README §7](README.md#7-open-questions-spec-gaps): 2 (the language switch is not built: the Bangla digits case is ⛔), 3 (the day boundary of `from` and `to`).

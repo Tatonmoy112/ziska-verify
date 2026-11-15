@@ -1,0 +1,43 @@
+# SEC: Security
+
+| Field | Value |
+|---|---|
+| Spec | final.md §9.5, §12 |
+| API | every route |
+| Automated in | `app_config_test`, `log_redactor_test`, `test/flow/lookup_flow_test.dart` |
+| Format | [Case format and type tags](README.md#3-case-format) |
+
+| ID | Title | Type | Pri | Run on | Auto | Pre-conditions / Data | Steps | Expected | Source |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-SEC-001 | HTTPS only | SEC | P1 | AUTO + DEVICE | ✅ `app_config_test` | Fake backend; Real phone | Build with an `http://` address; on a phone, try a cleartext request | Build refuses; Android blocks cleartext | §12.1, §18.3 Transport |
+| TC-SEC-002 | Secrets never logged | SEC | P1 | AUTO | ✅ `log_redactor_test` | Fake backend | Log a pass, password, code, hidden code, phone ID | Replaced by `***` | §12.2 |
+| TC-SEC-003 | Passes in secure storage | SEC | P1 | DEVICE | ✋ | Real phone | Inspect app storage on a rooted test phone or backup | No pass in shared preferences or files | §12.1 |
+| TC-SEC-004 | No sensitive value in routes | SEC | P1 | AUTO | ✅ `flow/lookup_flow_test` | Fake backend | Every route with parameters | Only `check_ref`, a serial search, or `extra` entities; no code or password | §9.5, §18.3 Navigation |
+| TC-SEC-005 | QR link never opened | SEC | P1 | DEVICE | ✋ | Real phone | Scan a product QR | No browser opens | §12.1 |
+| TC-SEC-006 | Release build obfuscated | SEC | P2 | DEVICE | ✋ | Real phone | Build release with `--obfuscate`; inspect | Class names obfuscated | §12.1 |
+| TC-SEC-007 | No secret in the logs of a whole session | SEC | P1 | AUTO | ✅ `flow/security_flow_test` | Fake backend | Log in with a code; look up by hidden code; change the password; add a retail user; read every log line | No pass, password, emailed code, hidden code, or phone ID; only `request_id`, the route, and the status | §12.2 |
+| TC-SEC-008 | Release build log | SEC | P1 | DEVICE | ✋ | Real phone; release build; `adb logcat` | Log in with a code; look up by hidden code; change the password; add a retail user; watch `adb logcat` the whole time | No pass, password, emailed code, hidden code, or phone ID in logcat | §12.2 |
+| TC-SEC-009 | Plain storage holds preferences only | SEC | P1 | AUTO | ✅ `flow/security_flow_test` | Fake backend | After a whole session, read the plain app storage | Only preferences (language, theme); no pass, phone ID, item, or check | §12.1 Local data |
+| TC-SEC-010 | Nothing about items or checks on disk | SEC | P1 | DEVICE | ✋ | Real phone; debuggable build (`run-as`) | After lookups, a bulk, and History, list the app's files and caches | No item or check data, no queued scans, no cached answers | §12.1 Local data |
+| TC-SEC-011 | Backup holds no secret | SEC | P1 | DEVICE | ✋ | Real phone; a backup of the app | Back up the app data; read it | No pass and no phone ID in a readable form | §12.1 Device integrity |
+| TC-SEC-012 | App switcher and screenshots | SEC | P3 | DEVICE | ✋ | Real phone | Open the recent apps on a result and on "… was added" with the first password shown; take a screenshot | Spec gap 14 | §12.1 |
+| TC-SEC-013 | Password fields hidden everywhere | SEC | P1 | AUTO | ✅ `flow/security_flow_test` | Fake backend | Open Login, Set a new password, Change password, Reset password, Add retail user | Every password field hidden until **Show password** | §6.6 |
+| TC-SEC-014 | The keyboard does not learn hidden codes | SEC | P2 | AUTO + DEVICE | ✅ `flow/security_flow_test` | Fake backend | Type a hidden code; check the field settings; on a phone, look at the keyboard suggestions | No suggestions and no autocorrect on the hidden code field | §12.1 Hidden code protection |
+| TC-SEC-015 | Only `mailto:` and `tel:` links opened | SEC | P1 | AUTO | ✅ `flow/security_flow_test` | Fake backend | A whole session including Request access, Support contact, every lookup way | Every launched link is `mailto:` or `tel:`; never `http(s)` or `intent:` | §12.1 External links |
+| TC-SEC-016 | QR holding a script or a very long text | SEC | P1 | AUTO | ✅ `input_preparation_test` | Fake backend | Scan `javascript:alert(1)/q/Q8F2KD91XA7M`; a 4 000-character text; `intent://scan/#Intent;end` | The first sends `Q8F2KD91XA7M` and opens nothing; the others: "This QR code is not a product code of this company."; nothing opened | §12.1 QR link safety |
+| TC-SEC-017 | Lookalike characters in a QR value | SEC | P2 | AUTO | ✅ `input_preparation_test` | Fake backend | Scan a link whose value has a full-width `Ｍ`, then a zero-width space | Refused as not a product code; never sent | §12.1 Input safety, §13.1.3 |
+| TC-SEC-018 | Requests only to the configured host over HTTPS | SEC | P1 | AUTO | ✅ `flow/security_flow_test` | Fake backend | A whole session | Every request goes to the base URL of the flavor's config, over HTTPS | §12.1 Transport, §17 |
+| TC-SEC-019 | No cookies | SEC | P2 | AUTO | ✅ `flow/security_flow_test` | Fake backend | An answer sets `Set-Cookie`; send the next request | No `Cookie` header | §6.3, §15.1 |
+| TC-SEC-020 | Passes only where they belong | SEC | P1 | AUTO | ✅ `flow/security_flow_test` | Fake backend | A whole session | The access pass only in the `Authorization` header; the refresh pass only in the `auth/refresh` body; never in a query | §6.3 |
+| TC-SEC-021 | Phone ID only on login and code | SEC | P1 | AUTO | ✅ `flow/security_flow_test` | Fake backend | A whole session | `phone_id` only in the `auth/login` and `auth/verify-phone` bodies | §6.1 |
+| TC-SEC-022 | No secret inside the release app | SEC | P1 | DEVICE | ✋ | Release APK | Search the APK's strings and decompiled code | No pass, password, or key; only the base URL and the client slug | §12.1 Reverse engineering |
+| TC-SEC-023 | Test builds never point at a live client | SEC | P2 | AUTO | ✅ `flow/security_flow_test` | The repository | Read `config/mock.json` and `config/staging.json` | Neither uses the live host or a live client slug | §17 |
+| TC-SEC-024 | Dependencies without known flaws | SEC | P2 | AUTO | ✅ `ci.yml` (dependency-scan) | CI on every push to `main` and pull request; OSV-Scanner v2.7.0 | Scan `pubspec.lock` against the OSV database; proved once on a scratch lockfile pinning `http` 0.13.0 | The real lockfile: no finding, the job passes. A known-vulnerable package (GHSA-4rgh-jx4f-qfcq): reported, the job fails | §12.1 Supply chain |
+| TC-SEC-025 | `pubspec.lock` is committed | SEC | P2 | AUTO | ✅ `ci.yml` (dependency-scan) | CI | `git ls-files --error-unmatch pubspec.lock` | The file is tracked and not ignored; without it the job fails before the scan | §12.1 Supply chain |
+| TC-SEC-026 | An accepted finding has a reason and an end date | SEC | P3 | AUTO | ✅ `ci.yml` (dependency-scan) | `osv-scanner.toml` with `[[IgnoredVulns]]`: `id`, `reason`, `ignoreUntil` | Accept the scratch finding until a future date; then set the date in the past | Future date: the job passes; past date: the job fails again (proved locally) | §12.1 Supply chain |
+| TC-SEC-027 | The picture host never gets the access pass | SEC | P1 | AUTO | ✅ `flow/lookup_edge_flow_test`, `checked_input_test` | Fake backend (`startApp`); a genuine result with `picture_url` | Open the result; read the requests | The picture is asked of the picture service only; no API request goes to the picture address; no `Authorization` header with it | §12.1, §13.1.4 |
+| TC-SEC-028 | The picture is never written to storage | SEC | P2 | AUTO | ✅ `picture_storage_test` | Static scan of `lib/` and `pubspec.yaml` | Search for disk image caches and file writes of pictures | No `cached_network_image` or other disk cache; pictures only in Flutter's memory image cache | §12.1, backend D21 |
+
+## Spec gaps in this file
+
+See [README §7](README.md#7-open-questions-spec-gaps): 14 (the app switcher and screenshots).

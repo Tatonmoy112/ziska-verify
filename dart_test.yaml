@@ -1,0 +1,5 @@
+# Screenshot (golden) tests: made on the development PC with real fonts
+# (test/ui/ui_helpers.dart). CI runs `flutter test --exclude-tags golden`,
+# because another system draws fonts differently.
+tags:
+  golden:

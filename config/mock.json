@@ -1,0 +1,7 @@
+{
+  "FLAVOR": "mock",
+  "API_BASE_URL": "https://6df9cc6e-393d-4588-a29f-4f598127420d.mock.pstmn.io",
+  "CLIENT_SLUG": "ziska",
+  "OFFICE_EMAIL": "office@example.com",
+  "OFFICE_PHONE": "+8800000000000"
+}

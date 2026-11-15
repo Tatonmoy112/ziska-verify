@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: subosito/flutter-action@v2
+        with:
+          # Keep in step with .fvmrc
+          flutter-version: "3.41.9"
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+      - run: flutter gen-l10n
+      - run: dart format --output=none --set-exit-if-changed lib test
+      - run: flutter analyze
+      # Goldens are made with this PC's fonts; Linux draws them differently
+      # (docs/test-cases/15-ui.md). They run on the development PC.
+      - run: flutter test --exclude-tags golden
+      - run: >
+          flutter build apk --debug --flavor mock
+          --dart-define-from-file=config/mock.json
+
+  # Known vulnerabilities in the packages the app ships (final.md §12.1
+  # Supply chain; docs/test-cases/11-security.md TC-SEC-024 … -026).
+  dependency-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # TC-SEC-025: the scan needs the exact versions.
+      - name: pubspec.lock is committed
+        run: git ls-files --error-unmatch pubspec.lock
+
+      # TC-SEC-024: fails on any known vulnerability. An accepted finding
+      # goes in osv-scanner.toml with a reason and an end date (TC-SEC-026).
+      - name: Scan pubspec.lock (OSV-Scanner)
+        uses: google/osv-scanner-action/osv-scanner-action@v2.7.0
+        with:
+          scan-args: |-
+            --lockfile=pubspec.lock

@@ -1,0 +1,605 @@
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:ziska_verify/features/history/presentation/bloc/check_totals_cubit.dart';
+import 'package:ziska_verify/features/profile/domain/entities/profile.dart';
+import 'package:ziska_verify/features/profile/presentation/bloc/profile_cubit.dart';
+import 'package:ziska_verify/l10n/generated/app_localizations.dart';
+import 'package:ziska_verify/shared/design_system/components/buttons/app_button.dart';
+import 'package:ziska_verify/shared/design_system/tokens/app_colors.dart';
+import 'package:ziska_verify/shared/design_system/tokens/app_radius.dart';
+import 'package:ziska_verify/shared/design_system/tokens/app_spacing.dart';
+import 'package:ziska_verify/shared/design_system/tokens/app_typography.dart';
+import 'package:ziska_verify/shared/widgets/label_value_row.dart';
+import 'package:ziska_verify/shared/widgets/large_text.dart';
+
+/// The Profile tab (Figma "Profile"; final.md Section 13.8). Actions that
+/// belong to other features are passed in by the router. With a
+/// [CheckTotalsCubit] above it (the profile can read History), it shows the
+/// official's check counts and asks for them again each time the tab comes
+/// back into view.
+class ProfileScreen extends StatefulWidget {
+  const ProfileScreen({
+    required this.versionInfo,
+    required this.onChangePassword,
+    required this.onContactSupport,
+    required this.onLogout,
+    super.key,
+  });
+
+  final Future<({String version, String build})> versionInfo;
+  final VoidCallback onChangePassword;
+  final void Function(Profile profile) onContactSupport;
+  final Future<void> Function() onLogout;
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  /// Whether the tab was in view at the last check; the shell turns
+  /// tickers off for the tabs it keeps off stage.
+  bool? _shown;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final shown = TickerMode.valuesOf(context).enabled;
+    if (shown && _shown != true) {
+      unawaited(_totals?.load());
+    }
+    _shown = shown;
+  }
+
+  CheckTotalsCubit? get _totals {
+    try {
+      return context.read<CheckTotalsCubit>();
+    } on ProviderNotFoundException {
+      return null;
+    }
+  }
+
+  Future<void> _confirmLogout(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.logoutConfirmTitle),
+        content: Text(l10n.logoutConfirmBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.danger),
+            child: Text(l10n.logout),
+          ),
+        ],
+      ),
+    );
+    if (confirmed ?? false) await widget.onLogout();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final profile = context.watch<ProfileCubit>().state.profile;
+    if (profile == null) return const SizedBox.shrink();
+    final support = profile.supportEmail ?? profile.supportPhone;
+
+    final totals = _totals;
+
+    return Scaffold(
+      backgroundColor: AppColors.surfaceMuted,
+      body: RefreshIndicator(
+        // Pull to refresh asks for the counts again (the profile itself is
+        // loaded at start).
+        onRefresh: () async => totals?.load(),
+        notificationPredicate: (_) => totals != null,
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            _HeaderAndCard(
+              profile: profile,
+              title: l10n.profileTitle,
+              rows: [
+                _InfoRow(
+                  label: l10n.organisationLabel,
+                  value: profile.organisation ?? '—',
+                ),
+                _InfoRow(label: l10n.emailLabel, value: profile.email),
+                _InfoRow(label: l10n.roleLabel, value: profile.role),
+              ],
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.screen,
+                AppSpacing.lg,
+                AppSpacing.screen,
+                AppSpacing.screen,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (totals != null) ...[
+                    BlocBuilder<CheckTotalsCubit, CheckTotalsState>(
+                      bloc: totals,
+                      builder: (context, state) => _Stats(
+                        state: state,
+                        onRetry: () => unawaited(totals.load()),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xl),
+                  ],
+                  Text(l10n.accountSection, style: AppTypography.fieldLabel),
+                  const SizedBox(height: AppSpacing.xs),
+                  _Card(
+                    children: [
+                      _ActionRow(
+                        icon: LucideIcons.lock,
+                        title: l10n.changePasswordRow,
+                        onTap: widget.onChangePassword,
+                      ),
+                      _ActionRow(
+                        icon: LucideIcons.mail,
+                        title: l10n.supportContactRow,
+                        subtitle: support ?? l10n.supportNotSet,
+                        onTap: support == null
+                            ? null
+                            : () => widget.onContactSupport(profile),
+                      ),
+                      FutureBuilder(
+                        future: widget.versionInfo,
+                        builder: (context, snapshot) => _ActionRow(
+                          icon: LucideIcons.clock,
+                          title: l10n.appVersionRow,
+                          subtitle: snapshot.data == null
+                              ? null
+                              : l10n.appVersionValue(
+                                  snapshot.data!.version,
+                                  snapshot.data!.build,
+                                ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  AppButton(
+                    key: const Key('profile.logout'),
+                    variant: AppButtonVariant.danger,
+                    icon: LucideIcons.logOut,
+                    label: l10n.logout,
+                    onPressed: () => unawaited(_confirmLogout(context)),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The navy band with the title, and the white identity card overlapping
+/// it (Figma "Profile"): the initials in a round avatar standing over the
+/// card's top edge, the name, the role as a green pill, then the rows.
+class _HeaderAndCard extends StatelessWidget {
+  const _HeaderAndCard({
+    required this.profile,
+    required this.title,
+    required this.rows,
+  });
+
+  final Profile profile;
+  final String title;
+  final List<Widget> rows;
+
+  static const _avatar = 72.0;
+
+  /// How far the card reaches up into the navy band.
+  static const _overlap = 40.0;
+
+  String get _initials {
+    final parts = profile.name.trim().split(RegExp(r'\s+'));
+    final letters = parts
+        .where((p) => p.isNotEmpty)
+        .take(2)
+        .map((p) => p.characters.first.toUpperCase());
+    return letters.join();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final top = MediaQuery.paddingOf(context).top;
+    // The band holds the title (it grows with the font size) and the part
+    // of the card that overlaps it.
+    final titleHeight = MediaQuery.textScalerOf(
+      context,
+    ).scale(AppTypography.headline.fontSize! * AppTypography.headline.height!);
+    // The avatar's top sits a gap under the title; the card's top runs
+    // through the avatar's middle.
+    final cardTop =
+        top + AppSpacing.md + titleHeight + AppSpacing.md + _avatar / 2;
+    final band = cardTop + _overlap;
+
+    return Stack(
+      children: [
+        SizedBox(
+          height: band,
+          width: double.infinity,
+          child: DecoratedBox(
+            decoration: const BoxDecoration(gradient: AppColors.headerGradient),
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(
+                AppSpacing.screen,
+                top + AppSpacing.md,
+                AppSpacing.screen,
+                0,
+              ),
+              child: Semantics(
+                header: true,
+                child: Text(
+                  title,
+                  style: AppTypography.headline.copyWith(
+                    color: AppColors.onPrimary,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        Padding(
+          padding: EdgeInsets.fromLTRB(
+            AppSpacing.screen,
+            cardTop,
+            AppSpacing.screen,
+            0,
+          ),
+          child: _Card(
+            key: const Key('profile.identity'),
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.md,
+                  AppSpacing.md,
+                  AppSpacing.md,
+                  AppSpacing.sm,
+                ),
+                child: Row(
+                  children: [
+                    const SizedBox(width: _avatar),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(profile.name, style: AppTypography.heading),
+                          const SizedBox(height: AppSpacing.xxs),
+                          _RolePill(role: profile.role),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              ...rows,
+            ],
+          ),
+        ),
+        // The avatar stands half over the card's top edge.
+        Positioned(
+          left: AppSpacing.screen + AppSpacing.md,
+          top: cardTop - _avatar / 2,
+          child: ExcludeSemantics(
+            child: Container(
+              key: const Key('profile.avatar'),
+              width: _avatar,
+              height: _avatar,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                gradient: AppColors.headerGradient,
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.background, width: 4),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primaryDark.withValues(alpha: 0.18),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: Text(
+                _initials,
+                style: AppTypography.headline.copyWith(
+                  color: AppColors.onPrimary,
+                ),
+                textScaler: TextScaler.noScaling,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// The role as a green pill with a dot ("● FIELD INSPECTOR").
+class _RolePill extends StatelessWidget {
+  const _RolePill({required this.role});
+
+  final String role;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      key: const Key('profile.role'),
+      decoration: const BoxDecoration(
+        color: AppColors.successBackground,
+        borderRadius: BorderRadius.all(Radius.circular(AppRadius.pill)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.xxs,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const DecoratedBox(
+              decoration: BoxDecoration(
+                color: AppColors.success,
+                shape: BoxShape.circle,
+              ),
+              child: SizedBox.square(dimension: 6),
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            Flexible(
+              child: Text(
+                role.toUpperCase(),
+                style: AppTypography.fieldLabel.copyWith(
+                  color: AppColors.success,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The three count cards: Checks, Valid (green), Not verified (red: not
+/// found + not in a batch). Skeletons while the first counts load; one
+/// line with Try again when they cannot load.
+class _Stats extends StatelessWidget {
+  const _Stats({required this.state, required this.onRetry});
+
+  final CheckTotalsState state;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final totals = state.totals;
+    if (totals == null && state.status == CheckTotalsStatus.failed) {
+      return Row(
+        key: const Key('profile.stats.failed'),
+        children: [
+          Expanded(
+            child: Text(l10n.statsFailed, style: AppTypography.caption),
+          ),
+          TextButton(onPressed: onRetry, child: Text(l10n.retry)),
+        ],
+      );
+    }
+    final cards = [
+      (l10n.statChecks, totals?.total, AppColors.textStrong),
+      (l10n.statValid, totals?.valid, AppColors.success),
+      (
+        l10n.statNotVerified,
+        totals == null ? null : totals.notFound + totals.unassigned,
+        AppColors.danger,
+      ),
+    ];
+    final stacked = isLargeText(context);
+    final children = [
+      for (final (label, count, color) in cards)
+        _StatCard(label: label, count: count, color: color, wide: stacked),
+    ];
+    if (stacked) {
+      return Column(
+        key: const Key('profile.stats'),
+        children: [
+          for (final (i, card) in children.indexed) ...[
+            if (i > 0) const SizedBox(height: AppSpacing.xs),
+            card,
+          ],
+        ],
+      );
+    }
+    return IntrinsicHeight(
+      key: const Key('profile.stats'),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final (i, card) in children.indexed) ...[
+            if (i > 0) const SizedBox(width: AppSpacing.sm),
+            Expanded(child: card),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _StatCard extends StatelessWidget {
+  const _StatCard({
+    required this.label,
+    required this.count,
+    required this.color,
+    required this.wide,
+  });
+
+  final String label;
+
+  /// `null` while loading: a grey bar takes its place.
+  final int? count;
+  final Color color;
+
+  /// At a large font: the label on the left, the count on the right.
+  final bool wide;
+
+  @override
+  Widget build(BuildContext context) {
+    final count = this.count;
+    final number = count == null
+        ? DecoratedBox(
+            decoration: const BoxDecoration(
+              color: AppColors.surfaceMuted,
+              borderRadius: BorderRadius.all(Radius.circular(AppRadius.sm)),
+            ),
+            child: SizedBox.fromSize(size: const Size(40, 28)),
+          )
+        : FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              '$count',
+              style: AppTypography.title.copyWith(color: color),
+            ),
+          );
+    final text = Text(
+      label,
+      textAlign: wide ? TextAlign.start : TextAlign.center,
+      style: AppTypography.caption.copyWith(
+        color: AppColors.textStrong,
+        fontWeight: FontWeight.w500,
+      ),
+    );
+    return Semantics(
+      label: count == null ? label : '$label, $count',
+      excludeSemantics: true,
+      child: DecoratedBox(
+        decoration: const BoxDecoration(
+          color: AppColors.background,
+          borderRadius: AppRadius.card,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.sm,
+            vertical: AppSpacing.md,
+          ),
+          child: wide
+              ? Row(
+                  children: [
+                    Expanded(child: text),
+                    const SizedBox(width: AppSpacing.sm),
+                    number,
+                  ],
+                )
+              : Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    number,
+                    const SizedBox(height: AppSpacing.xxs),
+                    text,
+                  ],
+                ),
+        ),
+      ),
+    );
+  }
+}
+
+class _Card extends StatelessWidget {
+  const _Card({required this.children, super.key});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        color: AppColors.background,
+        borderRadius: AppRadius.card,
+      ),
+      child: Column(
+        children: [
+          for (final (i, child) in children.indexed) ...[
+            if (i > 0)
+              const Divider(
+                height: 1,
+                indent: AppSpacing.md,
+                endIndent: AppSpacing.md,
+                color: AppColors.border,
+              ),
+            child,
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _InfoRow extends StatelessWidget {
+  const _InfoRow({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.md,
+      ),
+      child: LabelValueRow(label: label, value: value, oneLine: true),
+    );
+  }
+}
+
+class _ActionRow extends StatelessWidget {
+  const _ActionRow({
+    required this.icon,
+    required this.title,
+    this.subtitle,
+    this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String? subtitle;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      onTap: onTap,
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.xxs,
+      ),
+      leading: Container(
+        width: 40,
+        height: 40,
+        decoration: const BoxDecoration(
+          color: AppColors.surfaceMuted,
+          borderRadius: BorderRadius.all(Radius.circular(AppRadius.md)),
+        ),
+        child: Icon(icon, size: 20, color: AppColors.primary),
+      ),
+      title: Text(title, style: AppTypography.bodyStrong),
+      subtitle: subtitle == null
+          ? null
+          : Text(subtitle!, style: AppTypography.caption),
+      trailing: onTap == null
+          ? null
+          : const Icon(LucideIcons.chevronRight, color: AppColors.textMuted),
+    );
+  }
+}
