@@ -255,7 +255,7 @@ The app has 326 texts. **224** of them were drafted on 2026-11-19 so that the la
 | 7 | `resetCodeWrong` | The code is wrong or has expired. Ask for a new code. | কোডটি ভুল বা মেয়াদোত্তীর্ণ। নতুন কোড চান। | 2026-11-17 | |
 | 8 | `resetNewCode` | Send a new code | নতুন কোড পাঠান | 2026-11-17 | |
 | 9 | `requestAccessTitle` | Sign up | সাইন আপ | earlier | |
-| 10 | `requestAccessSubtitle` | Create your account. Your office checks it and emails you when it is approved. | আপনার অ্যাকাউন্ট তৈরি করুন। অফিস যাচাই করে অনুমোদন হলে ইমেইলে জানাবে। | earlier | |
+| 10 | `requestAccessSubtitle` | Create your account. Your office checks it and emails you its answer. | আপনার অ্যাকাউন্ট তৈরি করুন। অফিস যাচাই করে ইমেইলে উত্তর জানাবে। | 2026-11-19 | |
 | 11 | `permissionsSection` | WHAT YOU CAN DO | আপনি যা করতে পারেন | 2026-11-17 | |
 | 12 | `permissionLookup` | Check one item | একটি পণ্য যাচাই | 2026-11-17 | |
 | 13 | `permissionBulkLookup` | Check many items | একাধিক পণ্য যাচাই | 2026-11-17 | |
@@ -278,7 +278,7 @@ The app has 326 texts. **224** of them were drafted on 2026-11-19 so that the la
 | 30 | `reportCheckMyReports` | Check My reports | আমার রিপোর্ট দেখুন | 2026-11-17 | |
 | 31 | `myReportsEmptyBody` | Reports you file appear here. Use New report to file one. | আপনার পাঠানো রিপোর্ট এখানে দেখা যাবে। পাঠাতে নতুন রিপোর্ট ব্যবহার করুন। | 2026-11-17 | |
 | 32 | `backToList` | Back to the list | তালিকায় ফিরুন | 2026-11-17 | |
-| 33 | `accessPending` | Thanks for signing up. Your office will check your details and email you when your account is ready. | সাইন আপের জন্য ধন্যবাদ। অফিস আপনার তথ্য যাচাই করে অ্যাকাউন্ট প্রস্তুত হলে ইমেইলে জানাবে। | earlier | |
+| 33 | `accessPending` | Thanks for signing up. Your request was sent. You will get an email when it is answered. | সাইন আপের জন্য ধন্যবাদ। আপনার আবেদন পাঠানো হয়েছে। উত্তর দেওয়া হলে আপনি একটি ইমেইল পাবেন। | 2026-11-19 | |
 | 34 | `accessWrongCode` | The code is wrong or expired. Request a new code if needed. | কোডটি ভুল বা মেয়াদ শেষ। প্রয়োজনে নতুন কোড নিন। | earlier | |
 | 35 | `accessTryLater` | Try again later. Get a new code before you sign up again. | পরে আবার চেষ্টা করুন। আবার সাইন আপের আগে নতুন কোড নিন। | earlier | |
 | 36 | `accessRoleUnavailable` | This role is no longer available. Choose another role. | এই ভূমিকা এখন আর পাওয়া যাচ্ছে না। অন্য একটি বেছে নিন। | earlier | |

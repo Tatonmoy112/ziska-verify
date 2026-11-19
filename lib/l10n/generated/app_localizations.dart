@@ -461,7 +461,7 @@ abstract class AppLocalizations {
   /// No description provided for @requestAccessSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Create your account. Your office checks it and emails you when it is approved.'**
+  /// **'Create your account. Your office checks it and emails you its answer.'**
   String get requestAccessSubtitle;
 
   /// No description provided for @noPhoneApp.
@@ -1601,7 +1601,7 @@ abstract class AppLocalizations {
   /// No description provided for @accessPending.
   ///
   /// In en, this message translates to:
-  /// **'Thanks for signing up. Your office will check your details and email you when your account is ready.'**
+  /// **'Thanks for signing up. Your request was sent. You will get an email when it is answered.'**
   String get accessPending;
 
   /// No description provided for @accessWrongCode.

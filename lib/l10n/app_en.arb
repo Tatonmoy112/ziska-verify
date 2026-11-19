@@ -90,7 +90,7 @@
   "resetButton": "Reset password",
   "resetDone": "Password changed. Log in with your new password; every phone needs the emailed code at its next login.",
   "requestAccessTitle": "Sign up",
-  "requestAccessSubtitle": "Create your account. Your office checks it and emails you when it is approved.",
+  "requestAccessSubtitle": "Create your account. Your office checks it and emails you its answer.",
   "noPhoneApp": "No phone app found. Call {phone}.",
   "@noPhoneApp": {
     "placeholders": {
@@ -444,7 +444,7 @@
   "stepCheckCount": "Check count",
   "stepDone": "done",
   "stepWaiting": "waiting",
-  "accessPending": "Thanks for signing up. Your office will check your details and email you when your account is ready.",
+  "accessPending": "Thanks for signing up. Your request was sent. You will get an email when it is answered.",
   "accessWrongCode": "The code is wrong or expired. Request a new code if needed.",
   "accessTryLater": "Try again later. Get a new code before you sign up again.",
   "accessRoleUnavailable": "This role is no longer available. Choose another role.",

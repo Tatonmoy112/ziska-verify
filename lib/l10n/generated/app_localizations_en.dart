@@ -206,7 +206,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get requestAccessSubtitle =>
-      'Create your account. Your office checks it and emails you when it is approved.';
+      'Create your account. Your office checks it and emails you its answer.';
 
   @override
   String noPhoneApp(String phone) {
@@ -846,7 +846,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get accessPending =>
-      'Thanks for signing up. Your office will check your details and email you when your account is ready.';
+      'Thanks for signing up. Your request was sent. You will get an email when it is answered.';
 
   @override
   String get accessWrongCode =>

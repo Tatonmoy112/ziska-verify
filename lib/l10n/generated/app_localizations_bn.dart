@@ -205,7 +205,7 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get requestAccessSubtitle =>
-      'আপনার অ্যাকাউন্ট তৈরি করুন। অফিস যাচাই করে অনুমোদন হলে ইমেইলে জানাবে।';
+      'আপনার অ্যাকাউন্ট তৈরি করুন। অফিস যাচাই করে ইমেইলে উত্তর জানাবে।';
 
   @override
   String noPhoneApp(String phone) {
@@ -844,7 +844,7 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get accessPending =>
-      'সাইন আপের জন্য ধন্যবাদ। অফিস আপনার তথ্য যাচাই করে অ্যাকাউন্ট প্রস্তুত হলে ইমেইলে জানাবে।';
+      'সাইন আপের জন্য ধন্যবাদ। আপনার আবেদন পাঠানো হয়েছে। উত্তর দেওয়া হলে আপনি একটি ইমেইল পাবেন।';
 
   @override
   String get accessWrongCode =>
