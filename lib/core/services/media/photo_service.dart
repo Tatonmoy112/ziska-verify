@@ -67,19 +67,54 @@ class ImagePickerPhotoService implements PhotoService {
   }
 
   /// Shrinks and re-encodes [original]; the output keeps no EXIF.
-  static Future<Uint8List> prepare(Uint8List original) async {
-    final (width, height) = await _targetSize(original);
-    return fitWithinLimit(
-      (quality) => FlutterImageCompress.compressWithList(
-        original,
-        minWidth: width,
-        minHeight: height,
-        quality: quality,
-        // The defaults apply the orientation to the pixels
-        // (`autoCorrectionAngle`), write JPEG, and keep no EXIF
-        // (`keepExif: false`).
-      ),
+  static Future<Uint8List> prepare(Uint8List original) => shrink(
+    original,
+    compress: (bytes, width, height, quality) =>
+        FlutterImageCompress.compressWithList(
+          bytes,
+          minWidth: width,
+          minHeight: height,
+          quality: quality,
+          // The defaults apply the orientation to the pixels
+          // (`autoCorrectionAngle`), write JPEG, and keep no EXIF
+          // (`keepExif: false`).
+        ),
+    sizeOf: imageSize,
+  );
+
+  /// [prepare] with its encoder and size reader given, for tests. When the
+  /// original's size cannot be read (HEIC on some phones), the encoder is
+  /// asked for [maxSide] on both sides, which it treats as a minimum: the
+  /// result is read again and, when its longer side is still over
+  /// [maxSide], shrunk once more to it exactly (SRS FR-INC-04).
+  static Future<Uint8List> shrink(
+    Uint8List original, {
+    required Future<Uint8List> Function(
+      Uint8List bytes,
+      int width,
+      int height,
+      int quality,
+    )
+    compress,
+    required Future<(int, int)?> Function(Uint8List bytes) sizeOf,
+  }) async {
+    final size = await sizeOf(original);
+    final (width, height) = size == null ? (maxSide, maxSide) : _fit(size);
+    final first = await fitWithinLimit(
+      (quality) => compress(original, width, height, quality),
     );
+    if (size != null) return first;
+    final made = await sizeOf(first);
+    if (made == null || max(made.$1, made.$2) <= maxSide) return first;
+    final (w, h) = _fit(made);
+    return fitWithinLimit((quality) => compress(first, w, h, quality));
+  }
+
+  /// The size that brings the longer side to [maxSide], never enlarging.
+  static (int, int) _fit((int, int) size) {
+    final (w, h) = size;
+    final scale = min(1, maxSide / max(w, h));
+    return ((w * scale).round(), (h * scale).round());
   }
 
   /// Encodes at each of [qualities] until the photo is at most [maxBytes]
@@ -102,21 +137,18 @@ class ImagePickerPhotoService implements PhotoService {
     throw const PhotoException(PhotoProblem.tooLarge);
   }
 
-  /// The size that brings the longer side to [maxSide], never enlarging.
-  static Future<(int, int)> _targetSize(Uint8List bytes) async {
+  /// The width and height of an encoded image; `null` when the engine
+  /// cannot read it (HEIC on some phones).
+  static Future<(int, int)?> imageSize(Uint8List bytes) async {
     try {
       final buffer = await ui.ImmutableBuffer.fromUint8List(bytes);
       final descriptor = await ui.ImageDescriptor.encoded(buffer);
-      final w = descriptor.width;
-      final h = descriptor.height;
+      final size = (descriptor.width, descriptor.height);
       descriptor.dispose();
       buffer.dispose();
-      final scale = min(1, maxSide / max(w, h));
-      return ((w * scale).round(), (h * scale).round());
+      return size;
     } on Object {
-      // A format the engine cannot read (HEIC on some phones): the
-      // compressor still converts it; both sides are capped.
-      return (maxSide, maxSide);
+      return null;
     }
   }
 }

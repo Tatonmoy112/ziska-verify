@@ -63,4 +63,78 @@ void main() {
       }
     },
   );
+
+  group('TC-REP-060 never over 2,048 px (SRS FR-INC-04)', () {
+    /// A fake encoder: each call gives a new "image" whose size is noted.
+    final sizes = <Uint8List, (int, int)>{};
+    final calls = <(int, int)>[];
+    Uint8List made((int, int) size) {
+      final out = bytes(10 + sizes.length);
+      sizes[out] = size;
+      return out;
+    }
+
+    setUp(() {
+      sizes.clear();
+      calls.clear();
+    });
+
+    test(
+      'a size the phone can read: one pass to 2048 on the longer side',
+      () async {
+        final original = made((4000, 3000));
+        await ImagePickerPhotoService.shrink(
+          original,
+          compress: (b, w, h, q) async {
+            calls.add((w, h));
+            return made((w, h));
+          },
+          sizeOf: (b) async => sizes[b],
+        );
+        expect(calls, [(2048, 1536)]);
+      },
+    );
+
+    test('a size it cannot read (HEIC): a second pass when the result is '
+        'still too large', () async {
+      final original = bytes(5);
+      // The compressor keeps both sides at least 2048: a 4:3 photo comes
+      // out 2731 x 2048.
+      await ImagePickerPhotoService.shrink(
+        original,
+        compress: (b, w, h, q) async {
+          calls.add((w, h));
+          return made(b == original ? (2731, 2048) : (w, h));
+        },
+        sizeOf: (b) async => sizes[b],
+      );
+      expect(calls, [(2048, 2048), (2048, 1536)]);
+    });
+
+    test('a size it cannot read, already within 2048: one pass', () async {
+      final original = bytes(5);
+      await ImagePickerPhotoService.shrink(
+        original,
+        compress: (b, w, h, q) async {
+          calls.add((w, h));
+          return made((1600, 1200));
+        },
+        sizeOf: (b) async => sizes[b],
+      );
+      expect(calls, [(2048, 2048)]);
+    });
+
+    test('a small photo is never enlarged', () async {
+      final original = made((800, 600));
+      await ImagePickerPhotoService.shrink(
+        original,
+        compress: (b, w, h, q) async {
+          calls.add((w, h));
+          return made((w, h));
+        },
+        sizeOf: (b) async => sizes[b],
+      );
+      expect(calls, [(800, 600)]);
+    });
+  });
 }
