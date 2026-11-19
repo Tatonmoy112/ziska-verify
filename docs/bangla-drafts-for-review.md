@@ -2,7 +2,7 @@
 
 **From:** the mobile app team. **Date:** 2026-11-19 (replaces the list of 2026-11-17, which is included). **Status:** drafts, to be read and corrected by a Bangla reader chosen by Ziska (client question B5; final.md Section 20.3).
 
-The app has 326 texts. **224** of them were drafted on 2026-11-19 so that the language switch could ship; the other 102 were written earlier, with the screens they belong to, and are listed at the end. Both lists are part of the review; every text is in `lib/l10n/app_bn.arb`.
+The app has 327 texts. **226** of them were drafted on 2026-11-19 so that the language switch could ship; the other 101 were written earlier, with the screens they belong to, and are listed at the end. Both lists are part of the review; every text is in `lib/l10n/app_bn.arb`.
 
 ## How to review
 
@@ -241,8 +241,10 @@ The app has 326 texts. **224** of them were drafted on 2026-11-19 so that the la
 | 222 | `sessionSummaryCount` | {count, plural, =1{1 product scanned} other{{count} products scanned}} | {count, plural, =1{১টি পণ্য স্ক্যান হয়েছে} other{{count}টি পণ্য স্ক্যান হয়েছে}} | |
 | 223 | `sessionScanMore` | Scan more | আরও স্ক্যান | |
 | 224 | `sessionDone` | Done | সম্পন্ন | |
+| 225 | `historySession` | Session {id} | সেশন {id} | |
+| 226 | `historyCheckedBy` | Checked by {name} | যাচাই করেছেন {name} | |
 
-## Written earlier (102)
+## Written earlier (101)
 
 | # | Key | English | Bangla | Drafted | Review |
 |---|---|---|---|---|---|
@@ -266,88 +268,87 @@ The app has 326 texts. **224** of them were drafted on 2026-11-19 so that the la
 | 18 | `passwordPendingBanner` | Your password was set by someone else. Change it to keep your account safe. | আপনার পাসওয়ার্ড অন্য কেউ সেট করেছে। অ্যাকাউন্ট নিরাপদ রাখতে এটি বদলান। | 2026-11-17 | |
 | 19 | `supportNotSet` | Not set by your office | আপনার অফিস সেট করেনি | 2026-11-17 | |
 | 20 | `wayOther` | Other | অন্যান্য | 2026-11-17 | |
-| 21 | `historyInSession` | In a session | একটি সেশনে | 2026-11-17 | |
-| 22 | `historyNoChecksYet` | Your checks appear here after your first check. | প্রথম যাচাইয়ের পর আপনার যাচাইগুলো এখানে দেখা যাবে। | 2026-11-17 | |
-| 23 | `reportChooseCheck` | Link one of your checks (optional) | আপনার একটি যাচাই যুক্ত করুন (ঐচ্ছিক) | 2026-11-17 | |
-| 24 | `pickCheck` | Choose a check | একটি যাচাই বেছে নিন | 2026-11-17 | |
-| 25 | `reportPhotoConflict` | No more photos: the report has 3, or its hour is over. | আর ছবি নয়: রিপোর্টে ৩টি আছে, অথবা এক ঘণ্টা পেরিয়ে গেছে। | 2026-11-17 | |
-| 26 | `reportLeaveTitle` | Photos not sent | ছবি পাঠানো হয়নি | 2026-11-17 | |
-| 27 | `reportLeaveBody` | Some photos are still sending or can be sent again. If you leave, they are not sent. | কিছু ছবি এখনো পাঠানো হচ্ছে বা আবার পাঠানো যায়। চলে গেলে সেগুলো পাঠানো হবে না। | 2026-11-17 | |
-| 28 | `reportStay` | Stay | থাকুন | 2026-11-17 | |
-| 29 | `reportLeave` | Leave | চলে যান | 2026-11-17 | |
-| 30 | `reportCheckMyReports` | Check My reports | আমার রিপোর্ট দেখুন | 2026-11-17 | |
-| 31 | `myReportsEmptyBody` | Reports you file appear here. Use New report to file one. | আপনার পাঠানো রিপোর্ট এখানে দেখা যাবে। পাঠাতে নতুন রিপোর্ট ব্যবহার করুন। | 2026-11-17 | |
-| 32 | `backToList` | Back to the list | তালিকায় ফিরুন | 2026-11-17 | |
-| 33 | `accessPending` | Thanks for signing up. Your request was sent. You will get an email when it is answered. | সাইন আপের জন্য ধন্যবাদ। আপনার আবেদন পাঠানো হয়েছে। উত্তর দেওয়া হলে আপনি একটি ইমেইল পাবেন। | 2026-11-19 | |
-| 34 | `accessWrongCode` | The code is wrong or expired. Request a new code if needed. | কোডটি ভুল বা মেয়াদ শেষ। প্রয়োজনে নতুন কোড নিন। | earlier | |
-| 35 | `accessTryLater` | Try again later. Get a new code before you sign up again. | পরে আবার চেষ্টা করুন। আবার সাইন আপের আগে নতুন কোড নিন। | earlier | |
-| 36 | `accessRoleUnavailable` | This role is no longer available. Choose another role. | এই ভূমিকা এখন আর পাওয়া যাচ্ছে না। অন্য একটি বেছে নিন। | earlier | |
-| 37 | `accessNoRoles` | Ask the office for an account. | অ্যাকাউন্টের জন্য অফিসে যোগাযোগ করুন। | earlier | |
-| 38 | `accessContactOffice` | Contact the office | অফিসে যোগাযোগ করুন। | earlier | |
-| 39 | `accessName` | Name | নাম | earlier | |
-| 40 | `accessRole` | Role | ভূমিকা | earlier | |
-| 41 | `accessRoleHint` | Choose a role | একটি ভূমিকা বেছে নিন | 2026-11-17 | |
-| 42 | `accessPassword` | Choose a password | পাসওয়ার্ড বেছে নিন | earlier | |
-| 43 | `accessShowPassword` | Show password | পাসওয়ার্ড দেখুন | earlier | |
-| 44 | `accessHidePassword` | Hide password | পাসওয়ার্ড লুকান | earlier | |
-| 45 | `accessEmail` | Email | ইমেইল | earlier | |
-| 46 | `accessCode` | Code from the email | ইমেইলের কোড | 2026-11-17 | |
-| 47 | `accessResend` | Send a new code | নতুন কোড পাঠান | earlier | |
-| 48 | `accessSendCode` | Send code | কোড পাঠান | earlier | |
-| 49 | `accessCodeSent` | A code was sent to the address. | ঠিকানায় একটি কোড পাঠানো হয়েছে। | earlier | |
-| 50 | `accessSubmit` | Sign up | সাইন আপ | earlier | |
-| 51 | `scannerModeTitle` | Scanner mode | স্ক্যানার মোড | earlier | |
-| 52 | `serialStackTitle` | Serial stack | সিরিয়ালের তালিকা | earlier | |
-| 53 | `serialStackHint` | Type or paste up to 50 serials, separated by spaces, commas, or new lines. Repeated serials are checked once. | সর্বোচ্চ ৫০টি সিরিয়াল লিখুন বা পেস্ট করুন। স্পেস, কমা বা নতুন লাইন দিয়ে আলাদা করুন। একই সিরিয়াল একবারই যাচাই হবে। | earlier | |
-| 54 | `serialStackLimit` | Enter 1 to 50 different serials. Submit another stack for additional items. | ১ থেকে ৫০টি ভিন্ন সিরিয়াল দিন। আরও পণ্যের জন্য নতুন তালিকা পাঠান। | earlier | |
-| 55 | `serialStackUncertain` | The answer was lost. These checks may already be recorded. Retrying may record them again. | উত্তর পাওয়া যায়নি। যাচাইগুলো ইতিমধ্যে সংরক্ষিত হতে পারে। আবার পাঠালে পুনরায় সংরক্ষিত হতে পারে। | earlier | |
-| 56 | `serialStackNotSent` | No connection. Nothing was sent; send the stack again when you are online. | সংযোগ নেই। কিছুই পাঠানো হয়নি; অনলাইনে এলে তালিকাটি আবার পাঠান। | 2026-11-17 | |
-| 57 | `serialStackBadSerial` | Serial {position} ({value}) is not a serial: digits only, up to {digits} digits. | {position} নম্বর ({value}) সিরিয়াল নয়: শুধু সংখ্যা, সর্বোচ্চ {digits} অঙ্ক। | 2026-11-17 | |
-| 58 | `serialStackCount` | {count} of 50 serials | ৫০টির মধ্যে {count}টি সিরিয়াল | 2026-11-17 | |
-| 59 | `serialStackCountRepeats` | {count} of 50 serials · {repeats} repeated, sent once | ৫০টির মধ্যে {count}টি সিরিয়াল · {repeats}টি পুনরাবৃত্ত, একবার পাঠানো হবে | 2026-11-17 | |
-| 60 | `serialStackRecorded` | These checks were recorded, but their answer could not be shown. See them in History → Sessions. Do not send the same stack again. | যাচাইগুলো রেকর্ড হয়েছে, কিন্তু উত্তর দেখানো যায়নি। ইতিহাস → সেশনে দেখুন। একই তালিকা আবার পাঠাবেন না। | 2026-11-17 | |
-| 61 | `serialStackRetry` | Send the same stack again | একই তালিকা আবার পাঠান | earlier | |
-| 62 | `serialStackSubmit` | Check serials | সিরিয়াল যাচাই করুন | earlier | |
-| 63 | `serialStackNew` | Start another stack | নতুন তালিকা শুরু করুন | earlier | |
-| 64 | `serialStackHistory` | View this session's checks | এই সেশনের যাচাই দেখুন | earlier | |
-| 65 | `sessionScanned` | Scanned | যাচাই হয়েছে | earlier | |
-| 66 | `sessionValid` | Valid | সঠিক | earlier | |
-| 67 | `sessionWarning` | Warning | সতর্কতা | earlier | |
-| 68 | `sessionNotFound` | Not found | পাওয়া যায়নি | earlier | |
-| 69 | `sessionUnassigned` | Not in a batch | বরাদ্দ হয়নি | earlier | |
-| 70 | `sessionLeft` | Remaining | অবশিষ্ট | earlier | |
-| 71 | `sessionRepeat` | Already scanned | ইতিমধ্যে স্ক্যান হয়েছে | earlier | |
-| 72 | `sessionScanAgain` | Scan again | আবার স্ক্যান করুন | earlier | |
-| 73 | `sessionNoConnection` | No connection, scan again. | সংযোগ নেই, আবার স্ক্যান করুন। | 2026-11-17 | |
-| 74 | `sessionBusy` | The service is busy. Nothing was recorded; scan again. | সেবাটি ব্যস্ত। কিছুই রেকর্ড হয়নি; আবার স্ক্যান করুন। | 2026-11-17 | |
-| 75 | `sessionRestarted` | A new session started. | একটি নতুন সেশন শুরু হয়েছে। | 2026-11-17 | |
-| 76 | `sessionsTitle` | Sessions | সেশন | earlier | |
-| 77 | `sessionsMore` | Load more | আরও দেখুন | earlier | |
-| 78 | `sessionsAll` | All | সব | earlier | |
-| 79 | `sessionsOpen` | Open | চলমান | earlier | |
-| 80 | `sessionsEnded` | Ended | সমাপ্ত | earlier | |
-| 81 | `sessionsDates` | Choose dates | তারিখ বেছে নিন | earlier | |
-| 82 | `sessionsLastSevenDays` | Showing the last 7 days | গত ৭ দিনের তথ্য দেখানো হচ্ছে | earlier | |
-| 83 | `sessionsEmpty` | No sessions found. | কোনো সেশন পাওয়া যায়নি। | earlier | |
-| 84 | `historyChecksView` | Checks | যাচাই | 2026-11-17 | |
-| 85 | `sessionsStarted` | Started | শুরু | 2026-11-17 | |
-| 86 | `sessionsLastScan` | Last scan | শেষ স্ক্যান | 2026-11-17 | |
-| 87 | `sessionChecksTitle` | Session checks | সেশনের যাচাই | 2026-11-17 | |
-| 88 | `rateLimitedUnknown` | Too many attempts. Try again later. | অতিরিক্ত চেষ্টা হয়েছে। পরে আবার চেষ্টা করুন। | earlier | |
-| 89 | `sessionRowsFailed` | Couldn't load this session's scans. | এই সেশনের স্ক্যানগুলো লোড করা যায়নি। | 2026-11-17 | |
-| 90 | `reportPhotoSame` | That photo is already on the report. | এই ছবিটি রিপোর্টে আগেই আছে। | 2026-11-17 | |
-| 91 | `reportUnreadable` | The report was sent, but its answer could not be read. It may have been filed: check My reports before filing it again. | রিপোর্টটি পাঠানো হয়েছে, কিন্তু উত্তরটি পড়া যায়নি। এটি হয়তো জমা হয়েছে: আবার জমা দেওয়ার আগে আমার রিপোর্ট দেখুন। | 2026-11-17 | |
-| 92 | `reportCheckGone` | The check was not found. Remove it and try again. | চেকটি পাওয়া যায়নি। এটি সরিয়ে আবার চেষ্টা করুন। | 2026-11-17 | |
-| 93 | `reportRetailUserGone` | This retail user can no longer be named. Choose another, or file without one. | এই খুচরা ব্যবহারকারীর নাম আর দেওয়া যাবে না। অন্য একজন বেছে নিন, অথবা ছাড়াই জমা দিন। | 2026-11-17 | |
-| 94 | `sessionResumedCounts` | Resumed session. The counts show after the next scan. | সেশন আবার চালু হয়েছে। পরের স্ক্যানের পর গণনা দেখা যাবে। | 2026-11-17 | |
-| 95 | `sessionChecking` | Checking… | যাচাই হচ্ছে… | 2026-11-17 | |
-| 96 | `sessionCheckingMore` | Checking… {count} more | যাচাই হচ্ছে… আরও {count}টি | 2026-11-17 | |
-| 97 | `sessionNotChecked` | {count} more scans were not checked. Scan them again. | আরও {count}টি স্ক্যান যাচাই হয়নি। আবার স্ক্যান করুন। | 2026-11-17 | |
-| 98 | `typeSerialLabel` | Or type the serial | অথবা সিরিয়াল লিখুন | 2026-11-17 | |
-| 99 | `scanNotReady` | Scanning waits for the code formats. | কোডের ফরম্যাট লোড হলে স্ক্যান শুরু হবে। | 2026-11-17 | |
-| 100 | `copyrightNotice` | © {year} Ziska Pharmaceuticals Ltd. All rights reserved. | © {year} Ziska Pharmaceuticals Ltd. সর্বস্বত্ব সংরক্ষিত। | 2026-11-17 | |
-| 101 | `appVersionShort` | Version {version} ({build}) | সংস্করণ {version} ({build}) | 2026-11-17 | |
-| 102 | `offlineBanner` | No internet connection. Checks need a connection. | ইন্টারনেট সংযোগ নেই। যাচাই করতে সংযোগ প্রয়োজন। | earlier | |
+| 21 | `historyNoChecksYet` | Your checks appear here after your first check. | প্রথম যাচাইয়ের পর আপনার যাচাইগুলো এখানে দেখা যাবে। | 2026-11-17 | |
+| 22 | `reportChooseCheck` | Link one of your checks (optional) | আপনার একটি যাচাই যুক্ত করুন (ঐচ্ছিক) | 2026-11-17 | |
+| 23 | `pickCheck` | Choose a check | একটি যাচাই বেছে নিন | 2026-11-17 | |
+| 24 | `reportPhotoConflict` | No more photos: the report has 3, or its hour is over. | আর ছবি নয়: রিপোর্টে ৩টি আছে, অথবা এক ঘণ্টা পেরিয়ে গেছে। | 2026-11-17 | |
+| 25 | `reportLeaveTitle` | Photos not sent | ছবি পাঠানো হয়নি | 2026-11-17 | |
+| 26 | `reportLeaveBody` | Some photos are still sending or can be sent again. If you leave, they are not sent. | কিছু ছবি এখনো পাঠানো হচ্ছে বা আবার পাঠানো যায়। চলে গেলে সেগুলো পাঠানো হবে না। | 2026-11-17 | |
+| 27 | `reportStay` | Stay | থাকুন | 2026-11-17 | |
+| 28 | `reportLeave` | Leave | চলে যান | 2026-11-17 | |
+| 29 | `reportCheckMyReports` | Check My reports | আমার রিপোর্ট দেখুন | 2026-11-17 | |
+| 30 | `myReportsEmptyBody` | Reports you file appear here. Use New report to file one. | আপনার পাঠানো রিপোর্ট এখানে দেখা যাবে। পাঠাতে নতুন রিপোর্ট ব্যবহার করুন। | 2026-11-17 | |
+| 31 | `backToList` | Back to the list | তালিকায় ফিরুন | 2026-11-17 | |
+| 32 | `accessPending` | Thanks for signing up. Your request was sent. You will get an email when it is answered. | সাইন আপের জন্য ধন্যবাদ। আপনার আবেদন পাঠানো হয়েছে। উত্তর দেওয়া হলে আপনি একটি ইমেইল পাবেন। | 2026-11-19 | |
+| 33 | `accessWrongCode` | The code is wrong or expired. Request a new code if needed. | কোডটি ভুল বা মেয়াদ শেষ। প্রয়োজনে নতুন কোড নিন। | earlier | |
+| 34 | `accessTryLater` | Try again later. Get a new code before you sign up again. | পরে আবার চেষ্টা করুন। আবার সাইন আপের আগে নতুন কোড নিন। | earlier | |
+| 35 | `accessRoleUnavailable` | This role is no longer available. Choose another role. | এই ভূমিকা এখন আর পাওয়া যাচ্ছে না। অন্য একটি বেছে নিন। | earlier | |
+| 36 | `accessNoRoles` | Ask the office for an account. | অ্যাকাউন্টের জন্য অফিসে যোগাযোগ করুন। | earlier | |
+| 37 | `accessContactOffice` | Contact the office | অফিসে যোগাযোগ করুন। | earlier | |
+| 38 | `accessName` | Name | নাম | earlier | |
+| 39 | `accessRole` | Role | ভূমিকা | earlier | |
+| 40 | `accessRoleHint` | Choose a role | একটি ভূমিকা বেছে নিন | 2026-11-17 | |
+| 41 | `accessPassword` | Choose a password | পাসওয়ার্ড বেছে নিন | earlier | |
+| 42 | `accessShowPassword` | Show password | পাসওয়ার্ড দেখুন | earlier | |
+| 43 | `accessHidePassword` | Hide password | পাসওয়ার্ড লুকান | earlier | |
+| 44 | `accessEmail` | Email | ইমেইল | earlier | |
+| 45 | `accessCode` | Code from the email | ইমেইলের কোড | 2026-11-17 | |
+| 46 | `accessResend` | Send a new code | নতুন কোড পাঠান | earlier | |
+| 47 | `accessSendCode` | Send code | কোড পাঠান | earlier | |
+| 48 | `accessCodeSent` | A code was sent to the address. | ঠিকানায় একটি কোড পাঠানো হয়েছে। | earlier | |
+| 49 | `accessSubmit` | Sign up | সাইন আপ | earlier | |
+| 50 | `scannerModeTitle` | Scanner mode | স্ক্যানার মোড | earlier | |
+| 51 | `serialStackTitle` | Serial stack | সিরিয়ালের তালিকা | earlier | |
+| 52 | `serialStackHint` | Type or paste up to 50 serials, separated by spaces, commas, or new lines. Repeated serials are checked once. | সর্বোচ্চ ৫০টি সিরিয়াল লিখুন বা পেস্ট করুন। স্পেস, কমা বা নতুন লাইন দিয়ে আলাদা করুন। একই সিরিয়াল একবারই যাচাই হবে। | earlier | |
+| 53 | `serialStackLimit` | Enter 1 to 50 different serials. Submit another stack for additional items. | ১ থেকে ৫০টি ভিন্ন সিরিয়াল দিন। আরও পণ্যের জন্য নতুন তালিকা পাঠান। | earlier | |
+| 54 | `serialStackUncertain` | The answer was lost. These checks may already be recorded. Retrying may record them again. | উত্তর পাওয়া যায়নি। যাচাইগুলো ইতিমধ্যে সংরক্ষিত হতে পারে। আবার পাঠালে পুনরায় সংরক্ষিত হতে পারে। | earlier | |
+| 55 | `serialStackNotSent` | No connection. Nothing was sent; send the stack again when you are online. | সংযোগ নেই। কিছুই পাঠানো হয়নি; অনলাইনে এলে তালিকাটি আবার পাঠান। | 2026-11-17 | |
+| 56 | `serialStackBadSerial` | Serial {position} ({value}) is not a serial: digits only, up to {digits} digits. | {position} নম্বর ({value}) সিরিয়াল নয়: শুধু সংখ্যা, সর্বোচ্চ {digits} অঙ্ক। | 2026-11-17 | |
+| 57 | `serialStackCount` | {count} of 50 serials | ৫০টির মধ্যে {count}টি সিরিয়াল | 2026-11-17 | |
+| 58 | `serialStackCountRepeats` | {count} of 50 serials · {repeats} repeated, sent once | ৫০টির মধ্যে {count}টি সিরিয়াল · {repeats}টি পুনরাবৃত্ত, একবার পাঠানো হবে | 2026-11-17 | |
+| 59 | `serialStackRecorded` | These checks were recorded, but their answer could not be shown. See them in History → Sessions. Do not send the same stack again. | যাচাইগুলো রেকর্ড হয়েছে, কিন্তু উত্তর দেখানো যায়নি। ইতিহাস → সেশনে দেখুন। একই তালিকা আবার পাঠাবেন না। | 2026-11-17 | |
+| 60 | `serialStackRetry` | Send the same stack again | একই তালিকা আবার পাঠান | earlier | |
+| 61 | `serialStackSubmit` | Check serials | সিরিয়াল যাচাই করুন | earlier | |
+| 62 | `serialStackNew` | Start another stack | নতুন তালিকা শুরু করুন | earlier | |
+| 63 | `serialStackHistory` | View this session's checks | এই সেশনের যাচাই দেখুন | earlier | |
+| 64 | `sessionScanned` | Scanned | যাচাই হয়েছে | earlier | |
+| 65 | `sessionValid` | Valid | সঠিক | earlier | |
+| 66 | `sessionWarning` | Warning | সতর্কতা | earlier | |
+| 67 | `sessionNotFound` | Not found | পাওয়া যায়নি | earlier | |
+| 68 | `sessionUnassigned` | Not in a batch | বরাদ্দ হয়নি | earlier | |
+| 69 | `sessionLeft` | Remaining | অবশিষ্ট | earlier | |
+| 70 | `sessionRepeat` | Already scanned | ইতিমধ্যে স্ক্যান হয়েছে | earlier | |
+| 71 | `sessionScanAgain` | Scan again | আবার স্ক্যান করুন | earlier | |
+| 72 | `sessionNoConnection` | No connection, scan again. | সংযোগ নেই, আবার স্ক্যান করুন। | 2026-11-17 | |
+| 73 | `sessionBusy` | The service is busy. Nothing was recorded; scan again. | সেবাটি ব্যস্ত। কিছুই রেকর্ড হয়নি; আবার স্ক্যান করুন। | 2026-11-17 | |
+| 74 | `sessionRestarted` | A new session started. | একটি নতুন সেশন শুরু হয়েছে। | 2026-11-17 | |
+| 75 | `sessionsTitle` | Sessions | সেশন | earlier | |
+| 76 | `sessionsMore` | Load more | আরও দেখুন | earlier | |
+| 77 | `sessionsAll` | All | সব | earlier | |
+| 78 | `sessionsOpen` | Open | চলমান | earlier | |
+| 79 | `sessionsEnded` | Ended | সমাপ্ত | earlier | |
+| 80 | `sessionsDates` | Choose dates | তারিখ বেছে নিন | earlier | |
+| 81 | `sessionsLastSevenDays` | Showing the last 7 days | গত ৭ দিনের তথ্য দেখানো হচ্ছে | earlier | |
+| 82 | `sessionsEmpty` | No sessions found. | কোনো সেশন পাওয়া যায়নি। | earlier | |
+| 83 | `historyChecksView` | Checks | যাচাই | 2026-11-17 | |
+| 84 | `sessionsStarted` | Started | শুরু | 2026-11-17 | |
+| 85 | `sessionsLastScan` | Last scan | শেষ স্ক্যান | 2026-11-17 | |
+| 86 | `sessionChecksTitle` | Session checks | সেশনের যাচাই | 2026-11-17 | |
+| 87 | `rateLimitedUnknown` | Too many attempts. Try again later. | অতিরিক্ত চেষ্টা হয়েছে। পরে আবার চেষ্টা করুন। | earlier | |
+| 88 | `sessionRowsFailed` | Couldn't load this session's scans. | এই সেশনের স্ক্যানগুলো লোড করা যায়নি। | 2026-11-17 | |
+| 89 | `reportPhotoSame` | That photo is already on the report. | এই ছবিটি রিপোর্টে আগেই আছে। | 2026-11-17 | |
+| 90 | `reportUnreadable` | The report was sent, but its answer could not be read. It may have been filed: check My reports before filing it again. | রিপোর্টটি পাঠানো হয়েছে, কিন্তু উত্তরটি পড়া যায়নি। এটি হয়তো জমা হয়েছে: আবার জমা দেওয়ার আগে আমার রিপোর্ট দেখুন। | 2026-11-17 | |
+| 91 | `reportCheckGone` | The check was not found. Remove it and try again. | চেকটি পাওয়া যায়নি। এটি সরিয়ে আবার চেষ্টা করুন। | 2026-11-17 | |
+| 92 | `reportRetailUserGone` | This retail user can no longer be named. Choose another, or file without one. | এই খুচরা ব্যবহারকারীর নাম আর দেওয়া যাবে না। অন্য একজন বেছে নিন, অথবা ছাড়াই জমা দিন। | 2026-11-17 | |
+| 93 | `sessionResumedCounts` | Resumed session. The counts show after the next scan. | সেশন আবার চালু হয়েছে। পরের স্ক্যানের পর গণনা দেখা যাবে। | 2026-11-17 | |
+| 94 | `sessionChecking` | Checking… | যাচাই হচ্ছে… | 2026-11-17 | |
+| 95 | `sessionCheckingMore` | Checking… {count} more | যাচাই হচ্ছে… আরও {count}টি | 2026-11-17 | |
+| 96 | `sessionNotChecked` | {count} more scans were not checked. Scan them again. | আরও {count}টি স্ক্যান যাচাই হয়নি। আবার স্ক্যান করুন। | 2026-11-17 | |
+| 97 | `typeSerialLabel` | Or type the serial | অথবা সিরিয়াল লিখুন | 2026-11-17 | |
+| 98 | `scanNotReady` | Scanning waits for the code formats. | কোডের ফরম্যাট লোড হলে স্ক্যান শুরু হবে। | 2026-11-17 | |
+| 99 | `copyrightNotice` | © {year} Ziska Pharmaceuticals Ltd. All rights reserved. | © {year} Ziska Pharmaceuticals Ltd. সর্বস্বত্ব সংরক্ষিত। | 2026-11-17 | |
+| 100 | `appVersionShort` | Version {version} ({build}) | সংস্করণ {version} ({build}) | 2026-11-17 | |
+| 101 | `offlineBanner` | No internet connection. Checks need a connection. | ইন্টারনেট সংযোগ নেই। যাচাই করতে সংযোগ প্রয়োজন। | earlier | |
 
 ## After the review
 

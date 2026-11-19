@@ -68,6 +68,7 @@
 | TC-ERR-047 | A proxy page decided by its status | WORST | P2 | AUTO | ✅ `core/network/error_mapper_test` | An answer with no envelope | 400, 413, 415, 403, 404, 502 | A defect (logged) for 400/413/415; a general error for 403 and 502; "Not available." for 404 | Guide §1 |
 | TC-ERR-048 | `Retry-After` as seconds or a date | EDGE | P3 | AUTO | ✅ `core/network/error_mapper_test` | — | `30`, `-1`, `soon`, a date 45 s ahead, a past date | 30 s; none; none; 45 s; none (a manual retry) | Guide §1 |
 | TC-ERR-049 | A refused certificate | NET | P2 | AUTO | ✅ `core/network/error_mapper_test` | A TLS certificate error | Any request | Counted as not sent: safe to send again | §15.4 |
+| TC-ERR-050 | An unknown code on a busy or wait answer | NET | P2 | AUTO | ✅ `flow/errors_edge_flow_test` | Fake backend: `503 storage_slow` and `429 daily_quota` with messages; `503 service_unavailable` | Look up | The server's message for the unknown codes, the app's "The service is busy…" for the known one; the reference on each; no result | final.md §16 |
 
 ## Request Matrix
 

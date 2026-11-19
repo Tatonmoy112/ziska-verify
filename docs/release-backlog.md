@@ -11,7 +11,7 @@ Updated 2026-11-19. These items are intentionally separate from the implemented 
 | Password postponement (Not now) | The backend team ships `POST me/password/later` and `password_change_skippable`/`password_change_pending` in the guide, Postman and the test server; then `DEMO_PASSWORD_LATER` is removed and TC-AUTH-095 runs on staging |
 | Device/release checks | Camera permissions/torch/lifecycle, process-kill recovery, OS back, gallery metadata, release log inspection, larger sessions |
 | Store release signing | The client decides who owns the upload key; then the keystore and `android/key.properties` (git-ignored; steps in `docs/run.md`, "Release signing"). The build already reads that file when it exists (2026-11-19); until then the debug key, fine for testing only |
-| Bangla review | The client's Bangla reader reviews all 326 texts in `docs/bangla-drafts-for-review.md` (TC-PROF-034) and confirms or corrects each; the client also confirms open questions 18 (English at the first start) and 19 (Bangla digits read as 0–9) |
+| Bangla review | The client's Bangla reader reviews all 327 texts in `docs/bangla-drafts-for-review.md` (TC-PROF-034) and confirms or corrects each; the client also confirms open questions 18 (English at the first start) and 19 (Bangla digits read as 0–9) |
 
 Done since 2026-11-16 (kept here for the record):
 

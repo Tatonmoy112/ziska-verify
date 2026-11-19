@@ -68,6 +68,7 @@
 | TC-REP-057 | The same photo twice | EDGE | P2 | AUTO | ✅ `flow/reports_edge_flow_test` | Fake backend; both photos answer `n: 1` | Add a photo twice; file | One tile "Photo 1"; "That photo is already on the report."; a place is free again | Guide §6.2 |
 | TC-REP-058 | A 404 on filing names what is gone | NEG | P1 | AUTO | ✅ `features/incidents/report_incident_bloc_test`, `flow/reports_edge_flow_test` (TC-REP-025) | Fake backend; `POST incidents` 404 | File with "Check not found.", "Retail user not found.", no message | The check's text, the retail user's text (and the retail user taken off), or "Not available." | Guide §1, §6.1 |
 | TC-REP-059 | A refused photo shows why and its reference | NEG | P2 | AUTO | ✅ `flow/reports_edge_flow_test` (TC-REP-034, -035) | Fake backend; the photo 409 "The report has 3 photos already.", then 404 | File with a photo | Under the photos the server's message for the 409, "This photo was refused." for the 404, each with "Reference: …" | Guide §1, §6.2 |
+| TC-REP-060 | A photo is never over 2,048 px | EDGE | P2 | AUTO | ✅ `core/services/media/photo_limit_test` | A fake encoder; a 4000 × 3000 photo; one whose size the phone cannot read (HEIC) that comes out 2731 × 2048; one 1600 × 1200; one 800 × 600 | Prepare each photo | 2048 × 1536 in one pass; the HEIC one shrunk again to 2048 × 1536; no second pass when within 2,048; a small photo never enlarged | SRS FR-INC-04 |
 
 ## Spec gaps in this file
 

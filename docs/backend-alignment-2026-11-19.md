@@ -1,5 +1,7 @@
 # The app against the backend plan: what matches, what is left, what differs
 
+> **Update 2026-11-19 (same day): the 4 mismatches and the History difference are fixed** (commits `a7e2ef0`, `f482451`, `1fc6024`, `d9d9ee8` and the History commit after them), at the user's decision that this plan is the one to follow. `docs/protectb-api/` is now copied from `4ec8318` too (`834fda7`). Only **Not now** remains, waiting for the backend (B2).
+
 **Date:** 2026-11-19. **Backend plan audited:** `ProtectB-DOCS-initial` at commit `4ec8318` (2026-11-18 15:42), the latest on `main`. **App:** branch `feature/backend-plan-alignment` at `93ada90`.
 
 **How it was checked:**
@@ -12,8 +14,8 @@
 | | Count | In short |
 |---|---|---|
 | **Match** | about 90 items | Every route, field, status, error code, rate limit and SRS requirement the app uses |
-| **Mismatch, app to fix** | 4 (all small) | A stack answer that cannot be read; two error texts; one wording; one photo size case |
-| **Deliberate differences** | 2 | "Not now" on a forced password change; History rows without the official's name |
+| **Mismatch, app to fix** | 4 (all small): **all fixed** | A stack answer that cannot be read; two error texts; one wording; one photo size case |
+| **Deliberate differences** | 2: **1 fixed, 1 kept** | History rows now follow the SRS; "Not now" stays until the backend ships it |
 | **Left: owned by others** | 13 | 4 with the backend team, 6 with the client, 3 that need a real phone |
 | **Small open questions** | 3 | Points the guide does not settle |
 
@@ -49,31 +51,35 @@ The app's copy of the docs (`docs/protectb-api/`, from `ebff1d9`) differs from t
 | Errors (§1) | The envelope read into one typed error; all 15 codes mapped; "Reference: …" shown; `Retry-After` in seconds or as a date; none → "Try again later"; `app_preparing` | `error_mapper.dart`, `failure_message.dart` |
 | SRS v1.2 | ACC, PRM, LKP, SCN, HIS-01–03 and -05, INC, RTL, REQ, STK, GEN requirements and use cases UC-01–UC-11; NFR security, privacy (no location permission), usability, capacity, reliability; Bangladesh time; English and Bangla; offline (nothing queued) | the screens of each feature |
 
-## Mismatches the app should fix (all small)
+## Mismatches the app should fix (all small): fixed 2026-11-19
 
 **1. A stack answer that cannot be read can be sent again.**
 - **What the plan says:** guide §4.7: "All or nothing: when the answer is not 200, nothing was recorded." So a `200` means the stack *was* recorded. final.md §13.3: a recorded stack "is never sent again".
 - **What the app does:** it treats a `200` as recorded only when the items' number or order is wrong. A `200` with a field of the wrong type becomes a general error, and **Submit** stays on (`serial_stack_cubit.dart:138-142`).
 - **Effect:** if the server ever sends a malformed `200`, one more tap checks every serial twice, and the second answers say "checked before".
 - **Fix:** treat any unreadable `200` from `lookups/serials` as recorded, as the count case already is.
+- **Fixed** (`a7e2ef0`, TC-MIG-056).
 
 **2. Some unknown error codes show the app's text instead of the server's.**
 - **What the plan says:** final.md §16: an `error.code` the app does not know shows the server's message.
 - **What the app does:** on a `503` (and a `429`) any code becomes "The service is busy. Try again shortly." or the countdown (`error_mapper.dart:185-191`).
 - **Effect:** a new `503` code from the backend would lose its own explanation. The reference still shows.
 - **Fix:** use the server's message when a `503` or `429` carries a code the app does not know.
+- **Fixed** (`f482451`, TC-ERR-050).
 
 **3. The Sign up ending promises the wrong email.**
 - **What the plan says:** guide §3.9: "Your request was sent. You will get an email when it is answered."
 - **What the app does:** "…email you when your account is ready" (`accessPending`).
 - **Effect:** someone whose request is **refused** also gets an email, which the app's text does not lead them to expect.
 - **Fix:** follow the guide's words (English and Bangla).
+- **Fixed** (`1fc6024`): the ending and the Sign up subtitle ("…emails you its answer").
 
 **4. One kind of photo can stay larger than 2,048 px.**
 - **What the plan says:** SRS: "shrink each photo to 2,048 pixels on its longer side".
 - **What the app does:** when the phone cannot read a photo's size (some HEIC photos), it asks the compressor for 2,048 × 2,048. Android keeps both sides at least that, so a 4:3 photo comes out about 2,731 px long (`photo_service.dart:116-120`).
 - **Effect:** none for the server (the 1 MB limit still holds), but it misses the SRS's size.
 - **Fix:** read the size from the compressed result and shrink again if it is still over 2,048 px.
+- **Fixed** (`d9d9ee8`, TC-REP-060).
 
 ## Deliberate differences (decided, documented)
 
@@ -83,10 +89,10 @@ The app's copy of the docs (`docs/protectb-api/`, from `ebff1d9`) differs from t
 - **Today:** the app shows **Not now** only when the server sends `password_change_skippable`. Staging and live builds refuse the mock's demo switch, so on a real server the app follows the SRS until the backend ships the route.
 - **To close it:** the backend ships the route and updates the SRS, or the client withdraws the request.
 
-**History rows do not name the official.**
+**History rows do not name the official.** **Fixed 2026-11-19: the rows now follow the SRS.**
 - **The SRS:** FR-HIS-04: each row shows "… the official, and the session if any".
 - **The decision:** History shows only the official's own checks, so the name is left out, and a session shows as "In a session" (final.md N2, user decision 2026-11-17; backend D61 removed everyone's history).
-- **To close it:** the backend notes the change in the SRS.
+- **Closed:** each row shows "Checked by <the official>" and, for a session's check, "Session 7F3C2A10" (the ID's first 8 characters), as FR-HIS-04 lists (TC-UI-067).
 
 ## Left: owned by others
 
