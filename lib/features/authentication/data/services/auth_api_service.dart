@@ -26,6 +26,9 @@ abstract interface class AuthApiService {
     required String newPassword,
   });
 
+  /// `me/password/later`: **Not now** on a forced change.
+  Future<PasswordLaterResponseDto> postponePasswordChange();
+
   Future<void> forgotPassword(String email);
 
   Future<void> resetPassword({
@@ -95,6 +98,12 @@ class DioAuthApiService implements AuthApiService {
       ),
     ),
   );
+
+  @override
+  Future<PasswordLaterResponseDto> postponePasswordChange() async =>
+      PasswordLaterResponseDto.fromJson(
+        _map(await _api.post('me/password/later')),
+      );
 
   @override
   Future<void> forgotPassword(String email) => _api.post(

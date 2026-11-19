@@ -14,8 +14,8 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$LookupState {
 
- InputFormats? get formats; bool get formatsLoading; Failure? get formatsFailure; LookupStatus get status; LookupResult? get result;/// What the [result] answers: the way, the value as sent (a hidden code
-/// masked), and when (final.md Section 13.1.4).
+ InputFormats? get formats; bool get formatsLoading; Failure? get formatsFailure;/// After a `429` on the formats: Retry waits until this time.
+ DateTime? get formatsRetryAt; LookupStatus get status; LookupResult? get result;/// The serial/QR value and response time (final.md Section 13.1).
  CheckedInput? get checked; Failure? get failure; RefusedInput? get refused;/// After a `429`: when the next lookup may be sent (`Retry-After`).
  DateTime? get retryAt;
 /// Create a copy of LookupState
@@ -28,16 +28,16 @@ $LookupStateCopyWith<LookupState> get copyWith => _$LookupStateCopyWithImpl<Look
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is LookupState&&(identical(other.formats, formats) || other.formats == formats)&&(identical(other.formatsLoading, formatsLoading) || other.formatsLoading == formatsLoading)&&(identical(other.formatsFailure, formatsFailure) || other.formatsFailure == formatsFailure)&&(identical(other.status, status) || other.status == status)&&(identical(other.result, result) || other.result == result)&&(identical(other.checked, checked) || other.checked == checked)&&(identical(other.failure, failure) || other.failure == failure)&&(identical(other.refused, refused) || other.refused == refused)&&(identical(other.retryAt, retryAt) || other.retryAt == retryAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LookupState&&(identical(other.formats, formats) || other.formats == formats)&&(identical(other.formatsLoading, formatsLoading) || other.formatsLoading == formatsLoading)&&(identical(other.formatsFailure, formatsFailure) || other.formatsFailure == formatsFailure)&&(identical(other.formatsRetryAt, formatsRetryAt) || other.formatsRetryAt == formatsRetryAt)&&(identical(other.status, status) || other.status == status)&&(identical(other.result, result) || other.result == result)&&(identical(other.checked, checked) || other.checked == checked)&&(identical(other.failure, failure) || other.failure == failure)&&(identical(other.refused, refused) || other.refused == refused)&&(identical(other.retryAt, retryAt) || other.retryAt == retryAt));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,formats,formatsLoading,formatsFailure,status,result,checked,failure,refused,retryAt);
+int get hashCode => Object.hash(runtimeType,formats,formatsLoading,formatsFailure,formatsRetryAt,status,result,checked,failure,refused,retryAt);
 
 @override
 String toString() {
-  return 'LookupState(formats: $formats, formatsLoading: $formatsLoading, formatsFailure: $formatsFailure, status: $status, result: $result, checked: $checked, failure: $failure, refused: $refused, retryAt: $retryAt)';
+  return 'LookupState(formats: $formats, formatsLoading: $formatsLoading, formatsFailure: $formatsFailure, formatsRetryAt: $formatsRetryAt, status: $status, result: $result, checked: $checked, failure: $failure, refused: $refused, retryAt: $retryAt)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $LookupStateCopyWith<$Res>  {
   factory $LookupStateCopyWith(LookupState value, $Res Function(LookupState) _then) = _$LookupStateCopyWithImpl;
 @useResult
 $Res call({
- InputFormats? formats, bool formatsLoading, Failure? formatsFailure, LookupStatus status, LookupResult? result, CheckedInput? checked, Failure? failure, RefusedInput? refused, DateTime? retryAt
+ InputFormats? formats, bool formatsLoading, Failure? formatsFailure, DateTime? formatsRetryAt, LookupStatus status, LookupResult? result, CheckedInput? checked, Failure? failure, RefusedInput? refused, DateTime? retryAt
 });
 
 
@@ -65,12 +65,13 @@ class _$LookupStateCopyWithImpl<$Res>
 
 /// Create a copy of LookupState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? formats = freezed,Object? formatsLoading = null,Object? formatsFailure = freezed,Object? status = null,Object? result = freezed,Object? checked = freezed,Object? failure = freezed,Object? refused = freezed,Object? retryAt = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? formats = freezed,Object? formatsLoading = null,Object? formatsFailure = freezed,Object? formatsRetryAt = freezed,Object? status = null,Object? result = freezed,Object? checked = freezed,Object? failure = freezed,Object? refused = freezed,Object? retryAt = freezed,}) {
   return _then(_self.copyWith(
 formats: freezed == formats ? _self.formats : formats // ignore: cast_nullable_to_non_nullable
 as InputFormats?,formatsLoading: null == formatsLoading ? _self.formatsLoading : formatsLoading // ignore: cast_nullable_to_non_nullable
 as bool,formatsFailure: freezed == formatsFailure ? _self.formatsFailure : formatsFailure // ignore: cast_nullable_to_non_nullable
-as Failure?,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
+as Failure?,formatsRetryAt: freezed == formatsRetryAt ? _self.formatsRetryAt : formatsRetryAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as LookupStatus,result: freezed == result ? _self.result : result // ignore: cast_nullable_to_non_nullable
 as LookupResult?,checked: freezed == checked ? _self.checked : checked // ignore: cast_nullable_to_non_nullable
 as CheckedInput?,failure: freezed == failure ? _self.failure : failure // ignore: cast_nullable_to_non_nullable
@@ -161,10 +162,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( InputFormats? formats,  bool formatsLoading,  Failure? formatsFailure,  LookupStatus status,  LookupResult? result,  CheckedInput? checked,  Failure? failure,  RefusedInput? refused,  DateTime? retryAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( InputFormats? formats,  bool formatsLoading,  Failure? formatsFailure,  DateTime? formatsRetryAt,  LookupStatus status,  LookupResult? result,  CheckedInput? checked,  Failure? failure,  RefusedInput? refused,  DateTime? retryAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _LookupState() when $default != null:
-return $default(_that.formats,_that.formatsLoading,_that.formatsFailure,_that.status,_that.result,_that.checked,_that.failure,_that.refused,_that.retryAt);case _:
+return $default(_that.formats,_that.formatsLoading,_that.formatsFailure,_that.formatsRetryAt,_that.status,_that.result,_that.checked,_that.failure,_that.refused,_that.retryAt);case _:
   return orElse();
 
 }
@@ -182,10 +183,10 @@ return $default(_that.formats,_that.formatsLoading,_that.formatsFailure,_that.st
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( InputFormats? formats,  bool formatsLoading,  Failure? formatsFailure,  LookupStatus status,  LookupResult? result,  CheckedInput? checked,  Failure? failure,  RefusedInput? refused,  DateTime? retryAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( InputFormats? formats,  bool formatsLoading,  Failure? formatsFailure,  DateTime? formatsRetryAt,  LookupStatus status,  LookupResult? result,  CheckedInput? checked,  Failure? failure,  RefusedInput? refused,  DateTime? retryAt)  $default,) {final _that = this;
 switch (_that) {
 case _LookupState():
-return $default(_that.formats,_that.formatsLoading,_that.formatsFailure,_that.status,_that.result,_that.checked,_that.failure,_that.refused,_that.retryAt);case _:
+return $default(_that.formats,_that.formatsLoading,_that.formatsFailure,_that.formatsRetryAt,_that.status,_that.result,_that.checked,_that.failure,_that.refused,_that.retryAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -202,10 +203,10 @@ return $default(_that.formats,_that.formatsLoading,_that.formatsFailure,_that.st
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( InputFormats? formats,  bool formatsLoading,  Failure? formatsFailure,  LookupStatus status,  LookupResult? result,  CheckedInput? checked,  Failure? failure,  RefusedInput? refused,  DateTime? retryAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( InputFormats? formats,  bool formatsLoading,  Failure? formatsFailure,  DateTime? formatsRetryAt,  LookupStatus status,  LookupResult? result,  CheckedInput? checked,  Failure? failure,  RefusedInput? refused,  DateTime? retryAt)?  $default,) {final _that = this;
 switch (_that) {
 case _LookupState() when $default != null:
-return $default(_that.formats,_that.formatsLoading,_that.formatsFailure,_that.status,_that.result,_that.checked,_that.failure,_that.refused,_that.retryAt);case _:
+return $default(_that.formats,_that.formatsLoading,_that.formatsFailure,_that.formatsRetryAt,_that.status,_that.result,_that.checked,_that.failure,_that.refused,_that.retryAt);case _:
   return null;
 
 }
@@ -217,16 +218,17 @@ return $default(_that.formats,_that.formatsLoading,_that.formatsFailure,_that.st
 
 
 class _LookupState extends LookupState {
-  const _LookupState({this.formats, this.formatsLoading = false, this.formatsFailure, this.status = LookupStatus.idle, this.result, this.checked, this.failure, this.refused, this.retryAt}): super._();
+  const _LookupState({this.formats, this.formatsLoading = false, this.formatsFailure, this.formatsRetryAt, this.status = LookupStatus.idle, this.result, this.checked, this.failure, this.refused, this.retryAt}): super._();
   
 
 @override final  InputFormats? formats;
 @override@JsonKey() final  bool formatsLoading;
 @override final  Failure? formatsFailure;
+/// After a `429` on the formats: Retry waits until this time.
+@override final  DateTime? formatsRetryAt;
 @override@JsonKey() final  LookupStatus status;
 @override final  LookupResult? result;
-/// What the [result] answers: the way, the value as sent (a hidden code
-/// masked), and when (final.md Section 13.1.4).
+/// The serial/QR value and response time (final.md Section 13.1).
 @override final  CheckedInput? checked;
 @override final  Failure? failure;
 @override final  RefusedInput? refused;
@@ -243,16 +245,16 @@ _$LookupStateCopyWith<_LookupState> get copyWith => __$LookupStateCopyWithImpl<_
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LookupState&&(identical(other.formats, formats) || other.formats == formats)&&(identical(other.formatsLoading, formatsLoading) || other.formatsLoading == formatsLoading)&&(identical(other.formatsFailure, formatsFailure) || other.formatsFailure == formatsFailure)&&(identical(other.status, status) || other.status == status)&&(identical(other.result, result) || other.result == result)&&(identical(other.checked, checked) || other.checked == checked)&&(identical(other.failure, failure) || other.failure == failure)&&(identical(other.refused, refused) || other.refused == refused)&&(identical(other.retryAt, retryAt) || other.retryAt == retryAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LookupState&&(identical(other.formats, formats) || other.formats == formats)&&(identical(other.formatsLoading, formatsLoading) || other.formatsLoading == formatsLoading)&&(identical(other.formatsFailure, formatsFailure) || other.formatsFailure == formatsFailure)&&(identical(other.formatsRetryAt, formatsRetryAt) || other.formatsRetryAt == formatsRetryAt)&&(identical(other.status, status) || other.status == status)&&(identical(other.result, result) || other.result == result)&&(identical(other.checked, checked) || other.checked == checked)&&(identical(other.failure, failure) || other.failure == failure)&&(identical(other.refused, refused) || other.refused == refused)&&(identical(other.retryAt, retryAt) || other.retryAt == retryAt));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,formats,formatsLoading,formatsFailure,status,result,checked,failure,refused,retryAt);
+int get hashCode => Object.hash(runtimeType,formats,formatsLoading,formatsFailure,formatsRetryAt,status,result,checked,failure,refused,retryAt);
 
 @override
 String toString() {
-  return 'LookupState(formats: $formats, formatsLoading: $formatsLoading, formatsFailure: $formatsFailure, status: $status, result: $result, checked: $checked, failure: $failure, refused: $refused, retryAt: $retryAt)';
+  return 'LookupState(formats: $formats, formatsLoading: $formatsLoading, formatsFailure: $formatsFailure, formatsRetryAt: $formatsRetryAt, status: $status, result: $result, checked: $checked, failure: $failure, refused: $refused, retryAt: $retryAt)';
 }
 
 
@@ -263,7 +265,7 @@ abstract mixin class _$LookupStateCopyWith<$Res> implements $LookupStateCopyWith
   factory _$LookupStateCopyWith(_LookupState value, $Res Function(_LookupState) _then) = __$LookupStateCopyWithImpl;
 @override @useResult
 $Res call({
- InputFormats? formats, bool formatsLoading, Failure? formatsFailure, LookupStatus status, LookupResult? result, CheckedInput? checked, Failure? failure, RefusedInput? refused, DateTime? retryAt
+ InputFormats? formats, bool formatsLoading, Failure? formatsFailure, DateTime? formatsRetryAt, LookupStatus status, LookupResult? result, CheckedInput? checked, Failure? failure, RefusedInput? refused, DateTime? retryAt
 });
 
 
@@ -280,12 +282,13 @@ class __$LookupStateCopyWithImpl<$Res>
 
 /// Create a copy of LookupState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? formats = freezed,Object? formatsLoading = null,Object? formatsFailure = freezed,Object? status = null,Object? result = freezed,Object? checked = freezed,Object? failure = freezed,Object? refused = freezed,Object? retryAt = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? formats = freezed,Object? formatsLoading = null,Object? formatsFailure = freezed,Object? formatsRetryAt = freezed,Object? status = null,Object? result = freezed,Object? checked = freezed,Object? failure = freezed,Object? refused = freezed,Object? retryAt = freezed,}) {
   return _then(_LookupState(
 formats: freezed == formats ? _self.formats : formats // ignore: cast_nullable_to_non_nullable
 as InputFormats?,formatsLoading: null == formatsLoading ? _self.formatsLoading : formatsLoading // ignore: cast_nullable_to_non_nullable
 as bool,formatsFailure: freezed == formatsFailure ? _self.formatsFailure : formatsFailure // ignore: cast_nullable_to_non_nullable
-as Failure?,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
+as Failure?,formatsRetryAt: freezed == formatsRetryAt ? _self.formatsRetryAt : formatsRetryAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as LookupStatus,result: freezed == result ? _self.result : result // ignore: cast_nullable_to_non_nullable
 as LookupResult?,checked: freezed == checked ? _self.checked : checked // ignore: cast_nullable_to_non_nullable
 as CheckedInput?,failure: freezed == failure ? _self.failure : failure // ignore: cast_nullable_to_non_nullable

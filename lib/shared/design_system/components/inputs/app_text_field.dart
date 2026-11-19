@@ -29,6 +29,7 @@ class AppTextField extends StatelessWidget {
     this.maxLines = 1,
     this.textCapitalization = TextCapitalization.none,
     this.showCounter = false,
+    this.counter,
     this.focusNode,
     super.key,
   });
@@ -54,11 +55,10 @@ class AppTextField extends StatelessWidget {
   final Key? fieldKey;
 
   /// Lets the screen move the keyboard focus to the field (the scanner's
-  /// "Enter manually" returns to the Verify tab with the field focused).
+  /// "Enter manually" returns to the Check tab with the field focused).
   final FocusNode? focusNode;
 
-  /// A secret the keyboard must not learn or suggest (a hidden code, final.md
-  /// Section 12.1), though it stays visible.
+  /// A secret the keyboard must not learn or suggest.
   final bool secret;
 
   /// A note over several lines (Report incident).
@@ -68,6 +68,10 @@ class AppTextField extends StatelessWidget {
 
   /// Shows "12/1000" under the field when [maxLength] is set.
   final bool showCounter;
+
+  /// A counter of the caller's own (it overrides [showCounter]), for a
+  /// limit that is not counted the way [maxLength] counts.
+  final String? counter;
 
   @override
   Widget build(BuildContext context) {
@@ -105,7 +109,7 @@ class AppTextField extends StatelessWidget {
             prefixIcon: prefixIcon == null ? null : Icon(prefixIcon, size: 20),
             suffixIcon: suffix,
             errorText: errorText,
-            counterText: showCounter ? null : '',
+            counterText: counter ?? (showCounter ? null : ''),
             // A long hint wraps instead of ending with "…".
             hintMaxLines: 3,
           ),

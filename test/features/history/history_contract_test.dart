@@ -79,7 +79,7 @@ void main() {
           from: DateTime(2026, 10, 2),
           to: DateTime(2026, 10, 28),
           search: '1000001',
-          scope: CheckScope.all,
+          sessionId: 'session-1',
         ),
         const PageRequest(cursor: 'x'),
       );
@@ -91,7 +91,7 @@ void main() {
         'from': '2026-10-02',
         'to': '2026-10-28',
         'search': '1000001',
-        'scope': 'all',
+        'session_id': 'session-1',
       });
     });
   });
@@ -126,7 +126,7 @@ void main() {
       expect(sent(const CheckQuery()), {'limit': 50});
       // The default spelled out: own scope is never sent.
       // ignore: avoid_redundant_argument_values
-      expect(sent(const CheckQuery(scope: CheckScope.own)), {'limit': 50});
+      expect(sent(const CheckQuery(sessionId: null)), {'limit': 50});
     });
 
     test('TC-HIST-020 every result filter in the API form', () {

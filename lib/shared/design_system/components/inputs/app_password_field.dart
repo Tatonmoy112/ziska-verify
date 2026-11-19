@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:ziska_verify/shared/design_system/components/inputs/app_text_field.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_typography.dart';
@@ -19,6 +20,7 @@ class AppPasswordField extends StatefulWidget {
     this.onChanged,
     this.onSubmitted,
     this.fieldKey,
+    this.enabled = true,
     super.key,
   });
 
@@ -34,6 +36,10 @@ class AppPasswordField extends StatefulWidget {
   final String? errorText;
   final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onSubmitted;
+
+  /// False while a request runs: the value cannot change under it.
+  final bool enabled;
+
   final Key? fieldKey;
 
   @override
@@ -49,6 +55,7 @@ class _AppPasswordFieldState extends State<AppPasswordField> {
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         AppTextField(
+          enabled: widget.enabled,
           fieldKey: widget.fieldKey,
           label: widget.label,
           controller: widget.controller,
@@ -58,7 +65,9 @@ class _AppPasswordFieldState extends State<AppPasswordField> {
           keyboardType: TextInputType.visiblePassword,
           textInputAction: widget.textInputAction,
           autofillHints: widget.autofillHints,
-          maxLength: 128,
+          // 128 characters as the backend and PasswordPolicy count them
+          // (code points), not as the screen shows them (final.md 6.6).
+          inputFormatters: const [CodePointLimit(128)],
           errorText: widget.errorText,
           onChanged: widget.onChanged,
           onSubmitted: widget.onSubmitted,
@@ -71,6 +80,29 @@ class _AppPasswordFieldState extends State<AppPasswordField> {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// At most [max] characters counted as code points, as the backend counts
+/// a password (app API guide §3.6). A longer edit is cut at a whole
+/// character.
+class CodePointLimit extends TextInputFormatter {
+  const CodePointLimit(this.max);
+
+  final int max;
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final runes = newValue.text.runes;
+    if (runes.length <= max) return newValue;
+    final text = String.fromCharCodes(runes.take(max));
+    return TextEditingValue(
+      text: text,
+      selection: TextSelection.collapsed(offset: text.length),
     );
   }
 }

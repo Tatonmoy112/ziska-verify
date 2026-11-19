@@ -91,7 +91,7 @@ class PaginatedState<T> {
         : PaginationStatus.failureFirst,
     failure: failure,
     retryAt: failure.exception is RateLimitedException
-        ? clock.now().add(failure.retryAfter ?? const Duration(seconds: 60))
+        ? failure.retryAtFrom(clock.now())
         : null,
   );
 }

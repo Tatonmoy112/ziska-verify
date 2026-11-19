@@ -42,25 +42,35 @@ class FakeSessionService implements SessionService {
     required String accessToken,
     required String refreshToken,
     required bool mustChangePassword,
+    bool canSkip = false,
   }) async {
     savedAccess = accessToken;
     savedRefresh = refreshToken;
     emitState(
       mustChangePassword
-          ? const SessionPasswordChangeRequired()
+          ? SessionPasswordChangeRequired(canSkip: canSkip)
           : const SessionAuthenticated(),
     );
   }
 
   @override
-  Future<void> savePasswordChange(String accessToken) async {
+  Future<void> savePasswordChange(
+    String accessToken, {
+    bool mustChangePassword = false,
+  }) async {
     savedAccess = accessToken;
     emitState(const SessionAuthenticated());
   }
 
   @override
-  void requirePasswordChange() =>
-      emitState(const SessionPasswordChangeRequired());
+  Future<void> postponePasswordChange(String accessToken) async {
+    savedAccess = accessToken;
+    emitState(const SessionAuthenticated());
+  }
+
+  @override
+  void requirePasswordChange({bool? canSkip}) =>
+      emitState(SessionPasswordChangeRequired(canSkip: canSkip ?? false));
 
   @override
   Future<RenewalResult> renew() async => const Renewed();

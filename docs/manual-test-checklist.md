@@ -1,6 +1,9 @@
 # Track & Trace — Manual Test Checklist
 
-The 122 test cases of [`docs/test-cases/`](test-cases/README.md) that a person runs (121 marked ✋, and TC-PROF-006, blocked), 9 exploratory charters, and the 52 blocked cases to run once their feature is built. Everything else is automated (`flutter test`). Tick one box per case and write a note for anything that is not a Pass. Report each failure with the bug template in `test-plan.md` §11.2.
+> **2026-11-16 contract migration:** final.md v2.0 and [the migration acceptance cases](test-cases/16-mobile-migration.md) supersede conflicting requirements below. Hidden-code submission, the 500-item bulk endpoint, everyone scope, retail administration and certificates are retired. Old counts/status tables are historical, not current completion evidence. Use [the release backlog](release-backlog.md) for unrelated unfinished work.
+
+
+The 103 test cases of [`docs/test-cases/`](test-cases/README.md) that a person runs (102 marked ✋, and TC-PROF-006, blocked), 9 exploratory charters, and the 31 blocked cases to run once their feature is built. Everything else is automated (`flutter test`). Tick one box per case and write a note for anything that is not a Pass. Report each failure with the bug template in `test-plan.md` §11.2.
 
 | Session | When | Cases |
 |---|---|---|
@@ -133,13 +136,18 @@ The manual part is done when, together with [test-plan §11.3](test-plan.md#113-
    | Q4 | `https://www.google.com` | Refuse it; open no browser |
    | Q5 | `https://www.ziskaverify.com/q/abc` | Refuse it |
 
-5. **The mock always answers the same** (`test-plan.md` §4.1): every lookup is "Genuine product"; bulk needs exactly 3 items.
+5. **The mock answers by the value's last digit** (`docs/postman-mock-setup.md`; the mock must be made from the 2026-11-17 collection):
+   - a typed serial ending in 1 is Genuine, 2 needs attention, 3 not found, 4 not in a batch, anything else Genuine;
+   - in Scanner mode a QR ending in 3 is not found, any other the "first scan" example;
+   - a stack of serials always answers the collection's three-serial example;
+   - the login asks for a code, and any 6 digits are accepted; the code `111111` logs in to a forced password change (to try **Not now**);
+   - photos are numbered 1, 2, 3 per report.
 
 ---
 
 ## Session A — Phone + Mock Build
 
-### A1. Request access (log out first)
+### A1. Sign up (log out first)
 
 #### TC-AUTH-023 · Email the office · P2
 1. Login → **Contact us to request access** → **Email the office**.
@@ -155,33 +163,25 @@ Expected: the dialler opens with `+8800000000000` (the mock's office number). No
 
 - [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
 
-#### TC-AUTH-025 · No mail app · P3
-1. Disable the mail app (Settings → Apps → Gmail → Disable), or use a phone without one.
-2. Tap **Email the office**.
-
-Expected: "No email app found. Write to office@example.com." Re-enable the mail app afterwards.
-
-- [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
-
 ### A2. QR scanning (log in)
 
 #### TC-LOOK-015 · Scan a product QR · P1
-1. Verify tab → **Scan QR code**. Allow the camera.
+1. Open the Check tab: the camera starts at once. Allow the camera.
 2. Point at **Q1**.
 
-Expected: "Verifying…", then the result screen "Genuine product" with reference `MA-2026-000123`.
+Expected: "Checking…", then the result screen "Genuine product" with reference `MA-2026-000123`.
 
 - [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
 
 #### TC-SEC-005 · A QR link is never opened · P1
-1. **Scan QR code** → point at **Q4** (google.com), then at **Q5**.
+1. On the Check tab, point the camera at **Q4** (google.com), then at **Q5**.
 
 Expected: for both, "This QR code is not a product code of this company." No browser opens. The camera keeps scanning.
 
 - [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
 
 #### TC-LOOK-017 · The same QR held in front of the camera · P2
-1. **Scan QR code** → hold **Q1** steadily in view for 5 seconds.
+1. On the Check tab, hold **Q1** steadily in view for 5 seconds.
 
 Expected: exactly one result screen opens (the camera stops while the result is shown); pressing back once returns to the camera, not to a second result.
 
@@ -189,32 +189,23 @@ Expected: exactly one result screen opens (the camera stops while the result is 
 
 #### TC-LOOK-018 · Camera refused · P2
 1. Settings → Apps → Track & Trace Mock → Permissions → Camera → **Don't allow**.
-2. Verify tab → **Scan QR code**.
+2. Open the Check tab (the camera starts by itself).
 
 Expected: "Camera access is off. Allow it in Settings to scan QR codes." with **Open settings**, which opens the app's settings page. Allow the camera again afterwards.
 
 - [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
 
 #### TC-LOOK-019 · Torch · P3
-1. **Scan QR code** → tap the torch button (bottom right) twice.
+1. On the Check tab, tap the torch button (top right of the camera) twice.
 
 Expected: the torch turns on, then off.
-
-- [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
-
-#### TC-BULK-013 · Scan many QR codes · P2
-1. Verify tab → MORE → **Bulk lookup** → **Scan QR codes**.
-2. Scan **Q1**, **Q2**, **Q3**, then **Q1** again.
-3. **Check 3 items**.
-
-Expected: each of the first three shows "Added …" with a short vibration; the fourth shows "This item is already in the list."; the list shows 3 items; the results show a summary and rows 1–3.
 
 - [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
 
 ### A3. Reports and photos
 
 #### TC-REP-012 · Camera and gallery · P1
-1. Verify tab → MORE → **Report incident** → **Add photo** → **Take a photo** → take one.
+1. Check tab → MORE → **Report incident** → **Add photo** → **Take a photo** → take one.
 2. **Add photo** → **Choose from gallery** → choose one.
 
 Expected: two thumbnails. Then type a note → **File report** → "Report 1042 filed." and both photos show "Photo 1" (the mock always answers photo 1).
@@ -253,15 +244,6 @@ Expected: the mail app opens to `help@ziska.example`.
 
 ### A5. Start without a connection
 
-#### TC-SESS-010 · Profile fails at start · P2
-1. Be logged in. Close the app fully (swipe it away).
-2. Turn on **Airplane mode** → open the app.
-3. Turn Airplane mode off → tap **Try again**.
-
-Expected: step 2: the start screen shows "No connection. Check the internet and try again." with **Try again**. Step 3: the Verify tab opens.
-
-- [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
-
 #### TC-UI-010 · Splash on the phone · P2
 The splash shows for a moment when the app opens while logged in (and right after login). To keep it on screen, use the error state of TC-SESS-010 (Airplane mode).
 1. Normal font size: close the app fully, open it, watch the splash.
@@ -270,14 +252,14 @@ The splash shows for a moment when the app opens while logged in (and right afte
 4. Rotate the phone to landscape.
 5. Airplane mode off → scroll if needed → **Try again**.
 
-Expected: in every step the logo, "Track & Trace", and the progress circle or error message are centred on the screen, not on the left; the logo is the same size at every font size and "ZISKA" stays on one line; no yellow-and-black stripes; **Try again** can be reached and opens the Verify tab. Put the font and display size back afterwards.
+Expected: in every step the logo, "Track & Trace", and the progress circle or error message are centred on the screen, not on the left; the logo is the same size at every font size and "ZISKA" stays on one line; no yellow-and-black stripes; **Try again** can be reached and opens the Check tab. Put the font and display size back afterwards.
 
 - [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
 
 ### A6. Devices, accessibility, performance
 
 #### TC-NFR-001 · Small screen · P2
-On a phone with a screen of 5.5″ or less, open: Login, code screen, Verify, a result, Bulk lookup with 3 results, History, Report incident, My reports, Profile.
+On a phone with a screen of 5.5″ or less, open: Login, code screen, Check, a result, Bulk lookup with 3 results, History, Report incident, My reports, Profile.
 
 Expected: no yellow-and-black stripes; nothing cut off; every button reachable by scrolling.
 
@@ -291,9 +273,9 @@ Expected: text wraps; no stripes; buttons still usable.
 - [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
 
 #### TC-NFR-003 · Screen reader · P2
-Settings → Accessibility → **TalkBack** on. Swipe through Login, the Verify tab, and a result.
+Settings → Accessibility → **TalkBack** on. Swipe through Login, the Check tab, and a result.
 
-Expected: every button and field is read with a clear name (for example "Email", "Show password", "Verify product", "Scan QR code"); the result title is read first. Turn TalkBack off afterwards.
+Expected: every button and field is read with a clear name (for example "Email", "Show password", "Check", "Torch"); the result title is read first. Turn TalkBack off afterwards.
 
 - [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
 
@@ -312,9 +294,9 @@ Expected: scrolling stays smooth; the counter shows "30 / 500 items". (Sending s
 - [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
 
 #### TC-NFR-008 · Rotation and resume · P3
-On Verify, a result, Bulk lookup with items, and Report incident with a note: rotate the phone; press Home and come back after 1 minute.
+On Check, a result, Bulk lookup with items, and Report incident with a note: rotate the phone; press Home and come back after 1 minute.
 
-Expected: the screen keeps what was typed; nothing is lost or duplicated. If the phone closed the app in the background, the result screen returns to the Verify tab (by design).
+Expected: the screen keeps what was typed; nothing is lost or duplicated. If the phone closed the app in the background, the result screen returns to the Check tab (by design).
 
 - [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
 
@@ -341,25 +323,18 @@ Expected: Home when the login finished (passes stored), Login otherwise; one log
 
 - [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
 
-#### TC-AUTH-084 · Phone without a dialler · P3
-*Needs:* Tablet without calling.
-
-Request access; **Call the office**.
-
-Expected: Spec gap 7. No crash.
-
-- [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
-
 ### A9. Session (added 2026-11-14)
 
-#### TC-SESS-031 · Phone clock wrong · P2
-*Needs:* Real phone, mock or staging.
+#### TC-SESS-041 · Kill during a renewal; a wrong clock · P3
+*Needs:* Staging; real phone.
 
-Set the phone clock 2 days ahead, then 2 days behind; use the app 30 minutes each.
+1. Leave the app 20 minutes; open **History** and kill the app at once (recent apps, swipe away); open it.
+2. Set the phone clock 2 days ahead; use the app 30 minutes; then 2 days behind; 30 minutes.
 
-Expected: The app works; a renewal happens only when the server answers `token_expired`; no extra Login.
+Expected: step 1: the app opens logged in, or on Login — never stuck. Step 2: everything works; no logout from the clock alone.
 
 - [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
+
 
 #### TC-SESS-032 · Session survives an app update · P2
 *Needs:* Real phone; two builds.
@@ -386,7 +361,7 @@ Expected: The app is not offered or opened for either; the browser handles the w
 #### TC-LOOK-062 · Camera permanently denied · P2
 *Needs:* Real phone.
 
-Deny the camera with "Don't ask again"; **Scan QR code**; **Open settings**; allow; return.
+Deny the camera with "Don't ask again"; open the Check tab; **Open settings**; allow; return.
 
 Expected: "Camera access is off. Allow it in Settings to scan QR codes."; settings open; the camera works after returning.
 
@@ -395,7 +370,7 @@ Expected: "Camera access is off. Allow it in Settings to scan QR codes."; settin
 #### TC-LOOK-063 · Phone without a camera · P3
 *Needs:* Device or emulator without a camera.
 
-**Scan QR code**.
+Open the Check tab.
 
 Expected: "This phone cannot scan QR codes. Type the serial instead.".
 
@@ -424,7 +399,7 @@ Expected: One lookup; one result screen.
 
 Scan a product QR.
 
-Expected: "Unable to verify. Check the connection and try again.".
+Expected: "Unable to check. Check the connection and try again.".
 
 - [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
 
@@ -438,42 +413,6 @@ Expected: The camera starts each time; no leftover lookup.
 - [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
 
 ### A12. Bulk lookup (added 2026-11-14)
-
-#### TC-BULK-021 · Same QR scanned twice · P2
-*Needs:* Real phone.
-
-**Scan QR codes**; scan one QR twice.
-
-Expected: "This item is already in the list."; one row.
-
-- [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
-
-#### TC-BULK-022 · Non-product QR while building · P2
-*Needs:* Real phone.
-
-**Scan QR codes**; scan a website QR.
-
-Expected: "This QR code is not a product code of this company."; not added.
-
-- [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
-
-#### TC-BULK-025 · Back pressed or app closed while sending · P2
-*Needs:* Real phone; slow network.
-
-Send a list of 50; press back (then, another time, close the app).
-
-Expected: Spec gap 10. Never sent twice without the official asking.
-
-- [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
-
-#### TC-BULK-036 · Fast scanning · P3
-*Needs:* Real phone; 50 different product QR codes.
-
-Scan all 50 one after another.
-
-Expected: Each added once with "Added …" and a vibration; no freeze.
-
-- [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
 
 ### A13. Reports and photos (added 2026-11-14)
 
@@ -524,15 +463,6 @@ Expected: Spec gap 11. No crash; the report can still be filed without photos.
 
 ### A14. Retail users (added 2026-11-14)
 
-#### TC-RTL-030 · First password not restored after the system closes the app · P2
-*Needs:* Real phone; "Don't keep activities" on.
-
-Add with the switch off; leave the app; return.
-
-Expected: The password is not shown again.
-
-- [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
-
 ### A15. Errors and network (added 2026-11-14)
 
 #### TC-ERR-030 · Countdown while in the background · P3
@@ -582,15 +512,6 @@ Expected: No item or check data, no queued scans, no cached answers.
 
 - [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
 
-#### TC-SEC-011 · Backup holds no secret · P1
-*Needs:* Real phone; a backup of the app.
-
-Back up the app data; read it.
-
-Expected: No pass and no phone ID in a readable form.
-
-- [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
-
 #### TC-SEC-012 · App switcher and screenshots · P3
 *Needs:* Real phone.
 
@@ -623,7 +544,7 @@ Expected: Everything works; nothing hidden under the status bar or the navigatio
 #### TC-NFR-012 · Split screen · P3
 *Needs:* Real phone.
 
-Put the app in half of a split screen; use Verify, History, Report incident.
+Put the app in half of a split screen; use Check, History, Report incident.
 
 Expected: Everything reachable by scrolling; no overflow.
 
@@ -695,7 +616,7 @@ Expected: The field in use and its button can be seen above the keyboard (by scr
 #### TC-UI-012 · Look matches the design · P3
 *Needs:* Real phone; `figma/`.
 
-Compare Login, Verify, a result, History, Profile with the designs.
+Compare Login, Check, a result, History, Profile with the designs.
 
 Expected: Colours, type, and spacing as designed; where they differ, the behaviour of final.md wins.
 
@@ -734,19 +655,19 @@ Expected: Colours, type sizes, spacing, and icons look like the design; every di
 
 - [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
 
-#### TC-UI-149 · Figma by eye: the Verify tab · P3
+#### TC-UI-149 · Figma by eye: the Check tab · P3
 *Needs:* Real phone, mock build; `figma/Home page.png` on the computer.
 
-Open the Verify tab beside the Figma image.
+Open the Check tab beside the Figma image.
 
 Expected: Colours, type sizes, spacing, and icons look like the design; every difference written down (Figma is a reference: a difference is a note, not a failure).
 
 - [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
 
-#### TC-UI-150 · Figma by eye: Request access · P3
+#### TC-UI-150 · Figma by eye: Sign up · P3
 *Needs:* Real phone, mock build; `figma/Request for id.png` on the computer.
 
-Open Request access beside the Figma image.
+Open Sign up beside the Figma image.
 
 Expected: Colours, type sizes, spacing, and icons look like the design; every difference written down (Figma is a reference: a difference is a note, not a failure).
 
@@ -841,7 +762,7 @@ Expected: Dart class names such as `ReportIncidentBloc` do not appear.
 - [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
 
 #### TC-NFR-006 · Start time · P3
-Release build, logged in; close the app fully; time from tapping the icon until the Verify tab shows. Repeat 3 times.
+Release build, logged in; close the app fully; time from tapping the icon until the Check tab shows. Repeat 3 times.
 
 Expected: under 3 seconds on the main test phone.
 
@@ -925,20 +846,6 @@ Expected: JPEG; the longer side 2048 px or less; 1 MB or less; no EXIF (no locat
 
 - [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
 
-#### TC-RTL-010 · Own password already set · P2
-As a supervisor, "Email a new first password" for a retail user who has already changed their password.
-
-Expected: "… has set their own password. Only your office can change it now."
-
-- [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
-
-#### TC-RTL-011 · Hourly limit · P3
-Add retail users or email first passwords more than 30 times in an hour.
-
-Expected: a wait message with seconds; no crash.
-
-- [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
-
 #### TC-PROF-005 · Voluntary password change · P2
 Profile → Change password → current password, a new one (`abcd1234` style) twice → Save.
 
@@ -954,51 +861,6 @@ Expected: "Your password was changed."; back on Profile; another phone logged in
 Log in with a test login, its email typed in capitals.
 
 Expected: Spec gap 4 (whether the backend matches emails without case).
-
-- [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
-
-#### TC-AUTH-037 · Blocked official · P1
-*Needs:* Staging build, backend test sheet.
-
-Log in with the blocked login, right password.
-
-Expected: "Email or password is incorrect.".
-
-- [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
-
-#### TC-AUTH-038 · Lockout after 5 wrong passwords · P1
-*Needs:* Staging build, backend test sheet.
-
-Wrong password 5 times; then the right password; 15 minutes later the right password again.
-
-Expected: Attempts 1–6: "Email or password is incorrect." (the lock is not revealed); after 15 minutes: logged in.
-
-- [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
-
-#### TC-AUTH-049 · Expired code · P1
-*Needs:* Staging build, backend test sheet.
-
-Log in; wait 6 minutes; enter the emailed code.
-
-Expected: "The code is wrong or has expired. Check the latest email, or log in again for a new code."; still on the code screen.
-
-- [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
-
-#### TC-AUTH-050 · Old code after a resend · P2
-*Needs:* Staging build, backend test sheet.
-
-Log in; **Send the code again**; enter the first code.
-
-Expected: "The code is wrong or has expired. Check the latest email, or log in again for a new code."; the second code works.
-
-- [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
-
-#### TC-AUTH-051 · Sixth try · P2
-*Needs:* Staging build, backend test sheet.
-
-Enter 5 wrong codes, then the right one; then **Back to login** and log in again.
-
-Expected: The 6th try: "The code is wrong or has expired. Check the latest email, or log in again for a new code."; the new login emails a new code that works.
 
 - [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
 
@@ -1056,6 +918,33 @@ Expected: Every answer: "If the address has an account, a code was sent."; the 6
 
 - [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
 
+#### TC-AUTH-114 · The server's login limits · P1
+*Needs:* Staging; the backend test sheet (a blocked login); the mail page.
+
+1. Log in with the blocked login and its right password.
+2. Log in with a wrong password 5 times, then the right one; again 15 minutes later.
+3. Log in; wait 6 minutes; enter the emailed code.
+4. Log in; **Send the code again**; enter the first code, then the second.
+5. Log in; enter 5 wrong codes, then the right one.
+
+Expected: step 1 and the 5 wrong tries: "Email or password is incorrect."; the right password works only after 15 minutes. Step 3 and the first code in step 4: "The code is wrong or has expired…"; the second code logs in. Step 5: the right code is refused after 5 wrong ones; a new login gets a new code.
+
+- [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
+
+#### TC-AUTH-095 · Not now on the test server · P1
+**Blocked: needs `POST me/password/later` on the test server** (`docs/backend-requests/password-change-later.md`).
+*Needs:* Staging; an account with a first password; real phone.
+
+1. Log in with the first password (and the emailed code on a new phone).
+2. On **Set a new password**, tap **Not now**.
+3. Check an item on the Check tab.
+4. Open **Profile**.
+5. Log out, then log in again.
+
+Expected: step 2: the Check tab opens. Step 3: the item is checked. Step 4: the reminder card with **Change password**. Step 5: the choice screen comes back.
+
+- [ ] Pass - [ ] Fail - [x] Blocked — Notes: waiting for the backend route
+
 ### C2. Session (added 2026-11-14)
 
 #### TC-SESS-021 · Back after 20 minutes in the background · P2
@@ -1064,15 +953,6 @@ Expected: Every answer: "If the address has an account, a code was sent."; the 6
 Log in; put the app in the background 20 minutes; return and open History.
 
 Expected: Data loads after a silent renewal; no Login screen.
-
-- [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
-
-#### TC-SESS-022 · App killed during a renewal · P3
-*Needs:* Staging; real phone.
-
-Let the access pass expire; open History and kill the app at once; open it.
-
-Expected: Home (the new passes were stored) or Login (the used refresh pass ended the login); never a crash or an endless loading.
 
 - [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
 
@@ -1127,15 +1007,6 @@ Expected: The picture loads over HTTPS (a skeleton first on 3G), zooms sharp, an
 
 ### C5. Bulk lookup (added 2026-11-14)
 
-#### TC-BULK-035 · 3 000 items a minute · P3
-*Needs:* Staging build, backend test sheet.
-
-Send 500-item lists one after another for a minute.
-
-Expected: `429` with a countdown; after the wait the same list goes through.
-
-- [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
-
 ### C6. History (added 2026-11-14)
 
 #### TC-HIST-041 · Long scroll · P3
@@ -1152,7 +1023,7 @@ Expected: Smooth scrolling; no row twice; memory steady.
 
 1. Open **Profile**; note **Checks**, **Valid**, **Not verified**.
 2. Open **History**; compare with the **All**, **Valid**, **Not found** and **Not in a batch** chips.
-3. Check one item on the Verify tab; open **Profile** again.
+3. Check one item on the Check tab; open **Profile** again.
 4. Pull the Profile down.
 
 Expected: step 2: Checks = All, Valid = Valid, Not verified = Not found + Not in a batch. Step 3: **Checks** is one more. Step 4: the counts are asked for again, nothing jumps.
@@ -1189,33 +1060,6 @@ Expected: "Photos can be added only within an hour of the report.".
 - [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
 
 ### C8. Retail users (added 2026-11-14)
-
-#### TC-RTL-015 · Email in other capitals already used · P3
-*Needs:* Staging build, backend test sheet.
-
-Add `Rahim.Store@Gmail.com` when `rahim.store@gmail.com` exists.
-
-Expected: Spec gap 4.
-
-- [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
-
-#### TC-RTL-031 · A new retail user can be picked at once · P2
-*Needs:* Staging build, backend test sheet.
-
-Add a retail user; Report incident → Choose a retail user; search the name.
-
-Expected: The new retail user is listed.
-
-- [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
-
-#### TC-RTL-036 · The old first password stops working · P2
-*Needs:* Staging build, backend test sheet.
-
-Email a new first password; log in as that retail user with the old one.
-
-Expected: "Email or password is incorrect.".
-
-- [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
 
 ### C9. Devices, accessibility, performance (added 2026-11-14)
 
@@ -1378,32 +1222,6 @@ Time-boxed sessions. Explore freely inside the mission and report every problem 
 ## Blocked: Not Built Yet
 
 These cases wait for a feature in the spec that is not built ([remaining-work-test-plan.md §4](remaining-work-test-plan.md#4-item-2--blocked-features)). When it is built, the AUTO ones are automated and the MOCK and DEVICE ones move into Session A.
-
-### Certificate (21)
-
-| Case | Title | Run on | Spec |
-|---|---|---|---|
-| TC-LOOK-068 | Certificate from a valid result | MOCK | §13.3 |
-| TC-LOOK-069 | Certificate from a warning lists its reasons | AUTO | §13.3 |
-| TC-LOOK-070 | No certificate for not found or not in a batch | AUTO | §13.3 |
-| TC-LOOK-071 | Certificate time with its offset | AUTO | §13.3, §18.3 Time display |
-| TC-LOOK-072 | Certificate file removed after sharing | DEVICE | §13.3 |
-| TC-LOOK-073 | Certificate restored without its result | AUTO | §9.5 Missing extra |
-| TC-LOOK-074 | The official's name on the certificate | AUTO | §13.3 |
-| TC-LOOK-075 | Check time on a phone in another time zone | AUTO | §13.3, §16 |
-| TC-LOOK-076 | Optional fields missing | AUTO | §13.1.4, §13.3 |
-| TC-LOOK-077 | Long names wrap on the page | AUTO | §13.3 |
-| TC-LOOK-078 | Bangla and symbols print | AUTO | §2.2, §13.3 |
-| TC-LOOK-079 | Only the masked code | AUTO | §12.1 Hidden code protection, §13.3 |
-| TC-LOOK-080 | Every reason, and an unknown one | AUTO | §13.1.5, §13.3 |
-| TC-LOOK-081 | Reference printed exactly | AUTO | §13.3 |
-| TC-LOOK-082 | Share cancelled | AUTO + DEVICE | §13.3 |
-| TC-LOOK-083 | The PDF cannot be made | AUTO | §13.3 |
-| TC-LOOK-084 | Certificate needs `item:lookup` | AUTO | §9.3, §9.4 |
-| TC-LOOK-085 | One press, one certificate | AUTO | §8.3 |
-| TC-LOOK-086 | Opens and prints on a phone | DEVICE | §13.3 |
-| TC-LOOK-087 | The client's layout | MOCK | §13.3, §20.3 |
-| TC-LOOK-088 | Certificate language | AUTO | §13.3, §16 |
 
 ### Language switch (20)
 

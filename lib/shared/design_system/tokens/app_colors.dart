@@ -8,7 +8,7 @@ abstract final class AppColors {
   static const primaryDark = Color(0xFF0F1E5A);
   static const onPrimary = Color(0xFFFFFFFF);
 
-  /// White at 10 %: decoration on navy (the Verify header's honeycomb, the
+  /// White at 10 %: decoration on navy (the Check header's honeycomb, the
   /// Scan card's QR corner).
   static const onPrimaryFaint = Color(0x1AFFFFFF);
 
@@ -27,7 +27,7 @@ abstract final class AppColors {
   static const surfaceMuted = Color(0xFFF4F6FB);
   static const border = Color(0xFFE2E8F0);
 
-  // Information panel (Request access "Please include")
+  // Information panel (Sign up "Please include")
   static const infoBackground = Color(0xFFE0F2FE);
   static const infoBorder = Color(0xFFBAE6FD);
 
@@ -60,7 +60,7 @@ abstract final class AppColors {
   /// [scannerBackground], never text.
   static const scanAccent = Color(0xFF4ADE80);
 
-  /// The header gradient (Request access, Home).
+  /// The header gradient (Sign up, Home).
   static const headerGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,

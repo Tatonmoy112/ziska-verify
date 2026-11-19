@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -172,7 +174,10 @@ void main() {
       await app.tap(find.byKey(const Key('reset.submit')));
 
       expect(
-        find.text('Password changed. Log in with your new password.'),
+        find.text(
+          'Password changed. Log in with your new password; every phone needs '
+          'the emailed code at its next login.',
+        ),
         findsOneWidget,
       );
       expect(find.text('Login to Track & Trace'), findsOneWidget);
@@ -181,30 +186,6 @@ void main() {
         'code': '123456',
         'new_password': 'abcd1234',
       });
-    });
-
-    testWidgets('TC-AUTH-022 request access lists the details and emails '
-        'the office', (tester) async {
-      final app = await startApp(tester, loggedIn: false);
-      await app.tapText('Contact us to request access');
-
-      for (final item in [
-        'Full name',
-        'Phone number',
-        'Organization',
-        'Email address',
-        'Job title',
-        'Reason for access',
-      ]) {
-        expect(find.text(item), findsOneWidget, reason: item);
-      }
-      await app.tapText('Email the office');
-
-      final mail = app.launcher.emails.single;
-      expect(mail.to, 'office@example.com');
-      expect(mail.subject, 'Access request');
-      expect(mail.body, contains('Job title: '));
-      expect(app.backend.requests, isEmpty);
     });
   });
 
@@ -238,6 +219,49 @@ void main() {
       expect(app.storage.values[SecureKeys.accessToken], isNull);
       expect(app.storage.values[SecureKeys.refreshToken], isNull);
       expect(app.storage.values[SecureKeys.phoneId], phoneId);
+    });
+
+    // TC-SESS-044 (data-flow audit E18): sent bare, as in the Postman
+    // collection; the button spins until the login has ended.
+    testWidgets('TC-SESS-044 logout is sent with no body type, and spins', (
+      tester,
+    ) async {
+      final answer = Completer<void>();
+      final app = await startApp(
+        tester,
+        overrides: {
+          'POST auth/logout': (_) async {
+            await answer.future;
+            return ok(null);
+          },
+        },
+      );
+      await app.tapText('Profile');
+      await app.tap(find.byKey(const Key('profile.logout')));
+      await tester.tap(
+        find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.text('Log out'),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('profile.logout')),
+          matching: find.byType(CircularProgressIndicator),
+        ),
+        findsOneWidget,
+      );
+      final sent = app.backend.sent('POST', 'auth/logout').single;
+      expect(sent.data, isNull);
+      expect(
+        sent.headers.keys.map((k) => k.toLowerCase()),
+        isNot(contains('content-type')),
+      );
+      answer.complete();
+      await tester.pumpAndSettle();
+      expect(find.text('Login to Track & Trace'), findsOneWidget);
     });
 
     testWidgets('TC-SESS-006 logout can be cancelled', (tester) async {

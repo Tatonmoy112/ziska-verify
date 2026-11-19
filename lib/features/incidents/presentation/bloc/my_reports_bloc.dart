@@ -29,7 +29,9 @@ final class MyReportsRetried extends MyReportsEvent {
 class MyReportsBloc extends Bloc<MyReportsEvent, PaginatedState<Report>> {
   MyReportsBloc(this._getReports) : super(const PaginatedState<Report>()) {
     on<MyReportsStarted>(
-      (e, emit) => _first(emit, keepItems: e.keepItems),
+      // Held while a 429 counts down (guide section 1).
+      (e, emit) =>
+          state.isWaiting ? null : _first(emit, keepItems: e.keepItems),
       transformer: restartable(),
     );
     on<MyReportsNextPageRequested>(

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:ziska_verify/core/services/storage/secure_storage_service.dart';
 
 import '../fakes/roles.dart';
@@ -18,8 +17,11 @@ void main() {
   // The seconds go down while the screen settles.
   const waitText = 'Too many attempts. Try again in';
   const codeWrong =
-      'The code is wrong or has expired. Check the latest email, or log in '
-      'again for a new code.';
+      'The code is wrong or has expired. Check the latest email, or send the '
+      'code again.';
+  // The reset screen's own text (backend D64, guide §3.7).
+  const resetCodeWrong =
+      'The code is wrong or has expired. Ask for a new code.';
   const photoRefused = 'This photo was refused.';
   const photoRetry = 'Not sent. Tap to send again.';
 
@@ -48,11 +50,6 @@ void main() {
     position.jumpTo(position.maxScrollExtent);
     await app.tester.pumpAndSettle();
     await app.tap(button);
-  }
-
-  Future<void> addRetailForm(FlowApp app) async {
-    await tile(app, 'verify.tool.retailUsers');
-    await app.tap(find.byKey(const Key('retailUsers.add')));
   }
 
   /// One row of the matrix.
@@ -130,7 +127,7 @@ void main() {
             await app.enter(const Key('reset.repeat'), 'abcd1234');
             await app.tap(find.byKey(const Key('reset.submit')));
           },
-          own: {401: codeWrong},
+          own: {401: resetCodeWrong},
         ),
         (
           name: 'change password',
@@ -175,17 +172,17 @@ void main() {
           own: {},
         ),
         (
-          name: 'bulk',
-          route: 'POST lookups/bulk',
+          name: 'serial stack',
+          route: 'POST lookups/serials',
           loggedIn: true,
           gated: true,
           trigger: (app) async {
-            await tile(app, 'verify.tool.bulk');
-            await app.enter(const Key('bulk.input'), '1000001');
-            await app.tap(find.byKey(const Key('bulk.add')));
-            await app.tap(find.byKey(const Key('bulk.send')));
+            await tile(app, 'verify.tool.serials');
+            await app.enter(const Key('serials.input'), '1000001');
+
+            await app.tap(find.byKey(const Key('serials.submit')));
           },
-          own: {503: 'Nothing was checked. Send the same list again.'},
+          own: {},
         ),
         (
           name: 'history',
@@ -204,11 +201,8 @@ void main() {
             await tile(app, 'verify.tool.report');
             await fillReport(app);
           },
-          own: {
-            404:
-                'The check or the retail user was not found. Remove it and '
-                'try again.',
-          },
+          // Nothing linked: a 404 is the route itself ("Not available").
+          own: {404: notAvailable},
         ),
         (
           name: 'photo',
@@ -224,7 +218,8 @@ void main() {
           own: {
             400: photoRefused,
             404: photoRefused,
-            429: photoRetry,
+            // The photo counts its Retry-After down (guide section 1).
+            429: waitText,
             500: photoRetry,
             503: photoRetry,
           },
@@ -242,54 +237,11 @@ void main() {
           route: 'GET retail-users',
           loggedIn: true,
           gated: true,
-          trigger: (app) => tile(app, 'verify.tool.retailUsers'),
-          own: {},
-        ),
-        (
-          name: 'retail roles',
-          route: 'GET retail-roles',
-          loggedIn: true,
-          gated: true,
-          trigger: addRetailForm,
-          own: {},
-        ),
-        (
-          name: 'add retail user',
-          route: 'POST retail-users',
-          loggedIn: true,
-          gated: true,
           trigger: (app) async {
-            await addRetailForm(app);
-            await app.enter(const Key('addRetail.name'), 'Rahim Store');
-            await app.enter(
-              const Key('addRetail.email'),
-              'rahim.store@gmail.com',
-            );
-            await app.tap(find.byKey(const Key('addRetail.role')));
-            await app.tapText('Retail seller');
-            await app.enter(const Key('addRetail.password'), '1234567890');
-            await app.tap(find.byKey(const Key('addRetail.submit')));
+            await tile(app, 'verify.tool.report');
+            await app.tap(find.byKey(const Key('report.retailUser')));
           },
-          own: {404: 'This role is no longer a retail role. Choose another.'},
-        ),
-        (
-          name: 'email a new first password',
-          route:
-              'POST retail-users/9d2e7c1b-3a4f-4e5d-8b6c-1f2a3b4c5d6e/password',
-          loggedIn: true,
-          gated: true,
-          trigger: (app) async {
-            await tile(app, 'verify.tool.retailUsers');
-            await app.tap(find.byIcon(LucideIcons.ellipsisVertical));
-            await app.tapText('Email a new first password');
-            await app.tap(
-              find.descendant(
-                of: find.byType(AlertDialog),
-                matching: find.text('Email it'),
-              ),
-            );
-          },
-          own: {404: 'This retail user was not found or is blocked.'},
+          own: {},
         ),
         (
           name: 'logout',

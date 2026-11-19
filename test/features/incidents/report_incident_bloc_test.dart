@@ -79,6 +79,37 @@ void main() {
     },
   );
 
+  // Audit H2 (build guide step 7, FR-INC-05): a lost answer may mean the
+  // report was filed; filing again could make a second report.
+  blocTest<ReportIncidentBloc, ReportIncidentState>(
+    'TC-REP-050 a lost connection while filing never allows filing again',
+    setUp: () => when(
+      () => repo.fileReport(
+        note: any(named: 'note'),
+        checkRef: any(named: 'checkRef'),
+        retailUserId: any(named: 'retailUserId'),
+      ),
+    ).thenAnswer((_) async => const Err(Failure(NetworkException()))),
+    build: build,
+    act: (bloc) async {
+      bloc.add(const ReportSubmitted('Torn seal'));
+      await settle();
+      bloc.add(const ReportSubmitted('Torn seal'));
+      await settle();
+    },
+    verify: (bloc) {
+      expect(bloc.state.filing, FilingStatus.unconfirmed);
+      expect(bloc.state.canEdit, isFalse);
+      verify(
+        () => repo.fileReport(
+          note: any(named: 'note'),
+          checkRef: any(named: 'checkRef'),
+          retailUserId: any(named: 'retailUserId'),
+        ),
+      ).called(1);
+    },
+  );
+
   blocTest<ReportIncidentBloc, ReportIncidentState>(
     'photos are sent one at a time after the report, in order',
     setUp: () => photoAnswers([const Success(1), const Success(2)]),
@@ -203,4 +234,48 @@ void main() {
       ),
     ),
   );
+
+  group('TC-REP-058 a 404 on filing names what is gone', () {
+    void answer404(String? message) =>
+        when(
+          () => repo.fileReport(
+            note: any(named: 'note'),
+            checkRef: any(named: 'checkRef'),
+            retailUserId: any(named: 'retailUserId'),
+          ),
+        ).thenAnswer(
+          (_) async => Err(Failure(NotFoundException(message: message))),
+        );
+
+    for (final (message, check, retail, missing) in [
+      ('Check not found.', true, true, MissingLink.check),
+      ('Retail user not found.', true, true, MissingLink.retailUser),
+      (null, true, false, MissingLink.check),
+      (null, false, true, MissingLink.retailUser),
+      (null, false, false, MissingLink.route),
+      (null, true, true, MissingLink.route),
+    ]) {
+      test(
+        '"$message", check $check, retail user $retail → $missing',
+        () async {
+          answer404(message);
+          final bloc = build(checkRef: check ? 'MA-2026-000123' : null);
+          if (retail) {
+            bloc.add(const RetailUserChosen((id: 'r1', name: 'Shop')));
+          }
+          bloc.add(const ReportSubmitted('Seal is cut'));
+          await settle();
+          expect(bloc.state.filing, FilingStatus.failed);
+          expect(bloc.state.missing, missing);
+          // A retail user that is gone is taken off; anything else stays.
+          expect(
+            bloc.state.retailUser,
+            retail && missing != MissingLink.retailUser ? isNotNull : isNull,
+          );
+          expect(bloc.state.checkRef, check ? 'MA-2026-000123' : isNull);
+          await bloc.close();
+        },
+      );
+    }
+  });
 }

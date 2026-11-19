@@ -1,1 +1,1 @@
-copied from ProtectB-DOCS-initial at commit 156f3a7 (2026-11-10)
+copied from ProtectB-DOCS-initial at commit ebff1d9 (2026-11-17)

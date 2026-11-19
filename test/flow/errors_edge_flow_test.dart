@@ -28,7 +28,7 @@ void main() {
 
   void expectNoResult() {
     expect(find.text('Genuine product'), findsNothing);
-    expect(find.text('Verification result'), findsNothing);
+    expect(find.text('Check result'), findsNothing);
   }
 
   testWidgets('TC-ERR-008 413 and 415 are handled as 400', (tester) async {
@@ -66,7 +66,15 @@ void main() {
     await second.tapText('Choose from gallery');
     await second.enter(const Key('report.note'), 'Seal is cut');
     await second.tap(find.byKey(const Key('report.submit')));
-    expect(find.text('This photo was refused.'), findsOneWidget);
+    // On the tile, and with its reference under the photos (guide §1).
+    expect(find.text('This photo was refused.'), findsNWidgets(2));
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('report.photoFailure')),
+        matching: find.text('Reference: req-1'),
+      ),
+      findsOneWidget,
+    );
   });
 
   testWidgets('TC-ERR-012 409 where the route has no 409 case', (
@@ -241,7 +249,12 @@ void main() {
       final mes = app.backend.sent('GET', 'me').length;
       await tester.pump(const Duration(seconds: 3));
       await tester.pumpAndSettle();
-      expect(find.textContaining(general), findsOneWidget);
+      // Without the envelope the status decides (guide section 1): 404 is
+      // "Not available"; 403 has no code to act on, so a general error.
+      expect(
+        find.textContaining(status == 404 ? 'Not available.' : general),
+        findsOneWidget,
+      );
       expect(app.backend.sent('GET', 'me'), hasLength(mes));
       expect(app.storage.values[SecureKeys.refreshToken], isNotNull);
     });
@@ -298,7 +311,7 @@ void main() {
       final app = await lookUp(tester, always(limited('60')));
       await app.tap(tab('History'));
       await tester.pump(const Duration(seconds: 10));
-      await app.tap(tab('Verify'));
+      await app.tap(tab('Check'));
       await app.enter(const Key('verify.input'), '1000001');
       await app.tap(find.byKey(const Key('verify.submit')));
       final afterReturn = app.backend.sent('POST', 'lookups').length;

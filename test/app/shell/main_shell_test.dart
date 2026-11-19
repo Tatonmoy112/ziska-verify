@@ -71,7 +71,7 @@ void main() {
 
   testWidgets('shows all three tabs with history permission', (tester) async {
     await pumpShell(tester, {'item:lookup', 'history:own'});
-    for (final label in ['Verify', 'History', 'Profile']) {
+    for (final label in ['Check', 'History', 'Profile']) {
       expect(find.text(label), findsOneWidget, reason: label);
     }
   });
@@ -80,13 +80,13 @@ void main() {
     tester,
   ) async {
     await pumpShell(tester, {'item:lookup'});
-    expect(find.text('Verify'), findsOneWidget);
+    expect(find.text('Check'), findsOneWidget);
     expect(find.text('Profile'), findsOneWidget);
     expect(find.text('History'), findsNothing);
   });
 
   testWidgets('tapping a tab switches to it', (tester) async {
-    await pumpShell(tester, {'history:all'});
+    await pumpShell(tester, {'history:own'});
     await tester.tap(find.text('History'));
     await tester.pumpAndSettle();
     expect(find.text('/history'), findsOneWidget);

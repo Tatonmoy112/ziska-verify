@@ -39,7 +39,6 @@ void main() {
       profile: profile,
       overrides: {'POST lookups': always(ok(answer)), ...overrides},
     );
-    if (way == 'hidden_code') await app.tapText('Hidden code');
     await app.enter(const Key('verify.input'), value);
     await app.tap(find.byKey(const Key('verify.submit')));
     return app;
@@ -71,54 +70,17 @@ void main() {
 
     // Scanned.
     app = await startApp(tester);
-    await app.tap(find.byKey(const Key('verify.scan')));
     app.scanner.scan('https://www.ziskaverify.com/q/Q8F2KD91XA7M');
     await tester.pumpAndSettle();
     await expectGenuineScreen('scanned');
 
-    // A row of the Bulk lookup results (one genuine item, as sent).
-    app = await startApp(
-      tester,
-      overrides: {
-        'POST lookups/bulk': always(
-          ok({
-            'summary': {
-              'total': 1,
-              'valid': 1,
-              'warning': 0,
-              'by_reason': <String, int>{},
-              'not_found': 0,
-              'unassigned': 0,
-            },
-            'results': [
-              {
-                'ref': 'MA-2026-000901',
-                'result': 'valid',
-                'reasons': <String>[],
-                'count': {'this_check': 1, 'last_at': null},
-                'item': {
-                  'serial': '1000001',
-                  'code': '*****7K2',
-                  'product': {
-                    'name': 'Paracetamol 500',
-                    'generic_name': 'Paracetamol',
-                    'short_name': null,
-                    'picture_url': 'https://pictures.example.com/53/9f2c.png',
-                  },
-                  'batch': {'number': 'B-1042', 'made': null, 'expires': null},
-                },
-              },
-            ],
-          }),
-        ),
-      },
-    );
-    await app.tap(find.byKey(const Key('verify.tool.bulk')));
-    await app.enter(const Key('bulk.input'), '1000001');
-    await app.tap(find.byKey(const Key('bulk.add')));
-    await app.tap(find.byKey(const Key('bulk.send')));
-    await app.tap(find.textContaining('1. ').first);
-    await expectGenuineScreen('bulk row');
+    // A serial-stack row uses the same full result screen.
+    app = await startApp(tester);
+    await app.tap(find.byKey(const Key('verify.tool.serials')));
+    await app.enter(const Key('serials.input'), '1000001,1000002,1000003');
+    await app.tap(find.byKey(const Key('serials.submit')));
+    await app.tap(find.text('1000001').first);
+    await expectGenuineScreen('serial-stack row');
   });
 
   testWidgets('TC-LOOK-094 not found: what you entered', (tester) async {
@@ -152,20 +114,6 @@ void main() {
     expect(find.text('MA-2026-000999'), findsNWidgets(2));
   });
 
-  testWidgets('TC-LOOK-095 not found by hidden code: masked only', (
-    tester,
-  ) async {
-    await lookUp(tester, way: 'hidden_code', value: '481516234999');
-    expect(row('Hidden code'), findsOneWidget);
-    expect(find.text('*****999'), findsOneWidget);
-    expect(find.textContaining('481516234999'), findsNothing);
-    // Nor in the route's extra.
-    final screen = tester.widget<LookupResultScreen>(
-      find.byType(LookupResultScreen),
-    );
-    expect(screen.view.input.shown, '*****999');
-  });
-
   testWidgets('TC-LOOK-096 hints from the formats', (tester) async {
     await lookUp(
       tester,
@@ -182,10 +130,10 @@ void main() {
       find.text('A serial has digits only, up to 10 digits.'),
       findsOneWidget,
     );
-    expect(find.text('A hidden code has 12 or 16 characters.'), findsOneWidget);
+    expect(find.text('A hidden code has 12 or 16 characters.'), findsNothing);
     expect(
       find.text('Scratch the panel off fully before typing the hidden code.'),
-      findsOneWidget,
+      findsNothing,
     );
     // No fixed lengths from the Figma (backend D41).
     expect(find.textContaining('7 digits'), findsNothing);
@@ -207,7 +155,6 @@ void main() {
       tester,
       overrides: {'POST lookups': always(ok(notFound))},
     );
-    await app.tap(find.byKey(const Key('verify.scan')));
     app.scanner.scan('https://www.ziskaverify.com/q/Q8F2KD91XA7M');
     await tester.pumpAndSettle();
     expect(find.text('Q8F2KD91XA7M'), findsOneWidget);
@@ -224,18 +171,15 @@ void main() {
   ) async {
     final app = await lookUp(
       tester,
-      way: 'hidden_code',
-      value: '481516234999',
     );
     await app.tap(find.byKey(const Key('result.tryAgain')));
     expect(find.byType(LookupResultScreen), findsNothing);
-    expect(app.fieldText(const Key('verify.input')), isEmpty);
+    expect(app.fieldText(const Key('verify.input')), '1000999');
 
     final scanned = await startApp(
       tester,
       overrides: {'POST lookups': always(ok(notFound))},
     );
-    await scanned.tap(find.byKey(const Key('verify.scan')));
     scanned.scanner.scan('https://www.ziskaverify.com/q/Q8F2KD91XA7M');
     await tester.pumpAndSettle();
     await scanned.tap(find.byKey(const Key('result.tryAgain')));
@@ -243,12 +187,12 @@ void main() {
   });
 
   testWidgets('TC-LOOK-099 Contact support only when set', (tester) async {
-    var app = await lookUp(tester, way: 'hidden_code', value: '481516234999');
+    var app = await lookUp(tester);
     await app.tap(find.byKey(const Key('result.contactSupport')));
     final mail = app.launcher.emails.single;
     expect(mail.to, 'help@ziska.example');
     expect(mail.subject, contains('MA-2026-000999'));
-    expect(mail.body, contains('Hidden code: *****999'));
+    expect(mail.body, contains('Serial: 1000999'));
     expect(mail.body, isNot(contains('481516234999')));
 
     app = await lookUp(
@@ -271,42 +215,18 @@ void main() {
     expect(find.byKey(const Key('result.contactSupport')), findsNothing);
   });
 
-  testWidgets('TC-LOOK-100 Back to Verify', (tester) async {
-    final app = await startApp(
-      tester,
-      overrides: {
-        'POST lookups/bulk': always(
-          ok({
-            'summary': {
-              'total': 1,
-              'valid': 0,
-              'warning': 0,
-              'by_reason': <String, int>{},
-              'not_found': 1,
-              'unassigned': 0,
-            },
-            'results': [notFound],
-          }),
-        ),
-      },
-    );
-    await app.tap(find.byKey(const Key('verify.tool.bulk')));
-    await app.enter(const Key('bulk.input'), '1000999');
-    await app.tap(find.byKey(const Key('bulk.add')));
-    await app.tap(find.byKey(const Key('bulk.send')));
-    await app.tapText('1. 1000999');
-    expect(find.byType(LookupResultScreen), findsOneWidget);
+  testWidgets('TC-LOOK-100 Back to Check', (tester) async {
+    final app = await lookUp(tester);
     await app.tap(find.byKey(const Key('result.backToVerify')));
     expect(find.byKey(const Key('verify.input')), findsOneWidget);
     expect(find.byType(LookupResultScreen), findsNothing);
   });
-
   testWidgets('TC-LOOK-101 not in a batch and unknown use the same layout', (
     tester,
   ) async {
     for (final (result, title) in [
       ('unassigned', 'Not in a batch'),
-      ('something_new', 'Unable to verify'),
+      ('something_new', 'Unable to check'),
     ]) {
       await lookUp(tester, answer: {'ref': 'MA-2026-000555', 'result': result});
       expect(find.text(title), findsNWidgets(2), reason: result);
@@ -320,5 +240,76 @@ void main() {
       );
       expect(find.byKey(const Key('result.tryAgain')), findsOneWidget);
     }
+  });
+
+  // Audit H5 (SRS FR-LKP-06): every field of a found item shows, a
+  // checked-before warning included; a missing one shows as blank.
+  Future<FlowApp> warningOf(
+    WidgetTester tester,
+    List<String> reasons, {
+    Map<String, Object?> batch = const {
+      'number': 'B-2291',
+      'made': '2026-01-10',
+      'expires': '2026-09-30',
+    },
+  }) => lookUp(
+    tester,
+    value: '1000311',
+    answer: {
+      'ref': 'MA-2026-004103',
+      'result': 'warning',
+      'reasons': reasons,
+      'count': {'this_check': 3, 'last_at': '2026-10-12T09:14:00Z'},
+      'item': {
+        'serial': '1000311',
+        'code': '*****7K2',
+        'product': {
+          'name': 'Paracetamol 500',
+          'generic_name': 'Paracetamol',
+          'short_name': 'PCM500',
+          'picture_url': null,
+        },
+        'batch': batch,
+      },
+    },
+  );
+
+  testWidgets('TC-LOOK-118 a checked-before warning keeps every item field', (
+    tester,
+  ) async {
+    await warningOf(tester, ['checked_before', 'expired']);
+    for (final label in [
+      'Product',
+      'Short name',
+      'Batch',
+      'Made',
+      'Expires',
+      'Serial',
+    ]) {
+      await tester.scrollUntilVisible(
+        find.text(label),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(find.text(label), findsWidgets, reason: label);
+    }
+    expect(find.text('PCM500'), findsOneWidget);
+  });
+
+  testWidgets('TC-LOOK-119 the check count on every found item; a missing '
+      'field is blank', (tester) async {
+    await warningOf(
+      tester,
+      ['recalled'],
+      batch: const {'number': 'B-2291', 'made': null, 'expires': '2026-09-30'},
+    );
+    await tester.scrollUntilVisible(
+      find.text('Check 3'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('Check 3'), findsOneWidget);
+    expect(find.text('Made'), findsOneWidget);
+    expect(find.text('—'), findsWidgets);
   });
 }

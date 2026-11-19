@@ -206,6 +206,58 @@ void main() {
       await shot('screen_login');
     });
 
+    uiTest('TC-UI-184 login: the copyright footer at the bottom', (
+      tester,
+      _,
+    ) async {
+      await startApp(tester, loggedIn: false);
+      await atOneX(tester);
+      final footer = find.byKey(const Key('login.footer'));
+      expect(
+        find.text('© 2026 Ziska Pharmaceuticals Ltd. All rights reserved.'),
+        findsOneWidget,
+      );
+      // The installed version (the harness's: 0.1.0, build 1).
+      expect(find.text('Version 0.1.0 (1)'), findsOneWidget);
+      expect(
+        find.descendant(of: footer, matching: find.text(l10n.authorizedOnly)),
+        findsOneWidget,
+      );
+      // Under Sign up, resting at the bottom of a tall phone.
+      final rect = tester.getRect(footer);
+      final request = tester.getRect(
+        find.ancestor(
+          of: find.text(l10n.requestAccessButton),
+          matching: find.byType(AppButton),
+        ),
+      );
+      expect(rect.top, greaterThan(request.bottom));
+      expect(phone.height - rect.bottom, lessThanOrEqualTo(AppSpacing.xl));
+      // Copyright above the version, both centred.
+      final copyright = tester.getRect(
+        find.byKey(const Key('login.copyright')),
+      );
+      final version = tester.getRect(find.byKey(const Key('login.version')));
+      expect(copyright.bottom, lessThanOrEqualTo(version.top));
+      expect(
+        copyright.center.dx,
+        moreOrLessEquals(phone.width / 2, epsilon: 1),
+      );
+      expect(version.center.dx, moreOrLessEquals(phone.width / 2, epsilon: 1));
+      // Read out as one item.
+      final semantics = tester.ensureSemantics();
+      await tester.pump();
+      expect(
+        find.bySemanticsLabel(
+          '© 2026 Ziska Pharmaceuticals Ltd. All rights reserved. '
+          'Version 0.1.0 (1)',
+        ),
+        findsOneWidget,
+      );
+      semantics.dispose();
+      expect(tester.takeException(), isNull);
+    });
+
     uiTest('TC-UI-076 login: field errors', (tester, shot) async {
       final app = await startApp(tester, loggedIn: false);
       await app.enter(const Key('login.email'), 'not-an-email');
@@ -362,6 +414,65 @@ void main() {
       await shot('screen_change_forced');
     });
 
+    /// A forced change that may be skipped (`password_change_skippable`).
+    Map<String, dynamic> skippable() => {
+      ...forced(Roles.fieldInspector),
+      'password_change_skippable': true,
+    };
+
+    uiTest('TC-UI-179 set a new password, or Not now', (tester, shot) async {
+      await startApp(tester, profile: skippable());
+      await atOneX(tester);
+      expect(find.text(l10n.changePasswordTitle), findsOneWidget);
+      expect(find.text(l10n.changePasswordChoiceSubtitle), findsOneWidget);
+      expect(back, findsNothing);
+      // Save first (navy), Not now under it (white), Log out as a link.
+      expect(
+        button(tester, const Key('change.submit')).variant,
+        AppButtonVariant.primary,
+      );
+      final later = button(tester, const Key('change.later'));
+      expect(later.label, l10n.changePasswordLater);
+      expect(later.variant, AppButtonVariant.tonal);
+      expect(later.onPressed, isNotNull);
+      final save = tester.getRect(find.byKey(const Key('change.submit')));
+      final notNow = tester.getRect(find.byKey(const Key('change.later')));
+      final logOut = tester.getRect(find.byKey(const Key('change.logout')));
+      expect(notNow.top, greaterThan(save.bottom));
+      expect(logOut.top, greaterThan(notNow.bottom));
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('change.logout')),
+          matching: find.text(l10n.logout),
+        ),
+        findsOneWidget,
+      );
+      await shot('screen_change_choice');
+    });
+
+    uiTest('TC-UI-180 set a new password, or Not now, at font size 2×', (
+      tester,
+      shot,
+    ) async {
+      tester.platformDispatcher.textScaleFactorTestValue = 2;
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      await startApp(tester, profile: skippable());
+      await atOneX(tester);
+      expect(tester.takeException(), isNull);
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('change.logout')),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.ensureVisible(find.byKey(const Key('change.logout')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('change.later')), findsOneWidget);
+      // Both buttons fit inside the screen sides at this size.
+      final later = tester.getRect(find.byKey(const Key('change.later')));
+      expect(later.right, lessThanOrEqualTo(phone.width));
+      await shot('screen_change_choice_2x');
+    });
+
     uiTest('TC-UI-084 change password (from Profile)', (tester, shot) async {
       final app = await startApp(tester);
       await app.tapText(l10n.tabProfile);
@@ -398,87 +509,26 @@ void main() {
     final app = await startApp(tester, loggedIn: false);
     await app.tapText(l10n.requestAccessButton);
     await atOneX(tester);
-    expect(find.byType(GradientHeader), findsOneWidget);
-    expect(back, findsOneWidget);
-
-    // The information panel.
-    final title = find.text(l10n.pleaseInclude);
-    final panel = tester
-        .widgetList<Container>(
-          find.ancestor(of: title, matching: find.byType(Container)),
-        )
-        .map((c) => c.decoration)
-        .whereType<BoxDecoration>()
-        .first;
-    expect(panel.color, AppColors.infoBackground);
-    expect((panel.border! as Border).top.color, AppColors.infoBorder);
-    expect(drawnStyle(tester, title).color, AppColors.infoAccent);
-    for (final item in [
-      l10n.includeName,
-      l10n.includePhone,
-      l10n.includeOrganisation,
-      l10n.includeEmail,
-      l10n.includeJobTitle,
-      l10n.includeReason,
-    ]) {
-      expect(find.text(item), findsOneWidget, reason: item);
-    }
-    // Two columns of details at normal text size (Figma).
-    final name = tester.getRect(find.text(l10n.includeName));
-    final phoneItem = tester.getRect(find.text(l10n.includePhone));
-    expect(phoneItem.top, name.top, reason: 'side by side');
-    expect(phoneItem.left, greaterThan(name.right));
-
-    // How it works: a pill title and three numbered steps, above the
-    // details.
-    expect(find.text(l10n.howItWorks.toUpperCase()), findsOneWidget);
-    for (final (i, title, body) in [
-      (1, l10n.requestStepSendTitle, l10n.requestStepSendBody),
-      (2, l10n.requestStepCheckTitle, l10n.requestStepCheckBody),
-      (3, l10n.requestStepLoginTitle, l10n.requestStepLoginBody),
-    ]) {
-      final step = find.byKey(Key('requestAccess.step$i'));
-      expect(
-        find.descendant(of: step, matching: find.text('$i')),
-        findsOneWidget,
-      );
-      expect(
-        find.descendant(of: step, matching: find.text(title)),
-        findsOneWidget,
-      );
-      expect(
-        find.descendant(of: step, matching: find.text(body)),
-        findsOneWidget,
-      );
-    }
-    expect(
-      tester.getRect(find.byKey(const Key('requestAccess.step3'))).bottom,
-      lessThan(tester.getRect(title).top),
-    );
-    expect(find.text(l10n.emailTeamButton), findsOneWidget);
-    expect(find.text(l10n.callTeamButton), findsOneWidget);
+    expect(find.byKey(const Key('access.name')), findsOneWidget);
+    expect(find.byType(DropdownButtonFormField<int>), findsOneWidget);
+    expect(find.byType(PasswordRules), findsOneWidget);
+    expect(find.byKey(const Key('access.email')), findsOneWidget);
+    expect(find.byKey(const Key('access.code')), findsNothing);
+    expect(tester.takeException(), isNull);
     await shot('screen_request_access');
   });
-
-  uiTest('TC-UI-171 request access at font size 2×', (tester, shot) async {
+  uiTest('TC-UI-171 request access at font size 2x', (tester, shot) async {
     tester.platformDispatcher.textScaleFactorTestValue = 2;
     addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
     final app = await startApp(tester, loggedIn: false);
     await app.tapText(l10n.requestAccessButton);
     await atOneX(tester);
-    expect(tester.takeException(), isNull);
-    // One column: each detail on its own line, full width.
-    final name = tester.getRect(find.text(l10n.includeName));
-    final phoneItem = tester.getRect(find.text(l10n.includePhone));
-    expect(phoneItem.top, greaterThan(name.bottom));
-    expect(phoneItem.left, name.left);
-    // The steps scroll into view and read whole.
     await tester.scrollUntilVisible(
-      find.byKey(const Key('requestAccess.step3')),
+      find.byKey(const Key('access.sendCode')),
       100,
       scrollable: find.byType(Scrollable).first,
     );
-    expect(find.text(l10n.requestStepLoginBody), findsOneWidget);
+    expect(tester.takeException(), isNull);
     await shot('screen_request_access_2x');
   });
 }

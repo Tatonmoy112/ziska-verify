@@ -5,7 +5,7 @@ import 'package:ziska_verify/shared/design_system/tokens/app_spacing.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_typography.dart';
 
 /// One numbered step: the number in a small grey square, then a title and
-/// a line under it (Request access "How it works", from the Figma). Read
+/// a line under it (Sign up "How it works", from the Figma). Read
 /// by a screen reader as one item: "Step 1. Title. Body".
 class NumberedStepRow extends StatelessWidget {
   const NumberedStepRow({

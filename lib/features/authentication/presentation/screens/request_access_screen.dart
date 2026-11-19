@@ -1,289 +1,332 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:ziska_verify/core/errors/app_exception.dart';
+import 'package:ziska_verify/features/authentication/domain/entities/access_request.dart';
+import 'package:ziska_verify/features/authentication/domain/services/email_check.dart';
+import 'package:ziska_verify/features/authentication/domain/services/password_policy.dart';
 import 'package:ziska_verify/features/authentication/presentation/bloc/request_access_cubit.dart';
+import 'package:ziska_verify/features/authentication/presentation/widgets/password_rules.dart';
 import 'package:ziska_verify/l10n/generated/app_localizations.dart';
 import 'package:ziska_verify/shared/design_system/components/buttons/app_button.dart';
+import 'package:ziska_verify/shared/design_system/components/inputs/app_otp_field.dart';
+import 'package:ziska_verify/shared/design_system/components/inputs/app_password_field.dart';
+import 'package:ziska_verify/shared/design_system/components/inputs/app_text_field.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_colors.dart';
-import 'package:ziska_verify/shared/design_system/tokens/app_radius.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_spacing.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_typography.dart';
+import 'package:ziska_verify/shared/extensions/failure_message.dart';
+import 'package:ziska_verify/shared/widgets/failure_banner.dart';
 import 'package:ziska_verify/shared/widgets/gradient_header.dart';
-import 'package:ziska_verify/shared/widgets/large_text.dart';
-import 'package:ziska_verify/shared/widgets/numbered_step_row.dart';
+import 'package:ziska_verify/shared/widgets/retry_countdown.dart';
 
-/// Request access (final.md Section 13.9; backend D27): how an account is
-/// made, the details to include, and the office's email and phone; nothing
-/// is sent to the backend. The first password is emailed or handed over in
-/// person (backend D55). The look follows the Figma "Request for id".
-class RequestAccessScreen extends StatelessWidget {
-  const RequestAccessScreen({super.key});
+/// Sign up: the access request of the app API guide §3.9 under the name
+/// users see, no login needed (app API guide §3.9, final.md Section
+/// 13.9): the name, the role, the password and the email first; then the
+/// emailed code; then the request.
+class RequestAccessScreen extends StatefulWidget {
+  const RequestAccessScreen({required this.onContactOffice, super.key});
+  final VoidCallback? onContactOffice;
+  @override
+  State<RequestAccessScreen> createState() => _RequestAccessScreenState();
+}
 
+class _RequestAccessScreenState extends State<RequestAccessScreen> {
+  final _name = TextEditingController();
+  final _email = TextEditingController();
+  final _password = TextEditingController();
+  final _code = TextEditingController();
+  int? _role;
+  int _codeVersion = 0;
+
+  /// Which request runs, so only its button spins.
+  bool _submitting = false;
+  @override
+  void dispose() {
+    for (final controller in [_name, _email, _password, _code]) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  bool get _valid =>
+      _name.text.trim().isNotEmpty &&
+      _name.text.trim().runes.length <= 100 &&
+      looksLikeEmail(_email.text) &&
+      const PasswordPolicy().check(_password.text).isValid &&
+      _role != null;
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    final l = AppLocalizations.of(context);
     final cubit = context.read<RequestAccessCubit>();
-    final includes = [
-      l10n.includeName,
-      l10n.includePhone,
-      l10n.includeOrganisation,
-      l10n.includeEmail,
-      l10n.includeJobTitle,
-      l10n.includeReason,
-    ];
-
-    return BlocListener<RequestAccessCubit, RequestAccessResult>(
-      listener: (context, result) {
-        if (result != RequestAccessResult.noApp) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.noMailApp(cubit.officeEmail))),
-        );
-      },
-      child: Scaffold(
-        backgroundColor: AppColors.surfaceMuted,
-        body: Column(
-          children: [
-            Expanded(
-              child: ListView(
-                padding: EdgeInsets.zero,
-                children: [
-                  GradientHeader(
-                    title: l10n.requestAccessTitle,
-                    subtitle: l10n.requestAccessSubtitle,
-                    onBack: () => context.pop(),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(AppSpacing.screen),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        _HowItWorksCard(
-                          title: l10n.howItWorks,
-                          steps: [
-                            (
-                              l10n.requestStepSendTitle,
-                              cubit.hasPhone
-                                  ? l10n.requestStepSendBody
-                                  : l10n.requestStepSendBodyEmailOnly,
-                            ),
-                            (
-                              l10n.requestStepCheckTitle,
-                              l10n.requestStepCheckBody,
-                            ),
-                            (
-                              l10n.requestStepLoginTitle,
-                              l10n.requestStepLoginBody,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: AppSpacing.lg),
-                        _IncludeCard(
-                          title: l10n.pleaseInclude,
-                          items: includes,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SafeArea(
-              top: false,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.screen,
-                  AppSpacing.xs,
-                  AppSpacing.screen,
-                  AppSpacing.md,
+    final header = GradientHeader(
+      title: l.requestAccessTitle,
+      subtitle: l.requestAccessSubtitle,
+      onBack: () => context.pop(),
+    );
+    return Scaffold(
+      body: BlocConsumer<RequestAccessCubit, RequestAccessState>(
+        listener: (_, state) {
+          if (_codeVersion != state.codeVersion) {
+            _code.clear();
+            _codeVersion = state.codeVersion;
+          }
+          if (state.stage == AccessStage.pending) {
+            _password.clear();
+            _code.clear();
+          }
+          if (_role != null && !state.roles.any((r) => r.id == _role)) {
+            setState(() => _role = null);
+          }
+        },
+        listenWhen: (a, b) =>
+            a.stage != b.stage ||
+            a.roles != b.roles ||
+            a.codeVersion != b.codeVersion,
+        builder: (_, state) {
+          if (state.stage == AccessStage.loading) {
+            return Column(
+              children: [
+                header,
+                const Expanded(
+                  child: Center(child: CircularProgressIndicator()),
                 ),
-                child: Column(
-                  children: [
-                    AppButton(
-                      label: l10n.emailTeamButton,
-                      icon: LucideIcons.mail,
-                      onPressed: () => cubit.email(
-                        subject: l10n.accessRequestSubject,
-                        body: '${includes.map((i) => '$i: ').join('\n')}\n',
+              ],
+            );
+          }
+          if (state.stage == AccessStage.pending) {
+            return ListView(
+              padding: EdgeInsets.zero,
+              children: [
+                header,
+                Padding(
+                  padding: const EdgeInsets.all(AppSpacing.screen),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const Icon(
+                        LucideIcons.mailCheck,
+                        size: 48,
+                        color: AppColors.success,
                       ),
-                    ),
-                    if (cubit.hasPhone) ...[
-                      const SizedBox(height: AppSpacing.sm),
+                      const SizedBox(height: AppSpacing.md),
+                      Text(
+                        l.accessPending,
+                        key: const Key('access.pending'),
+                        textAlign: TextAlign.center,
+                        style: AppTypography.bodyStrong,
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
                       AppButton(
-                        label: l10n.callTeamButton,
-                        icon: LucideIcons.phone,
-                        variant: AppButtonVariant.outlined,
-                        onPressed: cubit.call,
+                        label: l.backToLogin,
+                        onPressed: () => context.pop(),
                       ),
                     ],
-                    const SizedBox(height: AppSpacing.sm),
-                    AppButton(
-                      label: l10n.backToLogin,
-                      variant: AppButtonVariant.tonal,
-                      onPressed: () => context.pop(),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _IncludeCard extends StatelessWidget {
-  const _IncludeCard({required this.title, required this.items});
-
-  /// Narrowest list width that still fits two columns of items.
-  static const _twoColumnMinWidth = 260.0;
-
-  final String title;
-  final List<String> items;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: AppColors.infoBackground,
-        borderRadius: AppRadius.card,
-        border: Border.all(color: AppColors.infoBorder),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(
-                LucideIcons.info,
-                size: 20,
-                color: AppColors.infoAccent,
-              ),
-              const SizedBox(width: AppSpacing.xs),
-              Text(
-                title,
-                style: AppTypography.bodyStrong.copyWith(
-                  color: AppColors.infoAccent,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              // Two columns as in the Figma; one when the text is large or
-              // the card is narrow, so no item is cut or wraps mid-word.
-              final columns =
-                  !isLargeText(context) &&
-                      constraints.maxWidth >= _twoColumnMinWidth
-                  ? 2
-                  : 1;
-              final width =
-                  (constraints.maxWidth - (columns - 1) * AppSpacing.sm) /
-                  columns;
-              return Wrap(
-                spacing: AppSpacing.sm,
-                children: [
-                  for (final item in items)
-                    SizedBox(
-                      width: width,
-                      child: _IncludeItem(item),
-                    ),
-                ],
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _IncludeItem extends StatelessWidget {
-  const _IncludeItem(this.text);
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxs),
-      child: Row(
-        children: [
-          const Icon(
-            LucideIcons.check,
-            size: 16,
-            color: AppColors.infoAccent,
-          ),
-          const SizedBox(width: AppSpacing.xs),
-          Expanded(child: Text(text, style: AppTypography.caption)),
-        ],
-      ),
-    );
-  }
-}
-
-/// The white "HOW IT WORKS" card: a pill title and numbered steps split by
-/// dividers (Figma "Request for id").
-class _HowItWorksCard extends StatelessWidget {
-  const _HowItWorksCard({required this.title, required this.steps});
-
-  final String title;
-
-  /// Each step's title and body, in order.
-  final List<(String, String)> steps;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: AppRadius.card,
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Semantics(
-            header: true,
-            child: DecoratedBox(
-              key: const Key('requestAccess.howItWorks'),
-              decoration: const BoxDecoration(
-                color: AppColors.infoBackground,
-                borderRadius: BorderRadius.all(
-                  Radius.circular(AppRadius.pill),
-                ),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.sm,
-                  vertical: AppSpacing.xxs,
-                ),
-                child: Text(
-                  title.toUpperCase(),
-                  style: AppTypography.fieldLabel.copyWith(
-                    color: AppColors.infoAccent,
                   ),
                 ),
-              ),
+              ],
+            );
+          }
+          final failure = state.failure;
+          final message = switch (failure?.exception) {
+            UnauthenticatedException() => l.accessWrongCode,
+            // The chosen password breaks the rule (guide section 3.9).
+            PolicyDeniedException() => l.passwordRuleBroken,
+            ConflictException() => l.accessTryLater,
+            // "Role not found." on sending (guide §3.9); any other 404 is
+            // the app not being available (guide §1).
+            NotFoundException(:final message)
+                when state.rolesLoaded &&
+                    (message?.toLowerCase().contains('role') ?? false) =>
+              l.accessRoleUnavailable,
+            _ => failure?.message(l) ?? '',
+          };
+          return RetryCountdown(
+            until: state.retryAt,
+            builder: (_, seconds) => ListView(
+              padding: EdgeInsets.zero,
+              children: [
+                header,
+                Padding(
+                  padding: const EdgeInsets.all(AppSpacing.screen),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (failure != null) ...[
+                        FailureBanner(
+                          failure: failure,
+                          message: message,
+                          retryAt: state.retryAt,
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                      ],
+                      if (!state.rolesLoaded) ...[
+                        // The load failed (the banner above says why): only
+                        // Try again, never "Ask the office" (audit H4).
+                        AppButton(
+                          key: const Key('access.retryRoles'),
+                          variant: AppButtonVariant.tonal,
+                          label: l.retry,
+                          onPressed: seconds > 0
+                              ? null
+                              : () => unawaited(cubit.load()),
+                        ),
+                      ] else if (state.roles.isEmpty) ...[
+                        Text(l.accessNoRoles, style: AppTypography.body),
+                        const SizedBox(height: AppSpacing.lg),
+                        if (widget.onContactOffice != null) ...[
+                          AppButton(
+                            label: l.accessContactOffice,
+                            onPressed: widget.onContactOffice,
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                        ],
+                        AppButton(
+                          variant: AppButtonVariant.tonal,
+                          label: l.retry,
+                          onPressed: seconds > 0
+                              ? null
+                              : () => unawaited(cubit.load()),
+                        ),
+                      ] else ...[
+                        AppTextField(
+                          label: l.accessName,
+                          fieldKey: const Key('access.name'),
+                          controller: _name,
+                          enabled: !state.busy,
+                          maxLength: 100,
+                          onChanged: (_) => setState(() {}),
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        Text(
+                          l.accessRole.toUpperCase(),
+                          style: AppTypography.fieldLabel,
+                        ),
+                        const SizedBox(height: AppSpacing.xs),
+                        DropdownButtonFormField<int>(
+                          isDense: false,
+                          key: ValueKey((
+                            _role,
+                            state.roles.map((r) => r.id).join(','),
+                          )),
+                          initialValue: state.roles.any((r) => r.id == _role)
+                              ? _role
+                              : null,
+                          isExpanded: true,
+                          hint: Text(l.accessRoleHint),
+                          items: [
+                            for (final role in state.roles)
+                              DropdownMenuItem(
+                                value: role.id,
+                                child: Text(role.name),
+                              ),
+                          ],
+                          onChanged: state.busy
+                              ? null
+                              : (role) => setState(() => _role = role),
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        AppPasswordField(
+                          label: l.accessPassword,
+                          showLabel: l.accessShowPassword,
+                          hideLabel: l.accessHidePassword,
+                          fieldKey: const Key('access.password'),
+                          controller: _password,
+                          enabled: !state.busy,
+                          autofillHints: const [AutofillHints.newPassword],
+                          onChanged: (_) => setState(() {}),
+                        ),
+                        PasswordRules(
+                          check: const PasswordPolicy().check(_password.text),
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        AppTextField(
+                          label: l.accessEmail,
+                          fieldKey: const Key('access.email'),
+                          controller: _email,
+                          enabled: !state.busy,
+                          hint: l.emailHint,
+                          prefixIcon: LucideIcons.mail,
+                          autofillHints: const [AutofillHints.email],
+                          keyboardType: TextInputType.emailAddress,
+                          onChanged: (_) {
+                            cubit.emailEdited();
+                            _code.clear();
+                            setState(() {});
+                          },
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        // Each request waits out its own 429 (guide 1:
+                        // codes and requests are counted apart).
+                        RetryCountdown(
+                          until: state.codeRetryAt,
+                          builder: (_, wait) => AppButton(
+                            label: state.stage == AccessStage.code
+                                ? l.accessResend
+                                : l.accessSendCode,
+                            key: const Key('access.sendCode'),
+                            loading: state.busy && !_submitting,
+                            onPressed: !_valid || state.busy || wait > 0
+                                ? null
+                                : () {
+                                    _submitting = false;
+                                    unawaited(cubit.sendCode(_email.text));
+                                  },
+                          ),
+                        ),
+                        if (state.stage == AccessStage.code) ...[
+                          const SizedBox(height: AppSpacing.md),
+                          Text(l.accessCodeSent, style: AppTypography.body),
+                          const SizedBox(height: AppSpacing.sm),
+                          AppOtpField(
+                            key: ValueKey(state.codeVersion),
+                            label: l.accessCode,
+                            fieldKey: const Key('access.code'),
+                            controller: _code,
+                            enabled: !state.busy,
+                            onChanged: (_) => setState(() {}),
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          RetryCountdown(
+                            until: state.submitRetryAt,
+                            builder: (_, wait) => AppButton(
+                              label: l.accessSubmit,
+                              key: const Key('access.submit'),
+                              loading: state.busy && _submitting,
+                              onPressed:
+                                  !_valid ||
+                                      _code.text.length != 6 ||
+                                      state.busy ||
+                                      wait > 0
+                                  ? null
+                                  : () {
+                                      _submitting = true;
+                                      unawaited(
+                                        cubit.submit(
+                                          AccessRequest(
+                                            email: _email.text.trim(),
+                                            code: _code.text,
+                                            name: _name.text,
+                                            roleId: _role!,
+                                            password: _password.text,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                            ),
+                          ),
+                        ],
+                      ],
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ),
-          for (final (i, (stepTitle, body)) in steps.indexed) ...[
-            if (i > 0)
-              const Divider(height: AppSpacing.lg, color: AppColors.border)
-            else
-              const SizedBox(height: AppSpacing.md),
-            NumberedStepRow(
-              key: Key('requestAccess.step${i + 1}'),
-              number: i + 1,
-              title: stepTitle,
-              body: body,
-            ),
-          ],
-        ],
+          );
+        },
       ),
     );
   }

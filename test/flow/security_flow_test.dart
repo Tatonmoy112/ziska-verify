@@ -22,14 +22,19 @@ void main() {
       profile: Roles.supervisor,
       loggedIn: false,
     );
+    await app.tapText('Sign up');
+    await fillAccessForm(app);
+    await app.tap(find.byKey(const Key('access.sendCode')));
+    await app.enter(const Key('access.code'), '123456');
+    await app.tap(find.byKey(const Key('access.submit')));
+    await app.tapText('Back to login');
     await app.enter(const Key('login.email'), 'official@example.com');
     await app.enter(const Key('login.password'), 'login-secret-1');
     await app.tap(find.byKey(const Key('login.submit')));
     await app.enter(const Key('verify.code'), '864213');
     await app.tap(find.byKey(const Key('verify.submit')));
 
-    await app.tapText('Hidden code');
-    await app.enter(const Key('verify.input'), '481516234200');
+    await app.enter(const Key('verify.input'), '1000001');
     await app.tap(find.byKey(const Key('verify.submit')));
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
@@ -41,29 +46,14 @@ void main() {
     await app.enter(const Key('change.repeat'), 'new-secret-22');
     await app.tap(find.byKey(const Key('change.submit')));
 
-    await app.tap(tab('Verify'));
-    await tester.scrollUntilVisible(
-      find.byKey(const Key('verify.tool.retailUsers')),
-      300,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await app.tap(find.byKey(const Key('verify.tool.retailUsers')));
-    await app.tap(find.byKey(const Key('retailUsers.add')));
-    await app.enter(const Key('addRetail.name'), 'Rahim Store');
-    await app.enter(const Key('addRetail.email'), 'rahim.store@gmail.com');
-    await app.tap(find.byKey(const Key('addRetail.role')));
-    await app.tapText('Retail seller');
-    await app.enter(const Key('addRetail.password'), 'first-secret-33');
-    await app.tap(find.byKey(const Key('addRetail.submit')));
-
     return (
       app: app,
       secrets: {
         'login-secret-1',
         '864213',
-        '481516234200',
+        '1000001',
         'new-secret-22',
-        'first-secret-33',
+        'chosen-pass-1',
         // The passes and the phone ID.
         ...app.storage.values.values,
       },
@@ -162,27 +152,9 @@ void main() {
       expect(hidden(Key(key)), isTrue, reason: key);
     }
 
-    app = await startApp(tester, profile: Roles.supervisor);
-    await tester.scrollUntilVisible(
-      find.byKey(const Key('verify.tool.retailUsers')),
-      300,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await app.tap(find.byKey(const Key('verify.tool.retailUsers')));
-    await app.tap(find.byKey(const Key('retailUsers.add')));
-    expect(hidden(const Key('addRetail.password')), isTrue);
-  });
-
-  testWidgets('TC-SEC-014 the keyboard does not learn hidden codes', (
-    tester,
-  ) async {
-    final app = await startApp(tester);
-    await app.tapText('Hidden code');
-    final field = tester.widget<TextField>(
-      find.byKey(const Key('verify.input')),
-    );
-    expect(field.enableSuggestions, isFalse);
-    expect(field.autocorrect, isFalse);
+    app = await startApp(tester, loggedIn: false);
+    await app.tapText('Sign up');
+    expect(hidden(const Key('access.password')), isTrue);
   });
 
   test('TC-SEC-015 only mailto: and tel: links can be opened', () {

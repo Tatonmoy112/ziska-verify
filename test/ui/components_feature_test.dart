@@ -4,9 +4,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:ziska_verify/features/history/domain/entities/check.dart';
 import 'package:ziska_verify/features/history/presentation/widgets/check_tile.dart';
-import 'package:ziska_verify/features/verification/domain/entities/bulk.dart';
 import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
-import 'package:ziska_verify/features/verification/presentation/widgets/bulk_results_view.dart';
 import 'package:ziska_verify/features/verification/presentation/widgets/item_details_card.dart';
 import 'package:ziska_verify/features/verification/presentation/widgets/verification_result_card.dart';
 import 'package:ziska_verify/l10n/generated/app_localizations.dart';
@@ -243,13 +241,13 @@ void main() {
   });
 
   group('item details', () {
-    Future<void> details(WidgetTester tester, {CheckCount? tracking}) => pumpUi(
+    Future<void> details(WidgetTester tester, {CheckCount? count}) => pumpUi(
       tester,
       ColoredBox(
         color: AppColors.surfaceMuted,
         child: ListView(
           padding: const EdgeInsets.all(AppSpacing.screen),
-          children: [ItemDetailsCard(item: _item(), tracking: tracking)],
+          children: [ItemDetailsCard(item: _item(), count: count)],
         ),
       ),
       size: const Size(390, 600),
@@ -301,26 +299,30 @@ void main() {
       await shot('details_product');
     });
 
-    uiTest('TC-UI-064 tracking details card', (tester, shot) async {
+    // Audit H5: one card for every found item; the check count adds the
+    // pill and the previous check, never a field less (SRS FR-LKP-06).
+    uiTest('TC-UI-064 details card with the check count', (tester, shot) async {
       await details(
         tester,
-        tracking: CheckCount(
+        count: CheckCount(
           thisCheck: 3,
           lastAt: DateTime.utc(2026, 11, 10, 4),
-          by: const ['Asha Rao', 'Karim'],
         ),
       );
       expect(
-        find.text(l10n.detailsTrackingTitle.toUpperCase()),
+        find.text(l10n.detailsProductTitle.toUpperCase()),
         findsOneWidget,
       );
+      // Every field, then the previous check.
+      expect(find.byType(LabelValueRow), findsNWidgets(9));
+      expect(find.text(l10n.shortNameLabel), findsOneWidget);
       final pill = find.text(l10n.checkNumber(3));
       expect(pill, findsOneWidget);
       expect(drawnStyle(tester, pill).color, AppColors.warning);
       expect(find.text(l10n.previousCheckLabel), findsOneWidget);
       expect(find.textContaining('Nov 10, 2026'), findsOneWidget);
-      expect(find.text(l10n.checkedByLabel), findsOneWidget);
-      expect(find.text('Asha Rao, Karim'), findsOneWidget);
+      expect(find.text(l10n.checkedByLabel), findsNothing);
+      expect(find.text('Asha Rao, Karim'), findsNothing);
       // Never a uses limit (backend D31).
       expect(find.textContaining('/'), findsNothing);
       expect(find.textContaining('uses'), findsNothing);
@@ -332,7 +334,6 @@ void main() {
     Future<void> tiles(
       WidgetTester tester,
       List<CheckRecord> checks, {
-      bool showOfficial = false,
       double height = 844,
     }) => pumpUi(
       tester,
@@ -341,8 +342,7 @@ void main() {
         child: ListView(
           padding: const EdgeInsets.only(top: AppSpacing.md),
           children: [
-            for (final c in checks)
-              CheckTile(check: c, showOfficial: showOfficial),
+            for (final c in checks) CheckTile(check: c),
           ],
         ),
       ),
@@ -390,23 +390,16 @@ void main() {
       expect(find.textContaining('Paracetamol'), findsNothing);
     });
 
-    uiTest('TC-UI-067 history row: "by" only for everyone\'s checks', (
-      tester,
-      shot,
-    ) async {
+    // SRS FR-HIS-04: the session if any; never a checker's name (D61).
+    uiTest('TC-UI-067 history row: the session marker', (tester, shot) async {
       await tiles(tester, [_check(CheckResult.valid)], height: 240);
-      expect(find.textContaining(l10n.historyBy('Asha Rao')), findsNothing);
-      await tiles(
-        tester,
-        [_check(CheckResult.valid)],
-        showOfficial: true,
-        height: 240,
-      );
-      expect(
-        find.textContaining(l10n.historyBy('Asha Rao')),
-        findsOneWidget,
-      );
-      await shot('check_tile_by');
+      expect(find.textContaining(l10n.historyInSession), findsNothing);
+      expect(find.textContaining('Asha Rao'), findsNothing);
+      await tiles(tester, [
+        _check(CheckResult.valid, sessionId: '7f3c2a10'),
+      ], height: 240);
+      expect(find.textContaining(l10n.historyInSession), findsOneWidget);
+      await shot('check_tile_session');
     });
 
     uiTest('TC-UI-068 history row: the way', (tester, shot) async {
@@ -425,163 +418,6 @@ void main() {
           AppColors.textMuted,
         );
       }
-    });
-  });
-
-  group('bulk views', () {
-    uiTest('TC-UI-069 bulk summary', (tester, shot) async {
-      await pumpUi(
-        tester,
-        ColoredBox(
-          color: AppColors.surfaceMuted,
-          child: ListView(
-            padding: const EdgeInsets.all(AppSpacing.screen),
-            children: const [
-              BulkSummaryCard(
-                summary: BulkSummary(
-                  total: 6,
-                  valid: 1,
-                  warning: 2,
-                  byReason: {LookupReason.checkedBefore: 2},
-                  notFound: 3,
-                  unassigned: 0,
-                ),
-              ),
-            ],
-          ),
-        ),
-        size: const Size(390, 420),
-      );
-      // The counts: the headline-size numbers, each in its result colour.
-      final counts = {
-        for (final e in find.byType(Text).evaluate())
-          if ((e.widget as Text).style?.fontSize ==
-                  AppTypography.headline.fontSize &&
-              (e.widget as Text).data != l10n.bulkSummaryTitle)
-            (e.widget as Text).data: (e.widget as Text).style!.color,
-      };
-      expect(counts, {
-        '6': AppColors.textStrong,
-        '1': AppColors.success,
-        '2': AppColors.warning,
-        '3': AppColors.danger,
-        '0': AppColors.textLabel,
-      });
-      expect(find.text(l10n.reasonCheckedBefore), findsOneWidget);
-      expect(find.text(l10n.reasonExpired), findsNothing);
-      await shot('bulk_summary');
-    });
-
-    uiTest('TC-UI-070 bulk result rows', (tester, shot) async {
-      await pumpUi(
-        tester,
-        ColoredBox(
-          // The Bulk lookup screen's background.
-          color: AppColors.surfaceMuted,
-          child: BulkResultsView(
-            outcome: BulkOutcome(
-              summary: const BulkSummary(
-                total: 3,
-                valid: 1,
-                warning: 1,
-                byReason: {LookupReason.checkedBefore: 1},
-                notFound: 1,
-                unassigned: 0,
-              ),
-              rows: [
-                BulkRow(
-                  way: LookupWay.serial,
-                  label: '1000001',
-                  result: _result(LookupOutcome.valid),
-                ),
-                BulkRow(
-                  way: LookupWay.hiddenCode,
-                  label: '*****200',
-                  result: _result(
-                    LookupOutcome.warning,
-                    reasons: [LookupReason.checkedBefore],
-                  ),
-                ),
-                BulkRow(
-                  way: LookupWay.qr,
-                  label: 'Q8F2KD91XA7M',
-                  result: _result(LookupOutcome.notFound),
-                ),
-              ],
-            ),
-            onOpen: (_) {},
-            onNewList: () {},
-          ),
-        ),
-      );
-      for (final (title, outcome, product) in [
-        ('1. 1000001', LookupOutcome.valid, true),
-        ('2. *****200', LookupOutcome.warning, true),
-        ('3. Q8F2KD91XA7M', LookupOutcome.notFound, false),
-      ]) {
-        final style = outcomeStyle(outcome, l10n);
-        final tile = find.ancestor(
-          of: find.text(title),
-          matching: find.byType(ListTile),
-        );
-        expect(tile, findsOneWidget, reason: title);
-        final subtitle = [
-          style.title,
-          if (product) 'Paracetamol 500',
-          _ref,
-        ].join(' · ');
-        expect(
-          find.descendant(of: tile, matching: find.text(subtitle)),
-          findsOneWidget,
-        );
-        final icon = tester.widget<Icon>(
-          find.descendant(of: tile, matching: find.byIcon(style.icon)),
-        );
-        expect(icon.color, style.color);
-      }
-      await shot('bulk_results');
-    });
-
-    uiTest('TC-UI-071 bulk list rows', (tester, shot) async {
-      final app = await startApp(tester);
-      await app.tap(find.byKey(const Key('verify.tool.bulk')));
-      await app.enter(const Key('bulk.input'), '1000001');
-      await app.tap(find.byKey(const Key('bulk.add')));
-      await app.tapText(l10n.wayHiddenCode);
-      await app.enter(const Key('bulk.input'), '481516234200');
-      await app.tap(find.byKey(const Key('bulk.add')));
-      await app.tap(find.byKey(const Key('bulk.scan')));
-      app.scanner.scan('https://www.ziskaverify.com/q/Q8F2KD91XA7M');
-      await tester.pumpAndSettle();
-      if (find.text('Stop scanning').evaluate().isNotEmpty) {
-        await app.tapText('Stop scanning');
-      }
-      await atOneX(tester);
-
-      for (final (n, label, icon, way) in [
-        ('1', '1000001', LucideIcons.hash, l10n.waySerial),
-        ('2', '*****200', LucideIcons.tag, l10n.wayHiddenCode),
-        ('3', 'Q8F2KD91XA7M', LucideIcons.qrCode, l10n.wayQr),
-      ]) {
-        final tile = find.ancestor(
-          of: find.text(label),
-          matching: find.byType(ListTile),
-        );
-        expect(tile, findsOneWidget, reason: label);
-        expect(find.descendant(of: tile, matching: find.text(n)), findsOne);
-        expect(
-          find.descendant(of: tile, matching: find.byIcon(icon)),
-          findsOne,
-        );
-        expect(find.descendant(of: tile, matching: find.text(way)), findsOne);
-        expect(
-          find.descendant(of: tile, matching: find.byTooltip(l10n.removeItem)),
-          findsOne,
-        );
-      }
-      // The typed hidden code is never shown in full.
-      expect(find.textContaining('481516234200'), findsNothing);
-      await shot('bulk_list');
     });
   });
 
@@ -618,7 +454,7 @@ void main() {
       final bar = tester.widget<NavigationBar>(find.byType(NavigationBar));
       expect(bar.selectedIndex, 0);
       expect(
-        drawnStyle(tester, find.text(l10n.tabVerify)).color,
+        drawnStyle(tester, tab(l10n.tabVerify)).color,
         AppColors.primary,
       );
       expect(
@@ -679,6 +515,7 @@ CheckRecord _check(
   String? serial = '1000001',
   String? product = 'Paracetamol 500',
   String? batch = 'B-1042',
+  String? sessionId,
 }) => CheckRecord(
   ref: _ref,
   at: DateTime.utc(2026, 11, 14, 4, 30),
@@ -689,4 +526,5 @@ CheckRecord _check(
   serial: serial,
   product: product,
   batch: batch,
+  sessionId: sessionId,
 );

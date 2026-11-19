@@ -1,5 +1,8 @@
 # E2E: End-to-End Journeys
 
+> **2026-11-16 baseline:** [16-mobile-migration.md](16-mobile-migration.md) replaces conflicting cases for hidden-code input, bulk submission, everyone scope, retail administration, certificates, and email-only access requests. Historical IDs/counts below remain for traceability; do not execute retired cases as release requirements. Current architecture: ../../final.md.
+
+
 Each journey crosses several features in one session, as a real official would. The single steps are proved by their own cases; a journey proves they work together. Format: [README](README.md#3-case-format).
 
 | ID | Title | Type | Pri | Run on | Auto | Pre-conditions / Data | Steps | Expected | Source |
@@ -10,7 +13,7 @@ Each journey crosses several features in one session, as a real official would. 
 | TC-E2E-004 | Senior seller's day | E2E | P2 | AUTO | ✅ `flow/e2e_journeys_flow_test` | Fake backend; R4 | Bulk lookup; own History; Profile; log out | No reports or retail users anywhere | §7.2 |
 | TC-E2E-005 | Retail seller's day | E2E | P1 | AUTO | ✅ `flow/e2e_journeys_flow_test` | Fake backend; R5 | Look up by hidden code; back; own History; Profile; log out | The hidden code field empty after the result; own checks only | §7.2, §12.1 |
 | TC-E2E-006 | Incident reporter's day | E2E | P2 | AUTO | ✅ `flow/e2e_journeys_flow_test` | Fake backend; R6 | Report incident with a retail user picked; My reports; log out | Each step as in its own cases; no lookup anywhere | §7.1 |
-| TC-E2E-007 | Trainee's day | E2E | P2 | AUTO | ✅ `flow/e2e_journeys_flow_test` | Fake backend; R7 | Log in; Verify tab; Profile; change the password; log out | "No features yet"; the change works | §7.2 |
+| TC-E2E-007 | Trainee's day | E2E | P2 | AUTO | ✅ `flow/e2e_journeys_flow_test` | Fake backend; R7 | Log in; Check tab; Profile; change the password; log out | "No features yet"; the change works | §7.2 |
 | TC-E2E-008 | Retail seller without history | E2E | P2 | AUTO | ✅ `flow/e2e_journeys_flow_test` | Fake backend; R8 | Log in; look up; log out | No History anywhere | §7.2 |
 | TC-E2E-009 | A suspect item reported | E2E | P1 | STAGE | ✋ | Staging; an inspector login; the test sheet's `not_found` item | Look the item up; **Report incident** with 2 photos; open My reports; ask the office to open the report in the portal | My reports lists it with 2 photos and the reference; the office sees the same report and photos | §13.5 |
 | TC-E2E-010 | A new retail user's first day | E2E | P1 | STAGE | ✋ | Staging; a supervisor login; a second phone | Supervisor adds a retail user (switch on); on the second phone the retail user logs in with the emailed first password; code; new password; looks up an item; opens History | Code screen, then the forced change, then Home; History lists that check only | §6.2, §6.6, §13.6 |

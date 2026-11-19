@@ -40,21 +40,29 @@ final class Failure {
     _ => null,
   };
 
-  /// The wait shown when a `429` has no usable `Retry-After`.
-  static const defaultRetryAfter = Duration(seconds: 60);
-
   /// For a `429`: when a new request may be sent, counted from [now]
   /// (final.md Section 15.4). `null` for any other failure.
   DateTime? retryAtFrom(DateTime now) => exception is RateLimitedException
-      ? now.add(retryAfter ?? defaultRetryAfter)
+      ? (retryAfter == null ? null : now.add(retryAfter!))
       : null;
 }
 
-/// Runs [action] and turns any [AppException] into an [Err].
+/// Runs [action] and turns any [AppException] into an [Err]. An answer of
+/// the wrong shape (a field of the wrong type or missing, which the parsers
+/// report as a `TypeError` or a `FormatException`) is an
+/// [InternalErrorException] too, so a screen never waits forever (final.md
+/// Section 6.2).
 Future<Result<T>> guard<T>(Future<T> Function() action) async {
   try {
     return Success(await action());
   } on AppException catch (e) {
     return Err(Failure(e));
+  } on FormatException {
+    return const Err(Failure(InternalErrorException(message: 'answer_shape')));
+    // The generated parsers report a wrong field type this way; nothing else
+    // in an action is expected to.
+    // ignore: avoid_catching_errors
+  } on TypeError {
+    return const Err(Failure(InternalErrorException(message: 'answer_shape')));
   }
 }

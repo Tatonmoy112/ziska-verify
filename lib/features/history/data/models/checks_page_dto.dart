@@ -31,6 +31,7 @@ class CheckDto {
     this.serial,
     this.product,
     this.batch,
+    this.sessionId,
   });
 
   factory CheckDto.fromJson(Map<String, dynamic> json) =>
@@ -46,6 +47,7 @@ class CheckDto {
   final String? serial;
   final String? product;
   final String? batch;
+  final String? sessionId;
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake, createToJson: false)

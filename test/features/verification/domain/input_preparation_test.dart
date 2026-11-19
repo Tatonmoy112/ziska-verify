@@ -7,7 +7,6 @@ import 'package:ziska_verify/features/verification/domain/usecases/verification_
 
 /// The formats of the Postman example (`GET formats`).
 const formats = InputFormats(
-  hiddenCodes: [CodeFormat(length: 12, characters: '0123456789')],
   serialMaxDigits: 19,
   qr: CodeFormat(
     length: 12,
@@ -52,9 +51,6 @@ void main() {
       (LookupWay.serial, '1' * 20, InputProblem.wrongFormat),
       (LookupWay.serial, '10A1', InputProblem.wrongFormat),
       (LookupWay.serial, '', InputProblem.empty),
-      (LookupWay.hiddenCode, '481516234200', null),
-      (LookupWay.hiddenCode, '48151623420', InputProblem.wrongFormat),
-      (LookupWay.hiddenCode, '48151623420A', InputProblem.wrongFormat),
       (LookupWay.qr, 'Q8F2KD91XA7M', null),
       (LookupWay.qr, 'Q8F2KD91XA7', InputProblem.wrongFormat),
     ];
@@ -63,27 +59,15 @@ void main() {
         expect(validator.validate(way, value, formats), expected);
       });
     }
-
-    test('any of several hidden code formats is accepted', () {
-      const two = InputFormats(
-        hiddenCodes: [
-          CodeFormat(length: 12, characters: '0123456789'),
-          CodeFormat(length: 8, characters: 'ABCDEF0123456789'),
-        ],
-        serialMaxDigits: 10,
-        qr: CodeFormat(length: 12, characters: 'ABC'),
-      );
-      expect(validator.validate(LookupWay.hiddenCode, 'ABCD1234', two), isNull);
-    });
   });
 
   group('PrepareInput', () {
     const prepare = PrepareInput();
 
-    test('a QR link sends only the value after /q/', () {
+    test('a QR link sends only the value after /q/, as read', () {
       final out = prepare(
         LookupWay.qr,
-        'https://www.ziskaverify.com/q/q8f2kd91xa7m',
+        'https://www.ziskaverify.com/q/Q8F2KD91XA7M',
         formats,
       );
       expect(out, isA<ReadyInput>());
@@ -95,8 +79,8 @@ void main() {
       expect(out, isA<RefusedInput>());
     });
 
-    test('a typed hidden code is normalized before checking', () {
-      final out = prepare(LookupWay.hiddenCode, '4815 1623 4200', formats);
+    test('a typed serial is normalized before checking', () {
+      final out = prepare(LookupWay.serial, '4815 1623 4200', formats);
       expect((out as ReadyInput).value, '481516234200');
     });
   });
@@ -105,13 +89,6 @@ void main() {
   group('Input boundaries (TC-LOOK-023 … -042, TC-SEC-016, -017)', () {
     const prepare = PrepareInput();
     const other = InputFormats(
-      hiddenCodes: [
-        CodeFormat(length: 12, characters: '0123456789'),
-        CodeFormat(
-          length: 8,
-          characters: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789',
-        ),
-      ],
       serialMaxDigits: 10,
       qr: CodeFormat(
         length: 12,
@@ -122,9 +99,6 @@ void main() {
 
     // (case, way, raw, formats, value sent or null when refused)
     final cases = <(String, LookupWay, String, InputFormats, String?)>[
-      ('LOOK-023', LookupWay.hiddenCode, '481516234200', other, '481516234200'),
-      ('LOOK-023', LookupWay.hiddenCode, 'AB12CD34', other, 'AB12CD34'),
-      ('LOOK-023', LookupWay.hiddenCode, '4815162342', other, null),
       ('LOOK-024', LookupWay.serial, '1234567890', other, '1234567890'),
       ('LOOK-024', LookupWay.serial, '12345678901', other, null),
       ('LOOK-026', LookupWay.serial, '7', formats, '7'),
@@ -135,25 +109,6 @@ void main() {
       ('LOOK-030', LookupWay.serial, '10O0001', formats, null),
       ('LOOK-031', LookupWay.serial, '', formats, null),
       ('LOOK-032', LookupWay.serial, '0', formats, '0'),
-      ('LOOK-033', LookupWay.hiddenCode, '4' * 11, formats, null),
-      ('LOOK-033', LookupWay.hiddenCode, '4' * 13, formats, null),
-      ('LOOK-034', LookupWay.hiddenCode, 'ab12cd34', other, 'AB12CD34'),
-      ('LOOK-035', LookupWay.hiddenCode, '48151623420O', formats, null),
-      (
-        'LOOK-036',
-        LookupWay.hiddenCode,
-        '481516234200\n',
-        formats,
-        '481516234200',
-      ),
-      (
-        'LOOK-036',
-        LookupWay.hiddenCode,
-        '481516\t234200',
-        formats,
-        '481516234200',
-      ),
-      ('LOOK-037', LookupWay.hiddenCode, '4' * 65, formats, null),
       (
         'LOOK-038',
         LookupWay.qr,
@@ -196,9 +151,11 @@ void main() {
       (
         'LOOK-041',
         LookupWay.qr,
+        // Sent as read (guide section 4): lower case is not among the
+        // formats' characters, so it is refused, never made capitals.
         'https://a.example/q/${qr.toLowerCase()}',
         formats,
-        qr,
+        null,
       ),
       ('LOOK-042', LookupWay.qr, qr, formats, null),
       ('SEC-016', LookupWay.qr, 'javascript:alert(1)/q/$qr', formats, qr),

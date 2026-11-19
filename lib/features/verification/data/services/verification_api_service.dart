@@ -1,26 +1,25 @@
 import 'package:ziska_verify/core/errors/app_exception.dart';
 import 'package:ziska_verify/core/network/api_client.dart';
+import 'package:ziska_verify/core/pagination/page_request.dart';
 import 'package:ziska_verify/features/verification/data/models/verification_dtos.dart';
+import 'package:ziska_verify/features/verification/domain/entities/scan_session.dart';
 
-/// `GET formats`, `POST lookups`, `POST lookups/bulk` (final.md 5.7).
 abstract interface class VerificationApiService {
   Future<FormatsDto> getFormats();
-
   Future<LookupResultDto> lookup({required String way, required String value});
-
-  /// [items] are `{way, value}` pairs, 1 to 500, in the order to match.
-  Future<BulkResponseDto> lookupBulk(List<Map<String, String>> items);
+  Future<Map<String, dynamic>> scan(String value, String sessionId);
+  Future<Map<String, dynamic>> serials(List<String> values);
+  Future<void> endSession(String id);
+  Future<SessionsPageDto> sessions(SessionQuery query, PageRequest page);
+  Future<SessionSummaryDto> session(String id);
 }
 
 class DioVerificationApiService implements VerificationApiService {
   DioVerificationApiService(this._api);
-
   final ApiClient _api;
-
   @override
   Future<FormatsDto> getFormats() async =>
       FormatsDto.fromJson(_map(await _api.get('formats')));
-
   @override
   Future<LookupResultDto> lookup({
     required String way,
@@ -28,13 +27,48 @@ class DioVerificationApiService implements VerificationApiService {
   }) async => LookupResultDto.fromJson(
     _map(await _api.post('lookups', body: {'way': way, 'value': value})),
   );
-
   @override
-  Future<BulkResponseDto> lookupBulk(List<Map<String, String>> items) async =>
-      BulkResponseDto.fromJson(
-        _map(await _api.post('lookups/bulk', body: {'items': items})),
+  Future<Map<String, dynamic>> scan(String value, String sessionId) async =>
+      _map(
+        await _api.post(
+          'lookups',
+          body: {'way': 'qr', 'value': value, 'session_id': sessionId},
+        ),
       );
-
+  @override
+  Future<Map<String, dynamic>> serials(List<String> values) async =>
+      _map(await _api.post('lookups/serials', body: {'serials': values}));
+  @override
+  Future<void> endSession(String id) =>
+      _api.post('lookups/sessions/${Uri.encodeComponent(id)}/end');
+  @override
+  Future<SessionSummaryDto> session(String id) async =>
+      SessionSummaryDto.fromJson(
+        _map(await _api.get('lookups/sessions/${Uri.encodeComponent(id)}')),
+      );
+  @override
+  Future<SessionsPageDto> sessions(
+    SessionQuery query,
+    PageRequest page,
+  ) async => SessionsPageDto.fromJson(
+    _map(
+      await _api.get(
+        'lookups/sessions',
+        query: {
+          'limit': page.limit,
+          'cursor': page.cursor,
+          'status': query.status?.name,
+          'from': _day(query.from),
+          'to': _day(query.to),
+        },
+      ),
+    ),
+  );
+  static String? _day(DateTime? date) => date == null
+      ? null
+      : '${date.year.toString().padLeft(4, '0')}-'
+            '${date.month.toString().padLeft(2, '0')}-'
+            '${date.day.toString().padLeft(2, '0')}';
   static Map<String, dynamic> _map(Object? data) {
     if (data is Map<String, dynamic>) return data;
     throw const InternalErrorException(message: 'verification_shape');

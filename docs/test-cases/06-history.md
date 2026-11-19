@@ -1,5 +1,8 @@
 # HIST: History and Item Tracking
 
+> **2026-11-16 baseline:** [16-mobile-migration.md](16-mobile-migration.md) replaces conflicting cases for hidden-code input, bulk submission, everyone scope, retail administration, certificates, and email-only access requests. Historical IDs/counts below remain for traceability; do not execute retired cases as release requirements. Current architecture: ../../final.md.
+
+
 | Field | Value |
 |---|---|
 | Spec | final.md §8.3, §10, §13.4, §16 |
@@ -57,6 +60,7 @@
 | TC-HIST-046 | Nothing kept on the phone | SEC | P2 | AUTO | ✅ `flow/history_edge_flow_test` | Fake backend | Load History; restart the app offline; open History | An error with Try again, no rows: checks are not stored | §10.6, §12.1 Local data |
 | TC-HIST-047 | The result chips keep their counts | POS | P2 | AUTO | ✅ `flow/history_flow_test`, `features/history/history_bloc_test` | Fake backend; totals 120 / 80 / 30 / 9 / 1 | Open History; pick **Valid**; pick **Warning**; search a serial with a chip picked; pull to refresh | The chips show the totals; picking a chip sends `result` and keeps the counts without another request; a new search with a chip picked asks for the counts once more without `result`, with `limit=1`; a failed count leaves the chips without counts and the list shown; a refresh counts again | §13.4 |
 | TC-HIST-048 | Today and Yesterday in Bangladesh time | POS | P3 | AUTO | ✅ `core/utils/display_time_test` | Clock 12:23 on 15 Nov 2026 in Bangladesh | Rows at 11:00 today, 00:30 today (14 Nov in UTC), 23:59 yesterday, two days ago, last year | "Today · …", "Yesterday · …" up to Bangladesh midnight, then the date | §13.4, §16 |
+| TC-HIST-049 | No checks yet, without filters | EDGE | P3 | AUTO | ✅ `flow/history_edge_flow_test`, `ui/screens_verify_history_test` | Fake backend; no checks | Open History | "No checks" and "Your checks appear here after your first check."; never "No check matches these filters." | final.md §14.2 |
 
 ## Spec gaps in this file
 

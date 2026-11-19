@@ -14,6 +14,13 @@ import '../../../fakes/fake_session_service.dart';
 
 class _MockAuthApi extends Mock implements AuthApiService {}
 
+/// Secure storage that cannot be read: a platform error, not an app one.
+class _BrokenPhoneId implements PhoneIdService {
+  @override
+  Future<String> getOrCreate() async =>
+      throw Exception('PlatformException(keystore)');
+}
+
 class _FixedPhoneId implements PhoneIdService {
   @override
   Future<String> getOrCreate() async => 'phone-1';
@@ -147,5 +154,29 @@ void main() {
 
     expect(session.endCalls, 1);
     expect(session.current, isA<SessionUnauthenticated>());
+  });
+
+  // Data-flow audit A1 (guide §2): an unreadable phone ID is an app error,
+  // so Login says "Something went wrong" instead of spinning.
+  test('TC-SESS-042 an unreadable phone ID is an error, not a hang', () async {
+    final broken = AuthRepositoryImpl(
+      api: api,
+      session: session,
+      phoneId: _BrokenPhoneId(),
+      logger: FakeLoggerService(),
+    );
+    final result = await broken.login(email: 'a@b.c', password: 'p');
+    expect(result, isA<Err<LoginOutcome>>());
+    expect(
+      (result as Err<LoginOutcome>).failure.exception,
+      isA<InternalErrorException>(),
+    );
+    verifyNever(
+      () => api.login(
+        email: any(named: 'email'),
+        password: any(named: 'password'),
+        phoneId: any(named: 'phoneId'),
+      ),
+    );
   });
 }

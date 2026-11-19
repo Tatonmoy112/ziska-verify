@@ -6,7 +6,6 @@ part 'verification_dtos.g.dart';
 @JsonSerializable(fieldRename: FieldRename.snake, createToJson: false)
 class FormatsDto {
   const FormatsDto({
-    required this.hiddenCode,
     required this.serial,
     required this.qr,
   });
@@ -14,7 +13,6 @@ class FormatsDto {
   factory FormatsDto.fromJson(Map<String, dynamic> json) =>
       _$FormatsDtoFromJson(json);
 
-  final List<CodeFormatDto> hiddenCode;
   final SerialFormatDto serial;
   final CodeFormatDto qr;
 }
@@ -65,14 +63,13 @@ class LookupResultDto {
 
 @JsonSerializable(fieldRename: FieldRename.snake, createToJson: false)
 class CountDto {
-  const CountDto({required this.thisCheck, this.lastAt, this.by});
+  const CountDto({required this.thisCheck, this.lastAt});
 
   factory CountDto.fromJson(Map<String, dynamic> json) =>
       _$CountDtoFromJson(json);
 
   final int thisCheck;
   final String? lastAt;
-  final List<String>? by;
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake, createToJson: false)
@@ -123,37 +120,87 @@ class BatchDto {
   final String? expires;
 }
 
-/// `POST lookups/bulk` → `data` (app API guide §4.3).
 @JsonSerializable(fieldRename: FieldRename.snake, createToJson: false)
-class BulkResponseDto {
-  const BulkResponseDto({required this.summary, required this.results});
-
-  factory BulkResponseDto.fromJson(Map<String, dynamic> json) =>
-      _$BulkResponseDtoFromJson(json);
-
-  final BulkSummaryDto summary;
-  final List<LookupResultDto> results;
+class SessionTotalsDto {
+  const SessionTotalsDto({
+    required this.id,
+    required this.scanned,
+    required this.valid,
+    required this.warning,
+    required this.notFound,
+    required this.unassigned,
+    this.left,
+  });
+  factory SessionTotalsDto.fromJson(Map<String, dynamic> json) =>
+      _$SessionTotalsDtoFromJson(json);
+  final String id;
+  final int scanned;
+  final int valid;
+  final int warning;
+  final int notFound;
+  final int unassigned;
+  final int? left;
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake, createToJson: false)
-class BulkSummaryDto {
-  const BulkSummaryDto({
-    required this.total,
+class ScanResultDto {
+  const ScanResultDto({required this.session, required this.repeat});
+  factory ScanResultDto.fromJson(Map<String, dynamic> json) =>
+      _$ScanResultDtoFromJson(json);
+  final SessionTotalsDto session;
+  final bool repeat;
+}
+
+@JsonSerializable(fieldRename: FieldRename.snake, createToJson: false)
+class SessionSummaryDto {
+  const SessionSummaryDto({
+    required this.id,
+    required this.kind,
+    required this.status,
+    required this.startedAt,
+    required this.lastScanAt,
+    required this.scanned,
     required this.valid,
     required this.warning,
-    required this.byReason,
     required this.notFound,
     required this.unassigned,
   });
-
-  factory BulkSummaryDto.fromJson(Map<String, dynamic> json) =>
-      _$BulkSummaryDtoFromJson(json);
-
-  final int total;
+  factory SessionSummaryDto.fromJson(Map<String, dynamic> json) =>
+      _$SessionSummaryDtoFromJson(json);
+  final String id;
+  final String kind;
+  final String status;
+  final String startedAt;
+  final String lastScanAt;
+  final int scanned;
   final int valid;
   final int warning;
-  @JsonKey(defaultValue: <String, int>{})
-  final Map<String, int> byReason;
   final int notFound;
   final int unassigned;
+}
+
+@JsonSerializable(fieldRename: FieldRename.snake, createToJson: false)
+class SessionsPageDto {
+  const SessionsPageDto({required this.sessions, this.nextCursor});
+  factory SessionsPageDto.fromJson(Map<String, dynamic> json) =>
+      _$SessionsPageDtoFromJson(json);
+  final List<SessionSummaryDto> sessions;
+  final String? nextCursor;
+}
+
+@JsonSerializable(fieldRename: FieldRename.snake, createToJson: false)
+class SerialStackDto {
+  const SerialStackDto({required this.session, required this.items});
+  factory SerialStackDto.fromJson(Map<String, dynamic> json) =>
+      _$SerialStackDtoFromJson(json);
+  final SessionTotalsDto session;
+  final List<SerialStackItemDto> items;
+}
+
+@JsonSerializable(fieldRename: FieldRename.snake, createToJson: false)
+class SerialStackItemDto {
+  const SerialStackItemDto({required this.serial});
+  factory SerialStackItemDto.fromJson(Map<String, dynamic> json) =>
+      _$SerialStackItemDtoFromJson(json);
+  final String serial;
 }

@@ -15,7 +15,6 @@ String refusedMessage(
   if (refused.problem == InputProblem.empty) return l10n.inputEmpty;
   return switch (refused.way) {
     LookupWay.serial => l10n.inputWrongSerial(formats.serialMaxDigits),
-    LookupWay.hiddenCode => l10n.inputWrongHiddenCode,
     LookupWay.qr => l10n.notProductQr,
   };
 }

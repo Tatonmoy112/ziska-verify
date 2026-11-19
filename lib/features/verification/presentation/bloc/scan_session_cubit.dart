@@ -1,0 +1,531 @@
+import 'dart:async';
+
+import 'package:clock/clock.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:ziska_verify/core/errors/app_exception.dart';
+import 'package:ziska_verify/core/errors/result.dart';
+import 'package:ziska_verify/core/services/scanner/active_scan_store.dart';
+import 'package:ziska_verify/core/services/session/session_state.dart';
+import 'package:ziska_verify/features/verification/domain/entities/checked_input.dart';
+import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
+import 'package:ziska_verify/features/verification/domain/entities/scan_session.dart';
+import 'package:ziska_verify/features/verification/domain/repositories/verification_repository.dart';
+import 'package:ziska_verify/features/verification/domain/usecases/verification_usecases.dart';
+
+part 'scan_session_cubit.freezed.dart';
+
+typedef LoadRecoveredScans =
+    Future<Result<RecoveredScans>> Function(String id, String? cursor);
+
+@freezed
+abstract class ScanSessionState with _$ScanSessionState {
+  const factory ScanSessionState({
+    String? id,
+    InputFormats? formats,
+    SessionTotals? totals,
+    LookupResult? latest,
+    CheckedInput? checked,
+    @Default(false) bool repeat,
+
+    /// The session was another official's (`409 session_not_yours`): a new
+    /// one started; the screen says so once (guide section 4.3).
+    @Default(false) bool restarted,
+
+    /// A resumed session's scans could not be read: Try again reloads them
+    /// (guide section 4.6); scanning goes on meanwhile.
+    @Default(false) bool rowsFailed,
+
+    /// A saved session was taken up again; without its totals (no
+    /// `history:own`) the counters wait for the next scan's answer instead
+    /// of showing zeros.
+    @Default(false) bool resumed,
+
+    /// Reads waiting behind the one being checked.
+    @Default(0) int pending,
+
+    /// Reads let go when a scan failed: they were not checked and must be
+    /// scanned again (guide section 4.6: nothing is queued for later).
+    @Default(0) int notChecked,
+
+    /// Goes up with every answered scan, so each answer is announced, even
+    /// two equal ones in a row.
+    @Default(0) int answered,
+
+    /// After a `429` on loading those scans: not asked again before this.
+    DateTime? rowsRetryAt,
+    @Default(true) bool loading,
+    @Default(false) bool busy,
+    @Default(false) bool paused,
+    @Default(false) bool loadingMore,
+    @Default(<RecoveredScan>[]) List<RecoveredScan> rows,
+    String? nextCursor,
+    Failure? failure,
+    DateTime? retryAt,
+  }) = _ScanSessionState;
+}
+
+class ScanSessionCubit extends Cubit<ScanSessionState> {
+  ScanSessionCubit({
+    required VerificationRepository repository,
+    required ActiveScanStore store,
+    required Stream<SessionState> authStates,
+    LoadRecoveredScans? loadChecks,
+  }) : _repository = repository,
+       _store = store,
+       _loadChecks = loadChecks,
+       super(const ScanSessionState()) {
+    _auth = authStates.listen((s) {
+      if (s is SessionUnauthenticated) unawaited(finish());
+    });
+  }
+  final VerificationRepository _repository;
+  final ActiveScanStore _store;
+  final LoadRecoveredScans? _loadChecks;
+  late final StreamSubscription<SessionState> _auth;
+  Future<void> _storageTask = Future<void>.value();
+
+  /// Sends the next read once the spacing or a 429's wait has passed.
+  Timer? _pace;
+
+  /// Reads waiting to be sent, in the order the camera read them.
+  final _line = <_Read>[];
+
+  /// The read being checked (or waiting out a 429).
+  _Read? _inFlight;
+  DateTime? _lastSentAt;
+
+  /// At most two scans a second (guide section 4.3: 120 requests a minute).
+  static const scanSpacing = Duration(milliseconds: 500);
+  bool _ended = false;
+  bool _starting = false;
+  int _generation = 0;
+  String? _lastRaw;
+  Future<void> _persist(Future<void> Function() action) {
+    final next = _storageTask.then((_) => action());
+    _storageTask = next.catchError((Object _) {});
+    return next;
+  }
+
+  bool _active(int generation) =>
+      !isClosed && !_ended && generation == _generation;
+  Future<void> start() async {
+    if (_starting || _ended) return;
+    final wait = state.retryAt;
+    if (state.id == null && wait != null && clock.now().isBefore(wait)) {
+      return;
+    }
+    _starting = true;
+    final generation = ++_generation;
+    emit(state.copyWith(loading: true, failure: null));
+    try {
+      final formats = await _repository.getFormats();
+      if (!_active(generation)) return;
+      if (formats case Err(:final failure)) {
+        emit(
+          state.copyWith(
+            loading: false,
+            failure: failure,
+            retryAt: failure.retryAtFrom(clock.now()),
+          ),
+        );
+        return;
+      }
+      emit(state.copyWith(formats: (formats as Success<InputFormats>).value));
+      var id = await _store.read();
+      if (!_active(generation)) return;
+      SessionTotals? totals;
+      RecoveredScans? checks;
+      if (id != null && _loadChecks != null) {
+        final saved = await _repository.session(id);
+        if (!_active(generation)) return;
+        switch (saved) {
+          case Success(:final value):
+            if (value.status == ScanStatus.open &&
+                value.kind == SessionKind.qr) {
+              totals = value.totals;
+              final loaded = await _loadChecks(id, null);
+              if (!_active(generation)) return;
+              if (loaded case Success(:final value)) checks = value;
+              if (loaded case Err(:final failure)) {
+                emit(
+                  state.copyWith(
+                    id: id,
+                    totals: totals,
+                    loading: false,
+                    failure: failure,
+                    rowsFailed: true,
+                    rowsRetryAt: failure.retryAtFrom(clock.now()),
+                  ),
+                );
+                return;
+              }
+            } else {
+              id = null;
+            }
+          case Err(:final failure):
+            if (failure.exception is NotFoundException) {
+              id = null;
+            } else {
+              emit(state.copyWith(loading: false, failure: failure));
+              return;
+            }
+        }
+      }
+      final resumed = id != null;
+      id ??= ActiveScanStore.newId();
+      await _persist(() => _store.save(id!));
+      if (!_active(generation)) return;
+      emit(
+        state.copyWith(
+          id: id,
+          totals: totals,
+          resumed: resumed,
+          loading: false,
+          rows: checks?.items ?? [],
+          nextCursor: checks?.nextCursor,
+        ),
+      );
+    } on Object {
+      if (_active(generation)) {
+        emit(
+          state.copyWith(
+            loading: false,
+            failure: const Failure(
+              InternalErrorException(message: 'scan_storage'),
+            ),
+          ),
+        );
+      }
+    } finally {
+      _starting = false;
+    }
+  }
+
+  /// A QR read by the camera. A read that comes while another is being
+  /// checked waits in line; the line is sent in the order read, one at a
+  /// time, [scanSpacing] apart, so no read is dropped (guide section 4.3).
+  /// Completes when this read has been answered or let go.
+  Future<void> scan(String raw) {
+    final formats = state.formats;
+    if (_ended ||
+        state.loading ||
+        state.paused ||
+        formats == null ||
+        state.id == null) {
+      return Future<void>.value();
+    }
+    if (raw == _lastRaw) return Future<void>.value();
+    final prepared = const PrepareInput()(LookupWay.qr, raw, formats);
+    if (prepared is! ReadyInput) {
+      emit(
+        state.copyWith(
+          failure: const Failure(ValidationException(message: 'scan_input')),
+        ),
+      );
+      return Future<void>.value();
+    }
+    _lastRaw = raw;
+    final value = prepared.value;
+    if (_inFlight?.value == value || _line.any((r) => r.value == value)) {
+      return Future<void>.value();
+    }
+    final read = _Read(value);
+    _line.add(read);
+    emit(state.copyWith(pending: _waiting));
+    _pump();
+    return read.done.future;
+  }
+
+  /// Reads in line, the one held back by a 429 included.
+  int get _waiting => _line.length;
+
+  /// Sends the next read when nothing is being checked, the spacing has
+  /// passed and no 429 wait runs; otherwise comes back when it may.
+  void _pump() {
+    if (_inFlight != null ||
+        _line.isEmpty ||
+        _ended ||
+        isClosed ||
+        state.paused) {
+      return;
+    }
+    final now = clock.now();
+    DateTime? notBefore;
+    final wait = state.retryAt;
+    if (wait != null && now.isBefore(wait)) notBefore = wait;
+    final last = _lastSentAt;
+    if (last != null) {
+      final next = last.add(scanSpacing);
+      if (now.isBefore(next) &&
+          (notBefore == null || next.isAfter(notBefore))) {
+        notBefore = next;
+      }
+    }
+    if (notBefore != null) {
+      _pace?.cancel();
+      _pace = Timer(notBefore.difference(now), _pump);
+      return;
+    }
+    unawaited(_send(_line.removeAt(0)));
+  }
+
+  Future<void> _send(_Read read) async {
+    _inFlight = read;
+    _lastSentAt = clock.now();
+    final sent = read.value;
+    final generation = _generation;
+    emit(
+      state.copyWith(
+        busy: true,
+        repeat: false,
+        failure: null,
+        retryAt: null,
+        notChecked: 0,
+        pending: _waiting,
+      ),
+    );
+    var result = await _repository.scan(sent, state.id!);
+    if (!_active(generation)) return _drop(read);
+    if (result case Err(
+      failure: Failure(exception: ScanSessionException(:final code)),
+    )) {
+      final id = ActiveScanStore.newId();
+      try {
+        await _persist(() => _store.save(id));
+      } on Object {
+        if (_active(generation)) {
+          emit(
+            state.copyWith(
+              busy: false,
+              failure: const Failure(
+                InternalErrorException(message: 'scan_storage'),
+              ),
+            ),
+          );
+        }
+        _letGoAll(read);
+        return;
+      }
+      if (!_active(generation)) return _drop(read);
+      emit(
+        state.copyWith(
+          id: id,
+          rows: [],
+          nextCursor: null,
+          latest: null,
+          checked: null,
+          totals: null,
+          resumed: false,
+        ),
+      );
+      if (code == 'session_not_yours') {
+        _lastRaw = null;
+        emit(state.copyWith(busy: false, restarted: true));
+        read.letGo();
+        _inFlight = null;
+        _pump();
+        return;
+      }
+      result = await _repository.scan(sent, id);
+      if (!_active(generation)) return _drop(read);
+    }
+    switch (result) {
+      case Success(:final value):
+        final row = RecoveredScan(
+          ref: value.result.ref,
+          outcome: value.result.outcome,
+          serial: value.result.item?.serial,
+          product: value.result.item?.product.name,
+        );
+        _inFlight = null;
+        emit(
+          state.copyWith(
+            busy: false,
+            latest: value.result,
+            checked: CheckedInput.of(LookupWay.qr, sent, clock.now()),
+            repeat: value.repeat,
+            restarted: false,
+            totals: value.session,
+            answered: state.answered + 1,
+            pending: _waiting,
+            rows: value.repeat
+                ? state.rows
+                : [row, ...state.rows.where((r) => r.ref != row.ref)],
+          ),
+        );
+        read.letGo();
+        _pump();
+      case Err(:final failure):
+        _lastRaw = null;
+        final retryAt = failure.retryAtFrom(clock.now());
+        _inFlight = null;
+        if (retryAt != null) {
+          // A 429 with its wait: this read goes first again once the wait
+          // ends, and the line waits behind it (guide section 4.3).
+          _line.insert(0, read);
+        }
+        final dropped = retryAt != null ? 0 : _line.length;
+        if (retryAt == null) _letGoAll(null);
+        // The previous product's card goes: it is not this scan's result.
+        emit(
+          state.copyWith(
+            busy: false,
+            failure: failure,
+            retryAt: retryAt,
+            latest: null,
+            checked: null,
+            repeat: false,
+            notChecked: dropped,
+            pending: _waiting,
+          ),
+        );
+        read.letGo();
+        _pump();
+    }
+  }
+
+  /// An answer that came too late for this session: the read is let go.
+  void _drop(_Read read) {
+    read.letGo();
+    if (identical(_inFlight, read)) _inFlight = null;
+  }
+
+  /// Lets every waiting read go (and [current]); none is sent later.
+  void _letGoAll(_Read? current) {
+    _pace?.cancel();
+    for (final r in _line) {
+      r.letGo();
+    }
+    _line.clear();
+    current?.letGo();
+    if (identical(_inFlight, current)) _inFlight = null;
+  }
+
+  /// The camera stops (a result opened, the app in the background): the
+  /// line waits and goes on at [resume].
+  void pause() {
+    _pace?.cancel();
+    if (!isClosed) emit(state.copyWith(paused: true));
+  }
+
+  void resume() {
+    _lastRaw = null;
+    if (isClosed) return;
+    emit(state.copyWith(paused: false));
+    _pump();
+  }
+
+  /// Reads a resumed session's scans again, from the first page.
+  Future<void> reloadRows() async {
+    final id = state.id;
+    if (_ended ||
+        state.loadingMore ||
+        _rowsWaiting ||
+        id == null ||
+        _loadChecks == null) {
+      return;
+    }
+    final generation = _generation;
+    emit(state.copyWith(loadingMore: true));
+    final result = await _loadChecks(id, null);
+    if (!_active(generation)) return;
+    switch (result) {
+      case Success(:final value):
+        emit(
+          state.copyWith(
+            loadingMore: false,
+            rowsFailed: false,
+            failure: null,
+            rows: value.items,
+            nextCursor: value.nextCursor,
+          ),
+        );
+      case Err(:final failure):
+        emit(
+          state.copyWith(
+            loadingMore: false,
+            failure: failure,
+            rowsRetryAt: failure.retryAtFrom(clock.now()),
+          ),
+        );
+    }
+  }
+
+  bool get _rowsWaiting {
+    final wait = state.rowsRetryAt;
+    return wait != null && clock.now().isBefore(wait);
+  }
+
+  Future<void> more() async {
+    final cursor = state.nextCursor;
+    final id = state.id;
+    if (_ended ||
+        state.loadingMore ||
+        _rowsWaiting ||
+        cursor == null ||
+        id == null ||
+        _loadChecks == null) {
+      return;
+    }
+    final generation = _generation;
+    emit(state.copyWith(loadingMore: true));
+    final result = await _loadChecks(id, cursor);
+    if (!_active(generation)) return;
+    switch (result) {
+      case Success(:final value):
+        final refs = state.rows.map((r) => r.ref).toSet();
+        emit(
+          state.copyWith(
+            loadingMore: false,
+            failure: null,
+            rows: [...state.rows, ...value.items.where((r) => refs.add(r.ref))],
+            nextCursor: value.nextCursor,
+          ),
+        );
+      case Err(:final failure):
+        emit(
+          state.copyWith(
+            loadingMore: false,
+            failure: failure,
+            rowsRetryAt: failure.retryAtFrom(clock.now()),
+          ),
+        );
+    }
+  }
+
+  Future<void> finish() async {
+    if (_ended) return;
+    _ended = true;
+    ++_generation;
+    _letGoAll(_inFlight);
+    final id = state.id;
+    if (!isClosed) emit(const ScanSessionState(loading: false));
+    if (id != null) unawaited(_repository.endSession(id));
+    try {
+      await _persist(_store.clear);
+    } on Object {
+      // Never retain results or block leaving the screen on storage failure.
+      // A surviving UUID remains isolated to this official.
+      // The server expires an idle session.
+    }
+  }
+
+  @override
+  Future<void> close() async {
+    await finish();
+    await _auth.cancel();
+    return super.close();
+  }
+}
+
+/// One QR read, waiting to be sent or being checked.
+class _Read {
+  _Read(this.value);
+  final String value;
+  final done = Completer<void>();
+
+  void letGo() {
+    if (!done.isCompleted) done.complete();
+  }
+}

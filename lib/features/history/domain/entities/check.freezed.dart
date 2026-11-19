@@ -16,7 +16,7 @@ mixin _$CheckQuery {
 
  CheckResult? get result; CheckWay? get way;/// Calendar days, both included.
  DateTime? get from; DateTime? get to;/// A serial or a reference number.
- String? get search; CheckScope get scope;
+ String? get search; String? get sessionId;
 /// Create a copy of CheckQuery
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -27,16 +27,16 @@ $CheckQueryCopyWith<CheckQuery> get copyWith => _$CheckQueryCopyWithImpl<CheckQu
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CheckQuery&&(identical(other.result, result) || other.result == result)&&(identical(other.way, way) || other.way == way)&&(identical(other.from, from) || other.from == from)&&(identical(other.to, to) || other.to == to)&&(identical(other.search, search) || other.search == search)&&(identical(other.scope, scope) || other.scope == scope));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CheckQuery&&(identical(other.result, result) || other.result == result)&&(identical(other.way, way) || other.way == way)&&(identical(other.from, from) || other.from == from)&&(identical(other.to, to) || other.to == to)&&(identical(other.search, search) || other.search == search)&&(identical(other.sessionId, sessionId) || other.sessionId == sessionId));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,result,way,from,to,search,scope);
+int get hashCode => Object.hash(runtimeType,result,way,from,to,search,sessionId);
 
 @override
 String toString() {
-  return 'CheckQuery(result: $result, way: $way, from: $from, to: $to, search: $search, scope: $scope)';
+  return 'CheckQuery(result: $result, way: $way, from: $from, to: $to, search: $search, sessionId: $sessionId)';
 }
 
 
@@ -47,7 +47,7 @@ abstract mixin class $CheckQueryCopyWith<$Res>  {
   factory $CheckQueryCopyWith(CheckQuery value, $Res Function(CheckQuery) _then) = _$CheckQueryCopyWithImpl;
 @useResult
 $Res call({
- CheckResult? result, CheckWay? way, DateTime? from, DateTime? to, String? search, CheckScope scope
+ CheckResult? result, CheckWay? way, DateTime? from, DateTime? to, String? search, String? sessionId
 });
 
 
@@ -64,15 +64,15 @@ class _$CheckQueryCopyWithImpl<$Res>
 
 /// Create a copy of CheckQuery
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? result = freezed,Object? way = freezed,Object? from = freezed,Object? to = freezed,Object? search = freezed,Object? scope = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? result = freezed,Object? way = freezed,Object? from = freezed,Object? to = freezed,Object? search = freezed,Object? sessionId = freezed,}) {
   return _then(_self.copyWith(
 result: freezed == result ? _self.result : result // ignore: cast_nullable_to_non_nullable
 as CheckResult?,way: freezed == way ? _self.way : way // ignore: cast_nullable_to_non_nullable
 as CheckWay?,from: freezed == from ? _self.from : from // ignore: cast_nullable_to_non_nullable
 as DateTime?,to: freezed == to ? _self.to : to // ignore: cast_nullable_to_non_nullable
 as DateTime?,search: freezed == search ? _self.search : search // ignore: cast_nullable_to_non_nullable
-as String?,scope: null == scope ? _self.scope : scope // ignore: cast_nullable_to_non_nullable
-as CheckScope,
+as String?,sessionId: freezed == sessionId ? _self.sessionId : sessionId // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
@@ -157,10 +157,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( CheckResult? result,  CheckWay? way,  DateTime? from,  DateTime? to,  String? search,  CheckScope scope)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( CheckResult? result,  CheckWay? way,  DateTime? from,  DateTime? to,  String? search,  String? sessionId)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _CheckQuery() when $default != null:
-return $default(_that.result,_that.way,_that.from,_that.to,_that.search,_that.scope);case _:
+return $default(_that.result,_that.way,_that.from,_that.to,_that.search,_that.sessionId);case _:
   return orElse();
 
 }
@@ -178,10 +178,10 @@ return $default(_that.result,_that.way,_that.from,_that.to,_that.search,_that.sc
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( CheckResult? result,  CheckWay? way,  DateTime? from,  DateTime? to,  String? search,  CheckScope scope)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( CheckResult? result,  CheckWay? way,  DateTime? from,  DateTime? to,  String? search,  String? sessionId)  $default,) {final _that = this;
 switch (_that) {
 case _CheckQuery():
-return $default(_that.result,_that.way,_that.from,_that.to,_that.search,_that.scope);case _:
+return $default(_that.result,_that.way,_that.from,_that.to,_that.search,_that.sessionId);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -198,10 +198,10 @@ return $default(_that.result,_that.way,_that.from,_that.to,_that.search,_that.sc
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( CheckResult? result,  CheckWay? way,  DateTime? from,  DateTime? to,  String? search,  CheckScope scope)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( CheckResult? result,  CheckWay? way,  DateTime? from,  DateTime? to,  String? search,  String? sessionId)?  $default,) {final _that = this;
 switch (_that) {
 case _CheckQuery() when $default != null:
-return $default(_that.result,_that.way,_that.from,_that.to,_that.search,_that.scope);case _:
+return $default(_that.result,_that.way,_that.from,_that.to,_that.search,_that.sessionId);case _:
   return null;
 
 }
@@ -213,7 +213,7 @@ return $default(_that.result,_that.way,_that.from,_that.to,_that.search,_that.sc
 
 
 class _CheckQuery extends CheckQuery {
-  const _CheckQuery({this.result, this.way, this.from, this.to, this.search, this.scope = CheckScope.own}): super._();
+  const _CheckQuery({this.result, this.way, this.from, this.to, this.search, this.sessionId}): super._();
   
 
 @override final  CheckResult? result;
@@ -223,7 +223,7 @@ class _CheckQuery extends CheckQuery {
 @override final  DateTime? to;
 /// A serial or a reference number.
 @override final  String? search;
-@override@JsonKey() final  CheckScope scope;
+@override final  String? sessionId;
 
 /// Create a copy of CheckQuery
 /// with the given fields replaced by the non-null parameter values.
@@ -235,16 +235,16 @@ _$CheckQueryCopyWith<_CheckQuery> get copyWith => __$CheckQueryCopyWithImpl<_Che
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CheckQuery&&(identical(other.result, result) || other.result == result)&&(identical(other.way, way) || other.way == way)&&(identical(other.from, from) || other.from == from)&&(identical(other.to, to) || other.to == to)&&(identical(other.search, search) || other.search == search)&&(identical(other.scope, scope) || other.scope == scope));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CheckQuery&&(identical(other.result, result) || other.result == result)&&(identical(other.way, way) || other.way == way)&&(identical(other.from, from) || other.from == from)&&(identical(other.to, to) || other.to == to)&&(identical(other.search, search) || other.search == search)&&(identical(other.sessionId, sessionId) || other.sessionId == sessionId));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,result,way,from,to,search,scope);
+int get hashCode => Object.hash(runtimeType,result,way,from,to,search,sessionId);
 
 @override
 String toString() {
-  return 'CheckQuery(result: $result, way: $way, from: $from, to: $to, search: $search, scope: $scope)';
+  return 'CheckQuery(result: $result, way: $way, from: $from, to: $to, search: $search, sessionId: $sessionId)';
 }
 
 
@@ -255,7 +255,7 @@ abstract mixin class _$CheckQueryCopyWith<$Res> implements $CheckQueryCopyWith<$
   factory _$CheckQueryCopyWith(_CheckQuery value, $Res Function(_CheckQuery) _then) = __$CheckQueryCopyWithImpl;
 @override @useResult
 $Res call({
- CheckResult? result, CheckWay? way, DateTime? from, DateTime? to, String? search, CheckScope scope
+ CheckResult? result, CheckWay? way, DateTime? from, DateTime? to, String? search, String? sessionId
 });
 
 
@@ -272,15 +272,15 @@ class __$CheckQueryCopyWithImpl<$Res>
 
 /// Create a copy of CheckQuery
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? result = freezed,Object? way = freezed,Object? from = freezed,Object? to = freezed,Object? search = freezed,Object? scope = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? result = freezed,Object? way = freezed,Object? from = freezed,Object? to = freezed,Object? search = freezed,Object? sessionId = freezed,}) {
   return _then(_CheckQuery(
 result: freezed == result ? _self.result : result // ignore: cast_nullable_to_non_nullable
 as CheckResult?,way: freezed == way ? _self.way : way // ignore: cast_nullable_to_non_nullable
 as CheckWay?,from: freezed == from ? _self.from : from // ignore: cast_nullable_to_non_nullable
 as DateTime?,to: freezed == to ? _self.to : to // ignore: cast_nullable_to_non_nullable
 as DateTime?,search: freezed == search ? _self.search : search // ignore: cast_nullable_to_non_nullable
-as String?,scope: null == scope ? _self.scope : scope // ignore: cast_nullable_to_non_nullable
-as CheckScope,
+as String?,sessionId: freezed == sessionId ? _self.sessionId : sessionId // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

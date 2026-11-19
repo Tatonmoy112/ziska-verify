@@ -33,7 +33,7 @@ class AuthRepositoryImpl implements AuthRepository {
     final dto = await _api.login(
       email: email,
       password: password,
-      phoneId: await _phoneId.getOrCreate(),
+      phoneId: await _readPhoneId(),
     );
     return _apply(dto, email: email);
   });
@@ -47,8 +47,14 @@ class AuthRepositoryImpl implements AuthRepository {
     final dto = await _api.verifyPhone(
       challengeId: state.challengeId,
       code: code,
-      phoneId: await _phoneId.getOrCreate(),
+      phoneId: await _readPhoneId(),
     );
+    // Back to login while the code was checked: the late answer belongs to
+    // a challenge that was given up and never logs in.
+    final now = _session.current;
+    if (now is! SessionAwaitingCode || now.challengeId != state.challengeId) {
+      throw const RequestCancelledException();
+    }
     return _apply(dto, email: state.email);
   });
 
@@ -73,7 +79,16 @@ class AuthRepositoryImpl implements AuthRepository {
       oldPassword: oldPassword,
       newPassword: newPassword,
     );
-    await _session.savePasswordChange(dto.accessToken);
+    await _session.savePasswordChange(
+      dto.accessToken,
+      mustChangePassword: dto.mustChangePassword,
+    );
+  });
+
+  @override
+  Future<Result<void>> postponePasswordChange() => guard(() async {
+    final dto = await _api.postponePasswordChange();
+    await _session.postponePasswordChange(dto.accessToken);
   });
 
   @override
@@ -108,6 +123,20 @@ class AuthRepositoryImpl implements AuthRepository {
     await _session.end();
   }
 
+  /// The phone ID; a secure-storage failure (a platform error) becomes an
+  /// app error, so the screen says "Something went wrong" instead of
+  /// spinning (app API guide §2). The service tries again next time.
+  Future<String> _readPhoneId() async {
+    try {
+      return await _phoneId.getOrCreate();
+    } on AppException {
+      rethrow;
+    } on Object catch (e) {
+      _logger.warning('phone ID not readable: ${e.runtimeType}');
+      throw const InternalErrorException(message: 'phone_id');
+    }
+  }
+
   /// Decided by `data.status`, never by the message (Section 6.2).
   Future<LoginOutcome> _apply(
     LoginResponseDto dto, {
@@ -132,6 +161,7 @@ class AuthRepositoryImpl implements AuthRepository {
           accessToken: access,
           refreshToken: refresh,
           mustChangePassword: mustChange,
+          canSkip: mustChange && (dto.passwordChangeSkippable ?? false),
         );
         return LoggedIn(mustChangePassword: mustChange);
       default:

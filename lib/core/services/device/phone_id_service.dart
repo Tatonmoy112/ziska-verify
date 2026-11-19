@@ -21,7 +21,14 @@ class SecurePhoneIdService implements PhoneIdService {
   Future<String>? _pending;
 
   @override
-  Future<String> getOrCreate() => _pending ??= _load();
+  Future<String> getOrCreate() {
+    final pending = _pending ??= _load();
+    // A failure (unreadable storage) is not kept: the next call tries again.
+    return pending.catchError((Object e, StackTrace s) {
+      if (identical(_pending, pending)) _pending = null;
+      Error.throwWithStackTrace(e, s);
+    });
+  }
 
   Future<String> _load() async {
     final stored = await _storage.read(SecureKeys.phoneId);

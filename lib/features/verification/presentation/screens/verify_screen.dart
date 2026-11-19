@@ -1,16 +1,20 @@
 import 'dart:async';
+import 'dart:math' as math;
 
+import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:ziska_verify/core/navigation/route_names.dart';
+import 'package:ziska_verify/core/services/scanner/scanner_service.dart';
 import 'package:ziska_verify/features/profile/presentation/bloc/profile_cubit.dart';
 import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
 import 'package:ziska_verify/features/verification/presentation/bloc/lookup_bloc.dart';
 import 'package:ziska_verify/features/verification/presentation/models/result_view.dart';
 import 'package:ziska_verify/features/verification/presentation/screens/verifying_view.dart';
+import 'package:ziska_verify/features/verification/presentation/widgets/live_qr_camera.dart';
 import 'package:ziska_verify/features/verification/presentation/widgets/lookup_messages.dart';
 import 'package:ziska_verify/features/verification/presentation/widgets/serial_input_formatter.dart';
 import 'package:ziska_verify/l10n/generated/app_localizations.dart';
@@ -26,56 +30,145 @@ import 'package:ziska_verify/shared/widgets/error_banner.dart';
 import 'package:ziska_verify/shared/widgets/failure_banner.dart';
 import 'package:ziska_verify/shared/widgets/large_text.dart';
 import 'package:ziska_verify/shared/widgets/pattern_background.dart';
+import 'package:ziska_verify/shared/widgets/retry_countdown.dart';
 
-/// The Verify tab (final.md Section 13.7).
+/// The Check tab (final.md Sections 13.1.2, 13.7). With `item:lookup` it
+/// opens on the camera: a read QR is the trigger, sent at once as
+/// `POST lookups` with no button. A serial is typed under the camera.
+///
+/// The camera runs only while it can be seen: the tab shown and not
+/// covered (the shell and the navigator turn the tab's tickers off), the
+/// app in the foreground, and no scan result or failure holding it.
 class VerifyScreen extends StatefulWidget {
-  const VerifyScreen({required this.onOpenProfile, super.key});
+  const VerifyScreen({
+    required this.onOpenProfile,
+    required this.scanner,
+    required this.onOpenSettings,
+    super.key,
+  });
 
   /// Switches to the Profile tab; wired by the router.
   final VoidCallback onOpenProfile;
+  final ScannerService scanner;
+
+  /// Opens the phone's settings, when the camera was refused.
+  final Future<bool> Function() onOpenSettings;
 
   @override
   State<VerifyScreen> createState() => _VerifyScreenState();
 }
 
-class _VerifyScreenState extends State<VerifyScreen> {
+class _VerifyScreenState extends State<VerifyScreen>
+    with WidgetsBindingObserver {
   final _input = TextEditingController();
   final _inputFocus = FocusNode();
   final _loader = VerifyingLoader();
-  LookupWay _way = LookupWay.serial;
+  final LookupWay _way = LookupWay.serial;
+
+  /// Made when the role may check one item; the camera starts with it.
+  ScannerSession? _session;
+  bool _running = true;
+  bool _visible = true;
+  bool _resumed = true;
+
+  /// A scan's result is open, a scan failed (Scan again starts it), or a
+  /// tool opened from here is on top.
+  bool _held = false;
+
+  /// How the last lookup was asked: a scan's messages show on the camera,
+  /// a typed serial's under its field.
+  LookupWay _lastWay = LookupWay.serial;
+
+  /// The same code held in front of the camera is read once.
+  String? _lastRaw;
+  DateTime _lastAt = DateTime.fromMillisecondsSinceEpoch(0);
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _visible = TickerMode.valuesOf(context).enabled;
+    _sync();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _resumed = state == AppLifecycleState.resumed;
+    _sync();
+  }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _loader.stop();
+    unawaited(_session?.dispose());
     _input.dispose();
     _inputFocus.dispose();
     super.dispose();
   }
 
-  /// The verification loader follows the lookup (Section 13.1.2).
+  /// Starts or stops the camera so it runs exactly while it can be seen.
+  void _sync() {
+    final session = _session;
+    if (session == null) return;
+    final run = _visible && _resumed && !_held;
+    if (run == _running) return;
+    _running = run;
+    unawaited(run ? session.start() : session.stop());
+  }
+
+  void _hold(bool held) {
+    _held = held;
+    _sync();
+  }
+
+  /// The check loader follows the lookup (Section 13.1.2).
   void _onStatus(LookupState state) {
     switch (state.status) {
       case LookupStatus.inProgress:
         _loader.start(context);
       case LookupStatus.completed:
         unawaited(_onCompleted(state));
+      case LookupStatus.failed:
+        _loader.stop();
+        // The camera reads a code once until it restarts: it waits, and
+        // Scan again starts it, so the same QR can be sent again. Never by
+        // itself, so nothing is sent again and again while offline.
+        if (_lastWay == LookupWay.qr) _hold(true);
       case _:
         _loader.stop();
     }
   }
 
-  void _verify() {
+  /// A QR read by the camera: sent at once (guide section 4.2).
+  void _onCode(String raw) {
+    final bloc = context.read<LookupBloc>();
+    if (_held || bloc.state.isBusy || bloc.state.formats == null) return;
+    final now = clock.now();
+    if (raw == _lastRaw && now.difference(_lastAt).inSeconds < 3) return;
+    _lastRaw = raw;
+    _lastAt = now;
+    _lastWay = LookupWay.qr;
     FocusScope.of(context).unfocus();
-    context.read<LookupBloc>().add(LookupRequested(_way, _input.text));
+    bloc.add(LookupRequested(LookupWay.qr, raw));
   }
 
-  /// Opens the scanner. Its "Enter manually" comes back with `true`: the
-  /// field then gets the focus, so the official can type straight away.
-  Future<void> _scan() async {
-    final manual = await context.pushNamed<bool>(RouteNames.scan);
-    if (manual ?? false) {
-      if (mounted) _inputFocus.requestFocus();
-    }
+  /// After a failed scan: the camera starts again for the same QR.
+  void _scanAgain() {
+    _lastRaw = null;
+    context.read<LookupBloc>().add(const LookupCleared());
+    _hold(false);
+  }
+
+  void _verify() {
+    FocusScope.of(context).unfocus();
+    _lastWay = LookupWay.serial;
+    context.read<LookupBloc>().add(LookupRequested(_way, _input.text));
   }
 
   void _clear() {
@@ -84,20 +177,72 @@ class _VerifyScreenState extends State<VerifyScreen> {
     setState(() {});
   }
 
+  /// A tool opened from here: the camera waits until it is closed.
+  Future<void> _open(String route) async {
+    _hold(true);
+    await context.pushNamed(route);
+    if (!mounted) return;
+    _hold(false);
+  }
+
   Future<void> _onCompleted(LookupState state) async {
     final view = ResultView(
       result: state.result!,
       input: state.checked!,
-      origin: ResultOrigin.verify,
+      origin: _lastWay == LookupWay.qr
+          ? ResultOrigin.scanner
+          : ResultOrigin.verify,
       formats: state.formats,
     );
-    // A typed hidden code is never kept beyond this screen (Section 12.1).
-    if (_way == LookupWay.hiddenCode) _input.clear();
+
+    _hold(true);
     context.read<LookupBloc>().add(const LookupCleared());
     final opening = context.pushNamed(RouteNames.lookupResult, extra: view);
     // The result takes the loader's place.
     _loader.stop();
     await opening;
+    if (!mounted) return;
+    _lastRaw = null;
+    _hold(false);
+  }
+
+  /// The camera's view of the lookup: only a scan's messages show on it.
+  LiveQrCamera _camera(
+    BuildContext context,
+    LookupState state,
+    ScannerSession session,
+  ) {
+    final l10n = AppLocalizations.of(context);
+    final formats = state.formats;
+    final scan = _lastWay == LookupWay.qr;
+    final failed = scan && state.status == LookupStatus.failed;
+    final message = switch (state.status) {
+      // The card under the camera has the error and Try again.
+      _ when formats == null && state.formatsFailure != null =>
+        l10n.scanNotReady,
+      LookupStatus.refused when scan && formats != null => refusedMessage(
+        l10n,
+        state.refused!,
+        formats,
+      ),
+      LookupStatus.failed when scan => lookupFailureMessage(
+        l10n,
+        state.failure!,
+      ),
+      _ => null,
+    };
+    return LiveQrCamera(
+      session: session,
+      height: math.max(300, MediaQuery.sizeOf(context).height * 0.42),
+      onCode: _onCode,
+      onOpenSettings: widget.onOpenSettings,
+      busy: scan && state.isBusy,
+      message: message,
+      requestId: failed ? state.failure?.requestId : null,
+      retryAt: failed ? state.retryAt : null,
+      failed: failed,
+      onScanAgain: _scanAgain,
+    );
   }
 
   @override
@@ -111,32 +256,61 @@ class _VerifyScreenState extends State<VerifyScreen> {
         _ToolTile(
           key: const Key('verify.tool.bulk'),
           icon: LucideIcons.layers,
-          title: l10n.toolBulk,
-          onTap: () => context.pushNamed(RouteNames.bulkLookup),
+          title: l10n.scannerModeTitle,
+          onTap: () => unawaited(_open(RouteNames.scannerMode)),
+        ),
+      if (profile?.can('item:bulk_lookup') ?? false)
+        _ToolTile(
+          key: const Key('verify.tool.serials'),
+          icon: LucideIcons.listOrdered,
+          title: l10n.serialStackTitle,
+          onTap: () => unawaited(_open(RouteNames.serialStack)),
         ),
       if (profile?.can('incident:report') ?? false) ...[
         _ToolTile(
           key: const Key('verify.tool.report'),
           icon: LucideIcons.flag,
           title: l10n.toolReport,
-          onTap: () => context.pushNamed(RouteNames.reportIncident),
+          onTap: () => unawaited(_open(RouteNames.reportIncident)),
         ),
         _ToolTile(
           key: const Key('verify.tool.myReports'),
           icon: LucideIcons.fileText,
           title: l10n.toolMyReports,
-          onTap: () => context.pushNamed(RouteNames.myReports),
+          onTap: () => unawaited(_open(RouteNames.myReports)),
         ),
       ],
-      if (profile?.can('retail_user:add') ?? false)
-        _ToolTile(
-          key: const Key('verify.tool.retailUsers'),
-          icon: LucideIcons.store,
-          title: l10n.toolRetailUsers,
-          onTap: () => context.pushNamed(RouteNames.retailUsers),
-        ),
     ];
 
+    if (!canLookup && isLargeText(context)) {
+      return Scaffold(
+        backgroundColor: AppColors.surfaceMuted,
+        body: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            _Header(
+              organisation: profile?.organisation ?? l10n.appTitle,
+              name: profile?.name ?? '',
+              onOpenProfile: widget.onOpenProfile,
+            ),
+            if (tools.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.all(AppSpacing.screen),
+                child: _ToolsSection(tools: tools),
+              )
+            else
+              AppEmptyState(
+                icon: LucideIcons.lockKeyhole,
+                title: l10n.noFeaturesTitle,
+                body: l10n.noFeaturesBody,
+              ),
+          ],
+        ),
+      );
+    }
+    final session = canLookup
+        ? _session ??= widget.scanner.createSession()
+        : null;
     return Scaffold(
       backgroundColor: AppColors.surfaceMuted,
       body: Column(
@@ -148,7 +322,7 @@ class _VerifyScreenState extends State<VerifyScreen> {
             onOpenProfile: widget.onOpenProfile,
           ),
           Expanded(
-            child: canLookup
+            child: session != null
                 ? BlocConsumer<LookupBloc, LookupState>(
                     listenWhen: (a, b) => a.status != b.status,
                     listener: (context, state) => _onStatus(state),
@@ -158,14 +332,10 @@ class _VerifyScreenState extends State<VerifyScreen> {
                       child: _LookupForm(
                         state: state,
                         way: _way,
+                        typed: _lastWay == LookupWay.serial,
+                        camera: _camera(context, state, session),
                         input: _input,
                         inputFocus: _inputFocus,
-                        onScan: () => unawaited(_scan()),
-                        onWayChanged: (way) => setState(() {
-                          _way = way;
-                          _input.clear();
-                          context.read<LookupBloc>().add(const LookupCleared());
-                        }),
                         onChanged: () => setState(() {}),
                         onVerify: _verify,
                         onClear: _clear,
@@ -194,10 +364,10 @@ class _LookupForm extends StatelessWidget {
   const _LookupForm({
     required this.state,
     required this.way,
+    required this.typed,
+    required this.camera,
     required this.input,
     required this.inputFocus,
-    required this.onScan,
-    required this.onWayChanged,
     required this.onChanged,
     required this.onVerify,
     required this.onClear,
@@ -206,10 +376,12 @@ class _LookupForm extends StatelessWidget {
 
   final LookupState state;
   final LookupWay way;
+
+  /// The last lookup was a typed serial: its messages show here.
+  final bool typed;
+  final Widget camera;
   final TextEditingController input;
   final FocusNode inputFocus;
-  final VoidCallback onScan;
-  final ValueChanged<LookupWay> onWayChanged;
   final VoidCallback onChanged;
   final VoidCallback onVerify;
   final VoidCallback onClear;
@@ -220,128 +392,132 @@ class _LookupForm extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final formats = state.formats;
 
-    if (formats == null) {
-      if (state.formatsFailure != null) {
-        return Padding(
-          padding: const EdgeInsets.all(AppSpacing.screen),
-          child: Column(
-            children: [
-              ErrorBanner(
-                message:
-                    '${l10n.formatsFailed} '
-                    '${state.formatsFailure!.message(l10n)}',
-                requestId: state.formatsFailure!.requestId,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              AppButton(
-                label: l10n.retry,
-                onPressed: () =>
-                    context.read<LookupBloc>().add(const FormatsRequested()),
-              ),
-            ],
+    // Without the formats only the serial form waits: the tools need no
+    // formats, so they stay (final.md Section 13.7).
+    Widget formsUnavailable() {
+      final formatsFailure = state.formatsFailure;
+      if (formatsFailure == null) {
+        return const Padding(
+          padding: EdgeInsets.all(AppSpacing.xl),
+          child: Center(
+            child: CircularProgressIndicator(key: Key('verify.formatsLoading')),
           ),
         );
       }
-      return const Center(child: CircularProgressIndicator());
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ErrorBanner(
+            message:
+                '${l10n.formatsFailed} '
+                '${formatsFailure.message(l10n)}',
+            requestId: formatsFailure.requestId,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          RetryCountdown(
+            until: state.formatsRetryAt,
+            builder: (context, wait) => AppButton(
+              key: const Key('verify.formatsRetry'),
+              label: wait > 0 ? l10n.errorRateLimited(wait) : l10n.retry,
+              onPressed: wait > 0
+                  ? null
+                  : () => context.read<LookupBloc>().add(
+                      const FormatsRequested(),
+                    ),
+            ),
+          ),
+        ],
+      );
     }
 
     final failure = state.failure;
     return ListView(
-      padding: const EdgeInsets.all(AppSpacing.screen),
+      padding: EdgeInsets.zero,
       children: [
-        DecoratedBox(
-          decoration: const BoxDecoration(
-            color: AppColors.background,
-            borderRadius: AppRadius.card,
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(l10n.verifyItemTitle, style: AppTypography.headline),
-                const SizedBox(height: AppSpacing.xxs),
-                Text(l10n.verifyItemSubtitle, style: AppTypography.caption),
-                const SizedBox(height: AppSpacing.md),
-                SegmentedButton<LookupWay>(
-                  segments: [
-                    ButtonSegment(
-                      value: LookupWay.serial,
-                      label: Text(l10n.waySerial),
+        camera,
+        Padding(
+          padding: const EdgeInsets.all(AppSpacing.screen),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (formats == null)
+                formsUnavailable()
+              else
+                DecoratedBox(
+                  decoration: const BoxDecoration(
+                    color: AppColors.background,
+                    borderRadius: AppRadius.card,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        AppTextField(
+                          fieldKey: const Key('verify.input'),
+                          label: l10n.typeSerialLabel,
+                          hint: l10n.serialHint(formats.serialMaxDigits),
+                          controller: input,
+                          focusNode: inputFocus,
+                          prefixIcon: LucideIcons.hash,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            LengthLimitingTextInputFormatter(64),
+                            const SerialInputFormatter(),
+                          ],
+                          textInputAction: TextInputAction.search,
+                          errorText:
+                              typed && state.status == LookupStatus.refused
+                              ? refusedMessage(l10n, state.refused!, formats)
+                              : null,
+                          onChanged: (_) => onChanged(),
+                          onSubmitted: (_) => onVerify(),
+                        ),
+                        if (typed &&
+                            state.status == LookupStatus.failed &&
+                            failure != null) ...[
+                          const SizedBox(height: AppSpacing.sm),
+                          // A `429` counts down and goes away at 0.
+                          FailureBanner(
+                            failure: failure,
+                            retryAt: state.retryAt,
+                            message: lookupFailureMessage(l10n, failure),
+                          ),
+                        ],
+                        const SizedBox(height: AppSpacing.md),
+                        _ButtonPair(
+                          // Held while a 429 counts down (guide section 1).
+                          first: RetryCountdown(
+                            until: state.retryAt,
+                            builder: (context, seconds) => AppButton(
+                              key: const Key('verify.submit'),
+                              label: l10n.verifyButtonLookup,
+                              loading: typed && state.isBusy,
+                              onPressed:
+                                  input.text.isEmpty ||
+                                      seconds > 0 ||
+                                      state.isBusy
+                                  ? null
+                                  : onVerify,
+                            ),
+                          ),
+                          second: AppButton(
+                            label: l10n.clear,
+                            variant: AppButtonVariant.outlined,
+                            onPressed: state.isBusy ? null : onClear,
+                          ),
+                        ),
+                      ],
                     ),
-                    ButtonSegment(
-                      value: LookupWay.hiddenCode,
-                      label: Text(l10n.wayHiddenCode),
-                    ),
-                  ],
-                  selected: {way},
-                  showSelectedIcon: false,
-                  onSelectionChanged: (s) => onWayChanged(s.single),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                AppTextField(
-                  fieldKey: const Key('verify.input'),
-                  secret: way == LookupWay.hiddenCode,
-                  label: way == LookupWay.serial
-                      ? l10n.waySerial
-                      : l10n.wayHiddenCode,
-                  hint: way == LookupWay.serial
-                      ? l10n.serialHint(formats.serialMaxDigits)
-                      : l10n.hiddenCodeHint,
-                  controller: input,
-                  focusNode: inputFocus,
-                  prefixIcon: way == LookupWay.serial
-                      ? LucideIcons.hash
-                      : LucideIcons.tag,
-                  keyboardType: way == LookupWay.serial
-                      ? TextInputType.number
-                      : TextInputType.visiblePassword,
-                  inputFormatters: [
-                    LengthLimitingTextInputFormatter(64),
-                    if (way == LookupWay.serial) const SerialInputFormatter(),
-                  ],
-                  textInputAction: TextInputAction.search,
-                  errorText: state.status == LookupStatus.refused
-                      ? refusedMessage(l10n, state.refused!, formats)
-                      : null,
-                  onChanged: (_) => onChanged(),
-                  onSubmitted: (_) => onVerify(),
-                ),
-                if (state.status == LookupStatus.failed && failure != null) ...[
-                  const SizedBox(height: AppSpacing.sm),
-                  // A `429` counts down and goes away at 0.
-                  FailureBanner(
-                    failure: failure,
-                    retryAt: state.retryAt,
-                    message: lookupFailureMessage(l10n, failure),
-                  ),
-                ],
-                const SizedBox(height: AppSpacing.md),
-                _ButtonPair(
-                  first: AppButton(
-                    key: const Key('verify.submit'),
-                    label: l10n.verifyButtonLookup,
-                    loading: state.isBusy,
-                    onPressed: input.text.isEmpty ? null : onVerify,
-                  ),
-                  second: AppButton(
-                    label: l10n.clear,
-                    variant: AppButtonVariant.outlined,
-                    onPressed: state.isBusy ? null : onClear,
                   ),
                 ),
+              if (tools.isNotEmpty) ...[
+                const SizedBox(height: AppSpacing.xl),
+                _ToolsSection(tools: tools),
               ],
-            ),
+            ],
           ),
         ),
-        const SizedBox(height: AppSpacing.lg),
-        _ScanCard(
-          onTap: state.isBusy ? null : onScan,
-        ),
-        if (tools.isNotEmpty) ...[
-          const SizedBox(height: AppSpacing.xl),
-          _ToolsSection(tools: tools),
-        ],
       ],
     );
   }
@@ -403,87 +579,6 @@ class _ToolTile extends StatelessWidget {
             color: AppColors.textMuted,
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _ScanCard extends StatelessWidget {
-  const _ScanCard({required this.onTap});
-
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return Material(
-      color: AppColors.primary,
-      borderRadius: AppRadius.card,
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        key: const Key('verify.scan'),
-        onTap: onTap,
-        borderRadius: AppRadius.card,
-        child: Stack(
-          children: [
-            // The Figma's large faint QR corner at the right edge.
-            const PositionedDirectional(
-              end: -AppSpacing.xl,
-              bottom: -AppSpacing.xxl,
-              child: ExcludeSemantics(
-                child: Icon(
-                  LucideIcons.qrCode,
-                  key: Key('verify.scan.motif'),
-                  size: 128,
-                  color: AppColors.onPrimaryFaint,
-                ),
-              ),
-            ),
-            _scanCardContent(l10n),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _scanCardContent(AppLocalizations l10n) {
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      child: Row(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: AppColors.onPrimary.withValues(alpha: 0.15),
-              borderRadius: AppRadius.input,
-            ),
-            child: const Icon(
-              LucideIcons.qrCode,
-              color: AppColors.onPrimary,
-            ),
-          ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.scanQrTitle,
-                  style: AppTypography.bodyStrong.copyWith(
-                    color: AppColors.onPrimary,
-                  ),
-                ),
-                Text(
-                  l10n.scanQrSubtitle,
-                  style: AppTypography.caption.copyWith(
-                    color: AppColors.onPrimary.withValues(alpha: 0.85),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }

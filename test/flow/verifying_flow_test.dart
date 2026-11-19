@@ -162,7 +162,6 @@ void main() {
         'POST lookups': slow((_) => validAnswer()),
       },
     );
-    await app.tap(find.byKey(const Key('verify.scan')));
     app.scanner.scan('https://www.ziskaverify.com/q/Q8F2KD91XA7M');
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));

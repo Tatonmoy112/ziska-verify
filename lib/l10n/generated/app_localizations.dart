@@ -107,19 +107,19 @@ abstract class AppLocalizations {
   /// Under the app's name on the Splash.
   ///
   /// In en, this message translates to:
-  /// **'Product Verification System'**
+  /// **'Product Authenticity Check'**
   String get appSubtitle;
 
   /// The line on the Splash's navy glow, above the progress.
   ///
   /// In en, this message translates to:
-  /// **'Verify genuine products instantly'**
+  /// **'Check genuine products instantly'**
   String get splashTagline;
 
   /// No description provided for @brandTagline.
   ///
   /// In en, this message translates to:
-  /// **'TRACK · TRACE · VERIFY'**
+  /// **'TRACK · TRACE · CHECK'**
   String get brandTagline;
 
   /// No description provided for @loginTitle.
@@ -131,7 +131,7 @@ abstract class AppLocalizations {
   /// No description provided for @loginSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Enter your email and password to verify products.'**
+  /// **'Enter your email and password to check products.'**
   String get loginSubtitle;
 
   /// No description provided for @emailLabel.
@@ -185,13 +185,13 @@ abstract class AppLocalizations {
   /// No description provided for @noAccountQuestion.
   ///
   /// In en, this message translates to:
-  /// **'Don\'t have an ID and password?'**
+  /// **'Don\'t have an account?'**
   String get noAccountQuestion;
 
   /// No description provided for @requestAccessButton.
   ///
   /// In en, this message translates to:
-  /// **'Contact us to request access'**
+  /// **'Sign up'**
   String get requestAccessButton;
 
   /// No description provided for @authorizedOnly.
@@ -233,19 +233,19 @@ abstract class AppLocalizations {
   /// No description provided for @codeLabel.
   ///
   /// In en, this message translates to:
-  /// **'Verification code'**
+  /// **'Code from the email'**
   String get codeLabel;
 
   /// No description provided for @verifyButton.
   ///
   /// In en, this message translates to:
-  /// **'Verify'**
+  /// **'Continue'**
   String get verifyButton;
 
   /// No description provided for @codeWrong.
   ///
   /// In en, this message translates to:
-  /// **'The code is wrong or has expired. Check the latest email, or log in again for a new code.'**
+  /// **'The code is wrong or has expired. Check the latest email, or send the code again.'**
   String get codeWrong;
 
   /// No description provided for @resendCode.
@@ -289,6 +289,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your password was set by someone else. Choose your own password to continue.'**
   String get changePasswordForcedSubtitle;
+
+  /// No description provided for @changePasswordChoiceSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your password was set by someone else. Choose your own now, or later from Profile.'**
+  String get changePasswordChoiceSubtitle;
+
+  /// No description provided for @changePasswordLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get changePasswordLater;
+
+  /// No description provided for @passwordLaterRefused.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now is not available for your account. Choose a new password or log out.'**
+  String get passwordLaterRefused;
 
   /// No description provided for @changePasswordSubtitle.
   ///
@@ -362,6 +380,12 @@ abstract class AppLocalizations {
   /// **'a number'**
   String get ruleNumber;
 
+  /// No description provided for @ruleNoControl.
+  ///
+  /// In en, this message translates to:
+  /// **'no tabs or line breaks'**
+  String get ruleNoControl;
+
   /// No description provided for @passwordRuleBroken.
   ///
   /// In en, this message translates to:
@@ -398,10 +422,22 @@ abstract class AppLocalizations {
   /// **'Reset password'**
   String get resetTitle;
 
+  /// No description provided for @resetCodeWrong.
+  ///
+  /// In en, this message translates to:
+  /// **'The code is wrong or has expired. Ask for a new code.'**
+  String get resetCodeWrong;
+
+  /// No description provided for @resetNewCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Send a new code'**
+  String get resetNewCode;
+
   /// No description provided for @resetSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Enter the code sent to {email} and choose a new password.'**
+  /// **'If {email} has an account, a code was sent to it. Enter the code and choose a new password.'**
   String resetSubtitle(String email);
 
   /// No description provided for @resetButton.
@@ -413,80 +449,26 @@ abstract class AppLocalizations {
   /// No description provided for @resetDone.
   ///
   /// In en, this message translates to:
-  /// **'Password changed. Log in with your new password.'**
+  /// **'Password changed. Log in with your new password; every phone needs the emailed code at its next login.'**
   String get resetDone;
 
   /// No description provided for @requestAccessTitle.
   ///
   /// In en, this message translates to:
-  /// **'Request access'**
+  /// **'Sign up'**
   String get requestAccessTitle;
 
   /// No description provided for @requestAccessSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Accounts are created by your office. Email or call them with the details below.'**
+  /// **'Create your account. Your office checks it and emails you when it is approved.'**
   String get requestAccessSubtitle;
 
-  /// No description provided for @pleaseInclude.
+  /// No description provided for @noPhoneApp.
   ///
   /// In en, this message translates to:
-  /// **'Please include'**
-  String get pleaseInclude;
-
-  /// No description provided for @includeName.
-  ///
-  /// In en, this message translates to:
-  /// **'Full name'**
-  String get includeName;
-
-  /// No description provided for @includeOrganisation.
-  ///
-  /// In en, this message translates to:
-  /// **'Organization'**
-  String get includeOrganisation;
-
-  /// No description provided for @includePhone.
-  ///
-  /// In en, this message translates to:
-  /// **'Phone number'**
-  String get includePhone;
-
-  /// No description provided for @includeEmail.
-  ///
-  /// In en, this message translates to:
-  /// **'Email address'**
-  String get includeEmail;
-
-  /// No description provided for @includeReason.
-  ///
-  /// In en, this message translates to:
-  /// **'Reason for access'**
-  String get includeReason;
-
-  /// No description provided for @includeJobTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Job title'**
-  String get includeJobTitle;
-
-  /// No description provided for @emailTeamButton.
-  ///
-  /// In en, this message translates to:
-  /// **'Email the office'**
-  String get emailTeamButton;
-
-  /// No description provided for @callTeamButton.
-  ///
-  /// In en, this message translates to:
-  /// **'Call the office'**
-  String get callTeamButton;
-
-  /// No description provided for @accessRequestSubject.
-  ///
-  /// In en, this message translates to:
-  /// **'Access request'**
-  String get accessRequestSubject;
+  /// **'No phone app found. Call {phone}.'**
+  String noPhoneApp(String phone);
 
   /// No description provided for @noMailApp.
   ///
@@ -557,7 +539,7 @@ abstract class AppLocalizations {
   /// No description provided for @tabVerify.
   ///
   /// In en, this message translates to:
-  /// **'Verify'**
+  /// **'Check'**
   String get tabVerify;
 
   /// No description provided for @tabHistory.
@@ -584,12 +566,6 @@ abstract class AppLocalizations {
   /// **'Your role does not allow any features yet. Contact your office.'**
   String get noFeaturesBody;
 
-  /// No description provided for @comingSoon.
-  ///
-  /// In en, this message translates to:
-  /// **'This part of the app is being built.'**
-  String get comingSoon;
-
   /// No description provided for @profileTitle.
   ///
   /// In en, this message translates to:
@@ -607,6 +583,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Role'**
   String get roleLabel;
+
+  /// No description provided for @permissionsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'WHAT YOU CAN DO'**
+  String get permissionsSection;
+
+  /// No description provided for @permissionLookup.
+  ///
+  /// In en, this message translates to:
+  /// **'Check one item'**
+  String get permissionLookup;
+
+  /// No description provided for @permissionBulkLookup.
+  ///
+  /// In en, this message translates to:
+  /// **'Check many items'**
+  String get permissionBulkLookup;
+
+  /// No description provided for @permissionHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Own history'**
+  String get permissionHistory;
+
+  /// No description provided for @permissionReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Report incidents'**
+  String get permissionReport;
+
+  /// No description provided for @permissionsNone.
+  ///
+  /// In en, this message translates to:
+  /// **'None. Ask your office.'**
+  String get permissionsNone;
 
   /// No description provided for @accountSection.
   ///
@@ -629,7 +641,7 @@ abstract class AppLocalizations {
   /// Profile card: the official's checks found in no batch or not found at all (not_found + unassigned).
   ///
   /// In en, this message translates to:
-  /// **'Not verified'**
+  /// **'Needs attention'**
   String get statNotVerified;
 
   /// Under the Profile cards' place when GET checks fails; a Try again link follows.
@@ -643,6 +655,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Change password'**
   String get changePasswordRow;
+
+  /// No description provided for @passwordPendingBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Your password was set by someone else. Change it to keep your account safe.'**
+  String get passwordPendingBanner;
 
   /// No description provided for @supportContactRow.
   ///
@@ -686,65 +704,11 @@ abstract class AppLocalizations {
   /// **'Cancel'**
   String get cancel;
 
-  /// Pill title of the Request access steps; shown in capitals.
-  ///
-  /// In en, this message translates to:
-  /// **'How it works'**
-  String get howItWorks;
-
-  /// No description provided for @requestStepSendTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Send your request'**
-  String get requestStepSendTitle;
-
-  /// No description provided for @requestStepSendBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Email or call the office with the details below.'**
-  String get requestStepSendBody;
-
-  /// Step 1 when the office has no phone number configured.
-  ///
-  /// In en, this message translates to:
-  /// **'Email the office with the details below.'**
-  String get requestStepSendBodyEmailOnly;
-
-  /// No description provided for @requestStepCheckTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Your office checks it'**
-  String get requestStepCheckTitle;
-
-  /// No description provided for @requestStepCheckBody.
-  ///
-  /// In en, this message translates to:
-  /// **'An administrator checks your request and creates your account.'**
-  String get requestStepCheckBody;
-
-  /// No description provided for @requestStepLoginTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Receive your login'**
-  String get requestStepLoginTitle;
-
-  /// No description provided for @requestStepLoginBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Your first password is emailed to you or given to you in person. You change it at your first login.'**
-  String get requestStepLoginBody;
-
   /// No description provided for @verifyItemTitle.
   ///
   /// In en, this message translates to:
-  /// **'Verify an item'**
+  /// **'Check authenticity'**
   String get verifyItemTitle;
-
-  /// No description provided for @verifyItemSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Type the serial or the hidden code, or scan the QR code.'**
-  String get verifyItemSubtitle;
 
   /// No description provided for @waySerial.
   ///
@@ -764,22 +728,22 @@ abstract class AppLocalizations {
   /// **'QR code'**
   String get wayQr;
 
+  /// No description provided for @wayOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get wayOther;
+
   /// No description provided for @serialHint.
   ///
   /// In en, this message translates to:
   /// **'Up to {digits} digits'**
   String serialHint(int digits);
 
-  /// No description provided for @hiddenCodeHint.
-  ///
-  /// In en, this message translates to:
-  /// **'The code under the scratch layer'**
-  String get hiddenCodeHint;
-
   /// No description provided for @verifyButtonLookup.
   ///
   /// In en, this message translates to:
-  /// **'Verify product'**
+  /// **'Check'**
   String get verifyButtonLookup;
 
   /// No description provided for @clear.
@@ -787,18 +751,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Clear'**
   String get clear;
-
-  /// No description provided for @scanQrTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Scan QR code'**
-  String get scanQrTitle;
-
-  /// No description provided for @scanQrSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Point your camera at the product\'s QR code'**
-  String get scanQrSubtitle;
 
   /// Above the scanner's frame; shown in capitals.
   ///
@@ -812,12 +764,6 @@ abstract class AppLocalizations {
   /// **'Looking for a QR code · hold steady'**
   String get scanLooking;
 
-  /// Scanner button: back to the Verify tab with the field focused, to type the serial or hidden code.
-  ///
-  /// In en, this message translates to:
-  /// **'Enter manually'**
-  String get enterManually;
-
   /// No description provided for @inputEmpty.
   ///
   /// In en, this message translates to:
@@ -829,12 +775,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'A serial has digits only, up to {digits} digits.'**
   String inputWrongSerial(int digits);
-
-  /// No description provided for @inputWrongHiddenCode.
-  ///
-  /// In en, this message translates to:
-  /// **'This is not a hidden code of this company. Check each character.'**
-  String get inputWrongHiddenCode;
 
   /// No description provided for @notProductQr.
   ///
@@ -851,13 +791,13 @@ abstract class AppLocalizations {
   /// No description provided for @lookupNetworkError.
   ///
   /// In en, this message translates to:
-  /// **'Unable to verify. Check the connection and try again.'**
+  /// **'Unable to check. Check the connection and try again.'**
   String get lookupNetworkError;
 
   /// No description provided for @verifying.
   ///
   /// In en, this message translates to:
-  /// **'Verifying…'**
+  /// **'Checking…'**
   String get verifying;
 
   /// No description provided for @toolsTitle.
@@ -865,12 +805,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'MORE'**
   String get toolsTitle;
-
-  /// No description provided for @toolBulk.
-  ///
-  /// In en, this message translates to:
-  /// **'Bulk lookup'**
-  String get toolBulk;
 
   /// No description provided for @toolReport.
   ///
@@ -883,12 +817,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'My reports'**
   String get toolMyReports;
-
-  /// No description provided for @toolRetailUsers.
-  ///
-  /// In en, this message translates to:
-  /// **'Retail users'**
-  String get toolRetailUsers;
 
   /// No description provided for @scannerPermissionDenied.
   ///
@@ -923,7 +851,7 @@ abstract class AppLocalizations {
   /// No description provided for @resultTitle.
   ///
   /// In en, this message translates to:
-  /// **'Verification result'**
+  /// **'Check result'**
   String get resultTitle;
 
   /// No description provided for @resultValidTitle.
@@ -959,7 +887,7 @@ abstract class AppLocalizations {
   /// No description provided for @resultNotFoundBody.
   ///
   /// In en, this message translates to:
-  /// **'No product of this company has this code.'**
+  /// **'No product of this company has this serial or QR code.'**
   String get resultNotFoundBody;
 
   /// No description provided for @resultUnassignedTitle.
@@ -977,7 +905,7 @@ abstract class AppLocalizations {
   /// No description provided for @resultUnknownTitle.
   ///
   /// In en, this message translates to:
-  /// **'Unable to verify'**
+  /// **'Unable to check'**
   String get resultUnknownTitle;
 
   /// No description provided for @resultUnknownBody.
@@ -1085,7 +1013,7 @@ abstract class AppLocalizations {
   /// No description provided for @verifyAnother.
   ///
   /// In en, this message translates to:
-  /// **'Verify another item'**
+  /// **'Check another item'**
   String get verifyAnother;
 
   /// No description provided for @copied.
@@ -1099,108 +1027,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Copy reference number'**
   String get copyReference;
-
-  /// No description provided for @copyPassword.
-  ///
-  /// In en, this message translates to:
-  /// **'Copy password'**
-  String get copyPassword;
-
-  /// No description provided for @bulkTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Bulk lookup'**
-  String get bulkTitle;
-
-  /// No description provided for @bulkCount.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} / {max} items'**
-  String bulkCount(int count, int max);
-
-  /// No description provided for @bulkScanStart.
-  ///
-  /// In en, this message translates to:
-  /// **'Scan QR codes'**
-  String get bulkScanStart;
-
-  /// No description provided for @bulkScanStop.
-  ///
-  /// In en, this message translates to:
-  /// **'Stop scanning'**
-  String get bulkScanStop;
-
-  /// No description provided for @bulkAdd.
-  ///
-  /// In en, this message translates to:
-  /// **'Add'**
-  String get bulkAdd;
-
-  /// No description provided for @bulkAdded.
-  ///
-  /// In en, this message translates to:
-  /// **'Added {label}'**
-  String bulkAdded(String label);
-
-  /// No description provided for @bulkDuplicate.
-  ///
-  /// In en, this message translates to:
-  /// **'This item is already in the list.'**
-  String get bulkDuplicate;
-
-  /// No description provided for @bulkFull.
-  ///
-  /// In en, this message translates to:
-  /// **'The list is full ({max} items).'**
-  String bulkFull(int max);
-
-  /// No description provided for @bulkEmpty.
-  ///
-  /// In en, this message translates to:
-  /// **'Scan QR codes or type serials and hidden codes to build the list.'**
-  String get bulkEmpty;
-
-  /// No description provided for @bulkClearList.
-  ///
-  /// In en, this message translates to:
-  /// **'Clear list'**
-  String get bulkClearList;
-
-  /// No description provided for @bulkSend.
-  ///
-  /// In en, this message translates to:
-  /// **'Check {count} items'**
-  String bulkSend(int count);
-
-  /// No description provided for @bulkSending.
-  ///
-  /// In en, this message translates to:
-  /// **'Checking {count} items…'**
-  String bulkSending(int count);
-
-  /// No description provided for @bulkNothingChecked.
-  ///
-  /// In en, this message translates to:
-  /// **'Nothing was checked. Send the same list again.'**
-  String get bulkNothingChecked;
-
-  /// No description provided for @bulkSendAgain.
-  ///
-  /// In en, this message translates to:
-  /// **'Send again'**
-  String get bulkSendAgain;
-
-  /// No description provided for @bulkSummaryTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Summary'**
-  String get bulkSummaryTitle;
-
-  /// No description provided for @bulkTotal.
-  ///
-  /// In en, this message translates to:
-  /// **'Total'**
-  String get bulkTotal;
 
   /// No description provided for @bulkValid.
   ///
@@ -1225,24 +1051,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not in a batch'**
   String get bulkUnassigned;
-
-  /// No description provided for @bulkOnlyAttention.
-  ///
-  /// In en, this message translates to:
-  /// **'Only items that need attention'**
-  String get bulkOnlyAttention;
-
-  /// No description provided for @bulkNewList.
-  ///
-  /// In en, this message translates to:
-  /// **'New list'**
-  String get bulkNewList;
-
-  /// No description provided for @bulkNoAttention.
-  ///
-  /// In en, this message translates to:
-  /// **'No item needs attention.'**
-  String get bulkNoAttention;
 
   /// No description provided for @removeItem.
   ///
@@ -1304,23 +1112,17 @@ abstract class AppLocalizations {
   /// **'Choose dates'**
   String get historyPickDates;
 
-  /// No description provided for @historyScopeAll.
-  ///
-  /// In en, this message translates to:
-  /// **'Everyone\'s checks'**
-  String get historyScopeAll;
-
-  /// No description provided for @historyScopeAllHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Include the checks of every official'**
-  String get historyScopeAllHint;
-
   /// No description provided for @historyEmptyTitle.
   ///
   /// In en, this message translates to:
   /// **'No checks'**
   String get historyEmptyTitle;
+
+  /// No description provided for @historyInSession.
+  ///
+  /// In en, this message translates to:
+  /// **'In a session'**
+  String get historyInSession;
 
   /// No description provided for @historyEmptyBody.
   ///
@@ -1328,11 +1130,11 @@ abstract class AppLocalizations {
   /// **'No check matches these filters.'**
   String get historyEmptyBody;
 
-  /// No description provided for @historyBy.
+  /// No description provided for @historyNoChecksYet.
   ///
   /// In en, this message translates to:
-  /// **'by {name}'**
-  String historyBy(String name);
+  /// **'Your checks appear here after your first check.'**
+  String get historyNoChecksYet;
 
   /// The History result chip that shows every result.
   ///
@@ -1373,7 +1175,7 @@ abstract class AppLocalizations {
   /// No description provided for @historyTracking.
   ///
   /// In en, this message translates to:
-  /// **'Every check of serial {serial}'**
+  /// **'Your checks of serial {serial}'**
   String historyTracking(String serial);
 
   /// No description provided for @pickRetailUser.
@@ -1436,6 +1238,18 @@ abstract class AppLocalizations {
   /// **'Choose a retail user (optional)'**
   String get reportChooseRetailUser;
 
+  /// No description provided for @reportChooseCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Link one of your checks (optional)'**
+  String get reportChooseCheck;
+
+  /// No description provided for @pickCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a check'**
+  String get pickCheck;
+
   /// No description provided for @reportPhotosLabel.
   ///
   /// In en, this message translates to:
@@ -1478,12 +1292,6 @@ abstract class AppLocalizations {
   /// **'Report {id} filed.'**
   String reportFiled(int id);
 
-  /// No description provided for @reportPhotosSending.
-  ///
-  /// In en, this message translates to:
-  /// **'Sending photos…'**
-  String get reportPhotosSending;
-
   /// No description provided for @reportPhotoFailedRetry.
   ///
   /// In en, this message translates to:
@@ -1495,6 +1303,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This photo was refused.'**
   String get reportPhotoRefused;
+
+  /// No description provided for @reportPhotoConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'No more photos: the report has 3, or its hour is over.'**
+  String get reportPhotoConflict;
+
+  /// No description provided for @reportLeaveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos not sent'**
+  String get reportLeaveTitle;
+
+  /// No description provided for @reportLeaveBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Some photos are still sending or can be sent again. If you leave, they are not sent.'**
+  String get reportLeaveBody;
+
+  /// No description provided for @reportStay.
+  ///
+  /// In en, this message translates to:
+  /// **'Stay'**
+  String get reportStay;
+
+  /// No description provided for @reportLeave.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave'**
+  String get reportLeave;
 
   /// No description provided for @reportPhotoSent.
   ///
@@ -1526,17 +1364,17 @@ abstract class AppLocalizations {
   /// **'Done'**
   String get reportDone;
 
-  /// No description provided for @reportNotFound.
-  ///
-  /// In en, this message translates to:
-  /// **'The check or the retail user was not found. Remove it and try again.'**
-  String get reportNotFound;
-
   /// No description provided for @reportUnconfirmed.
   ///
   /// In en, this message translates to:
   /// **'The connection dropped. The report may have been filed: check My reports before filing it again.'**
   String get reportUnconfirmed;
+
+  /// No description provided for @reportCheckMyReports.
+  ///
+  /// In en, this message translates to:
+  /// **'Check My reports'**
+  String get reportCheckMyReports;
 
   /// No description provided for @myReportsTitle.
   ///
@@ -1549,6 +1387,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You have not filed any report yet.'**
   String get myReportsEmpty;
+
+  /// No description provided for @myReportsEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Reports you file appear here. Use New report to file one.'**
+  String get myReportsEmptyBody;
 
   /// No description provided for @myReportsPhotos.
   ///
@@ -1567,192 +1411,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Report incident'**
   String get reportFromResult;
-
-  /// No description provided for @retailUsersTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Retail users'**
-  String get retailUsersTitle;
-
-  /// No description provided for @retailUsersAdd.
-  ///
-  /// In en, this message translates to:
-  /// **'Add retail user'**
-  String get retailUsersAdd;
-
-  /// No description provided for @retailUsersSearchHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Part of a name, or a whole email'**
-  String get retailUsersSearchHint;
-
-  /// No description provided for @retailUsersEmpty.
-  ///
-  /// In en, this message translates to:
-  /// **'No retail user yet.'**
-  String get retailUsersEmpty;
-
-  /// No description provided for @retailUserEmailPassword.
-  ///
-  /// In en, this message translates to:
-  /// **'Email a new first password'**
-  String get retailUserEmailPassword;
-
-  /// No description provided for @retailUserEmailPasswordConfirm.
-  ///
-  /// In en, this message translates to:
-  /// **'A new first password is emailed to {name}. The old one stops working at once.'**
-  String retailUserEmailPasswordConfirm(String name);
-
-  /// No description provided for @retailUserEmailPasswordSend.
-  ///
-  /// In en, this message translates to:
-  /// **'Email it'**
-  String get retailUserEmailPasswordSend;
-
-  /// No description provided for @retailUserPasswordEmailed.
-  ///
-  /// In en, this message translates to:
-  /// **'A new first password was emailed to {name}.'**
-  String retailUserPasswordEmailed(String name);
-
-  /// No description provided for @retailUserOwnPassword.
-  ///
-  /// In en, this message translates to:
-  /// **'{name} has set their own password. Only your office can change it now.'**
-  String retailUserOwnPassword(String name);
-
-  /// No description provided for @retailUserNotFound.
-  ///
-  /// In en, this message translates to:
-  /// **'This retail user was not found or is blocked.'**
-  String get retailUserNotFound;
-
-  /// No description provided for @addRetailUserTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Add retail user'**
-  String get addRetailUserTitle;
-
-  /// No description provided for @addRetailUserName.
-  ///
-  /// In en, this message translates to:
-  /// **'Name'**
-  String get addRetailUserName;
-
-  /// No description provided for @addRetailUserNameHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Shop or person name'**
-  String get addRetailUserNameHint;
-
-  /// No description provided for @addRetailUserEmail.
-  ///
-  /// In en, this message translates to:
-  /// **'Email'**
-  String get addRetailUserEmail;
-
-  /// No description provided for @addRetailUserEmailHint.
-  ///
-  /// In en, this message translates to:
-  /// **'The address they log in with and read mail at'**
-  String get addRetailUserEmailHint;
-
-  /// No description provided for @addRetailUserRole.
-  ///
-  /// In en, this message translates to:
-  /// **'Role'**
-  String get addRetailUserRole;
-
-  /// No description provided for @addRetailUserPassword.
-  ///
-  /// In en, this message translates to:
-  /// **'First password'**
-  String get addRetailUserPassword;
-
-  /// No description provided for @addRetailUserPasswordHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Used once; they change it at the first login'**
-  String get addRetailUserPasswordHint;
-
-  /// No description provided for @addRetailUserSendEmail.
-  ///
-  /// In en, this message translates to:
-  /// **'Email the login details'**
-  String get addRetailUserSendEmail;
-
-  /// No description provided for @addRetailUserSendEmailOff.
-  ///
-  /// In en, this message translates to:
-  /// **'Give the password to the retail user yourself.'**
-  String get addRetailUserSendEmailOff;
-
-  /// No description provided for @addRetailUserSubmit.
-  ///
-  /// In en, this message translates to:
-  /// **'Add retail user'**
-  String get addRetailUserSubmit;
-
-  /// No description provided for @addRetailUserNoRoles.
-  ///
-  /// In en, this message translates to:
-  /// **'Your office has not marked any role as a retail role yet, so no retail user can be added.'**
-  String get addRetailUserNoRoles;
-
-  /// No description provided for @addRetailUserEmailInUse.
-  ///
-  /// In en, this message translates to:
-  /// **'An official with this email already exists.'**
-  String get addRetailUserEmailInUse;
-
-  /// No description provided for @addRetailUserRoleGone.
-  ///
-  /// In en, this message translates to:
-  /// **'This role is no longer a retail role. Choose another.'**
-  String get addRetailUserRoleGone;
-
-  /// No description provided for @addRetailUserDoneTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'{name} was added'**
-  String addRetailUserDoneTitle(String name);
-
-  /// No description provided for @addRetailUserEmailed.
-  ///
-  /// In en, this message translates to:
-  /// **'The login details were emailed to {email}.'**
-  String addRetailUserEmailed(String email);
-
-  /// No description provided for @addRetailUserMailFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'The account was made, but the email could not be sent. Give them the password below, or use \"Email a new first password\" a little later.'**
-  String get addRetailUserMailFailed;
-
-  /// No description provided for @addRetailUserGiveYourself.
-  ///
-  /// In en, this message translates to:
-  /// **'Give the password to the retail user yourself.'**
-  String get addRetailUserGiveYourself;
-
-  /// No description provided for @addRetailUserPasswordOnce.
-  ///
-  /// In en, this message translates to:
-  /// **'Password (shown once):'**
-  String get addRetailUserPasswordOnce;
-
-  /// No description provided for @addRetailUserFirstLogin.
-  ///
-  /// In en, this message translates to:
-  /// **'They change it at the first login, and their phone needs the emailed code.'**
-  String get addRetailUserFirstLogin;
-
-  /// No description provided for @addAnother.
-  ///
-  /// In en, this message translates to:
-  /// **'Add another'**
-  String get addAnother;
 
   /// No description provided for @pictureTitle.
   ///
@@ -1802,12 +1460,6 @@ abstract class AppLocalizations {
   /// **'Product details'**
   String get detailsProductTitle;
 
-  /// No description provided for @detailsTrackingTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Tracking details'**
-  String get detailsTrackingTitle;
-
   /// No description provided for @checkNumber.
   ///
   /// In en, this message translates to:
@@ -1850,24 +1502,6 @@ abstract class AppLocalizations {
   /// **'Hints'**
   String get hintsTitle;
 
-  /// No description provided for @hintHiddenCodeLength.
-  ///
-  /// In en, this message translates to:
-  /// **'A hidden code has {lengths} characters.'**
-  String hintHiddenCodeLength(String lengths);
-
-  /// No description provided for @lengthsOr.
-  ///
-  /// In en, this message translates to:
-  /// **'{first} or {last}'**
-  String lengthsOr(String first, String last);
-
-  /// No description provided for @hintScratch.
-  ///
-  /// In en, this message translates to:
-  /// **'Scratch the panel off fully before typing the hidden code.'**
-  String get hintScratch;
-
   /// No description provided for @hintScanQr.
   ///
   /// In en, this message translates to:
@@ -1889,8 +1523,14 @@ abstract class AppLocalizations {
   /// No description provided for @backToVerify.
   ///
   /// In en, this message translates to:
-  /// **'Back to Verify'**
+  /// **'Back to Check'**
   String get backToVerify;
+
+  /// No description provided for @backToList.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to the list'**
+  String get backToList;
 
   /// No description provided for @supportEmailSubject.
   ///
@@ -1945,6 +1585,420 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'waiting'**
   String get stepWaiting;
+
+  /// No description provided for @accessPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Thanks for signing up. Your office will check your details and email you when your account is ready.'**
+  String get accessPending;
+
+  /// No description provided for @accessWrongCode.
+  ///
+  /// In en, this message translates to:
+  /// **'The code is wrong or expired. Request a new code if needed.'**
+  String get accessWrongCode;
+
+  /// No description provided for @accessTryLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again later. Get a new code before you sign up again.'**
+  String get accessTryLater;
+
+  /// No description provided for @accessRoleUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This role is no longer available. Choose another role.'**
+  String get accessRoleUnavailable;
+
+  /// No description provided for @accessNoRoles.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask the office for an account.'**
+  String get accessNoRoles;
+
+  /// No description provided for @accessContactOffice.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact the office'**
+  String get accessContactOffice;
+
+  /// No description provided for @accessName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get accessName;
+
+  /// No description provided for @accessRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Role'**
+  String get accessRole;
+
+  /// No description provided for @accessRoleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a role'**
+  String get accessRoleHint;
+
+  /// No description provided for @accessPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a password'**
+  String get accessPassword;
+
+  /// No description provided for @accessShowPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Show password'**
+  String get accessShowPassword;
+
+  /// No description provided for @accessHidePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide password'**
+  String get accessHidePassword;
+
+  /// No description provided for @accessEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get accessEmail;
+
+  /// No description provided for @accessCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Code from the email'**
+  String get accessCode;
+
+  /// No description provided for @accessResend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send a new code'**
+  String get accessResend;
+
+  /// No description provided for @accessSendCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Send code'**
+  String get accessSendCode;
+
+  /// No description provided for @accessCodeSent.
+  ///
+  /// In en, this message translates to:
+  /// **'A code was sent to the address.'**
+  String get accessCodeSent;
+
+  /// No description provided for @accessSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign up'**
+  String get accessSubmit;
+
+  /// No description provided for @scannerModeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Scanner mode'**
+  String get scannerModeTitle;
+
+  /// No description provided for @serialStackTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Serial stack'**
+  String get serialStackTitle;
+
+  /// No description provided for @serialStackHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Type or paste up to 50 serials, separated by spaces, commas, or new lines. Repeated serials are checked once.'**
+  String get serialStackHint;
+
+  /// No description provided for @serialStackLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter 1 to 50 different serials. Submit another stack for additional items.'**
+  String get serialStackLimit;
+
+  /// No description provided for @serialStackUncertain.
+  ///
+  /// In en, this message translates to:
+  /// **'The answer was lost. These checks may already be recorded. Retrying may record them again.'**
+  String get serialStackUncertain;
+
+  /// No description provided for @serialStackNotSent.
+  ///
+  /// In en, this message translates to:
+  /// **'No connection. Nothing was sent; send the stack again when you are online.'**
+  String get serialStackNotSent;
+
+  /// No description provided for @serialStackBadSerial.
+  ///
+  /// In en, this message translates to:
+  /// **'Serial {position} ({value}) is not a serial: digits only, up to {digits} digits.'**
+  String serialStackBadSerial(int position, String value, int digits);
+
+  /// No description provided for @serialStackCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} of 50 serials'**
+  String serialStackCount(int count);
+
+  /// No description provided for @serialStackCountRepeats.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} of 50 serials · {repeats} repeated, sent once'**
+  String serialStackCountRepeats(int count, int repeats);
+
+  /// No description provided for @serialStackRecorded.
+  ///
+  /// In en, this message translates to:
+  /// **'These checks were recorded, but their answer could not be shown. See them in History → Sessions. Do not send the same stack again.'**
+  String get serialStackRecorded;
+
+  /// No description provided for @serialStackRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Send the same stack again'**
+  String get serialStackRetry;
+
+  /// No description provided for @serialStackSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Check serials'**
+  String get serialStackSubmit;
+
+  /// No description provided for @serialStackNew.
+  ///
+  /// In en, this message translates to:
+  /// **'Start another stack'**
+  String get serialStackNew;
+
+  /// No description provided for @serialStackHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'View this session\'s checks'**
+  String get serialStackHistory;
+
+  /// No description provided for @sessionScanned.
+  ///
+  /// In en, this message translates to:
+  /// **'Scanned'**
+  String get sessionScanned;
+
+  /// No description provided for @sessionValid.
+  ///
+  /// In en, this message translates to:
+  /// **'Valid'**
+  String get sessionValid;
+
+  /// No description provided for @sessionWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Warning'**
+  String get sessionWarning;
+
+  /// No description provided for @sessionNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Not found'**
+  String get sessionNotFound;
+
+  /// No description provided for @sessionUnassigned.
+  ///
+  /// In en, this message translates to:
+  /// **'Not in a batch'**
+  String get sessionUnassigned;
+
+  /// No description provided for @sessionLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining'**
+  String get sessionLeft;
+
+  /// No description provided for @sessionRepeat.
+  ///
+  /// In en, this message translates to:
+  /// **'Already scanned'**
+  String get sessionRepeat;
+
+  /// No description provided for @sessionScanAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan again'**
+  String get sessionScanAgain;
+
+  /// No description provided for @sessionNoConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'No connection, scan again.'**
+  String get sessionNoConnection;
+
+  /// No description provided for @sessionBusy.
+  ///
+  /// In en, this message translates to:
+  /// **'The service is busy. Nothing was recorded; scan again.'**
+  String get sessionBusy;
+
+  /// No description provided for @sessionRestarted.
+  ///
+  /// In en, this message translates to:
+  /// **'A new session started.'**
+  String get sessionRestarted;
+
+  /// No description provided for @sessionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sessions'**
+  String get sessionsTitle;
+
+  /// No description provided for @sessionsMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Load more'**
+  String get sessionsMore;
+
+  /// No description provided for @sessionsAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get sessionsAll;
+
+  /// No description provided for @sessionsOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get sessionsOpen;
+
+  /// No description provided for @sessionsEnded.
+  ///
+  /// In en, this message translates to:
+  /// **'Ended'**
+  String get sessionsEnded;
+
+  /// No description provided for @sessionsDates.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose dates'**
+  String get sessionsDates;
+
+  /// No description provided for @sessionsLastSevenDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing the last 7 days'**
+  String get sessionsLastSevenDays;
+
+  /// No description provided for @sessionsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No sessions found.'**
+  String get sessionsEmpty;
+
+  /// No description provided for @historyChecksView.
+  ///
+  /// In en, this message translates to:
+  /// **'Checks'**
+  String get historyChecksView;
+
+  /// No description provided for @sessionsStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Started'**
+  String get sessionsStarted;
+
+  /// No description provided for @sessionsLastScan.
+  ///
+  /// In en, this message translates to:
+  /// **'Last scan'**
+  String get sessionsLastScan;
+
+  /// No description provided for @sessionChecksTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Session checks'**
+  String get sessionChecksTitle;
+
+  /// No description provided for @rateLimitedUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts. Try again later.'**
+  String get rateLimitedUnknown;
+
+  /// No description provided for @sessionRowsFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load this session\'s scans.'**
+  String get sessionRowsFailed;
+
+  /// No description provided for @reportPhotoSame.
+  ///
+  /// In en, this message translates to:
+  /// **'That photo is already on the report.'**
+  String get reportPhotoSame;
+
+  /// No description provided for @reportUnreadable.
+  ///
+  /// In en, this message translates to:
+  /// **'The report was sent, but its answer could not be read. It may have been filed: check My reports before filing it again.'**
+  String get reportUnreadable;
+
+  /// No description provided for @reportCheckGone.
+  ///
+  /// In en, this message translates to:
+  /// **'The check was not found. Remove it and try again.'**
+  String get reportCheckGone;
+
+  /// No description provided for @reportRetailUserGone.
+  ///
+  /// In en, this message translates to:
+  /// **'This retail user can no longer be named. Choose another, or file without one.'**
+  String get reportRetailUserGone;
+
+  /// No description provided for @sessionResumedCounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Resumed session. The counts show after the next scan.'**
+  String get sessionResumedCounts;
+
+  /// No description provided for @sessionChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking…'**
+  String get sessionChecking;
+
+  /// No description provided for @sessionCheckingMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking… {count} more'**
+  String sessionCheckingMore(int count);
+
+  /// No description provided for @sessionNotChecked.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} more scans were not checked. Scan them again.'**
+  String sessionNotChecked(int count);
+
+  /// No description provided for @typeSerialLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Or type the serial'**
+  String get typeSerialLabel;
+
+  /// No description provided for @scanNotReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Scanning waits for the code formats.'**
+  String get scanNotReady;
+
+  /// No description provided for @copyrightNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'© {year} Ziska Pharmaceuticals Ltd. All rights reserved.'**
+  String copyrightNotice(String year);
+
+  /// No description provided for @appVersionShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Version {version} ({build})'**
+  String appVersionShort(String version, String build);
 }
 
 class _AppLocalizationsDelegate

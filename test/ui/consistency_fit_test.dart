@@ -150,27 +150,22 @@ void main() {
         await tester.pumpAndSettle();
       }
 
-      sides(find.byKey(const Key('verify.scan')), 'Verify');
-      await openTile(app, const Key('verify.tool.bulk'));
-      sides(find.byKey(const Key('bulk.scan')), 'Bulk lookup');
+      sides(find.byKey(const Key('verify.tool.serials')), 'Check');
+      await openTile(app, const Key('verify.tool.serials'));
+      sides(find.byKey(const Key('serials.input')), 'Serial stack');
       await back();
       await openTile(app, const Key('verify.tool.report'));
       sides(find.byKey(const Key('report.note')), 'Report incident');
       await back();
       await openTile(app, const Key('verify.tool.myReports'));
       sides(
-        find.descendant(
-          of: find.byType(ListView),
-          matching: find.byType(DecoratedBox),
+        find.byWidgetPredicate(
+          (w) =>
+              w.key is ValueKey<String> &&
+              (w.key! as ValueKey<String>).value.startsWith('reports.row.'),
         ),
         'My reports',
       );
-      await back();
-      await openTile(app, const Key('verify.tool.retailUsers'));
-      sides(find.byKey(const Key('retailUsers.search')), 'Retail users');
-      await app.tap(find.byKey(const Key('retailUsers.add')));
-      sides(find.byKey(const Key('addRetail.name')), 'Add retail user');
-      await back();
       await back();
       await app.tap(tab(l10n.tabHistory));
       final search = tester.getRect(find.byKey(const Key('history.search')));
@@ -278,23 +273,22 @@ void main() {
       labels(['change.old', 'change.new', 'change.repeat'], 'Set password');
 
       app = await start(tester, profile: Roles.supervisor);
-      labels(['verify.input'], 'Verify');
-      await openTile(app, const Key('verify.tool.bulk'));
-      labels(['bulk.input'], 'Bulk lookup');
+      labels(['verify.input'], 'Check');
+      await openTile(app, const Key('verify.tool.serials'));
+      labels(['serials.input'], 'Bulk lookup');
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
       await openTile(app, const Key('verify.tool.report'));
       labels(['report.note'], 'Report incident');
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
-      await openTile(app, const Key('verify.tool.retailUsers'));
-      await app.tap(find.byKey(const Key('retailUsers.add')));
+      app = await start(tester, loggedIn: false);
+      await app.tapText(l10n.requestAccessButton);
       labels([
-        'addRetail.name',
-        'addRetail.email',
-        'addRetail.role',
-        'addRetail.password',
-      ], 'Add retail user');
+        'access.name',
+        'access.password',
+        'access.email',
+      ], 'Sign up');
     });
 
     test('TC-UI-138 one error banner look', () {
@@ -344,66 +338,31 @@ void main() {
           );
           final inEmptyState =
               before.contains('AppEmptyState(') ||
-              RegExp(r'empty(Title|Body):\s*$').hasMatch(before);
+              // Directly, or one of the texts a choice in the argument
+              // picks (no comma: still the same argument).
+              RegExp(r'empty(Title|Body):[^,]*$').hasMatch(before);
           if (!inEmptyState) found.add('$path: $name');
         }
       }
       expect(found, isEmpty);
     });
 
-    uiTest('TC-UI-140 dialogs alike', (tester, shot) async {
-      /// The dialog's action labels in order, its title style, its shape.
-      (List<String?>, TextStyle, ShapeBorder?) dialog() {
-        final d = find.byType(AlertDialog);
-        final actions = tester
-            .widgetList<TextButton>(
-              find.descendant(of: d, matching: find.byType(TextButton)),
-            )
-            .map((b) => (b.child! as Text).data)
-            .toList();
-        final title = (tester.widget<AlertDialog>(d).title! as Text).data!;
-        final material = tester.widget<Material>(
-          find.descendant(of: d, matching: find.byType(Material)).first,
-        );
-        return (
-          actions,
-          drawnStyle(tester, find.text(title)),
-          material.shape,
-        );
-      }
-
-      var app = await start(tester, profile: Roles.supervisor);
+    uiTest('TC-UI-140 logout confirmation follows the design tokens', (
+      tester,
+      shot,
+    ) async {
+      final app = await start(tester, profile: Roles.supervisor);
       await app.tap(tab(l10n.tabProfile));
-      await tester.scrollUntilVisible(
-        find.byKey(const Key('profile.logout')),
-        200,
-        scrollable: find.byType(Scrollable).last,
-      );
       await app.tap(find.byKey(const Key('profile.logout')));
-      final logOut = dialog();
-      expect(logOut.$1, [l10n.cancel, l10n.logout]);
-
-      app = await start(tester, profile: Roles.supervisor);
-      await openTile(app, const Key('verify.tool.retailUsers'));
-      await app.tap(find.byTooltip('Show menu').first);
-      await app.tapText('Email a new first password');
-      final emailIt = dialog();
-      expect(emailIt.$1, [l10n.cancel, 'Email it']);
-
-      for (final (style, name) in [
-        (logOut.$2, 'Log out'),
-        (emailIt.$2, 'Email'),
-      ]) {
-        expect(style.fontSize, AppTypography.headline.fontSize, reason: name);
-        expect(
-          style.fontWeight,
-          AppTypography.headline.fontWeight,
-          reason: name,
-        );
-      }
-      expect(logOut.$3, emailIt.$3);
+      final dialog = tester.widget<AlertDialog>(find.byType(AlertDialog));
+      expect((dialog.title! as Text).data, l10n.logoutConfirmTitle);
+      expect(
+        drawnStyle(tester, find.text(l10n.logoutConfirmTitle)).fontSize,
+        AppTypography.headline.fontSize,
+      );
+      expect(find.text(l10n.cancel), findsOneWidget);
+      await shot('dialog_logout');
     });
-
     test('TC-UI-141 every icon button has a label', () {
       final missing = [
         for (final (at, args) in callArguments('IconButton'))
@@ -477,7 +436,8 @@ void main() {
           ),
         },
       );
-      await openTile(app, const Key('verify.tool.retailUsers'));
+      await openTile(app, const Key('verify.tool.report'));
+      await app.tap(find.byKey(const Key('report.retailUser')));
       expectFits(tester);
       await shot('long_retail_users');
 
@@ -522,15 +482,21 @@ void main() {
       );
       await lookUp(app);
       expectFits(tester);
-      // No empty rows: only the values that came are shown.
+      // SRS FR-LKP-06: every field appears; a missing one is blank ("—").
       for (final label in [
         l10n.genericLabel,
         l10n.shortNameLabel,
         l10n.madeLabel,
         l10n.expiresLabel,
       ]) {
-        expect(find.text(label), findsNothing, reason: label);
+        await tester.scrollUntilVisible(
+          find.text(label),
+          200,
+          scrollable: find.byType(Scrollable).first,
+        );
+        expect(find.text(label), findsOneWidget, reason: label);
       }
+      expect(find.text('—'), findsNWidgets(4));
       expect(find.text(l10n.batchLabel), findsOneWidget);
       await shot('missing_result');
 
@@ -596,22 +562,15 @@ void main() {
       await shot('big_result');
 
       app = await start(tester);
-      await openTile(app, const Key('verify.tool.bulk'));
-      await app.tap(find.byKey(const Key('bulk.scan')));
-      for (var i = 0; i < 500; i++) {
-        app.scanner.scan(
-          'https://www.ziskaverify.com/q/Q8F2KD91${'$i'.padLeft(4, '0')}',
-        );
-        await tester.pump();
-      }
-      await tester.pumpAndSettle();
-      if (find.text('Stop scanning').evaluate().isNotEmpty) {
-        await app.tapText('Stop scanning');
-      }
+      await openTile(app, const Key('verify.tool.serials'));
+      await app.enter(
+        const Key('serials.input'),
+        List.generate(50, (i) => '${i + 1}').join(','),
+      );
+      await app.tap(find.byKey(const Key('serials.submit')));
       expectFits(tester);
-      expect(find.text(l10n.bulkCount(500, 500)), findsWidgets);
-      expect(find.text(l10n.bulkSend(500)), findsOneWidget);
-      await shot('big_bulk');
+      expect(find.bySemanticsLabel('Scanned: 50'), findsOneWidget);
+      await shot('big_serial_stack');
     });
 
     uiTest('TC-UI-146 the smallest width', (tester, shot) async {

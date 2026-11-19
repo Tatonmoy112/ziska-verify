@@ -29,6 +29,7 @@ CheckDto _$CheckDtoFromJson(Map<String, dynamic> json) => CheckDto(
   serial: json['serial'] as String?,
   product: json['product'] as String?,
   batch: json['batch'] as String?,
+  sessionId: json['session_id'] as String?,
 );
 
 TotalsDto _$TotalsDtoFromJson(Map<String, dynamic> json) => TotalsDto(

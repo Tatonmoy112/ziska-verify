@@ -19,12 +19,12 @@ final class FormatsRequested extends LookupEvent {
   const FormatsRequested();
 }
 
-/// A scanned QR text or a typed serial or hidden code (final.md 8.4).
+/// A scanned QR text or a typed serial (final.md 8.4).
 final class LookupRequested extends LookupEvent {
   const LookupRequested(this.way, this.raw);
   final LookupWay way;
 
-  /// Never kept in the state: a hidden code is not stored (Section 12.1).
+  /// The raw input is normalized before the request.
   final String raw;
 }
 
@@ -41,11 +41,13 @@ abstract class LookupState with _$LookupState {
     InputFormats? formats,
     @Default(false) bool formatsLoading,
     Failure? formatsFailure,
+
+    /// After a `429` on the formats: Retry waits until this time.
+    DateTime? formatsRetryAt,
     @Default(LookupStatus.idle) LookupStatus status,
     LookupResult? result,
 
-    /// What the [result] answers: the way, the value as sent (a hidden code
-    /// masked), and when (final.md Section 13.1.4).
+    /// The serial/QR value and response time (final.md Section 13.1).
     CheckedInput? checked,
     Failure? failure,
     RefusedInput? refused,
@@ -98,6 +100,8 @@ class LookupBloc extends Bloc<LookupEvent, LookupState> {
     Emitter<LookupState> emit,
   ) async {
     if (state.formats != null) return;
+    final wait = state.formatsRetryAt;
+    if (wait != null && _now().isBefore(wait)) return;
     emit(state.copyWith(formatsLoading: true, formatsFailure: null));
     final result = await _getFormats();
     emit(switch (result) {
@@ -108,6 +112,7 @@ class LookupBloc extends Bloc<LookupEvent, LookupState> {
       Err(:final failure) => state.copyWith(
         formatsLoading: false,
         formatsFailure: failure,
+        formatsRetryAt: failure.retryAtFrom(_now()),
       ),
     });
   }
@@ -155,7 +160,7 @@ class LookupBloc extends Bloc<LookupEvent, LookupState> {
         status: LookupStatus.failed,
         failure: failure,
         retryAt: failure.exception is RateLimitedException
-            ? _now().add(failure.retryAfter ?? const Duration(seconds: 60))
+            ? failure.retryAtFrom(_now())
             : null,
       ),
     });

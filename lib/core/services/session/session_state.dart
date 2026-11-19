@@ -8,18 +8,22 @@ final class SessionUnauthenticated extends SessionState {
   const SessionUnauthenticated();
 }
 
-/// `auth/login` answered `code_sent`: the Verify code screen.
+/// `auth/login` answered `code_sent`: the email code screen.
 final class SessionAwaitingCode extends SessionState {
   const SessionAwaitingCode({required this.challengeId, required this.email});
   final String challengeId;
 
-  /// Shown on the Verify code screen ("We sent a code to …").
+  /// Shown on the email code screen ("We sent a code to …").
   final String email;
 }
 
 /// Logged in with `must_change_password: true`: only Change password.
+/// With [canSkip] (the backend's `password_change_skippable`), the official
+/// may choose **Not now** instead (final.md Section 6.6).
 final class SessionPasswordChangeRequired extends SessionState {
-  const SessionPasswordChangeRequired();
+  const SessionPasswordChangeRequired({this.canSkip = false});
+
+  final bool canSkip;
 }
 
 /// Logged in, password accepted.

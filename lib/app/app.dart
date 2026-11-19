@@ -7,8 +7,11 @@ import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ziska_verify/app/config/app_config.dart';
 import 'package:ziska_verify/app/router/app_router.dart';
+import 'package:ziska_verify/core/services/scanner/active_scan_store.dart';
 import 'package:ziska_verify/core/services/session/forbidden_signal.dart';
 import 'package:ziska_verify/core/services/session/session_service.dart';
+import 'package:ziska_verify/core/services/session/session_state.dart';
+import 'package:ziska_verify/core/services/storage/secure_storage_service.dart';
 import 'package:ziska_verify/features/profile/domain/usecases/get_profile.dart';
 import 'package:ziska_verify/features/profile/presentation/bloc/profile_cubit.dart';
 import 'package:ziska_verify/l10n/generated/app_localizations.dart';
@@ -26,6 +29,37 @@ class App extends StatefulWidget {
 }
 
 class _AppState extends State<App> {
+  String? _official;
+  StreamSubscription<ProfileState>? _profileChanges;
+  StreamSubscription<SessionState>? _sessionChanges;
+  void _clearRecovery(String official) {
+    unawaited(
+      ActiveScanStore(
+        widget.locator<SecureStorageService>(),
+        client: widget.locator<AppConfig>().clientSlug,
+        official: official,
+      ).clear().catchError((Object _) {}),
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _profileChanges = _profile.stream.listen((state) {
+      final id = state.profile?.id;
+      if (id != null && id != _official) {
+        if (_official != null) _clearRecovery(_official!);
+        _official = id;
+      }
+    });
+    _sessionChanges = widget.locator<SessionService>().states.listen((state) {
+      if (state is SessionUnauthenticated && _official != null) {
+        _clearRecovery(_official!);
+        _official = null;
+      }
+    });
+  }
+
   late final ProfileCubit _profile = ProfileCubit(
     widget.locator<GetProfile>(),
     widget.locator<SessionService>(),
@@ -38,6 +72,8 @@ class _AppState extends State<App> {
 
   @override
   void dispose() {
+    unawaited(_profileChanges?.cancel());
+    unawaited(_sessionChanges?.cancel());
     _router.dispose();
     unawaited(_profile.close());
     super.dispose();

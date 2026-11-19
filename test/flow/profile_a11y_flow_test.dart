@@ -32,8 +32,14 @@ void main() {
     ) async {
       final app = await startApp(tester);
       await openProfile(app);
-      await app.tapText('Support contact');
+      await app.tap(find.byKey(const Key('profile.supportEmail')));
       expect(app.launcher.emails.single.to, 'help@ziska.example');
+      // Both channels show (guide §3.8): the phone opens the dialler.
+      final phone = find.byKey(const Key('profile.supportPhone'));
+      if (phone.evaluate().isNotEmpty) {
+        await app.tap(phone);
+        expect(app.launcher.calls, hasLength(1));
+      }
     });
 
     testWidgets('TC-PROF-003 support not set', (tester) async {

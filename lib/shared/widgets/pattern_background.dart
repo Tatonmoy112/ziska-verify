@@ -10,7 +10,7 @@ enum PatternKind {
   /// Thin lines on a square grid (the QR scanner).
   grid,
 
-  /// Hexagon outlines in a honeycomb (the Verify tab's header).
+  /// Hexagon outlines in a honeycomb (the Check tab's header).
   hexagons,
 }
 

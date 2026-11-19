@@ -42,6 +42,10 @@ class AuthInterceptor extends Interceptor {
     if (options.extra[RequestFlags.skipAuth] != true && token != null) {
       options.headers['Authorization'] = 'Bearer $token';
       options.extra[RequestFlags.usedToken] = token;
+    } else {
+      // A retry after the login ended never carries the old pass.
+      options.headers.remove('Authorization');
+      options.extra.remove(RequestFlags.usedToken);
     }
     handler.next(options);
   }
@@ -68,8 +72,15 @@ class AuthInterceptor extends Interceptor {
           case Renewed():
             break;
           case SessionEnded():
+            // The reference of the request that found the pass expired.
             return handler.reject(
-              _withError(err, const UnauthenticatedException(statusCode: 401)),
+              _withError(
+                err,
+                UnauthenticatedException(
+                  statusCode: 401,
+                  requestId: _requestIdOf(response?.data),
+                ),
+              ),
             );
           case RenewalFailed(:final error):
             return handler.reject(_withError(err, error));
@@ -86,7 +97,11 @@ class AuthInterceptor extends Interceptor {
 
     // Every route except me, me/password and logout answers this until the
     // password is changed (final.md Section 6.6).
-    if (response?.statusCode == 403 && code == 'password_change_required') {
+    // An answer to an older login's pass says nothing about the login of
+    // now (the same rule as a 401 below).
+    if (response?.statusCode == 403 &&
+        code == 'password_change_required' &&
+        options.extra[RequestFlags.usedToken] == _session.accessToken) {
       _session.requirePasswordChange();
     }
 
@@ -99,6 +114,20 @@ class AuthInterceptor extends Interceptor {
         code == 'unauthenticated' &&
         sentWithToken &&
         options.extra[RequestFlags.keepSessionOn401] != true) {
+      final current = _session.accessToken;
+      if (options.extra[RequestFlags.usedToken] != current) {
+        // Sent with the pass of a login that is over: it never ends the
+        // login of now. Retried once with the current pass, if there is one.
+        if (current != null && options.extra[RequestFlags.retried] != true) {
+          options.extra[RequestFlags.retried] = true;
+          try {
+            return handler.resolve(await _dio.fetch<Object?>(options));
+          } on DioException catch (e) {
+            return handler.next(e);
+          }
+        }
+        return handler.next(err);
+      }
       await _session.end();
     }
     handler.next(err);
@@ -106,6 +135,14 @@ class AuthInterceptor extends Interceptor {
 
   static DioException _withError(DioException err, Object error) =>
       err.copyWith(error: error);
+
+  static String? _requestIdOf(Object? body) {
+    if (body is Map<String, dynamic>) {
+      final error = body['error'];
+      if (error is Map<String, dynamic>) return error['request_id'] as String?;
+    }
+    return null;
+  }
 
   static String? _codeOf(Object? body) {
     if (body is Map<String, dynamic>) {

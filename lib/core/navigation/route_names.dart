@@ -11,11 +11,10 @@ abstract final class RouteNames {
   static const home = 'home';
   static const history = 'history';
   static const profile = 'profile';
-  static const scan = 'scan';
   static const lookupResult = 'lookupResult';
-  static const bulkLookup = 'bulkLookup';
+  static const scannerMode = 'scannerMode';
+  static const serialStack = 'serialStack';
+  static const sessionChecks = 'sessionChecks';
   static const myReports = 'myReports';
   static const reportIncident = 'reportIncident';
-  static const retailUsers = 'retailUsers';
-  static const addRetailUser = 'addRetailUser';
 }

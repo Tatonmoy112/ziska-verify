@@ -7,9 +7,10 @@ import 'package:ziska_verify/l10n/generated/app_localizations.dart';
 extension FailureMessage on Failure {
   String message(AppLocalizations l10n) => switch (exception) {
     NetworkException() => l10n.errorNetwork,
-    RateLimitedException(:final retryAfter) => l10n.errorRateLimited(
-      retryAfter?.inSeconds ?? 60,
-    ),
+    RateLimitedException(:final retryAfter) =>
+      retryAfter == null
+          ? l10n.rateLimitedUnknown
+          : l10n.errorRateLimited(retryAfter.inSeconds),
     AppPreparingException() => l10n.errorPreparing,
     ServiceUnavailableException() => l10n.errorUnavailable,
     NotFoundException() => l10n.errorNotAvailable,
@@ -40,4 +41,7 @@ const _knownCodes = {
   'app_preparing',
   'service_unavailable',
   'internal_error',
+  'session_full',
+  'session_ended',
+  'session_not_yours',
 };

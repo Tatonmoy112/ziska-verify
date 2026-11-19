@@ -39,7 +39,7 @@ void main() {
   ) async {
     final app = await openProfile(tester, withName('Asha ' * 20));
     expect(tester.takeException(), isNull);
-    await app.tap(tab('Verify'));
+    await app.tap(tab('Check'));
     expect(tester.takeException(), isNull);
   });
 
@@ -49,7 +49,7 @@ void main() {
       'organisation': null,
     });
     expect(find.textContaining('null'), findsNothing);
-    await app.tap(tab('Verify'));
+    await app.tap(tab('Check'));
     expect(find.textContaining('null'), findsNothing);
     expect(tester.takeException(), isNull);
   });
@@ -129,5 +129,63 @@ void main() {
       ),
       findsOneWidget,
     );
+  });
+
+  // SRS v1.2 FR-ACC-15: the profile shows the official's permissions.
+  group('TC-PROF-041 what the role allows', () {
+    Future<Finder> permissions(FlowApp app) async {
+      final card = find.byKey(const Key('profile.permissions'));
+      await app.tester.scrollUntilVisible(
+        card,
+        200,
+        scrollable: find.byType(Scrollable).last,
+      );
+      return card;
+    }
+
+    String row(String key) => 'profile.permission.$key';
+
+    testWidgets('all four, by their names', (tester) async {
+      final app = await openProfile(tester, Roles.supervisor);
+      final card = await permissions(app);
+      for (final (key, title) in [
+        ('item:lookup', 'Check one item'),
+        ('item:bulk_lookup', 'Check many items'),
+        ('history:own', 'Own history'),
+        ('incident:report', 'Report incidents'),
+      ]) {
+        expect(find.byKey(Key(row(key))), findsOneWidget, reason: key);
+        expect(
+          find.descendant(of: card, matching: find.text(title)),
+          findsOneWidget,
+        );
+      }
+    });
+
+    testWidgets('only what the role has; unknown keys are not shown', (
+      tester,
+    ) async {
+      final app = await openProfile(
+        tester,
+        Roles.only(['item:bulk_lookup', 'retail_user:add']),
+      );
+      await permissions(app);
+      expect(find.byKey(Key(row('item:bulk_lookup'))), findsOneWidget);
+      expect(find.byKey(Key(row('item:lookup'))), findsNothing);
+      expect(find.byKey(Key(row('retail_user:add'))), findsNothing);
+      expect(find.text('None. Ask your office.'), findsNothing);
+    });
+
+    testWidgets('none: "None. Ask your office."', (tester) async {
+      final app = await openProfile(tester, Roles.only([]));
+      final card = await permissions(app);
+      expect(
+        find.descendant(
+          of: card,
+          matching: find.text('None. Ask your office.'),
+        ),
+        findsOneWidget,
+      );
+    });
   });
 }

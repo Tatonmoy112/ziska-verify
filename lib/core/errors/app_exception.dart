@@ -109,6 +109,16 @@ final class ConflictException extends AppException {
   });
 }
 
+/// A QR scan cannot join its current session.
+final class ScanSessionException extends AppException {
+  const ScanSessionException({
+    super.statusCode,
+    super.code,
+    super.message,
+    super.requestId,
+  });
+}
+
 /// 429 `rate_limited`, carrying the `Retry-After` seconds.
 final class RateLimitedException extends AppException {
   const RateLimitedException({
@@ -156,6 +166,12 @@ final class InternalErrorException extends AppException {
 /// No answer: offline, timeout, or connection failure.
 final class NetworkException extends AppException {
   const NetworkException({super.message});
+
+  /// The [message] of a request that never reached a server (no
+  /// connection): nothing was recorded, so sending again is safe.
+  static const notSent = 'not_sent';
+
+  bool get wasNotSent => message == notSent;
 }
 
 /// The request was cancelled by the app (a screen closed, a newer search).

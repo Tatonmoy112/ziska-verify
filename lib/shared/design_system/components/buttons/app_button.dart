@@ -8,11 +8,11 @@ enum AppButtonVariant {
   /// Filled navy ("Login securely").
   primary,
 
-  /// Navy outline ("Contact us to request access").
+  /// Navy outline ("Sign up" on Login).
   outlined,
 
   /// White with a light border and navy text: a low-emphasis action
-  /// ("Back to login", "Back to Verify"). Visible on white and on grey
+  /// ("Back to login", "Back to Check"). Visible on white and on grey
   /// (`surfaceMuted`) screens alike.
   tonal,
 

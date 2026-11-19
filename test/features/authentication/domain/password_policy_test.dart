@@ -50,6 +50,11 @@ void main() {
       for (final p in ['abcd\t1234', 'abcd\n1234', 'abcd\r1234']) {
         expect(policy.check(p).isValid, isFalse, reason: p);
       }
+      // NUL, DEL, and the C1 next-line character too.
+      for (final code in [0x00, 0x7F, 0x85]) {
+        final p = 'abcd${String.fromCharCode(code)}1234';
+        expect(policy.check(p).isValid, isFalse, reason: 'U+$code');
+      }
     });
 
     test('TC-AUTH-073 spaces and symbols are allowed', () {

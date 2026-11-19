@@ -20,17 +20,3 @@ RetailUserDto _$RetailUserDtoFromJson(Map<String, dynamic> json) =>
       name: json['name'] as String,
       email: json['email'] as String,
     );
-
-RetailRoleDto _$RetailRoleDtoFromJson(Map<String, dynamic> json) =>
-    RetailRoleDto(
-      id: (json['id'] as num).toInt(),
-      name: json['name'] as String,
-    );
-
-AddedRetailUserDto _$AddedRetailUserDtoFromJson(Map<String, dynamic> json) =>
-    AddedRetailUserDto(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      email: json['email'] as String,
-      emailSent: json['email_sent'] as bool?,
-    );

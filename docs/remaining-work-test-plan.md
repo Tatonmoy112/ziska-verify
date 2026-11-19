@@ -1,5 +1,8 @@
 # Track & Trace — Remaining Work Test Plan
 
+> **2026-11-16 contract migration:** final.md v2.0 and [the migration acceptance cases](test-cases/16-mobile-migration.md) supersede conflicting requirements below. Hidden-code submission, the 500-item bulk endpoint, everyone scope, retail administration and certificates are retired. Old counts/status tables are historical, not current completion evidence. Use [the release backlog](release-backlog.md) for unrelated unfinished work.
+
+
 | Field | Value |
 |---|---|
 | Version | 1.0 — 2026-11-14 |

@@ -4,17 +4,17 @@
   "@appTitle": {
     "description": "The app's name."
   },
-  "appSubtitle": "Product Verification System",
+  "appSubtitle": "Product Authenticity Check",
   "@appSubtitle": {
     "description": "Under the app's name on the Splash."
   },
-  "splashTagline": "Verify genuine products instantly",
+  "splashTagline": "Check genuine products instantly",
   "@splashTagline": {
     "description": "The line on the Splash's navy glow, above the progress."
   },
-  "brandTagline": "TRACK · TRACE · VERIFY",
+  "brandTagline": "TRACK · TRACE · CHECK",
   "loginTitle": "Login to Track & Trace",
-  "loginSubtitle": "Enter your email and password to verify products.",
+  "loginSubtitle": "Enter your email and password to check products.",
   "emailLabel": "Email",
   "emailHint": "name@example.com",
   "passwordLabel": "Password",
@@ -23,8 +23,8 @@
   "forgotPassword": "Forgot password?",
   "loginButton": "Login securely",
   "noAccountDivider": "NO ACCOUNT?",
-  "noAccountQuestion": "Don't have an ID and password?",
-  "requestAccessButton": "Contact us to request access",
+  "noAccountQuestion": "Don't have an account?",
+  "requestAccessButton": "Sign up",
   "authorizedOnly": "Only authorized users can access this system",
   "loginFailed": "Email or password is incorrect.",
   "fieldRequired": "Required",
@@ -38,9 +38,9 @@
       }
     }
   },
-  "codeLabel": "Verification code",
-  "verifyButton": "Verify",
-  "codeWrong": "The code is wrong or has expired. Check the latest email, or log in again for a new code.",
+  "codeLabel": "Code from the email",
+  "verifyButton": "Continue",
+  "codeWrong": "The code is wrong or has expired. Check the latest email, or send the code again.",
   "resendCode": "Send the code again",
   "resendIn": "Send again in {seconds} s",
   "@resendIn": {
@@ -55,6 +55,9 @@
   "backToLogin": "Back to login",
   "changePasswordTitle": "Set a new password",
   "changePasswordForcedSubtitle": "Your password was set by someone else. Choose your own password to continue.",
+  "changePasswordChoiceSubtitle": "Your password was set by someone else. Choose your own now, or later from Profile.",
+  "changePasswordLater": "Not now",
+  "passwordLaterRefused": "Not now is not available for your account. Choose a new password or log out.",
   "changePasswordSubtitle": "Choose a new password. Your other phones will be logged out.",
   "currentPasswordLabel": "Current password",
   "newPasswordLabel": "New password",
@@ -67,13 +70,16 @@
   "ruleLength": "8 characters or more",
   "ruleLetter": "a letter",
   "ruleNumber": "a number",
+  "ruleNoControl": "no tabs or line breaks",
   "passwordRuleBroken": "The password does not meet the rules below.",
   "forgotTitle": "Forgot password",
   "forgotSubtitle": "Enter your email. If it has an account, we will send a 6-digit code.",
   "sendCodeButton": "Send code",
   "forgotSent": "If the address has an account, a code was sent.",
   "resetTitle": "Reset password",
-  "resetSubtitle": "Enter the code sent to {email} and choose a new password.",
+  "resetCodeWrong": "The code is wrong or has expired. Ask for a new code.",
+  "resetNewCode": "Send a new code",
+  "resetSubtitle": "If {email} has an account, a code was sent to it. Enter the code and choose a new password.",
   "@resetSubtitle": {
     "placeholders": {
       "email": {
@@ -82,19 +88,17 @@
     }
   },
   "resetButton": "Reset password",
-  "resetDone": "Password changed. Log in with your new password.",
-  "requestAccessTitle": "Request access",
-  "requestAccessSubtitle": "Accounts are created by your office. Email or call them with the details below.",
-  "pleaseInclude": "Please include",
-  "includeName": "Full name",
-  "includeOrganisation": "Organization",
-  "includePhone": "Phone number",
-  "includeEmail": "Email address",
-  "includeReason": "Reason for access",
-  "includeJobTitle": "Job title",
-  "emailTeamButton": "Email the office",
-  "callTeamButton": "Call the office",
-  "accessRequestSubject": "Access request",
+  "resetDone": "Password changed. Log in with your new password; every phone needs the emailed code at its next login.",
+  "requestAccessTitle": "Sign up",
+  "requestAccessSubtitle": "Create your account. Your office checks it and emails you when it is approved.",
+  "noPhoneApp": "No phone app found. Call {phone}.",
+  "@noPhoneApp": {
+    "placeholders": {
+      "phone": {
+        "type": "String"
+      }
+    }
+  },
   "noMailApp": "No email app found. Write to {email}.",
   "@noMailApp": {
     "placeholders": {
@@ -127,22 +131,27 @@
       }
     }
   },
-  "tabVerify": "Verify",
+  "tabVerify": "Check",
   "tabHistory": "History",
   "tabProfile": "Profile",
   "noFeaturesTitle": "No features yet",
   "noFeaturesBody": "Your role does not allow any features yet. Contact your office.",
-  "comingSoon": "This part of the app is being built.",
   "profileTitle": "Profile",
   "organisationLabel": "Organization",
   "roleLabel": "Role",
+  "permissionsSection": "WHAT YOU CAN DO",
+  "permissionLookup": "Check one item",
+  "permissionBulkLookup": "Check many items",
+  "permissionHistory": "Own history",
+  "permissionReport": "Report incidents",
+  "permissionsNone": "None. Ask your office.",
   "accountSection": "ACCOUNT",
   "statChecks": "Checks",
   "@statChecks": {
     "description": "Profile card: every check the official made."
   },
   "statValid": "Valid",
-  "statNotVerified": "Not verified",
+  "statNotVerified": "Needs attention",
   "@statNotVerified": {
     "description": "Profile card: the official's checks found in no batch or not found at all (not_found + unassigned)."
   },
@@ -151,6 +160,7 @@
     "description": "Under the Profile cards' place when GET checks fails; a Try again link follows."
   },
   "changePasswordRow": "Change password",
+  "passwordPendingBanner": "Your password was set by someone else. Change it to keep your account safe.",
   "supportContactRow": "Support contact",
   "supportNotSet": "Not set by your office",
   "appVersionRow": "App version",
@@ -168,25 +178,11 @@
   "logoutConfirmTitle": "Log out?",
   "logoutConfirmBody": "This phone stays trusted, so the next login needs no emailed code.",
   "cancel": "Cancel",
-  "howItWorks": "How it works",
-  "@howItWorks": {
-    "description": "Pill title of the Request access steps; shown in capitals."
-  },
-  "requestStepSendTitle": "Send your request",
-  "requestStepSendBody": "Email or call the office with the details below.",
-  "requestStepSendBodyEmailOnly": "Email the office with the details below.",
-  "@requestStepSendBodyEmailOnly": {
-    "description": "Step 1 when the office has no phone number configured."
-  },
-  "requestStepCheckTitle": "Your office checks it",
-  "requestStepCheckBody": "An administrator checks your request and creates your account.",
-  "requestStepLoginTitle": "Receive your login",
-  "requestStepLoginBody": "Your first password is emailed to you or given to you in person. You change it at your first login.",
-  "verifyItemTitle": "Verify an item",
-  "verifyItemSubtitle": "Type the serial or the hidden code, or scan the QR code.",
+  "verifyItemTitle": "Check authenticity",
   "waySerial": "Serial",
   "wayHiddenCode": "Hidden code",
   "wayQr": "QR code",
+  "wayOther": "Other",
   "serialHint": "Up to {digits} digits",
   "@serialHint": {
     "placeholders": {
@@ -195,11 +191,8 @@
       }
     }
   },
-  "hiddenCodeHint": "The code under the scratch layer",
-  "verifyButtonLookup": "Verify product",
+  "verifyButtonLookup": "Check",
   "clear": "Clear",
-  "scanQrTitle": "Scan QR code",
-  "scanQrSubtitle": "Point your camera at the product's QR code",
   "scanFrameHint": "Place the QR code inside the frame",
   "@scanFrameHint": {
     "description": "Above the scanner's frame; shown in capitals."
@@ -207,10 +200,6 @@
   "scanLooking": "Looking for a QR code · hold steady",
   "@scanLooking": {
     "description": "The status under the scanner's frame while the camera looks for a code."
-  },
-  "enterManually": "Enter manually",
-  "@enterManually": {
-    "description": "Scanner button: back to the Verify tab with the field focused, to type the serial or hidden code."
   },
   "inputEmpty": "Enter a value first",
   "inputWrongSerial": "A serial has digits only, up to {digits} digits.",
@@ -221,31 +210,28 @@
       }
     }
   },
-  "inputWrongHiddenCode": "This is not a hidden code of this company. Check each character.",
   "notProductQr": "This QR code is not a product code of this company.",
   "formatsFailed": "Could not load the code formats.",
-  "lookupNetworkError": "Unable to verify. Check the connection and try again.",
-  "verifying": "Verifying…",
+  "lookupNetworkError": "Unable to check. Check the connection and try again.",
+  "verifying": "Checking…",
   "toolsTitle": "MORE",
-  "toolBulk": "Bulk lookup",
   "toolReport": "Report incident",
   "toolMyReports": "My reports",
-  "toolRetailUsers": "Retail users",
   "scannerPermissionDenied": "Camera access is off. Allow it in Settings to scan QR codes.",
   "scannerUnsupported": "This phone cannot scan QR codes. Type the serial instead.",
   "scannerFailed": "The camera could not start.",
   "openSettings": "Open settings",
   "torch": "Torch",
-  "resultTitle": "Verification result",
+  "resultTitle": "Check result",
   "resultValidTitle": "Genuine product",
   "resultValidBody": "First check by any official. Nothing is wrong with this item.",
   "resultWarningTitle": "Genuine, needs attention",
   "resultWarningBody": "Read every reason below.",
   "resultNotFoundTitle": "Not found",
-  "resultNotFoundBody": "No product of this company has this code.",
+  "resultNotFoundBody": "No product of this company has this serial or QR code.",
   "resultUnassignedTitle": "Not in a batch",
   "resultUnassignedBody": "This item exists but has not been given to a batch yet.",
-  "resultUnknownTitle": "Unable to verify",
+  "resultUnknownTitle": "Unable to check",
   "resultUnknownBody": "This result is not known to this app version. Update the app or contact your office.",
   "reasonCheckedBefore": "Checked before",
   "reasonCheckedBeforeDetail": "This is check number {count} of this item. Last check: {when}.",
@@ -273,71 +259,13 @@
   "batchLabel": "Batch",
   "madeLabel": "Made",
   "expiresLabel": "Expires",
-  "verifyAnother": "Verify another item",
+  "verifyAnother": "Check another item",
   "copied": "Copied",
   "copyReference": "Copy reference number",
-  "copyPassword": "Copy password",
-  "bulkTitle": "Bulk lookup",
-  "bulkCount": "{count} / {max} items",
-  "@bulkCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      },
-      "max": {
-        "type": "int"
-      }
-    }
-  },
-  "bulkScanStart": "Scan QR codes",
-  "bulkScanStop": "Stop scanning",
-  "bulkAdd": "Add",
-  "bulkAdded": "Added {label}",
-  "@bulkAdded": {
-    "placeholders": {
-      "label": {
-        "type": "String"
-      }
-    }
-  },
-  "bulkDuplicate": "This item is already in the list.",
-  "bulkFull": "The list is full ({max} items).",
-  "@bulkFull": {
-    "placeholders": {
-      "max": {
-        "type": "int"
-      }
-    }
-  },
-  "bulkEmpty": "Scan QR codes or type serials and hidden codes to build the list.",
-  "bulkClearList": "Clear list",
-  "bulkSend": "Check {count} items",
-  "@bulkSend": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "bulkSending": "Checking {count} items…",
-  "@bulkSending": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "bulkNothingChecked": "Nothing was checked. Send the same list again.",
-  "bulkSendAgain": "Send again",
-  "bulkSummaryTitle": "Summary",
-  "bulkTotal": "Total",
   "bulkValid": "Valid",
   "bulkWarning": "Warning",
   "bulkNotFound": "Not found",
   "bulkUnassigned": "Not in a batch",
-  "bulkOnlyAttention": "Only items that need attention",
-  "bulkNewList": "New list",
-  "bulkNoAttention": "No item needs attention.",
   "removeItem": "Remove",
   "clearSearch": "Clear the search",
   "historySearchHint": "Search a serial or a reference number",
@@ -348,18 +276,10 @@
   "historyDates": "Dates",
   "historyAny": "Any",
   "historyPickDates": "Choose dates",
-  "historyScopeAll": "Everyone's checks",
-  "historyScopeAllHint": "Include the checks of every official",
   "historyEmptyTitle": "No checks",
+  "historyInSession": "In a session",
   "historyEmptyBody": "No check matches these filters.",
-  "historyBy": "by {name}",
-  "@historyBy": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
+  "historyNoChecksYet": "Your checks appear here after your first check.",
   "historyAll": "All",
   "@historyAll": {
     "description": "The History result chip that shows every result."
@@ -382,7 +302,7 @@
       }
     }
   },
-  "historyTracking": "Every check of serial {serial}",
+  "historyTracking": "Your checks of serial {serial}",
   "@historyTracking": {
     "placeholders": {
       "serial": {
@@ -400,6 +320,8 @@
   "reportCheckLabel": "Check",
   "reportRetailUserLabel": "Retail user",
   "reportChooseRetailUser": "Choose a retail user (optional)",
+  "reportChooseCheck": "Link one of your checks (optional)",
+  "pickCheck": "Choose a check",
   "reportPhotosLabel": "Photos",
   "reportPhotosHint": "Up to 3 photos. Location and other details in the photo are removed.",
   "reportAddPhoto": "Add photo",
@@ -414,9 +336,13 @@
       }
     }
   },
-  "reportPhotosSending": "Sending photos…",
   "reportPhotoFailedRetry": "Not sent. Tap to send again.",
   "reportPhotoRefused": "This photo was refused.",
+  "reportPhotoConflict": "No more photos: the report has 3, or its hour is over.",
+  "reportLeaveTitle": "Photos not sent",
+  "reportLeaveBody": "Some photos are still sending or can be sent again. If you leave, they are not sent.",
+  "reportStay": "Stay",
+  "reportLeave": "Leave",
   "reportPhotoSent": "Photo {n}",
   "@reportPhotoSent": {
     "placeholders": {
@@ -429,10 +355,11 @@
   "reportPhotoUnreadable": "This photo could not be read. Try another.",
   "reportPhotoWindowOver": "Photos can be added only within an hour of the report.",
   "reportDone": "Done",
-  "reportNotFound": "The check or the retail user was not found. Remove it and try again.",
   "reportUnconfirmed": "The connection dropped. The report may have been filed: check My reports before filing it again.",
+  "reportCheckMyReports": "Check My reports",
   "myReportsTitle": "My reports",
   "myReportsEmpty": "You have not filed any report yet.",
+  "myReportsEmptyBody": "Reports you file appear here. Use New report to file one.",
   "myReportsPhotos": "{count, plural, =0{No photos} =1{1 photo} other{{count} photos}}",
   "@myReportsPhotos": {
     "placeholders": {
@@ -443,90 +370,27 @@
   },
   "newReport": "New report",
   "reportFromResult": "Report incident",
-  "retailUsersTitle": "Retail users",
-  "retailUsersAdd": "Add retail user",
-  "retailUsersSearchHint": "Part of a name, or a whole email",
-  "retailUsersEmpty": "No retail user yet.",
-  "retailUserEmailPassword": "Email a new first password",
-  "retailUserEmailPasswordConfirm": "A new first password is emailed to {name}. The old one stops working at once.",
-  "@retailUserEmailPasswordConfirm": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "retailUserEmailPasswordSend": "Email it",
-  "retailUserPasswordEmailed": "A new first password was emailed to {name}.",
-  "@retailUserPasswordEmailed": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "retailUserOwnPassword": "{name} has set their own password. Only your office can change it now.",
-  "@retailUserOwnPassword": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "retailUserNotFound": "This retail user was not found or is blocked.",
-  "addRetailUserTitle": "Add retail user",
-  "addRetailUserName": "Name",
-  "addRetailUserNameHint": "Shop or person name",
-  "addRetailUserEmail": "Email",
-  "addRetailUserEmailHint": "The address they log in with and read mail at",
-  "addRetailUserRole": "Role",
-  "addRetailUserPassword": "First password",
-  "addRetailUserPasswordHint": "Used once; they change it at the first login",
-  "addRetailUserSendEmail": "Email the login details",
-  "addRetailUserSendEmailOff": "Give the password to the retail user yourself.",
-  "addRetailUserSubmit": "Add retail user",
-  "addRetailUserNoRoles": "Your office has not marked any role as a retail role yet, so no retail user can be added.",
-  "addRetailUserEmailInUse": "An official with this email already exists.",
-  "addRetailUserRoleGone": "This role is no longer a retail role. Choose another.",
-  "addRetailUserDoneTitle": "{name} was added",
-  "@addRetailUserDoneTitle": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "addRetailUserEmailed": "The login details were emailed to {email}.",
-  "@addRetailUserEmailed": {
-    "placeholders": {
-      "email": {
-        "type": "String"
-      }
-    }
-  },
-  "addRetailUserMailFailed": "The account was made, but the email could not be sent. Give them the password below, or use \"Email a new first password\" a little later.",
-  "addRetailUserGiveYourself": "Give the password to the retail user yourself.",
-  "addRetailUserPasswordOnce": "Password (shown once):",
-  "addRetailUserFirstLogin": "They change it at the first login, and their phone needs the emailed code.",
-  "addAnother": "Add another",
   "pictureTitle": "Product image",
   "pictureNone": "No picture for this product",
   "pictureFailed": "The picture could not be loaded",
   "pictureOf": "Picture of {name}",
   "@pictureOf": {
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "pictureOpenHint": "Opens the picture full screen",
   "close": "Close",
   "badgeGenuine": "Genuine",
   "detailsProductTitle": "Product details",
-  "detailsTrackingTitle": "Tracking details",
   "checkNumber": "Check {count}",
   "@checkNumber": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "previousCheckLabel": "Previous check",
@@ -535,37 +399,34 @@
   "checkedAtLabel": "Checked at",
   "resultRowLabel": "Result",
   "hintsTitle": "Hints",
-  "hintHiddenCodeLength": "A hidden code has {lengths} characters.",
-  "@hintHiddenCodeLength": {
-    "placeholders": {
-      "lengths": {"type": "String"}
-    }
-  },
-  "lengthsOr": "{first} or {last}",
-  "@lengthsOr": {
-    "placeholders": {
-      "first": {"type": "String"},
-      "last": {"type": "String"}
-    }
-  },
-  "hintScratch": "Scratch the panel off fully before typing the hidden code.",
   "hintScanQr": "Scan the QR code instead of typing.",
   "tryAgainLookup": "Try again",
   "contactSupport": "Contact support",
-  "backToVerify": "Back to Verify",
+  "backToVerify": "Back to Check",
+  "backToList": "Back to the list",
   "supportEmailSubject": "Item not found: {ref}",
   "@supportEmailSubject": {
     "placeholders": {
-      "ref": {"type": "String"}
+      "ref": {
+        "type": "String"
+      }
     }
   },
   "supportEmailBody": "Reference: {ref}\n{way}: {value}\nChecked at: {time}",
   "@supportEmailBody": {
     "placeholders": {
-      "ref": {"type": "String"},
-      "way": {"type": "String"},
-      "value": {"type": "String"},
-      "time": {"type": "String"}
+      "ref": {
+        "type": "String"
+      },
+      "way": {
+        "type": "String"
+      },
+      "value": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
     }
   },
   "verifyingTitle": "Checking the item…",
@@ -574,5 +435,135 @@
   "stepItemRecord": "Item record",
   "stepCheckCount": "Check count",
   "stepDone": "done",
-  "stepWaiting": "waiting"
+  "stepWaiting": "waiting",
+  "accessPending": "Thanks for signing up. Your office will check your details and email you when your account is ready.",
+  "accessWrongCode": "The code is wrong or expired. Request a new code if needed.",
+  "accessTryLater": "Try again later. Get a new code before you sign up again.",
+  "accessRoleUnavailable": "This role is no longer available. Choose another role.",
+  "accessNoRoles": "Ask the office for an account.",
+  "accessContactOffice": "Contact the office",
+  "accessName": "Name",
+  "accessRole": "Role",
+  "accessRoleHint": "Choose a role",
+  "accessPassword": "Choose a password",
+  "accessShowPassword": "Show password",
+  "accessHidePassword": "Hide password",
+  "accessEmail": "Email",
+  "accessCode": "Code from the email",
+  "accessResend": "Send a new code",
+  "accessSendCode": "Send code",
+  "accessCodeSent": "A code was sent to the address.",
+  "accessSubmit": "Sign up",
+  "scannerModeTitle": "Scanner mode",
+  "serialStackTitle": "Serial stack",
+  "serialStackHint": "Type or paste up to 50 serials, separated by spaces, commas, or new lines. Repeated serials are checked once.",
+  "serialStackLimit": "Enter 1 to 50 different serials. Submit another stack for additional items.",
+  "serialStackUncertain": "The answer was lost. These checks may already be recorded. Retrying may record them again.",
+  "serialStackNotSent": "No connection. Nothing was sent; send the stack again when you are online.",
+  "serialStackBadSerial": "Serial {position} ({value}) is not a serial: digits only, up to {digits} digits.",
+  "serialStackCount": "{count} of 50 serials",
+  "@serialStackCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "serialStackCountRepeats": "{count} of 50 serials · {repeats} repeated, sent once",
+  "@serialStackCountRepeats": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "repeats": {
+        "type": "int"
+      }
+    }
+  },
+  "@serialStackBadSerial": {
+    "placeholders": {
+      "position": {
+        "type": "int"
+      },
+      "value": {
+        "type": "String"
+      },
+      "digits": {
+        "type": "int"
+      }
+    }
+  },
+  "serialStackRecorded": "These checks were recorded, but their answer could not be shown. See them in History → Sessions. Do not send the same stack again.",
+  "serialStackRetry": "Send the same stack again",
+  "serialStackSubmit": "Check serials",
+  "serialStackNew": "Start another stack",
+  "serialStackHistory": "View this session's checks",
+  "sessionScanned": "Scanned",
+  "sessionValid": "Valid",
+  "sessionWarning": "Warning",
+  "sessionNotFound": "Not found",
+  "sessionUnassigned": "Not in a batch",
+  "sessionLeft": "Remaining",
+  "sessionRepeat": "Already scanned",
+  "sessionScanAgain": "Scan again",
+  "sessionNoConnection": "No connection, scan again.",
+  "sessionBusy": "The service is busy. Nothing was recorded; scan again.",
+  "sessionRestarted": "A new session started.",
+  "sessionsTitle": "Sessions",
+  "sessionsMore": "Load more",
+  "sessionsAll": "All",
+  "sessionsOpen": "Open",
+  "sessionsEnded": "Ended",
+  "sessionsDates": "Choose dates",
+  "sessionsLastSevenDays": "Showing the last 7 days",
+  "sessionsEmpty": "No sessions found.",
+  "historyChecksView": "Checks",
+  "sessionsStarted": "Started",
+  "sessionsLastScan": "Last scan",
+  "sessionChecksTitle": "Session checks",
+  "rateLimitedUnknown": "Too many attempts. Try again later.",
+  "sessionRowsFailed": "Couldn't load this session's scans.",
+  "reportPhotoSame": "That photo is already on the report.",
+  "reportUnreadable": "The report was sent, but its answer could not be read. It may have been filed: check My reports before filing it again.",
+  "reportCheckGone": "The check was not found. Remove it and try again.",
+  "reportRetailUserGone": "This retail user can no longer be named. Choose another, or file without one.",
+  "sessionResumedCounts": "Resumed session. The counts show after the next scan.",
+  "sessionChecking": "Checking…",
+  "sessionCheckingMore": "Checking… {count} more",
+  "@sessionCheckingMore": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sessionNotChecked": "{count} more scans were not checked. Scan them again.",
+  "@sessionNotChecked": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "typeSerialLabel": "Or type the serial",
+  "scanNotReady": "Scanning waits for the code formats.",
+  "copyrightNotice": "© {year} Ziska Pharmaceuticals Ltd. All rights reserved.",
+  "@copyrightNotice": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "appVersionShort": "Version {version} ({build})",
+  "@appVersionShort": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "build": {
+        "type": "String"
+      }
+    }
+  }
 }

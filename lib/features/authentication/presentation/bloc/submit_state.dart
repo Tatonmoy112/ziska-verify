@@ -24,14 +24,11 @@ abstract class SubmitState with _$SubmitState {
     status: SubmitStatus.failure,
     failure: failure,
     retryAt: failure.exception is RateLimitedException
-        ? clock.now().add(failure.retryAfter ?? defaultRetryAfter)
+        ? failure.retryAtFrom(clock.now())
         : null,
   );
 
   const SubmitState._();
-
-  /// The wait shown when a `429` has no usable `Retry-After`.
-  static const defaultRetryAfter = Duration(seconds: 60);
 
   bool get isSubmitting => status == SubmitStatus.submitting;
 

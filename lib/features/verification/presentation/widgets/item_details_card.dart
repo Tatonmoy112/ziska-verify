@@ -9,19 +9,19 @@ import 'package:ziska_verify/shared/design_system/tokens/app_spacing.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_typography.dart';
 import 'package:ziska_verify/shared/widgets/label_value_row.dart';
 
-/// The item's details (final.md Section 13.1.4). **PRODUCT DETAILS**: the
-/// product, its batch and dates, the serial, and the masked hidden code.
-/// With [tracking] (a `checked_before` result) it is **TRACKING DETAILS**:
-/// a "Check N" pill, the item first, the previous check time, and the
-/// earlier checkers when the API sends them. A `null` field is left out;
-/// the picture has its own card.
+/// The item's details (final.md Section 13.1, SRS FR-LKP-06): every field
+/// of a found item — the product (name, generic, short), the batch and its
+/// dates, the serial, and the masked hidden code — and, with [count], a
+/// "Check N" pill and the previous check time. A missing field shows as a
+/// blank "—". The picture has its own card. Never names the officials of
+/// earlier checks (FR-LKP-09).
 class ItemDetailsCard extends StatelessWidget {
-  const ItemDetailsCard({required this.item, this.tracking, super.key});
+  const ItemDetailsCard({required this.item, this.count, super.key});
 
   final ItemDetails item;
 
-  /// The check count of a `checked_before` result.
-  final CheckCount? tracking;
+  /// The check count of the answer, when it has one.
+  final CheckCount? count;
 
   @override
   Widget build(BuildContext context) {
@@ -29,41 +29,27 @@ class ItemDetailsCard extends StatelessWidget {
     final locale = Localizations.localeOf(context).toLanguageTag();
     final product = item.product;
     final batch = item.batch;
-    final count = tracking;
+    final count = this.count;
     String? date(DateTime? d) => d == null ? null : DisplayTime.date(d, locale);
 
     final rows = <(String, String?)>[
-      if (count == null) ...[
-        (l10n.productLabel, product.name),
-        (l10n.genericLabel, product.genericName),
-        (l10n.shortNameLabel, product.shortName),
-        (l10n.batchLabel, batch.number),
-        (l10n.madeLabel, date(batch.made)),
-        (l10n.expiresLabel, date(batch.expires)),
-        (l10n.serialLabel, item.serial),
-        (l10n.codeLabel2, item.maskedCode),
-      ] else ...[
-        (l10n.serialLabel, item.serial),
-        (l10n.codeLabel2, item.maskedCode),
-        (l10n.batchLabel, batch.number),
-        (l10n.productLabel, product.name),
-        (l10n.genericLabel, product.genericName),
+      (l10n.productLabel, product.name),
+      (l10n.genericLabel, product.genericName),
+      (l10n.shortNameLabel, product.shortName),
+      (l10n.batchLabel, batch.number),
+      (l10n.madeLabel, date(batch.made)),
+      (l10n.expiresLabel, date(batch.expires)),
+      (l10n.serialLabel, item.serial),
+      (l10n.codeLabel2, item.maskedCode),
+      // The previous check, when there was one.
+      if (count?.lastAt != null)
         (
           l10n.previousCheckLabel,
-          count.lastAt == null
-              ? null
-              : DisplayTime.dateTime(count.lastAt!, locale),
+          DisplayTime.dateTime(count!.lastAt!, locale),
         ),
-        (
-          l10n.checkedByLabel,
-          count.by == null || count.by!.isEmpty ? null : count.by!.join(', '),
-        ),
-      ],
     ];
-    final shown = [
-      for (final (label, value) in rows)
-        if (value != null) (label, value),
-    ];
+    // A missing field stays, blank (FR-LKP-06: "missing ones are blank").
+    final shown = [for (final (label, value) in rows) (label, value ?? '—')];
 
     return DecoratedBox(
       decoration: const BoxDecoration(
@@ -79,10 +65,7 @@ class ItemDetailsCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    (count == null
-                            ? l10n.detailsProductTitle
-                            : l10n.detailsTrackingTitle)
-                        .toUpperCase(),
+                    l10n.detailsProductTitle.toUpperCase(),
                     style: AppTypography.sectionTitle,
                   ),
                 ),
@@ -93,7 +76,11 @@ class ItemDetailsCard extends StatelessWidget {
                     color: AppColors.textMuted,
                   )
                 else
-                  _CheckPill(label: l10n.checkNumber(count.thisCheck)),
+                  _CheckPill(
+                    label: l10n.checkNumber(count.thisCheck),
+                    // The first check is no warning: green, not amber.
+                    first: count.thisCheck <= 1,
+                  ),
               ],
             ),
             const SizedBox(height: AppSpacing.xs),
@@ -116,15 +103,16 @@ class ItemDetailsCard extends StatelessWidget {
 /// "Check N": this check's number for the item, never a uses limit
 /// (backend D31).
 class _CheckPill extends StatelessWidget {
-  const _CheckPill({required this.label});
+  const _CheckPill({required this.label, required this.first});
 
   final String label;
+  final bool first;
 
   @override
   Widget build(BuildContext context) => DecoratedBox(
-    decoration: const BoxDecoration(
-      color: AppColors.warningBackground,
-      borderRadius: BorderRadius.all(Radius.circular(AppRadius.pill)),
+    decoration: BoxDecoration(
+      color: first ? AppColors.successBackground : AppColors.warningBackground,
+      borderRadius: const BorderRadius.all(Radius.circular(AppRadius.pill)),
     ),
     child: Padding(
       padding: const EdgeInsets.symmetric(
@@ -134,7 +122,7 @@ class _CheckPill extends StatelessWidget {
       child: Text(
         label,
         style: AppTypography.caption.copyWith(
-          color: AppColors.warning,
+          color: first ? AppColors.success : AppColors.warning,
           fontWeight: FontWeight.w600,
         ),
       ),

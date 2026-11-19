@@ -45,19 +45,13 @@ String checkSentence(CheckRecord check, AppLocalizations l10n) =>
 
 /// One check in History (final.md Section 13.4), in the Figma "product
 /// history" layout: the serial and the result badge; batch, day, and time;
-/// a grey box saying what the result means; the way and the reference.
+/// a grey box saying what the result means; the way, "In a session" when
+/// the check belongs to one (SRS FR-HIS-04), and the reference. Always the
+/// official's own check (backend D61), so no checker's name.
 class CheckTile extends StatelessWidget {
-  const CheckTile({
-    required this.check,
-    required this.showOfficial,
-    this.number,
-    super.key,
-  });
+  const CheckTile({required this.check, this.number, super.key});
 
   final CheckRecord check;
-
-  /// The checker's name, shown for everyone's checks.
-  final bool showOfficial;
 
   /// The place in a tracking log ("01"), newest first; none in the plain
   /// list.
@@ -72,7 +66,7 @@ class CheckTile extends StatelessWidget {
       CheckWay.qr => (LucideIcons.qrCode, l10n.wayQr),
       CheckWay.serial => (LucideIcons.hash, l10n.waySerial),
       CheckWay.hiddenCode => (LucideIcons.tag, l10n.wayHiddenCode),
-      null => (LucideIcons.circleHelp, ''),
+      null => (LucideIcons.circleHelp, l10n.wayOther),
     };
     final when = DisplayTime.dayAndTime(
       check.at,
@@ -176,9 +170,10 @@ class CheckTile extends StatelessWidget {
                     const SizedBox(width: AppSpacing.xxs),
                     Flexible(
                       child: Text(
-                        showOfficial
-                            ? '$wayLabel · ${l10n.historyBy(check.official)}'
-                            : wayLabel,
+                        check.sessionId == null
+                            ? wayLabel
+                            : '$wayLabel · ${l10n.historyInSession}',
+                        key: const Key('checkTile.way'),
                         style: AppTypography.caption,
                       ),
                     ),

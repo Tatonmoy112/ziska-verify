@@ -24,7 +24,7 @@ class DioHistoryApiService implements HistoryApiService {
   }
 
   /// Only documented parameters; empty filters are left out, and so is
-  /// `scope` unless it is `all` (final.md Section 10.2).
+  /// No scope parameter is supported. Session filters are explicit.
   static Map<String, Object?> checksQuery(CheckQuery query, PageRequest page) {
     final search = query.search?.trim();
     return {
@@ -35,7 +35,7 @@ class DioHistoryApiService implements HistoryApiService {
       'from': query.from == null ? null : _day(query.from!),
       'to': query.to == null ? null : _day(query.to!),
       'search': search == null || search.isEmpty ? null : search,
-      'scope': query.scope == CheckScope.all ? 'all' : null,
+      'session_id': query.sessionId,
     };
   }
 

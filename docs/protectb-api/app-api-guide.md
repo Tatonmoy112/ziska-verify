@@ -5,6 +5,27 @@ the app can call, with an example of each. A Postman collection with every route
 comes with it: `ProtectB-mobile-app.postman_collection.json`; how to build the app
 on it, step by step, is `app-build-guide.md`._
 
+> **What is ready (2026-11-16).** Everything in this guide is built and tested on
+> our side, the stack of serials (§4.7) included: after its load test a stack
+> holds up to 50 serials, 500 a minute per official. There is no test server yet
+> (§8); until there is, build against this guide and the Postman collection.
+>
+> **Changed 2026-11-15, before any client's app is live:** people can ask for an
+> account from the app (§3.9). Items are looked up by **serial or QR only**:
+> `way: "hidden_code"` answers 400 and `GET formats` has no `hidden_code`. A
+> stack of up to 50 typed serials goes in one request (§4.7). The app sees only
+> the official's own checks: `history:all`, `scope=all` (now 400) and `count.by`
+> are gone. Adding retail users in the app is gone (`GET retail-roles`,
+> `POST retail-users`, `POST retail-users/{id}/password` answer 404); picking one
+> for a report stays (§7). Certificates are not part of the design; every check
+> keeps its reference number.
+>
+> **Changed 2026-11-11:** the bulk lookup `POST lookups/bulk` is gone (it
+> answers 404); **scanner sessions** replace it (§4.3–4.6): each QR is sent on
+> its own with a `session_id`. The limit per network address is 3,000 a
+> minute, and the limit of 3,000 items a minute is gone. Build the bulk screen
+> as scanner mode.
+
 ## 1. The basics
 
 **Address.** Every route is under
@@ -66,17 +87,19 @@ request in our logs.
 | 403 | `policy_denied` | The new password breaks a rule (§3.6) | Show the password rules |
 | 403 | `forbidden` | The official's role lacks the permission (§4) | Hide what the role cannot do |
 | 404 | `not_found` | Unknown route, unknown client, or the app is switched off for this client | "Not available" |
-| 409 | `conflict` | The request conflicts with the current state (§6.2, §7) | Show the message |
+| 409 | `conflict` | The request conflicts with the current state (§3.9, §6.2) | Show the message |
+| 409 | `session_full`, `session_ended`, `session_not_yours` | A scan cannot join this scanner session (§4.3) | Start a new session |
 | 429 | `rate_limited` | Too many requests | Wait the seconds in the `Retry-After` header |
 | 503 | `app_preparing` | The client's app was just switched on and is being prepared (§4) | "The app is being prepared. Try again later." |
 | 503 | `service_unavailable` | A part of our service is down | "Try again shortly" |
 | 5xx | `internal_error` | Anything else | A general error with the reference |
 
-**Limits.** 120 requests a minute per official, 3,000 looked-up items a
-minute per official (§4.3), 50 reports an hour per official (§6.1), 30 retail
-users added or passwords emailed an hour per official (§7), and 1,200
-requests a minute per network address (shared by everyone behind it, such as one
-office). Logging in has its own, lower limits (§3.1). Over a limit: **429** with
+**Limits.** 120 requests a minute per official (2 scans a second, §4.3; a
+stack of serials is one request, §4.7), 500 serials a minute per official in
+stacks (§4.7), 50 reports an hour per official (§6.1),
+10 access codes and 10 access requests an hour per network address (§3.9), and 3,000 requests a
+minute per network address
+(shared by everyone behind it, such as supervisors on one warehouse Wi-Fi). Logging in has its own, lower limits (§3.1). Over a limit: **429** with
 `Retry-After`. Go by that header, never by a number written into the app.
 
 ## 2. The phone ID
@@ -148,15 +171,17 @@ the message: it is the same for both.
 **`must_change_password: true`** means the official's password was set by
 someone else: a new account's first password, typed by whoever added them and
 emailed to them by us or given to them personally; a password their admin replaced; or a new first
-password emailed by us (§7.4). Until it is changed (§3.6), every route
+password emailed by us. Whoever makes an account may leave it `false` (for
+example when approving a request with the password the person chose, §3.9). Until it is changed (§3.6), every route
 except `me`, `me/password` and `auth/logout` answers **403
 `password_change_required`**. Show only the change-password screen.
 
 A **first password** (typed by whoever made the account, or made and emailed by
 us) works until it is used: it has no end date. It reaches the official either
 by our email or from the person who made the account, who chose not to have it
-emailed. Either way it must be changed at the first login, and the first login
-on a phone still needs the emailed 6-digit code.
+emailed. Either way it must be changed at the first login when
+`must_change_password` is `true`, which is the default for an account the
+office makes; the first login on a phone still needs the emailed 6-digit code.
 
 **Send the code again: `POST auth/resend-code`** with `{ "challenge_id": "0b6e…" }`.
 **200**, `data: { "status": "sent" }`: a new code is emailed (the old one
@@ -233,8 +258,8 @@ login on it needs no code.
   The answer does not say which part failed.
 
 **The password rule** (for every password an official chooses: this change,
-the forgotten-password reset of §3.7, and a password their admin types for
-them):
+the forgotten-password reset of §3.7, the password of an access request §3.9,
+and a password their admin types for them):
 
 | Rule | Example that fails | Example that passes |
 |---|---|---|
@@ -260,8 +285,8 @@ New password
 Check the same three things in the app before sending, and keep the button
 disabled until all three are met; a 403 then only happens when the app's check
 and ours differ. Count characters, not bytes. A first password typed when an
-account was made (by the admin, or by a supervisor for a retail user, §7.3) has
-no rule but 1 to 128 characters, because it works once and must be changed.
+account was made by the client's office has no rule but 1 to 128 characters,
+because it works once and must be changed.
 
 ### 3.7 Forgotten password
 
@@ -287,6 +312,11 @@ still 200).
 - **403 `policy_denied`**: the new password breaks the password rule (§3.6:
   8 or more characters, a letter and a number). Show the same hints as there.
 - A blocked official cannot reset a password: the answer is the same 401.
+- **10 wrong codes in an hour close the official's reset for 15 minutes**
+  (D64): the waiting code stops working, step 1 sends no mail, and step 2
+  answers the same 401 even for the right code. The answers do not change, so
+  the app cannot tell; show the usual "wrong or expired code" text and offer
+  step 1 again. Logging in with the password still works meanwhile.
 
 ### 3.8 The official's profile: `GET me`
 
@@ -305,15 +335,89 @@ still 200).
   admin set; either field can be `null` when not set.
 - Call it when the app starts: **401** means the login ended.
 
+### 3.9 Request access
+
+A person without an account asks for one from the app; none of these routes
+needs a login. The client's office reads the request in its portal and approves
+or refuses it, and either way we email the person.
+
+Build the screen in this order, so that the emailed code is still fresh when it
+is sent: the name, the role, the password and the email first; then "Send code";
+then the code and "Send request".
+
+**1. The roles: `GET roles/requestable`**
+
+```json
+{ "success": true, "message": "Roles fetched successfully.",
+  "data": [ { "id": 8, "name": "Distributor" }, { "id": 7, "name": "Retail seller" } ] }
+```
+
+- Only the roles the client's office lets people ask for, ordered by name. An
+  empty list means none can be asked for now: show "Ask the office for an
+  account" instead of the form.
+
+**2. The code: `POST auth/access/code`** with `{ "email": "person@example.com" }`.
+
+- Always **200**, `data: null`, "A code was sent to the address.", whatever the
+  address. Show the code screen.
+- A new address gets a 6-digit code; it lives 5 minutes and allows 5 tries, and
+  asking again replaces it. An address that already has an account gets a mail
+  saying so and pointing to "Forgot password" (§3.7), and no code.
+- An address gets at most 5 mails from us in 15 minutes, login codes included;
+  past that none is sent, and the answer is still 200.
+
+**3. The request: `POST auth/access`**
+
+```json
+{ "email": "person@example.com", "code": "123456", "name": "Rahim Store", "role_id": 7, "password": "…" }
+```
+
+```json
+{ "success": true, "message": "Request sent.", "data": { "status": "pending" } }
+```
+
+- **200**: the request waits for the client's office. Show "Your request was
+  sent. You will get an email when it is answered." A second request for the
+  same address replaces the first.
+- `name`: 1 to 100 characters. `role_id`: one of step 1. `password`: the app's
+  rule (§3.6). We keep the password only in a form nobody can read back, the
+  client's office included.
+- **What happens next.** The office may change the name, the role and even the
+  password before approving. The approval mail says the person can log in
+  (§3.1), with the password they chose unless the mail gives a new one; the
+  first login on a phone needs the emailed code, as always. A refusal mail says
+  the request was not approved.
+- **The first login after approval.** With the password they chose, the person
+  goes straight in (`must_change_password: false`). If the office gave a new
+  password, or ticked "must change password", the login answers
+  `must_change_password: true` and only the change of §3.6 is open. The app
+  just follows the flag (§3.2); it never assumes either. A request nobody answers is deleted after
+  **20 days**; the person may then ask again.
+- **401 `unauthenticated`**: a wrong, expired or used code. An address that
+  already has an account was sent no code, so it gets the same answer.
+- **403 `policy_denied`**: the password breaks the rule; show the hints of §3.6.
+- **404 `not_found`** "Role not found.": `role_id` is not one of step 1's.
+- **409 `conflict`**: too many requests are waiting for the client's office;
+  show "Try again later." The code was used up: the next try starts again at
+  step 2.
+- **429 `rate_limited`**: more than 10 code requests, or 10 requests, in an hour
+  from this network address. Show the `Retry-After` countdown.
+- **Which refusals use up the code.** A 400, 403 or 404 does not: the official
+  corrects the form and sends it again with the same code (it still lives 5
+  minutes and allows 5 tries in all). A 401 with a wrong code costs one of the 5
+  tries. A 200 or a 409 uses it up.
+
 ## 4. Looking items up
 
-An item can be looked up three ways, each giving the same answer:
+An item can be looked up two ways, each giving the same answer:
 
 | `way` | `value` | Where the official finds it |
 |---|---|---|
 | `serial` | the serial number, digits only, as text: `"1000001"` | printed on the label |
 | `qr` | the 12 characters after `/q/` in the QR's link | the QR code |
-| `hidden_code` | the code under the scratch layer | scratched off |
+
+The hidden code under the scratch layer is the consumer's: the app never asks
+for it (`way: "hidden_code"` answers 400 since 2026-11-15).
 
 **Reading a QR.** The QR holds a link such as
 `https://www.ziskaverify.com/q/Q8F2KD91XA7M`. Take the part after the last
@@ -328,11 +432,12 @@ role allows takes effect within a minute.
 | Permission | Opens |
 |---|---|
 | `item:lookup` | §4.2, one item at a time |
-| `item:bulk_lookup` | §4.3, many items at once (a supervisor checking 50 QR codes, say); since 2026-11-03 |
-| `history:own` | §5, the official's own checks |
-| `history:all` | §5, the official's own checks and every official's, and who made an item's earlier checks |
-| `incident:report` | §6, filing a report with photos and seeing one's own reports; picking a retail user (§7.1) |
-| `retail_user:add` | §7, adding retail users and emailing their first password |
+| `item:bulk_lookup` | checking many items: §4.3–4.5, scanner sessions (a supervisor scanning a stack of products one after another), and §4.7, a stack of typed serials |
+| `history:own` | §5, the official's own checks, and §4.5, their own sessions |
+| `incident:report` | §6, filing a report with photos and seeing one's own reports; picking a retail user (§7) |
+
+No role sees other officials' checks in the app: those are for the client's
+office, in its portal.
 
 **While the app is being prepared.** When a client's app is first switched
 on, every existing item gets its QR value in a job that can run up to an hour.
@@ -345,14 +450,10 @@ What a valid input looks like, so the app can check it before sending:
 
 ```json
 { "success": true, "message": "Formats fetched successfully.",
-  "data": { "hidden_code": [ { "length": 12, "characters": "0123456789" } ],
-            "serial": { "max_digits": 19 },
+  "data": { "serial": { "max_digits": 19 },
             "qr": { "length": 12, "characters": "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789" } } }
 ```
 
-- `hidden_code` lists every format this client uses (there can be several
-  lengths). Spaces and `-` an official types are ignored, and lower-case
-  letters are read as capitals.
 - Never build these numbers into the app: they differ between clients and can
   change.
 
@@ -380,7 +481,7 @@ What a valid input looks like, so the app can check it before sending:
 |---|---|---|
 | `valid` | The item is genuine, this is its first check by any official, and nothing is wrong with it | `item`, `count` |
 | `warning` | The item is genuine but needs attention: see `reasons` | `item`, `count`, `reasons` |
-| `not_found` | No item of this client has this serial, QR value or hidden code | nothing else |
+| `not_found` | No item of this client has this serial or QR value | nothing else |
 | `unassigned` | The item exists but has not been given to a batch yet | nothing else |
 
 A check never answers `invalid`: an item can pass from one seller to another
@@ -396,67 +497,204 @@ and be checked again.
 | `damaged` | The item was marked damaged |
 | `switched_off` | The item's batch is switched off |
 
-- `ref` is the check's reference number. Put it on a certificate: the
-  client's office looks it up to confirm the certificate.
-  Every answer has one, `not_found` and `unassigned` included.
+- `ref` is the check's reference number: show it with the result. It finds
+  the check fast in the history (§5) and in the client's portal. Every answer
+  has one, `not_found` and `unassigned` included.
 - `count.this_check` is this check's number for the item (1 for a first
   check); `count.last_at` the time of the check before, `null` on a first
-  check. For an official with `history:all`, `count.by` lists the names of
-  the officials of earlier checks.
+  check. Who made the earlier checks is never sent.
 - `item.code` is the hidden code masked: `*****` and its last 3 characters,
   whatever its length. The full hidden code is never sent.
 - `item.product.picture_url`, `short_name` and the batch's `made` and
   `expires` can be `null`.
-- **400 `validation_failed`**: an unknown `way`, or a `value` that is not text,
+- **400 `validation_failed`**: a `way` other than `serial` or `qr`, or a `value` that is not text,
   is empty, is longer than 64 characters or holds a control character. A value of the right kind that matches no
   format is not an error: it answers `not_found`.
+- With a `session_id`, the lookup is a scan in a scanner session (§4.3).
 
-### 4.3 Many items: `POST lookups/bulk`
+### 4.3 Scanner sessions: product after product
 
-Needs `item:bulk_lookup` (until 2026-11-03 `item:lookup` opened it; every role
-holding `item:lookup` then was given `item:bulk_lookup` too, so nobody lost
-it). A retail role usually has single lookups only: hide the bulk screen when
-`GET me` does not list it.
+A supervisor with a stack of products in front of them opens **scanner mode**:
+the camera reads one QR code, the app sends it at once, shows the result on the
+scanner screen, and the supervisor takes the next product. Every scan is the
+single lookup of §4.2 with a **session ID**, so each result comes back at once
+and the session keeps the totals. (Until 2026-11-10 a bulk lookup,
+`POST lookups/bulk`, took up to 500 items in one request. It is removed.)
 
-Up to 500 items in one request, of any ways mixed:
+Needs `item:bulk_lookup`. A retail role usually has single lookups only: hide
+scanner mode when `GET me` does not list it.
+
+**Starting a session.** On entering scanner mode, the app makes a new random
+UUID (version 4) and sends it with every scan of that session. Nothing is sent
+to start it: the first scan does. Keep the ID on the phone (it is the only thing
+the app may keep, §4.6) so that after a crash the app can carry on in the same
+session.
+
+#### A scan: `POST lookups` with `session_id`
 
 ```json
-{ "items": [ { "way": "serial", "value": "1000001" },
-             { "way": "qr", "value": "Q8F2KD91XA7M" },
-             { "way": "hidden_code", "value": "4815 1623 4200" } ] }
+{ "way": "qr", "value": "Q8F2KD91XA7M", "session_id": "7f3c2a10-5b1e-4c8e-9d4a-2e6f0b9c1d33" }
 ```
 
 ```json
 { "success": true, "message": "Lookup done.",
-  "data": { "summary": { "total": 3, "valid": 1, "warning": 1,
-                         "by_reason": { "checked_before": 1, "expired": 0, "recalled": 0, "damaged": 0, "switched_off": 0 },
-                         "not_found": 1, "unassigned": 0 },
-            "results": [ { "ref": "MA-2026-000124", "result": "valid", "count": { … }, "item": { … } },
-                         { "ref": "MA-2026-000125", "result": "warning", "reasons": ["checked_before"], … },
-                         { "ref": "MA-2026-000126", "result": "not_found" } ] } }
+  "data": { "ref": "MA-2026-004103",
+            "result": "warning",
+            "reasons": ["checked_before", "expired"],
+            "count": { "this_check": 3, "last_at": "2026-10-12T09:14:00Z" },
+            "item": { "serial": "1000311", "code": "*****7K2",
+                      "product": { "name": "Paracetamol 500", "generic_name": "Paracetamol",
+                                   "short_name": "PCM500", "picture_url": "https://…" },
+                      "batch": { "number": "B-2291", "made": "2026-01-10", "expires": "2026-09-30" } },
+            "repeat": false,
+            "session": { "id": "7f3c2a10-5b1e-4c8e-9d4a-2e6f0b9c1d33",
+                         "scanned": 41, "valid": 38, "warning": 2, "not_found": 1, "unassigned": 0,
+                         "left": 4959 } } }
 ```
 
-- `results` are in the order sent: the first result is the first item. What
-  was sent is never repeated in the answer; match by position.
-- `by_reason` counts items, so an item with two reasons counts in both.
-- Every item counts as its own check, with its own reference number, even the
-  same item twice in one request.
-- 0 or more than 500 items: **400 `validation_failed`**.
-- **503 `service_unavailable`** (our service is very busy): none of the items
-  was checked or recorded. Send the same request again after a few seconds;
-  each item then gets its true answer.
+- Everything down to `item` is exactly the answer of §4.2, with the same
+  rules. The app decides what the scanner screen shows.
+- **`way` must be `qr`** in a session. Typed serials stay on the one-item
+  screen, or go as a stack (§4.7).
+- **`repeat: true`**: this QR was already scanned in this session. The answer is
+  the **first** scan's (the same `ref` and result); it is not counted again and
+  adds no check, so `session` does not change. Show "already scanned". The
+  same item scanned in another session, or outside one, counts as usual.
+- **`session`**: `scanned` is the different items scanned in this session so
+  far, this one included; `valid`, `warning`, `not_found` and `unassigned` how
+  many of them had each result; `left` how many more different items the
+  session can take (5,000 in all).
+- **`not_found`** and **`unassigned`**: `ref`, `result`, `repeat` and `session`
+  only, as in §4.2.
 
-**Limit.** 3,000 items a minute per official, a bulk request counting as its
-items. Over it: **429 `rate_limited`** with `Retry-After`, and nothing in the
-request is checked. The limit is counted over the last minute as an
-estimate, so an official sending bulks without a pause can be refused a
-little before 3,000 (at full speed about 2,700 items a minute get through).
-Wait the seconds in `Retry-After`, then send the same request again.
+| HTTP | `code` | When | What the app does |
+|---|---|---|---|
+| 400 | `validation_failed` | `session_id` is not a UUID, or `way` is not `qr` | A bug in the app |
+| 403 | `forbidden` | the role lacks `item:bulk_lookup` | Hide scanner mode |
+| 409 | `session_full` | the session has 5,000 different items | Start a new session and send the scan again in it |
+| 409 | `session_ended` | the session was ended, or closed itself after 15 minutes without a scan | Start a new session and send the scan again in it, without asking the official |
+| 409 | `session_not_yours` | the session ID belongs to another official | Start a new session |
+| 429 | `rate_limited` | more than 120 requests a minute (2 scans a second) | Wait `Retry-After`, then send the scan again |
+| 503 | `service_unavailable` | busy | Show "scan again"; nothing was recorded |
+
+### 4.4 End a session: `POST lookups/sessions/{id}/end`
+
+When the official leaves scanner mode (the app's back button or the phone's),
+send this and leave at once: do not wait for the answer. Then forget the ID; the
+next time is a new session.
+
+```json
+{ "success": true, "message": "Session ended.", "data": null }
+```
+
+- No body; **200**, `data: null`. Ending a session that has already ended
+  answers the same.
+- **404 `not_found`**: no such session, or another official's.
+- A session nobody ended closes by itself after **15 minutes without a scan**.
+
+### 4.5 The sessions: `GET lookups/sessions` and `GET lookups/sessions/{id}`
+
+The official's own sessions, scanner sessions and stacks of serials alike
+(`history:own`), newest first:
+
+```
+GET lookups/sessions?limit=50&status=ended&from=2026-11-01&to=2026-11-10
+```
+
+| Query | Meaning |
+|---|---|
+| `limit` | 1 to 100, default 50 |
+| `cursor` | from the previous page's `next_cursor` |
+| `status` | `open` or `ended` |
+| `from`, `to` | dates (`YYYY-MM-DD`), both included; the last 7 days when left out |
+
+`scope` is gone since 2026-11-15: sending it is **400**.
+
+```json
+{ "success": true, "message": "Sessions fetched successfully.",
+  "data": { "sessions": [ { "id": "7f3c…", "kind": "qr", "status": "ended",
+                            "started_at": "2026-11-10T10:15:02Z", "last_scan_at": "2026-11-10T10:32:41Z",
+                            "scanned": 300, "valid": 291, "warning": 6, "not_found": 3, "unassigned": 0,
+                            "official": "Karim Ahmed" } ],
+            "next_cursor": null } }
+```
+
+- `kind` is `qr` for a scanner session (§4.3) and `serial` for a stack of
+  serials (§4.7), which starts and ends with its one request.
+- A session runs from its first scan (`started_at`) to its last
+  (`last_scan_at`), however it was ended.
+- `GET lookups/sessions/{id}` answers one such row: use it after a crash to
+  rebuild the scanner's counter. Another official's session answers **404**.
+- **A session's items** are the history (§5) filtered by it:
+  `GET checks?session_id=7f3c…&limit=100`.
+
+### 4.6 On the phone
+
+- The list on the scanner screen lives in the app's memory only. When the
+  official leaves scanner mode, clear it; to see a session again, read it from
+  us (§4.5).
+- The app may keep the session ID on the phone, and nothing else of a session.
+  After a crash, reopen scanner mode in the same session, read
+  `GET lookups/sessions/{id}` and `GET checks?session_id=…`, and carry on; if it
+  answers `session_ended`, start a new one.
+- Online only: a scan without a connection fails. Show "no connection, scan
+  again"; nothing is queued for later.
+- Do not send the same QR twice in a row while it stays in front of the camera.
+  If it is sent again anyway, the answer says `repeat: true` and nothing is
+  counted.
+
+### 4.7 A stack of serials: `POST lookups/serials`
+
+For a pile of items whose serials the official types or pastes: up to **50**
+in one request, answered together (more are sent as several stacks, one after
+another). Needs `item:bulk_lookup`, the permission of
+scanner mode.
+
+```json
+{ "serials": ["1000001", "1000002", "1000003"] }
+```
+
+```json
+{ "success": true, "message": "Lookup done.",
+  "data": { "session": { "id": "c41d9e02-…", "kind": "serial",
+                         "scanned": 3, "valid": 1, "warning": 1, "not_found": 1, "unassigned": 0 },
+            "items": [
+              { "serial": "1000001", "ref": "MA-2026-004200", "result": "valid",
+                "count": { "this_check": 1, "last_at": null }, "item": { … } },
+              { "serial": "1000002", "ref": "MA-2026-004201", "result": "warning", "reasons": ["recalled"],
+                "count": { "this_check": 2, "last_at": "2026-11-02T08:40:00Z" }, "item": { … } },
+              { "serial": "1000003", "ref": "MA-2026-004202", "result": "not_found" } ] } }
+```
+
+- `serials`: a list of 1 to 50 values, each as the `value` of §4.2 with
+  `way: "serial"`. One that is no serial of this client answers `not_found`.
+- **A serial sent twice** is checked once and answered once. `items` follows the
+  order sent, without the repeats; each entry is the answer of §4.2 for that
+  serial (`ref`, `result`, and `reasons`, `count` and `item` as there), with the
+  `serial` as sent.
+- **Every serial is one check:** its own reference number, its own row in the
+  history (§5), counted as any check, and telling the client's office of a
+  recalled, expired, damaged or switched-off item as any check does.
+- **The stack is kept as a session of kind `serial`** (§4.5), started and ended
+  by this one request: it shows in the sessions list, and
+  `GET checks?session_id=…` lists its checks. Nothing needs ending.
+- **All or nothing:** when the answer is not 200, nothing was recorded; send the
+  same stack again.
+- **400 `validation_failed`**: `serials` missing, not a list, empty, longer than
+  50, or holding a value §4.2 would refuse.
+- **403 `forbidden`**: the role lacks `item:bulk_lookup`; hide the stack screen.
+- **429 `rate_limited`**: a stack is one request of the 120 a minute, and an
+  official sends at most **500 serials a minute** in stacks (10 full stacks; a
+  serial sent twice in one stack counts once). A stack that would pass it is refused whole, and nothing is recorded: wait the
+  `Retry-After` seconds and send it again.
+- **503 `app_preparing`** (§4) or **`service_unavailable`**: try again shortly.
+  When many officials send stacks at the same moment, a stack can now and then
+  answer 503 `service_unavailable` (5 in 600 in our load test): nothing was
+  recorded, so send the same stack again after a second.
 
 ## 5. History: `GET checks`
 
-The official's own checks, newest first (`history:own`), or every official's
-(`history:all`, with `?scope=all`):
+The official's own checks, newest first (`history:own`):
 
 ```
 GET checks?limit=50&result=warning&way=qr&from=2026-10-01&to=2026-10-28&search=1000001
@@ -467,17 +705,19 @@ GET checks?limit=50&result=warning&way=qr&from=2026-10-01&to=2026-10-28&search=1
 | `limit` | 1 to 100, default 50 |
 | `cursor` | from the previous page's `next_cursor` |
 | `result` | `valid`, `warning`, `not_found`, `unassigned` |
-| `way` | `serial`, `qr`, `hidden_code` |
+| `way` | `serial`, `qr`, or `hidden_code` (checks made before 2026-11-15 only) |
 | `from`, `to` | dates (`YYYY-MM-DD`), both included |
 | `search` | a serial or a reference number |
-| `scope` | `own` (default; needs `history:own` or `history:all`) or `all` (needs `history:all`) |
+| `session_id` | one session's checks, a scanner session's or a stack's (§4.5) |
+
+`scope` is gone since 2026-11-15: sending it is **400**.
 
 ```json
 { "success": true, "message": "Checks fetched successfully.",
   "data": { "checks": [ { "ref": "MA-2026-000123", "at": "2026-10-28T10:02:11Z", "way": "qr",
                           "result": "warning", "reasons": ["checked_before"],
                           "serial": "1000001", "product": "Paracetamol 500", "batch": "B-1042",
-                          "official": "Asha Rao" } ],
+                          "official": "Asha Rao", "session_id": null } ],
             "totals": { "total": 120, "valid": 80, "warning": 30, "not_found": 9, "unassigned": 1 },
             "next_cursor": "3255" } }
 ```
@@ -485,7 +725,9 @@ GET checks?limit=50&result=warning&way=qr&from=2026-10-01&to=2026-10-28&search=1
 - `totals` comes with the first page only (`null` on later pages), counting
   every check that matches the filters.
 - `serial`, `product` and `batch` are `null` for `not_found`, and `product`
-  and `batch` for `unassigned`. `official` is the name of whoever checked.
+  and `batch` for `unassigned`. `official` is the official's own name.
+- `session_id` is the scanner session the check belongs to, `null` for a check
+  outside one.
 - `reasons` is an empty list unless the result is `warning`.
 - `next_cursor` is `null` when the page is not full. A full page always gives a
   cursor, so the page after it may be empty. Pass it back as it is.
@@ -613,23 +855,14 @@ GET incidents?limit=50
 A **retail user** is a seller who uses the app: an official in a role the
 client's office marks as a retail role. They log in and look items up like any
 official, with what their role allows. A report can name the retail user it is
-about (§6.1). The client's office adds retail users in its portal; an official
-whose role has `retail_user:add` (a supervisor, say) can also add one on the
-spot, here.
-
-**The first password** is typed by the official who adds the retail user
-(§7.3). By default we email it to the retail user; the official can instead
-give it to them personally (`send_email: false`). Later ones (§7.4) are made and
-emailed by us, never shown to the official. The retail user logs in with it,
-must change it at once (§3.2), and their phone needs the emailed code as any
-new phone does. It works until it is used: there is no end date.
-
-**Limit:** 30 retail users added or passwords emailed an hour per official,
-together. Over it: **429 `rate_limited`** with `Retry-After`.
+about (§6.1). The client's office makes retail users in its portal, or approves
+a seller's own request (§3.9). (Until 2026-11-15 an official with
+`retail_user:add` could add one here; `GET retail-roles`, `POST retail-users` and
+`POST retail-users/{id}/password` now answer 404.)
 
 ### 7.1 Pick a retail user: `GET retail-users`
 
-Needs `incident:report` or `retail_user:add`.
+Needs `incident:report`.
 
 ```
 GET retail-users?search=rahim&limit=50
@@ -654,73 +887,11 @@ GET retail-users?search=rahim&limit=50
 - `next_cursor` is `null` when the page is not full. A full page always gives
   a cursor, so the page after it may be empty.
 
-### 7.2 The retail roles: `GET retail-roles`
-
-Needs `retail_user:add`. The roles a new retail user can be given.
-
-```json
-{ "success": true, "message": "Retail roles fetched successfully.",
-  "data": [ { "id": 7, "name": "Retail seller" } ] }
-```
-
-An empty list means the client's office has marked no role as a retail role
-yet: no retail user can be added until it does.
-
-### 7.3 Add a retail user: `POST retail-users`
-
-Needs `retail_user:add`.
-
-```json
-{ "name": "Rahim Store", "email": "rahim.store@gmail.com", "role_id": 7, "password": "1234567890", "send_email": true }
-```
-
-```json
-{ "success": true, "message": "Retail user added successfully.",
-  "data": { "id": "9d2e…", "name": "Rahim Store", "email": "rahim.store@gmail.com", "email_sent": true } }
-```
-
-- **201** on success. The retail user can be named on a report at once.
-- `name`: 1 to 100 characters. `email`: the address the retail user will log
-  in with and read the mail at; it must be real, or they can never log in.
-  `role_id`: one of §7.2. `password`: required, 1 to 128 characters, no
-  control characters, and no other rule: it is used once and must be changed at
-  the first login.
-- `send_email`: optional, `true` or `false`; left out it is `true`.
-  - `true`: we email the password to the retail user with the login email.
-  - `false`: no mail. The official gives the password to the retail user
-    personally. Show a switch "Email the login details" (on by default) and,
-    when it is off, "Give the password to the retail user yourself."
-  - Anything but `true` or `false`: **400 `validation_failed`**.
-- `email_sent`:
-  - `true`: the mail went.
-  - `false`: we tried and it could not be sent; the account was made. Say so:
-    the official gives the retail user the password they typed, or emails a new
-    one (§7.4) a little later.
-  - `null`: not sent, as asked (`send_email: false`).
-- **409 `conflict`** "An official with this email already exists.": anyone of
-  the client's officials, retail or not, already has it.
-- **404 `not_found`** "Role not found.": `role_id` is not a retail role.
-
-### 7.4 Email a new first password: `POST retail-users/{id}/password`
-
-Needs `retail_user:add`. For a retail user whose mail never arrived or was lost,
-or who was given the password personally and lost it. No body. This one is
-always emailed.
-
-```json
-{ "success": true, "message": "Password emailed.", "data": { "email_sent": true } }
-```
-
-- The new password replaces the old one, which stops working at once.
-- **409 `conflict`** "The retail user has set their own password.": once a
-  retail user has chosen their own, only the client's office can change it.
-- **404 `not_found`** "Retail user not found.": no such official, one who is
-  not a retail user, or a blocked one.
-
 ## 8. Versions and questions
 
 - **Versions.** Every route is under `/v1/` and only grows: new routes and new
-  fields in answers can appear, so ignore a field you do not know. A change that
+  fields in answers can appear, so ignore a field you do not know. (The one
+  exception is 2026-11-15, before any client's app was live: see the top.) A change that
   would break your app comes as `/v2/`, and `/v1/` keeps working for a period we
   agree with you.
 - **Testing.** A test client with made-up items and officials comes with the test

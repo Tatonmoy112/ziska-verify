@@ -39,6 +39,16 @@ class ChangePasswordCubit extends _SubmitCubit {
   Future<void> logout() => _logout();
 }
 
+/// **Not now** on a forced change (`me/password/later`, final.md Section
+/// 6.6); its own state, so the screen keeps it apart from Save.
+class PostponePasswordCubit extends _SubmitCubit {
+  PostponePasswordCubit(this._postpone);
+
+  final PostponePasswordChange _postpone;
+
+  Future<void> submit() => run(_postpone.call);
+}
+
 /// `auth/password/forgot`: always the same answer.
 class ForgotPasswordCubit extends _SubmitCubit {
   ForgotPasswordCubit(this._request);

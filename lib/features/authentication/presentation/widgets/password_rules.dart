@@ -7,7 +7,8 @@ import 'package:ziska_verify/shared/design_system/tokens/app_spacing.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_typography.dart';
 
 /// The three password rules, shown before typing starts, each ticked as it
-/// is met (app build guide §4.9).
+/// is met (app build guide §4.9), and a fourth when a control character
+/// (a tab, a line break) breaks it.
 class PasswordRules extends StatelessWidget {
   const PasswordRules({required this.check, super.key});
 
@@ -22,20 +23,31 @@ class PasswordRules extends StatelessWidget {
         _Rule(met: check.hasLength, label: l10n.ruleLength),
         _Rule(met: check.hasLetter, label: l10n.ruleLetter),
         _Rule(met: check.hasNumber, label: l10n.ruleNumber),
+        // The fourth rule (no control characters, guide §3.6, FR-ACC-13)
+        // shows only when it is broken, so a pasted tab is explained.
+        if (!check.hasNoControl)
+          _Rule(met: false, label: l10n.ruleNoControl, broken: true),
       ],
     );
   }
 }
 
 class _Rule extends StatelessWidget {
-  const _Rule({required this.met, required this.label});
+  const _Rule({required this.met, required this.label, this.broken = false});
 
   final bool met;
   final String label;
 
+  /// A rule that is broken now, not only not yet met: shown in red.
+  final bool broken;
+
   @override
   Widget build(BuildContext context) {
-    final color = met ? AppColors.success : AppColors.textMuted;
+    final color = met
+        ? AppColors.success
+        : broken
+        ? AppColors.danger
+        : AppColors.textMuted;
     return Semantics(
       checked: met,
       label: label,
@@ -45,7 +57,11 @@ class _Rule extends StatelessWidget {
         child: Row(
           children: [
             Icon(
-              met ? LucideIcons.circleCheck : LucideIcons.circle,
+              met
+                  ? LucideIcons.circleCheck
+                  : broken
+                  ? LucideIcons.circleX
+                  : LucideIcons.circle,
               size: 18,
               color: color,
             ),

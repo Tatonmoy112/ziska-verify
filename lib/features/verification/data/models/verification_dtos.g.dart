@@ -7,9 +7,6 @@ part of 'verification_dtos.dart';
 // **************************************************************************
 
 FormatsDto _$FormatsDtoFromJson(Map<String, dynamic> json) => FormatsDto(
-  hiddenCode: (json['hidden_code'] as List<dynamic>)
-      .map((e) => CodeFormatDto.fromJson(e as Map<String, dynamic>))
-      .toList(),
   serial: SerialFormatDto.fromJson(json['serial'] as Map<String, dynamic>),
   qr: CodeFormatDto.fromJson(json['qr'] as Map<String, dynamic>),
 );
@@ -43,7 +40,6 @@ LookupResultDto _$LookupResultDtoFromJson(Map<String, dynamic> json) =>
 CountDto _$CountDtoFromJson(Map<String, dynamic> json) => CountDto(
   thisCheck: (json['this_check'] as num).toInt(),
   lastAt: json['last_at'] as String?,
-  by: (json['by'] as List<dynamic>?)?.map((e) => e as String).toList(),
 );
 
 ItemDto _$ItemDtoFromJson(Map<String, dynamic> json) => ItemDto(
@@ -66,24 +62,56 @@ BatchDto _$BatchDtoFromJson(Map<String, dynamic> json) => BatchDto(
   expires: json['expires'] as String?,
 );
 
-BulkResponseDto _$BulkResponseDtoFromJson(Map<String, dynamic> json) =>
-    BulkResponseDto(
-      summary: BulkSummaryDto.fromJson(json['summary'] as Map<String, dynamic>),
-      results: (json['results'] as List<dynamic>)
-          .map((e) => LookupResultDto.fromJson(e as Map<String, dynamic>))
-          .toList(),
-    );
-
-BulkSummaryDto _$BulkSummaryDtoFromJson(Map<String, dynamic> json) =>
-    BulkSummaryDto(
-      total: (json['total'] as num).toInt(),
+SessionTotalsDto _$SessionTotalsDtoFromJson(Map<String, dynamic> json) =>
+    SessionTotalsDto(
+      id: json['id'] as String,
+      scanned: (json['scanned'] as num).toInt(),
       valid: (json['valid'] as num).toInt(),
       warning: (json['warning'] as num).toInt(),
-      byReason:
-          (json['by_reason'] as Map<String, dynamic>?)?.map(
-            (k, e) => MapEntry(k, (e as num).toInt()),
-          ) ??
-          {},
+      notFound: (json['not_found'] as num).toInt(),
+      unassigned: (json['unassigned'] as num).toInt(),
+      left: (json['left'] as num?)?.toInt(),
+    );
+
+ScanResultDto _$ScanResultDtoFromJson(Map<String, dynamic> json) =>
+    ScanResultDto(
+      session: SessionTotalsDto.fromJson(
+        json['session'] as Map<String, dynamic>,
+      ),
+      repeat: json['repeat'] as bool,
+    );
+
+SessionSummaryDto _$SessionSummaryDtoFromJson(Map<String, dynamic> json) =>
+    SessionSummaryDto(
+      id: json['id'] as String,
+      kind: json['kind'] as String,
+      status: json['status'] as String,
+      startedAt: json['started_at'] as String,
+      lastScanAt: json['last_scan_at'] as String,
+      scanned: (json['scanned'] as num).toInt(),
+      valid: (json['valid'] as num).toInt(),
+      warning: (json['warning'] as num).toInt(),
       notFound: (json['not_found'] as num).toInt(),
       unassigned: (json['unassigned'] as num).toInt(),
     );
+
+SessionsPageDto _$SessionsPageDtoFromJson(Map<String, dynamic> json) =>
+    SessionsPageDto(
+      sessions: (json['sessions'] as List<dynamic>)
+          .map((e) => SessionSummaryDto.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      nextCursor: json['next_cursor'] as String?,
+    );
+
+SerialStackDto _$SerialStackDtoFromJson(Map<String, dynamic> json) =>
+    SerialStackDto(
+      session: SessionTotalsDto.fromJson(
+        json['session'] as Map<String, dynamic>,
+      ),
+      items: (json['items'] as List<dynamic>)
+          .map((e) => SerialStackItemDto.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+
+SerialStackItemDto _$SerialStackItemDtoFromJson(Map<String, dynamic> json) =>
+    SerialStackItemDto(serial: json['serial'] as String);

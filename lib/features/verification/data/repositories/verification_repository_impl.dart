@@ -2,12 +2,16 @@ import 'dart:async';
 
 import 'package:ziska_verify/core/errors/app_exception.dart';
 import 'package:ziska_verify/core/errors/result.dart';
+import 'package:ziska_verify/core/pagination/cursor_page.dart';
+import 'package:ziska_verify/core/pagination/page_request.dart';
 import 'package:ziska_verify/core/services/session/session_service.dart';
 import 'package:ziska_verify/core/services/session/session_state.dart';
 import 'package:ziska_verify/features/verification/data/mappers/verification_mappers.dart';
+import 'package:ziska_verify/features/verification/data/models/verification_dtos.dart';
 import 'package:ziska_verify/features/verification/data/services/verification_api_service.dart';
-import 'package:ziska_verify/features/verification/domain/entities/bulk.dart';
 import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
+import 'package:ziska_verify/features/verification/domain/entities/scan_session.dart';
+import 'package:ziska_verify/features/verification/domain/entities/serial_stack.dart';
 import 'package:ziska_verify/features/verification/domain/repositories/verification_repository.dart';
 
 class VerificationRepositoryImpl implements VerificationRepository {
@@ -35,29 +39,65 @@ class VerificationRepositoryImpl implements VerificationRepository {
   );
 
   @override
-  Future<Result<BulkOutcome>> bulkLookup(List<BulkEntry> entries) =>
+  Future<Result<ScanResult>> scan(String value, String sessionId) =>
       guard(() async {
-        final dto = await _api.lookupBulk([
-          for (final e in entries) {'way': e.way.wire, 'value': e.value},
-        ]);
-        // Results come back in the order sent; nothing else links them to
-        // the items (final.md Section 13.2). A different count is a broken
-        // answer, never shown.
-        if (dto.results.length != entries.length) {
-          throw const InternalErrorException(message: 'bulk_count_mismatch');
+        final data = await _api.scan(value, sessionId);
+        final scan = ScanResultDto.fromJson(data);
+        if (scan.session.id != sessionId) {
+          throw const InternalErrorException(message: 'session_mismatch');
         }
-        return BulkOutcome(
-          summary: dto.summary.toEntity(),
-          rows: [
-            for (final (i, entry) in entries.indexed)
-              BulkRow(
-                way: entry.way,
-                label: entry.label,
-                result: dto.results[i].toEntity(),
+        return ScanResult(
+          result: LookupResultDto.fromJson(data).toEntity(),
+          repeat: scan.repeat,
+          session: scan.session.toEntity(),
+        );
+      });
+
+  @override
+  Future<Result<SerialStackResult>> serials(List<String> values) =>
+      guard(() async {
+        final expected = values.toSet().toList();
+        if (expected.isEmpty || expected.length > serialStackLimit) {
+          throw const ValidationException(message: 'serial_stack_size');
+        }
+        final data = await _api.serials(List.unmodifiable(expected));
+        final dto = SerialStackDto.fromJson(data);
+        final rawItems = (data['items'] as List).cast<Map<String, dynamic>>();
+        if (dto.items.length != expected.length ||
+            dto.session.scanned != expected.length ||
+            dto.items.indexed.any(
+              (entry) => entry.$2.serial != expected[entry.$1],
+            )) {
+          throw const InternalErrorException(message: 'serial_stack_mismatch');
+        }
+        return SerialStackResult(
+          session: dto.session.toEntity(),
+          items: [
+            for (final (i, item) in dto.items.indexed)
+              SerialStackRow(
+                serial: item.serial,
+                result: LookupResultDto.fromJson(rawItems[i]).toEntity(),
               ),
           ],
         );
       });
 
+  @override
+  Future<Result<void>> endSession(String id) =>
+      guard(() => _api.endSession(id));
+  @override
+  Future<Result<ScanSessionSummary>> session(String id) =>
+      guard(() async => (await _api.session(id)).toEntity());
+  @override
+  Future<Result<CursorPage<ScanSessionSummary>>> sessions(
+    SessionQuery query,
+    PageRequest page,
+  ) => guard(() async {
+    final dto = await _api.sessions(query, page);
+    return CursorPage(
+      items: [for (final session in dto.sessions) session.toEntity()],
+      nextCursor: dto.nextCursor,
+    );
+  });
   Future<void> dispose() => _subscription.cancel();
 }

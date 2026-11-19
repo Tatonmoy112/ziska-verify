@@ -18,11 +18,13 @@ class ApiClient {
     String path, {
     Map<String, Object?>? query,
     CancelToken? cancelToken,
+    bool skipAuth = false,
   }) => _send(
     () => _dio.get<Object?>(
       path,
       // Empty filters are never sent (final.md Section 10.2).
       queryParameters: _withoutEmpty(query),
+      options: Options(extra: {RequestFlags.skipAuth: skipAuth}),
       cancelToken: cancelToken,
     ),
   );

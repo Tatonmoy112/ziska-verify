@@ -237,7 +237,7 @@ void main() {
     expect(gradient.begin, Alignment.topLeft);
     expect(gradient.end, Alignment.bottomRight);
 
-    await pumpUi(tester, const GradientHeader(title: 'Request access'));
+    await pumpUi(tester, const GradientHeader(title: 'Sign up'));
     final boxes = tester
         .widgetList<DecoratedBox>(
           find.descendant(

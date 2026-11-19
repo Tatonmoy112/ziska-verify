@@ -1,8 +1,10 @@
 import 'dart:math' as math;
 
+import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:ziska_verify/core/errors/result.dart';
 import 'package:ziska_verify/features/profile/presentation/bloc/profile_cubit.dart';
 import 'package:ziska_verify/l10n/generated/app_localizations.dart';
 import 'package:ziska_verify/shared/design_system/components/buttons/app_button.dart';
@@ -14,6 +16,7 @@ import 'package:ziska_verify/shared/extensions/failure_message.dart';
 import 'package:ziska_verify/shared/widgets/app_logo.dart';
 import 'package:ziska_verify/shared/widgets/pattern_background.dart';
 import 'package:ziska_verify/shared/widgets/reference_text.dart';
+import 'package:ziska_verify/shared/widgets/retry_countdown.dart';
 
 /// Shown while the session is restored and the profile loads
 /// (final.md Section 9.4). The router leaves it by itself.
@@ -168,32 +171,9 @@ class _SplashContent extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: AppSpacing.lg),
-              if (failure != null) ...[
-                Semantics(
-                  liveRegion: true,
-                  child: Text(
-                    failure.message(l10n),
-                    key: const Key('splash.error'),
-                    textAlign: TextAlign.center,
-                    style: AppTypography.body.copyWith(
-                      color: AppColors.onPrimary,
-                    ),
-                  ),
-                ),
-                ReferenceText(
-                  failure.requestId,
-                  color: AppColors.onPrimary.withValues(alpha: 0.85),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                // White on the navy glow: the navy primary button would
-                // disappear into it.
-                AppButton(
-                  key: const Key('splash.retry'),
-                  label: l10n.retry,
-                  variant: AppButtonVariant.tonal,
-                  onPressed: () => context.read<ProfileCubit>().load(),
-                ),
-              ] else
+              if (failure != null)
+                _SplashFailure(failure: failure)
+              else
                 SizedBox.square(
                   dimension: 28,
                   child: CircularProgressIndicator(
@@ -284,6 +264,70 @@ class _Glow extends StatelessWidget {
           ],
         ),
         child: Padding(padding: padding, child: child),
+      ),
+    );
+  }
+}
+
+/// A failed `GET me`: the message, its reference, and Try again. A `429`
+/// counts down from its `Retry-After` and holds Try again until then
+/// (app API guide section 1).
+class _SplashFailure extends StatefulWidget {
+  const _SplashFailure({required this.failure});
+
+  final Failure failure;
+
+  @override
+  State<_SplashFailure> createState() => _SplashFailureState();
+}
+
+class _SplashFailureState extends State<_SplashFailure> {
+  late DateTime? _until = widget.failure.retryAtFrom(clock.now());
+
+  @override
+  void didUpdateWidget(_SplashFailure old) {
+    super.didUpdateWidget(old);
+    if (!identical(old.failure, widget.failure)) {
+      _until = widget.failure.retryAtFrom(clock.now());
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final failure = widget.failure;
+    return RetryCountdown(
+      until: _until,
+      builder: (context, seconds) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Semantics(
+            liveRegion: true,
+            child: Text(
+              seconds > 0
+                  ? l10n.errorRateLimited(seconds)
+                  : failure.message(l10n),
+              key: const Key('splash.error'),
+              textAlign: TextAlign.center,
+              style: AppTypography.body.copyWith(color: AppColors.onPrimary),
+            ),
+          ),
+          ReferenceText(
+            failure.requestId,
+            color: AppColors.onPrimary.withValues(alpha: 0.85),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          // White on the navy glow: the navy primary button would
+          // disappear into it.
+          AppButton(
+            key: const Key('splash.retry'),
+            label: l10n.retry,
+            variant: AppButtonVariant.tonal,
+            onPressed: seconds > 0
+                ? null
+                : () => context.read<ProfileCubit>().load(),
+          ),
+        ],
       ),
     );
   }

@@ -43,10 +43,10 @@ Give your agent this section as its standing instructions.
 ## 2. What the app does
 
 Field officials of one client (a manufacturer) check whether items are genuine:
-they scan a QR code, type a serial or type the scratched-off hidden code, and the
-app shows whether the item is genuine and whether anything is wrong with it. Some
-officials also file reports with photos, look back at past checks, and add retail
-users (shop owners who use the app too).
+they scan a QR code or type a serial (one, or a stack of up to 50), and the app
+shows whether the item is genuine and whether anything is wrong with it. Some
+officials also file reports with photos and look back at their own past checks. A
+person without an account asks for one from the app; the client's office approves it.
 
 **One app, one client.** The app is built for one client: its API address and the
 client's short name (the "slug") are fixed in the app's configuration. Every route
@@ -68,7 +68,7 @@ These are the parts to build. Names are suggestions; keep the responsibilities.
 | **API client** | Every HTTP call goes through it. Adds `Authorization: Bearer`, sends JSON, parses the answer shape, turns errors into typed errors by `error.code`, renews the pass once on `token_expired` (§4.2), honours `Retry-After`. No cookies. |
 | **Session** | Logged out, waiting for a code, must change password, logged in. Drives which screen shows. |
 | **Profile** | `GET me`: name, role, **permissions**, the client's name, support contact. Loaded at start and after login; the permissions decide the menus. |
-| **Screens** | Login, code, change password, forgotten password, home, single lookup (scanner and typing), bulk lookup, result, history, report, photo upload, retail user picker and add, profile, error. |
+| **Screens** | Login, code, change password, forgotten password, request access, home, single lookup (scanner and typing), scanner mode (sessions), stack of serials, result, history, report, photo upload, retail user picker, profile, error. |
 
 **The answer shape** is always the same (collection overview ▸ *The answer*):
 
@@ -143,12 +143,12 @@ after login, and after any 403 `forbidden`.
 
 | Permission | Feature |
 |---|---|
-| `item:lookup` | Single lookup (scan, serial, hidden code) |
-| `item:bulk_lookup` | Bulk lookup |
-| `history:own` | History of one's own checks |
-| `history:all` | Everyone's history (`scope=all`) and who checked an item before |
+| `item:lookup` | Single lookup (scan or serial) |
+| `item:bulk_lookup` | Checking many items: scanner mode (scanner sessions) and the stack of serials |
+| `history:own` | History of one's own checks and sessions |
 | `incident:report` | Reports, photos, my reports, picking a retail user |
-| `retail_user:add` | Adding retail users, emailing their first password |
+
+No permission shows other officials' checks: the app never sees them.
 
 ### 4.6 Looking items up
 
@@ -159,11 +159,18 @@ after login, and after any 403 `forbidden`.
 - Show `data.result` and every `data.reasons` entry (*Looking items up ▸ Look up one
   item* lists them). `not_found` and `unassigned` carry only `ref`. There is no
   "invalid" result.
-- Show `ref` on the result: it is the check's reference number for a certificate.
-- `item.code` is already masked (`*****7K2`). Never store or show what the official
-  typed as a hidden code beyond the screen they typed it on.
-- **Bulk:** results come back **in the order sent**: match them by position. A 503
-  means nothing was checked: send the same list again.
+- Show `ref` on the result: it is the check's reference number, which finds the
+  check fast in the history and in the client's portal.
+- `item.code` is already masked (`*****7K2`). The app never asks for the hidden
+  code: it is the consumer's.
+- **Scanner mode:** each QR is sent on its own as soon as the camera reads it, with
+  the session's `session_id` (API guide §4.3). Show each result on the scanner screen
+  and add it to the list; `repeat: true` shows "already scanned". Keep only the
+  session ID on the phone.
+- **A stack of serials:** up to 50 typed or pasted serials in one
+  `POST lookups/serials` (API guide §4.7); show each entry's result in the order
+  sent. A failed stack recorded nothing: send it again whole (a 503 now and then
+  under load is expected: send it again after a second).
 
 ### 4.7 Reports and photos
 
@@ -177,13 +184,13 @@ after login, and after any 403 `forbidden`.
 
 ### 4.8 What never goes into logs or analytics
 
-Passes, passwords, emailed codes, hidden codes, the phone ID. Log `request_id`,
+Passes, passwords, emailed codes, the phone ID. Log `request_id`,
 the route and the status instead.
 
 ### 4.9 The password rule and its hints
 
 Every password an official chooses (the change after the first login, any later
-change, the forgotten-password reset) must have:
+change, the forgotten-password reset, the password of an access request) must have:
 
 - at least **8** characters (at most 128);
 - at least one **letter** (of any alphabet: English, Bangla, …);
@@ -201,9 +208,9 @@ On every screen where a new password is typed:
   three rules again and log the `request_id`.
 - Offer "show password" (an eye icon). If the design has a "repeat password"
   field, check in the app that both match; the API takes the password once.
-- The **first password** an admin or a supervisor types when making an account
-  (API guide §7.3) has no rule but 1 to 128 characters: it works once and must be
-  changed, under the rule above, at the first login.
+- The **first password** the client's office types when making an account has no
+  rule but 1 to 128 characters: it works once and, unless the office said
+  otherwise, must be changed under the rule above at the first login.
 
 ---
 
@@ -241,6 +248,16 @@ password*, *Forgotten password* (both).
       number) with live ticks, and keeps the button disabled until all are met (§4.9).
 - [ ] `abcd1234` is accepted; `12345678`, `password` and `abc123` are stopped by the
       app before sending.
+- [ ] Request access (API guide §3.9): the roles come from `roles/requestable` (an
+      empty list shows "Ask the office for an account"); the form takes the name,
+      role, password and email, then sends the code, then the code and the request;
+      every address shows "A code was sent to the address."; a 401 is "The code is
+      wrong or expired"; a 403 or 404 keeps the form and the code for another try;
+      a 409 shows "Try again later" and goes back to sending a code; the end screen
+      says an email will follow.
+- [ ] The first login after an approval follows `must_change_password`: home when
+      it is `false` (the person's own password), the change-password screen when it
+      is `true` (the office gave a new password or ticked "must change"). Test both.
 
 ### Step 3: staying logged in
 
@@ -256,18 +273,34 @@ Routes: *Session ▸ Renew the passes*, *Session ▸ Log out*, *Session ▸ Prof
 Routes: *Looking items up ▸ Input formats*, *Look up one item*.
 
 - [ ] Scanning a QR sends only the part after `/q/`.
-- [ ] Typing a serial or a hidden code is checked against `formats` first.
+- [ ] Typing a serial is checked against `formats` first.
 - [ ] Every `result` and every `reason` has its own clear display; `ref` is shown.
 - [ ] `app_preparing` shows its message; a role without `item:lookup` never sees
       the screen.
 
-### Step 5: bulk lookup
+### Step 5: scanner mode (scanner sessions)
 
-Routes: *Looking items up ▸ Look up many items (bulk)*.
+Routes: *Scanner sessions* (a scan, end a session, the sessions, one session) and
+*History ▸ History of checks* with `session_id`. API guide §4.3–4.6.
 
-- [ ] Up to 500 items; results matched by position; the summary shown.
-- [ ] A 503 offers "send again" with the same list; a 429 waits `Retry-After`.
+- [ ] Entering scanner mode makes a new UUID; every scan sends it with `way: "qr"`.
+- [ ] Each result shows on the scanner screen at once and joins the list; the
+      counter comes from `session` (scanned, valid, warning, not found, left).
+- [ ] The same QR held in front of the camera is sent once; `repeat: true` shows
+      "already scanned".
+- [ ] `session_full` and `session_ended` start a new session and send the scan
+      again in it; a 503 or no connection shows "scan again"; a 429 waits
+      `Retry-After`.
+- [ ] The app's and the phone's back button send `…/sessions/{id}/end` without
+      waiting, clear the list and forget the ID.
+- [ ] After a crash, the same session reopens from its ID: counter from
+      `GET lookups/sessions/{id}`, list from `GET checks?session_id=…`.
+- [ ] Past sessions: the sessions list, then one session's checks.
 - [ ] Hidden without `item:bulk_lookup`.
+- [ ] A stack of serials: up to 50 per request (more are split by the app or
+      refused before sending); repeats show once; each entry shows its result;
+      the stack appears in the sessions list with `kind: "serial"`; a 429 (more than
+      500 serials a minute) waits `Retry-After` and sends the same stack again.
 
 ### Step 6: history
 
@@ -275,7 +308,7 @@ Routes: *History ▸ History of checks*.
 
 - [ ] Filters (result, way, dates, search), paging with `next_cursor` until it is
       `null`, `totals` from the first page.
-- [ ] `scope=all` only with `history:all`.
+- [ ] Never sends `scope` (it is 400): the history is the official's own.
 
 ### Step 7: reports and photos
 
@@ -288,19 +321,10 @@ Routes: *Reports and photos* (all three), *Retail users ▸ Pick a retail user*.
 
 ### Step 8: retail users
 
-Routes: *Retail users* (all four).
+Routes: *Retail users ▸ Pick a retail user*.
 
-- [ ] Picking a retail user for a report (search, masked emails).
-- [ ] Adding a retail user from a role of `retail-roles`; `email_sent: false` is
-      explained; a 409 for an email in use is shown.
-- [ ] The add screen has the switch "Email the login details" (on by default). Off
-      sends `send_email: false`, answers `email_sent: null`, and the screen says
-      "Give the password to the retail user yourself." and shows the typed password
-      once more so the official can pass it on.
-- [ ] "Email a new first password" for a retail user who never got the mail or lost
-      the password they were given (always emailed). A first password has no end
-      date: it works until it is used.
-- [ ] Hidden without `retail_user:add` (the picker also opens with `incident:report`).
+- [ ] Picking a retail user for a report (search, masked emails); hidden without
+      `incident:report`. Retail users are not added in the app.
 
 ---
 
@@ -313,9 +337,9 @@ for you. With it we give you:
 - **the test sheet**: ten test logins (inspectors, supervisors, a trainee with no
   rights, retail users, one who must change the first password, one blocked), and
   for every result the app can show (`valid`, each `warning` reason, `unassigned`,
-  `not_found`) a serial, a QR value and a hidden code to type;
+  `not_found`) a serial and a QR value;
 - **the mail page**, where every emailed code arrives (a new phone, a forgotten
-  password). Nothing is sent to a real mailbox.
+  password, an access request). Nothing is sent to a real mailbox.
 
 **In Postman:** import `ProtectB-mobile-app.test-server.postman_environment.json`
 (the client and a login are filled in), put the address into `mobileBase` and the

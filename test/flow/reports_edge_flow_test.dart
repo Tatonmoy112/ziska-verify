@@ -94,6 +94,17 @@ void main() {
       expect((filed(app)['note'] as String).length, 1000);
     });
 
+    testWidgets('TC-REP-055 the 1 000 are code points: a flag (one '
+        'character on screen, two code points) counts as two', (tester) async {
+      final app = await openReport(tester);
+      // 998 letters and two flags of two code points each: 1 002 in all.
+      await file(app, '${'n' * 998}🇧🇩🇧🇩');
+      final sent = filed(app)['note'] as String;
+      expect(sent.runes.length, 1000);
+      expect(sent, '${'n' * 998}🇧🇩');
+      expect(find.text('1000/1000'), findsOneWidget);
+    });
+
     testWidgets('TC-REP-021 a note of spaces only cannot be filed', (
       tester,
     ) async {
@@ -112,22 +123,28 @@ void main() {
       expect(filed(app)['retail_user_id'], isNull);
     });
 
-    testWidgets('TC-REP-025 a linked check or retail user not found', (
-      tester,
-    ) async {
-      final app = await openReport(
-        tester,
-        overrides: {'POST incidents': always(apiError(404, 'not_found'))},
-      );
-      await file(app, 'Torn seal');
-      expect(
-        find.text(
-          'The check or the retail user was not found. Remove it and try '
-          'again.',
-        ),
-        findsOneWidget,
-      );
-    });
+    for (final (message, text) in [
+      ('Check not found.', 'The check was not found. Remove it and try again.'),
+      (
+        'Retail user not found.',
+        'This retail user can no longer be named. Choose another, or file '
+            'without one.',
+      ),
+      (null, 'Not available.'),
+    ]) {
+      testWidgets('TC-REP-025 filing answered 404 "$message"', (tester) async {
+        final app = await openReport(
+          tester,
+          overrides: {
+            'POST incidents': always(
+              apiError(404, 'not_found', message: message),
+            ),
+          },
+        );
+        await file(app, 'Torn seal');
+        expect(find.text(text), findsOneWidget);
+      });
+    }
 
     testWidgets('TC-REP-026 filing rate limited counts down and waits', (
       tester,
@@ -169,6 +186,34 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.text(text), findsOneWidget);
         expect(find.textContaining('req-1'), findsOneWidget);
+        expect(app.backend.sent('POST', 'incidents'), hasLength(1));
+      });
+    }
+
+    for (final (name, answer) in [
+      ('an id that is not a number', ok({'id': 'x'}, status: 201)),
+      ('a page that is not JSON', const ScriptedAnswer.raw(201, '<html>')),
+    ]) {
+      testWidgets('TC-REP-056 filing answered 201 with $name: it may be '
+          'filed, so it is never filed again', (tester) async {
+        final app = await openReport(
+          tester,
+          overrides: {'POST incidents': always(answer)},
+        );
+        await file(app, 'Torn seal');
+        expect(
+          find.textContaining('its answer could not be read'),
+          findsOneWidget,
+        );
+        final look = find.byKey(const Key('report.checkMyReports'));
+        final list = reportList(tester);
+        for (var i = 0; i < 10 && look.evaluate().isEmpty; i++) {
+          final position = tester.state<ScrollableState>(list).position;
+          position.jumpTo(position.maxScrollExtent);
+          await tester.pumpAndSettle();
+        }
+        expect(look, findsOneWidget);
+        expect(find.byKey(const Key('report.submit')), findsNothing);
         expect(app.backend.sent('POST', 'incidents'), hasLength(1));
       });
     }
@@ -221,41 +266,114 @@ void main() {
       });
     }
 
-    for (final (id, status, code) in [
-      ('034', 409, 'conflict'),
-      ('035', 404, 'not_found'),
+    // A 409 says why (3 photos, or the hour is over); a 404 is refused.
+    // Under the photos, the server's message for a 409 and the reference
+    // (TC-REP-059, guide sections 1 and 6.2).
+    for (final (id, status, code, message, tile, banner) in [
+      (
+        '034',
+        409,
+        'conflict',
+        'The report has 3 photos already.',
+        'No more photos: the report has 3, or its hour is over.',
+        'The report has 3 photos already.',
+      ),
+      (
+        '035',
+        404,
+        'not_found',
+        'Report not found.',
+        'This photo was refused.',
+        'This photo was refused.',
+      ),
     ]) {
       testWidgets('TC-REP-$id a refused photo ($status) is not offered '
           'again', (tester) async {
         final app = await openReport(
           tester,
-          overrides: {'POST $photosPath': always(apiError(status, code))},
-        );
-        await addPhoto(app);
-        await file(app, 'Torn seal');
-        expect(find.text('This photo was refused.'), findsOneWidget);
-        expect(find.text('Not sent. Tap to send again.'), findsNothing);
-        await app.tapText('This photo was refused.');
-        expect(app.backend.sent('POST', photosPath), hasLength(1));
-      });
-    }
-
-    for (final (status, code) in [
-      (429, 'rate_limited'),
-      (500, 'internal_error'),
-    ]) {
-      testWidgets('TC-REP-036 a photo answered $status is sent again to the '
-          'same report', (tester) async {
-        var calls = 0;
-        final app = await openReport(
-          tester,
           overrides: {
-            'POST $photosPath': (_) =>
-                calls++ == 0 ? apiError(status, code) : photoN(1),
+            'POST $photosPath': always(
+              apiError(status, code, message: message, requestId: 'req-ph'),
+            ),
           },
         );
         await addPhoto(app);
         await file(app, 'Torn seal');
+        final failure = find.byKey(const Key('report.photoFailure'));
+        expect(
+          find.descendant(of: failure, matching: find.text(banner)),
+          findsOneWidget,
+        );
+        expect(
+          find.descendant(
+            of: failure,
+            matching: find.text('Reference: req-ph'),
+          ),
+          findsOneWidget,
+        );
+        expect(find.text(tile), findsWidgets);
+        expect(find.text('Not sent. Tap to send again.'), findsNothing);
+        await app.tap(find.text(tile).first);
+        expect(app.backend.sent('POST', photosPath), hasLength(1));
+      });
+    }
+
+    // TC-REP-052 (guide 6.2): Done asks before leaving a photo that can be
+    // sent again; Stay keeps the screen.
+    testWidgets('TC-REP-052 Done asks while a photo is not sent', (
+      tester,
+    ) async {
+      final app = await openReport(
+        tester,
+        overrides: {
+          'POST $photosPath': always(apiError(500, 'internal_error')),
+        },
+      );
+      await addPhoto(app);
+      await file(app, 'Torn seal');
+      expect(find.text('Not sent. Tap to send again.'), findsOneWidget);
+      await app.tap(find.byKey(const Key('report.done')));
+      expect(find.text('Photos not sent'), findsOneWidget);
+      await app.tapText('Stay');
+      expect(find.byKey(const Key('report.done')), findsOneWidget);
+      await app.tap(find.byKey(const Key('report.done')));
+      await app.tap(find.byKey(const Key('report.leave')));
+      expect(find.byKey(const Key('report.done')), findsNothing);
+    });
+
+    for (final (status, code, wait) in [
+      (429, 'rate_limited', 30),
+      (429, 'rate_limited', null),
+      (500, 'internal_error', null),
+    ]) {
+      testWidgets('TC-REP-036 a photo answered $status '
+          '(Retry-After: $wait) is sent again to the same report', (
+        tester,
+      ) async {
+        var calls = 0;
+        final app = await openReport(
+          tester,
+          overrides: {
+            'POST $photosPath': (_) => calls++ == 0
+                ? apiError(status, code, retryAfter: wait)
+                : photoN(1),
+          },
+        );
+        await addPhoto(app);
+        await file(app, 'Torn seal');
+        if (wait != null) {
+          // TC-REP-054 (guide 1): a 429 counts down its Retry-After; a tap
+          // before the end sends nothing. Without the header there is no
+          // wait: the app never makes one up.
+          expect(
+            find.text('Too many attempts. Try again in 30 s.'),
+            findsOneWidget,
+          );
+          await app.tap(find.byIcon(LucideIcons.refreshCw));
+          expect(app.backend.sent('POST', photosPath), hasLength(1));
+          await tester.pump(Duration(seconds: wait + 1));
+          await tester.pumpAndSettle();
+        }
         expect(find.text('Not sent. Tap to send again.'), findsOneWidget);
 
         // The failed photo itself is tapped (TC-REP-006).
@@ -265,6 +383,24 @@ void main() {
         expect(app.backend.sent('POST', 'incidents'), hasLength(1));
       });
     }
+
+    testWidgets('TC-REP-057 the same photo twice takes one place', (
+      tester,
+    ) async {
+      final app = await openReport(
+        tester,
+        // The same file again answers its n again (guide section 6.2).
+        overrides: {'POST $photosPath': always(photoN(1))},
+      );
+      await addPhoto(app);
+      await addPhoto(app);
+      await file(app, 'Torn seal');
+      await app.tester.pumpAndSettle();
+      expect(app.backend.sent('POST', photosPath), hasLength(2));
+      expect(find.text('Photo 1'), findsOneWidget);
+      expect(find.text('That photo is already on the report.'), findsOneWidget);
+      expect(find.byKey(const Key('report.addPhoto')), findsOneWidget);
+    });
 
     testWidgets('TC-REP-038 a photo added after filing is sent at once', (
       tester,

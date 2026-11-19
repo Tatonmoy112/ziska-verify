@@ -30,7 +30,7 @@ void main() {
     app = await startApp(tester, profile: Roles.supervisor);
     setUp?.call();
     await tester.pumpAndSettle();
-    await check('Verify');
+    await check('Check');
 
     await app.enter(const Key('verify.input'), '1000001');
     await app.tap(find.byKey(const Key('verify.submit')));
@@ -52,13 +52,10 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    await openTile('verify.tool.bulk');
-    for (final serial in ['1000001', '1000002', '1000003']) {
-      await app.enter(const Key('bulk.input'), serial);
-      await app.tap(find.byKey(const Key('bulk.add')));
-    }
+    await openTile('verify.tool.serials');
+    await app.enter(const Key('serials.input'), '1000001,1000002,1000003');
     await check('Bulk lookup list');
-    await app.tap(find.byKey(const Key('bulk.send')));
+    await app.tap(find.byKey(const Key('serials.submit')));
     await check('Bulk results');
     await back();
 
@@ -68,13 +65,9 @@ void main() {
     await openTile('verify.tool.myReports');
     await check('My reports');
     await back();
-    await openTile('verify.tool.retailUsers');
-    await check('Retail users');
-    await app.tap(find.byKey(const Key('retailUsers.add')));
-    await check('Add retail user');
+    await openTile('verify.tool.bulk');
+    await check('Scanner mode');
     await back();
-    await back();
-
     await app.tap(tab('History'));
     await check('History');
     await app.tap(tab('Profile'));
@@ -209,7 +202,6 @@ void main() {
         'GET checks': late('History of checks', '200 First page'),
         'GET incidents': late('My own reports', '200 The reports'),
         'GET retail-users': late('Pick a retail user', '200 The retail users'),
-        'GET retail-roles': late('Retail roles', '200 The retail roles'),
       },
     );
 
@@ -251,25 +243,6 @@ void main() {
     await expectLoading('My reports');
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
-    await open('verify.tool.retailUsers');
-    await expectLoading('Retail users');
-    // A plain tap: app.tap would wait until the roles have loaded.
-    await tester.tap(find.byKey(const Key('retailUsers.add')));
-    for (var i = 0; i < 8; i++) {
-      await tester.pump(const Duration(milliseconds: 100));
-    }
-    expect(
-      find.byType(CircularProgressIndicator),
-      findsWidgets,
-      reason: 'Add retail user',
-    );
-    await tester.pump(const Duration(seconds: 4));
-    await tester.pumpAndSettle();
-    await tester.binding.handlePopRoute();
-    await tester.pumpAndSettle();
-    await tester.binding.handlePopRoute();
-    await tester.pumpAndSettle();
-
     await tester.tap(tab('History'));
     await expectLoading('History');
     // History's next pages are slow too: let them all arrive.

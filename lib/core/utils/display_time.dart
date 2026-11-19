@@ -14,7 +14,7 @@ abstract final class DisplayTime {
   static String dateTime(DateTime instant, String locale) =>
       DateFormat.yMMMd(locale).add_jm().format(inZone(instant));
 
-  /// The certificate's form, with the offset: "2026-10-12 15:14 +06:00".
+  /// With the offset: "2026-10-12 15:14 +06:00".
   static String withOffset(DateTime instant) {
     final local = inZone(instant);
     final offset = local.timeZoneOffset;

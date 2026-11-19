@@ -113,11 +113,14 @@ class _VerifyCodeScreenState extends State<VerifyCodeScreen> {
                         ),
                       ],
                       const SizedBox(height: AppSpacing.lg),
-                      AppButton(
-                        key: const Key('verify.submit'),
-                        label: l10n.verifyButton,
-                        loading: submit.isSubmitting,
-                        onPressed: _complete ? _submit : null,
+                      RetryCountdown(
+                        until: submit.retryAt,
+                        builder: (context, seconds) => AppButton(
+                          key: const Key('verify.submit'),
+                          label: l10n.verifyButton,
+                          loading: submit.isSubmitting,
+                          onPressed: _complete && seconds == 0 ? _submit : null,
+                        ),
                       ),
                       const SizedBox(height: AppSpacing.sm),
                       RetryCountdown(

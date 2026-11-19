@@ -1,5 +1,8 @@
 # Track & Trace — Decision Sheet
 
+> **2026-11-16 contract migration:** final.md v2.0 and [the migration acceptance cases](test-cases/16-mobile-migration.md) supersede conflicting requirements below. Hidden-code submission, the 500-item bulk endpoint, everyone scope, retail administration and certificates are retired. Old counts/status tables are historical, not current completion evidence. Use [the release backlog](release-backlog.md) for unrelated unfinished work.
+
+
 **For:** the app owner, the client (Ziska Pharma), and the backend team.
 **Why:** the behaviours below are not defined by `final.md` or the backend documents. Until one option is chosen, their test cases say "Spec gap" instead of an expected result, so they cannot pass or fail.
 
@@ -280,11 +283,11 @@ Other: ______________________ Decided by: __________ Date: ________
 Other: ______________________ Decided by: __________ Date: ________
 
 ### Q20. The §14.1 component list against what is built
-`final.md` §14.1 names components; some are built under other names (`ErrorBanner` and `FailureBanner` for `AppErrorState`) and some are not built (`AppIconButton`, `AppCard`, `AppProductCard`, `AppLoading`, `AppSkeleton`, `AppScaffold`, `AppDialog`, `PermissionGate`, `NetworkStatusBanner`). The full list: [15-ui.md, section G](test-cases/15-ui.md#g-component-inventory). **Cases:** UI-159.
+`final.md` §14.1 named components; some were built under other names (`ErrorBanner` and `FailureBanner` for `AppErrorState`) and some were not built (none since final.md v2.0). **Settled 2026-11-16 by final.md v2.0 (option A): §14.1 lists the built set only.** Before it, AppIconButton, AppCard, AppProductCard, AppLoading, AppSkeleton, AppScaffold, AppDialog, PermissionGate and NetworkStatusBanner were listed and not built. The full list: [15-ui.md, section G](test-cases/15-ui.md#g-component-inventory). **Cases:** UI-159.
 
 | | Option | Effect |
 |---|---|---|
-| [ ] | A. §14.1 is changed to the built set | The spec lists `ErrorBanner`, `FailureBanner`, `GradientHeader`, `AppLogo`, `PasswordRules`, and the plain Flutter widgets used; nothing is rebuilt |
+| [x] | A. §14.1 is changed to the built set | The spec lists `ErrorBanner`, `FailureBanner`, `GradientHeader`, `AppLogo`, `PasswordRules`, and the plain Flutter widgets used; nothing is rebuilt |
 | [ ] | B. The code follows §14.1 | The missing components are built and the screens moved onto them; renames where only the name differs |
 | [ ] | C. Per component | Decided row by row in section G |
 

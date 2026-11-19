@@ -14,7 +14,7 @@ void main() {
         tester,
         history: true,
         lookupForm: true,
-        tileNames: {'bulk', 'report', 'myReports', 'retailUsers'},
+        tileNames: {'bulk', 'serials', 'report', 'myReports'},
       );
     });
 
@@ -24,7 +24,7 @@ void main() {
         tester,
         history: true,
         lookupForm: true,
-        tileNames: {'bulk', 'report', 'myReports'},
+        tileNames: {'bulk', 'serials', 'report', 'myReports'},
       );
     });
 
@@ -42,7 +42,7 @@ void main() {
         tester,
         history: true,
         lookupForm: true,
-        tileNames: {'bulk'},
+        tileNames: {'bulk', 'serials'},
       );
     });
 
@@ -51,7 +51,7 @@ void main() {
     ) async {
       await startApp(tester, profile: Roles.retailSeller);
       await expectRole(tester, history: true, lookupForm: true, tileNames: {});
-      expect(find.byKey(const Key('verify.scan')), findsOneWidget);
+      expect(find.byKey(const Key('verify.camera')), findsOneWidget);
       expect(find.text('MORE'), findsNothing);
     });
 
@@ -101,7 +101,7 @@ void main() {
       await app.enter(const Key('history.search'), 'MA-2026');
       await app.settleAfter(const Duration(milliseconds: 500));
 
-      await app.tap(tab('Verify'));
+      await app.tap(tab('Check'));
       expect(find.text('Welcome back,'), findsOneWidget);
       await app.tap(tab('History'));
       final search = tester.widget<TextField>(

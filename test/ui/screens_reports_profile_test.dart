@@ -114,7 +114,11 @@ void main() {
           'POST $photosPath': (_) => switch (n++) {
             0 => ok({'n': 1}, status: 201),
             1 => apiError(500, 'internal_error'),
-            _ => apiError(409, 'conflict'),
+            _ => apiError(
+              409,
+              'conflict',
+              message: 'The report has 3 photos already.',
+            ),
           },
         },
       );
@@ -128,7 +132,7 @@ void main() {
       expect(find.text(l10n.reportFiled(1042)), findsOneWidget);
       expect(find.text('Photo 1'), findsOneWidget);
       expect(find.text('Not sent. Tap to send again.'), findsOneWidget);
-      expect(find.text(l10n.reportPhotoRefused), findsOneWidget);
+      expect(find.text(l10n.reportPhotoConflict), findsOneWidget);
       expect(find.text(l10n.reportDone), findsOneWidget);
       await shot('screen_report_filed');
     });
@@ -146,7 +150,7 @@ void main() {
       await app.enter(const Key('report.note'), 'Seal is cut');
       await toEnd(tester, list);
       await app.tap(find.byKey(const Key('report.submit')));
-      expect(find.text(l10n.reportNotFound), findsOneWidget);
+      expect(find.text(l10n.errorNotAvailable), findsOneWidget);
       expect(find.text('Reference: req-rep'), findsOneWidget);
       await shot('screen_report_error');
     });
@@ -201,171 +205,6 @@ void main() {
     });
   });
 
-  group('Retail users', () {
-    Future<FlowApp> openList(
-      WidgetTester tester, {
-      Map<String, Answer> overrides = const {},
-    }) async {
-      final app = await start(
-        tester,
-        profile: Roles.supervisor,
-        overrides: overrides,
-      );
-      await openTile(app, const Key('verify.tool.retailUsers'));
-      return app;
-    }
-
-    Future<FlowApp> openAdd(
-      WidgetTester tester, {
-      Map<String, Answer> overrides = const {},
-    }) async {
-      final app = await openList(tester, overrides: overrides);
-      await app.tap(find.byKey(const Key('retailUsers.add')));
-      return app;
-    }
-
-    Future<void> fill(FlowApp app) async {
-      await app.enter(const Key('addRetail.name'), 'Rahim Store');
-      await app.enter(const Key('addRetail.email'), 'rahim.store@gmail.com');
-      await app.tap(find.byKey(const Key('addRetail.role')));
-      await app.tapText('Retail seller');
-      await app.enter(const Key('addRetail.password'), '1234567890');
-    }
-
-    ScriptedAnswer added({bool? emailed}) => ok({
-      'id': 'new-1',
-      'name': 'Rahim Store',
-      'email': 'rahim.store@gmail.com',
-      'email_sent': emailed,
-    }, status: 201);
-
-    uiTest('TC-UI-121 retail users', (tester, shot) async {
-      await openList(tester);
-      expect(find.byKey(const Key('retailUsers.search')), findsOneWidget);
-      expect(find.text('Rahim Store'), findsOneWidget);
-      expect(find.text('ra***@gmail.com'), findsOneWidget);
-      expect(find.byIcon(LucideIcons.ellipsisVertical), findsWidgets);
-      expect(find.byKey(const Key('retailUsers.add')), findsOneWidget);
-      await shot('screen_retail_users');
-    });
-
-    uiTest('TC-UI-122 retail users: empty', (tester, shot) async {
-      await openList(
-        tester,
-        overrides: {
-          'GET retail-users': always(
-            ok({'retail_users': <Object?>[], 'next_cursor': null}),
-          ),
-        },
-      );
-      expect(find.text(l10n.retailUsersEmpty), findsOneWidget);
-      await shot('screen_retail_users_empty');
-    });
-
-    uiTest('TC-UI-123 email a new first password: confirm', (
-      tester,
-      shot,
-    ) async {
-      final app = await openList(tester);
-      await app.tap(find.byIcon(LucideIcons.ellipsisVertical).first);
-      await app.tapText('Email a new first password');
-      final dialog = find.byType(AlertDialog);
-      expect(dialog, findsOneWidget);
-      expect(
-        find.descendant(of: dialog, matching: find.text(l10n.cancel)),
-        findsOneWidget,
-      );
-      expect(
-        find.descendant(of: dialog, matching: find.text('Email it')),
-        findsOneWidget,
-      );
-      await shot('screen_retail_confirm');
-    });
-
-    uiTest('TC-UI-124 add retail user', (tester, shot) async {
-      await openAdd(tester);
-      for (final key in [
-        'addRetail.name',
-        'addRetail.email',
-        'addRetail.role',
-        'addRetail.password',
-      ]) {
-        expect(find.byKey(Key(key)), findsOneWidget, reason: key);
-      }
-      expect(find.text(l10n.addRetailUserRole), findsWidgets);
-      final toggle = tester.widget<SwitchListTile>(
-        find.byKey(const Key('addRetail.sendEmail')),
-      );
-      expect(toggle.value, isTrue);
-      expect(find.text(l10n.addRetailUserSendEmailOff), findsNothing);
-      await shot('screen_add_retail');
-    });
-
-    uiTest('TC-UI-125 add retail user: switch off', (tester, shot) async {
-      final app = await openAdd(tester);
-      await app.tap(find.byKey(const Key('addRetail.sendEmail')));
-      final note = find.text(l10n.addRetailUserSendEmailOff);
-      expect(note, findsOneWidget);
-      expect(drawnStyle(tester, note).color, AppColors.warning);
-      await shot('screen_add_retail_off');
-    });
-
-    uiTest('TC-UI-126 added: emailed', (tester, shot) async {
-      final app = await openAdd(
-        tester,
-        overrides: {'POST retail-users': always(added(emailed: true))},
-      );
-      await fill(app);
-      await app.tap(find.byKey(const Key('addRetail.submit')));
-      expect(find.text(l10n.addRetailUserDoneTitle('Rahim Store')), findsOne);
-      expect(
-        find.text(l10n.addRetailUserEmailed('rahim.store@gmail.com')),
-        findsOneWidget,
-      );
-      expect(find.text(l10n.addAnother), findsOneWidget);
-      expect(find.byKey(const Key('addRetail.passwordOnce')), findsNothing);
-      await shot('screen_added_emailed');
-    });
-
-    uiTest('TC-UI-127 added: password shown once', (tester, shot) async {
-      final app = await openAdd(
-        tester,
-        overrides: {'POST retail-users': always(added())},
-      );
-      await fill(app);
-      await app.tap(find.byKey(const Key('addRetail.submit')));
-      expect(find.byKey(const Key('addRetail.passwordOnce')), findsOneWidget);
-      expect(find.byTooltip(l10n.copyPassword), findsOneWidget);
-      expect(find.text(l10n.addRetailUserFirstLogin), findsOneWidget);
-      await shot('screen_added_password');
-    });
-
-    uiTest('TC-UI-128 add retail user: no retail role', (tester, shot) async {
-      await openAdd(
-        tester,
-        overrides: {'GET retail-roles': always(ok(<Object?>[]))},
-      );
-      expect(find.text(l10n.addRetailUserNoRoles), findsOneWidget);
-      expect(find.byKey(const Key('addRetail.name')), findsNothing);
-      await shot('screen_add_retail_no_roles');
-    });
-
-    uiTest('TC-UI-129 add retail user: roles failed', (tester, shot) async {
-      await openAdd(
-        tester,
-        overrides: {
-          'GET retail-roles': always(
-            apiError(500, 'internal_error', requestId: 'req-roles'),
-          ),
-        },
-      );
-      expect(find.byType(ErrorBanner), findsOneWidget);
-      expect(find.text('Reference: req-roles'), findsOneWidget);
-      expect(find.text(l10n.retry), findsOneWidget);
-      await shot('screen_add_retail_roles_error');
-    });
-  });
-
   group('Profile', () {
     Future<FlowApp> openProfile(
       WidgetTester tester, {
@@ -415,14 +254,15 @@ void main() {
       // The check counts of the official, asked for once, one check long.
       expect(statCount(tester, l10n.statChecks), '120');
       expect(statCount(tester, l10n.statValid), '80');
-      expect(statCount(tester, l10n.statNotVerified), '10');
+      // 30 warnings + 9 not found + 1 not in a batch: 120 = 80 + 40.
+      expect(statCount(tester, l10n.statNotVerified), '40');
       expect(countRequests(app), hasLength(1));
       expect(
         countRequests(app).single.queryParameters.keys.toSet(),
         {'limit'},
       );
       expect(drawnStyle(tester, find.text('80')).color, AppColors.success);
-      expect(drawnStyle(tester, find.text('10')).color, AppColors.danger);
+      expect(drawnStyle(tester, find.text('40')).color, AppColors.warning);
       expect(find.text(l10n.organisationLabel), findsOneWidget);
       expect(find.text(l10n.changePasswordRow), findsOneWidget);
       // The email fits: the label takes only its own width.
@@ -441,6 +281,41 @@ void main() {
       );
       expect(find.text(l10n.appVersionRow), findsOneWidget);
       expect(find.byKey(const Key('profile.logout')), findsOneWidget);
+    });
+
+    uiTest('TC-UI-181 profile: the password reminder', (tester, shot) async {
+      await openProfile(
+        tester,
+        profile: {...Roles.fieldInspector, 'password_change_pending': true},
+      );
+      final banner = find.byKey(const Key('profile.passwordPending'));
+      expect(banner, findsOneWidget);
+      expect(find.text(l10n.passwordPendingBanner), findsOneWidget);
+      final box =
+          tester.widget<DecoratedBox>(banner).decoration as BoxDecoration;
+      expect(box.color, AppColors.warningBackground);
+      // Under the identity card, above the counts.
+      expect(
+        tester.getRect(banner).top,
+        greaterThan(
+          tester.getRect(find.byKey(const Key('profile.identity'))).bottom,
+        ),
+      );
+      expect(
+        tester.getRect(banner).bottom,
+        lessThan(tester.getRect(find.byKey(const Key('profile.stats'))).top),
+      );
+      expect(
+        find.byKey(const Key('profile.passwordPending.change')),
+        findsOneWidget,
+      );
+      await shot('screen_profile_password_pending');
+    });
+
+    uiTest('TC-UI-182 profile: no reminder when the password is the '
+        "official's own", (tester, _) async {
+      await openProfile(tester);
+      expect(find.byKey(const Key('profile.passwordPending')), findsNothing);
     });
 
     uiTest('TC-UI-175 profile: counts loading', (tester, shot) async {

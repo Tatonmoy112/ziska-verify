@@ -1,8 +1,8 @@
-/// The three ways to look an item up (final.md Section 13.1.1).
+/// The ways to look an item up: serial or QR (final.md Section 13.1;
+/// backend D62: never the hidden code).
 enum LookupWay {
   serial('serial'),
-  qr('qr'),
-  hiddenCode('hidden_code')
+  qr('qr')
   ;
 
   const LookupWay(this.wire);
@@ -35,13 +35,10 @@ class CodeFormat {
 
 class InputFormats {
   const InputFormats({
-    required this.hiddenCodes,
     required this.serialMaxDigits,
     required this.qr,
   });
 
-  /// Every hidden code format of this client (there can be several).
-  final List<CodeFormat> hiddenCodes;
   final int serialMaxDigits;
   final CodeFormat qr;
 }
@@ -87,16 +84,13 @@ class ItemDetails {
 }
 
 class CheckCount {
-  const CheckCount({required this.thisCheck, this.lastAt, this.by});
+  const CheckCount({required this.thisCheck, this.lastAt});
 
   /// This check's number for the item (1 for a first check).
   final int thisCheck;
 
   /// The check before, `null` on a first check.
   final DateTime? lastAt;
-
-  /// Earlier officials' names; only for `history:all`.
-  final List<String>? by;
 }
 
 /// A lookup's answer (`POST lookups`).

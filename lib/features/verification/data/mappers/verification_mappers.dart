@@ -1,13 +1,9 @@
 import 'package:ziska_verify/features/verification/data/models/verification_dtos.dart';
-import 'package:ziska_verify/features/verification/domain/entities/bulk.dart';
 import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
+import 'package:ziska_verify/features/verification/domain/entities/scan_session.dart';
 
 extension FormatsMapper on FormatsDto {
   InputFormats toEntity() => InputFormats(
-    hiddenCodes: [
-      for (final f in hiddenCode)
-        CodeFormat(length: f.length, characters: f.characters),
-    ],
     serialMaxDigits: serial.maxDigits,
     qr: CodeFormat(length: qr.length, characters: qr.characters),
   );
@@ -25,7 +21,6 @@ extension LookupResultMapper on LookupResultDto {
             lastAt: count!.lastAt == null
                 ? null
                 : DateTime.tryParse(count!.lastAt!)?.toUtc(),
-            by: count!.by,
           ),
     item: item == null
         ? null
@@ -68,20 +63,39 @@ LookupReason reasonFrom(String value) => switch (value) {
 DateTime? _date(String? value) =>
     value == null ? null : DateTime.tryParse(value);
 
-extension BulkSummaryMapper on BulkSummaryDto {
-  BulkSummary toEntity() {
-    final reasons = <LookupReason, int>{};
-    for (final MapEntry(:key, :value) in byReason.entries) {
-      final reason = reasonFrom(key);
-      reasons[reason] = (reasons[reason] ?? 0) + value;
-    }
-    return BulkSummary(
-      total: total,
+extension SessionTotalsMapper on SessionTotalsDto {
+  SessionTotals toEntity() => SessionTotals(
+    id: id,
+    scanned: scanned,
+    valid: valid,
+    warning: warning,
+    notFound: notFound,
+    unassigned: unassigned,
+    left: left,
+  );
+}
+
+extension SessionSummaryMapper on SessionSummaryDto {
+  ScanSessionSummary toEntity() => ScanSessionSummary(
+    totals: SessionTotals(
+      id: id,
+      scanned: scanned,
       valid: valid,
       warning: warning,
-      byReason: reasons,
       notFound: notFound,
       unassigned: unassigned,
-    );
-  }
+    ),
+    kind: switch (kind) {
+      'qr' => SessionKind.qr,
+      'serial' => SessionKind.serial,
+      _ => SessionKind.unknown,
+    },
+    status: switch (status) {
+      'open' => ScanStatus.open,
+      'ended' => ScanStatus.ended,
+      _ => ScanStatus.unknown,
+    },
+    startedAt: DateTime.parse(startedAt).toUtc(),
+    lastScanAt: DateTime.parse(lastScanAt).toUtc(),
+  );
 }

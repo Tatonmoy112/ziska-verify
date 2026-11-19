@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ziska_verify/core/errors/result.dart';
 import 'package:ziska_verify/core/pagination/page_request.dart';
 import 'package:ziska_verify/core/pagination/paginated_state.dart';
+import 'package:ziska_verify/core/pagination/wait_timer.dart';
 import 'package:ziska_verify/core/utils/event_transformers.dart';
 import 'package:ziska_verify/features/history/domain/entities/check.dart';
 import 'package:ziska_verify/features/history/domain/usecases/get_checks.dart';
@@ -120,11 +123,30 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
   /// The query (without its result) that [HistoryState.chipTotals] count.
   CheckQuery? _chipBase;
 
+  /// A load asked for during a `429` wait, sent when the wait ends.
+  final _deferred = WaitTimer();
+
+  @override
+  Future<void> close() {
+    _deferred.cancel();
+    return super.close();
+  }
+
   Future<void> _loadFirst(
     CheckQuery query,
     Emitter<HistoryState> emit, {
     bool keepItems = false,
   }) async {
+    // A 429 is counting down (guide section 1): the filters follow the tap,
+    // and the list is asked for once, when the wait ends.
+    final wait = state.list.retryAt;
+    if (state.list.isWaiting && wait != null) {
+      emit(state.copyWith(query: query));
+      _deferred.schedule(wait, () {
+        if (!isClosed) add(const HistoryRetried());
+      });
+      return;
+    }
     final generation = ++_generation;
     final base = query.copyWith(result: null);
     // The chip counts still hold when only the result changed; a refresh

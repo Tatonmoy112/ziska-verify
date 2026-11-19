@@ -5,7 +5,6 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:ziska_verify/core/services/scanner/scanner_service.dart';
 import 'package:ziska_verify/features/history/presentation/widgets/check_tile.dart';
 import 'package:ziska_verify/features/verification/presentation/screens/verifying_view.dart';
-import 'package:ziska_verify/features/verification/presentation/widgets/bulk_results_view.dart';
 import 'package:ziska_verify/features/verification/presentation/widgets/item_details_card.dart';
 import 'package:ziska_verify/features/verification/presentation/widgets/product_picture_card.dart';
 import 'package:ziska_verify/features/verification/presentation/widgets/result_entry_cards.dart';
@@ -120,42 +119,31 @@ void main() {
       expect(find.byIcon(LucideIcons.user), findsWidgets);
       expect(find.text(l10n.verifyItemTitle), findsOneWidget);
       expect(find.byType(SegmentedButton<Object?>), findsNothing);
-      expect(find.text(l10n.waySerial), findsOneWidget);
-      expect(find.text(l10n.wayHiddenCode), findsOneWidget);
+      expect(find.text(l10n.typeSerialLabel.toUpperCase()), findsOneWidget);
+      expect(find.text(l10n.wayHiddenCode), findsNothing);
       expect(input, findsOneWidget);
-      expect(find.text(l10n.verifyButtonLookup), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('verify.submit')),
+          matching: find.text(l10n.verifyButtonLookup),
+        ),
+        findsOneWidget,
+      );
       expect(find.text(l10n.clear), findsOneWidget);
-      expect(find.byKey(const Key('verify.scan')), findsOneWidget);
-      // The Figma's decoration: a faint honeycomb in the header and a large
-      // QR corner on the Scan card, both hidden from TalkBack.
+      // The camera is the tab's first thing: no card to open it.
+      expect(find.byKey(const Key('verify.camera')), findsOneWidget);
+      // The Figma's decoration: a faint honeycomb in the header.
       final pattern = tester.widget<PatternBackground>(
         find.byKey(const Key('verify.header.pattern')),
       );
       expect(pattern.kind, PatternKind.hexagons);
       expect(pattern.color, AppColors.onPrimaryFaint);
-      final motif = find.byKey(const Key('verify.scan.motif'));
-      expect(
-        find.ancestor(
-          of: motif,
-          matching: find.byKey(const Key('verify.scan')),
-        ),
-        findsOneWidget,
-      );
-      expect(
-        find.ancestor(of: motif, matching: find.byType(ExcludeSemantics)),
-        findsWidgets,
-      );
       // The serial's # and the hidden code's tag (the Figma "Label ID").
       Finder fieldIcon(IconData icon) => find.descendant(
         of: find.byKey(const Key('verify.input')),
         matching: find.byIcon(icon),
       );
       expect(fieldIcon(LucideIcons.hash), findsOneWidget);
-      await tester.tap(find.text(l10n.wayHiddenCode));
-      await tester.pumpAndSettle();
-      expect(fieldIcon(LucideIcons.tag), findsOneWidget);
-      await tester.tap(find.text(l10n.waySerial));
-      await tester.pumpAndSettle();
       await shot('screen_verify_all');
       await expectRole(
         tester,
@@ -171,7 +159,7 @@ void main() {
       expect(find.byType(AppEmptyState), findsOneWidget);
       expect(find.text(l10n.noFeaturesTitle), findsOneWidget);
       expect(input, findsNothing);
-      expect(find.byKey(const Key('verify.scan')), findsNothing);
+      expect(find.byKey(const Key('verify.camera')), findsNothing);
       await shot('screen_verify_none');
     });
 
@@ -255,74 +243,69 @@ void main() {
   });
 
   group('Scanner', () {
-    uiTest('TC-UI-094 scanner', (tester, shot) async {
-      final app = await start(tester);
-      await app.tap(find.byKey(const Key('verify.scan')));
+    uiTest('TC-UI-094 the Check tab opens on the camera', (
+      tester,
+      shot,
+    ) async {
+      await start(tester);
       expect(find.byKey(const Key('fake.camera')), findsOneWidget);
-      expect(find.text(l10n.scanQrTitle), findsOneWidget);
-      expect(
-        find.byTooltip(const DefaultMaterialLocalizations().backButtonTooltip),
-        findsOneWidget,
-      );
-      // Hint above the frame, status below it, the bar at the bottom.
+      final camera = tester.getRect(find.byKey(const Key('verify.camera')));
+      final title = tester.getRect(find.byKey(const Key('verify.cameraTitle')));
+      // Title and hint above the frame, the status below it, inside the
+      // camera; the serial field under the camera.
       final hint = tester.getRect(find.byKey(const Key('scanner.hint')));
       final frame = tester.getRect(find.byKey(const Key('scanner.frame')));
       final status = tester.getRect(find.byKey(const Key('scanner.status')));
-      final bar = tester.getRect(
-        find.byKey(const Key('scanner.enterManually')),
-      );
+      expect(find.text(l10n.verifyItemTitle), findsOneWidget);
       expect(find.text(l10n.scanFrameHint.toUpperCase()), findsOneWidget);
       expect(find.text(l10n.scanLooking), findsOneWidget);
+      expect(title.bottom, lessThan(hint.top + 0.01));
       expect(hint.bottom, lessThan(frame.top));
       expect(status.top, greaterThan(frame.bottom));
-      expect(bar.top, greaterThan(status.bottom));
-      expect(frame.width, frame.height);
+      expect(status.bottom, lessThanOrEqualTo(camera.bottom));
+      expect(frame.width, moreOrLessEquals(frame.height));
       expect(frame.center.dx, moreOrLessEquals(phone.width / 2));
-      // One torch, in the bottom bar.
-      expect(find.byTooltip(l10n.torch), findsOneWidget);
-      expect(
-        tester.getRect(find.byTooltip(l10n.torch)).top,
-        greaterThan(status.bottom),
-      );
-      await shot('screen_scanner');
+      // One torch, on the camera.
+      final torch = tester.getRect(find.byKey(const Key('scanner.torch')));
+      expect(torch.top, greaterThanOrEqualTo(camera.top));
+      expect(torch.bottom, lessThan(frame.top));
+      await shot('screen_check_camera');
     });
 
-    uiTest('TC-UI-095 scanner: camera refused', (tester, shot) async {
+    uiTest('TC-UI-095 the Check tab: camera refused', (tester, shot) async {
       final app = await start(tester);
       app.scanner.problem = ScannerProblem.permissionDenied;
-      await app.tap(find.byKey(const Key('verify.scan')));
+      // The camera is drawn again (another tab and back).
+      await app.tap(tab('History'));
+      await app.tap(tab('Check'));
       expect(find.text(l10n.scannerPermissionDenied), findsOneWidget);
-      expect(find.text(l10n.openSettings), findsOneWidget);
-      // Nothing is drawn over the message: no frame, no camera hint.
+      expect(find.byKey(const Key('scanner.openSettings')), findsOneWidget);
+      // Nothing is drawn over the message: no frame, no hint, no torch.
       expect(find.byKey(const Key('scanner.hint')), findsNothing);
       expect(find.byKey(const Key('scanner.frame')), findsNothing);
       expect(find.byKey(const Key('scanner.status')), findsNothing);
-      // Typing is still one tap away; there is no torch without a camera.
-      expect(find.byKey(const Key('scanner.enterManually')), findsOneWidget);
-      expect(find.byTooltip(l10n.torch), findsNothing);
-      await shot('screen_scanner_denied');
+      expect(find.byKey(const Key('scanner.torch')), findsNothing);
+      // Typing a serial still works, right under it.
+      expect(find.byKey(const Key('verify.input')), findsOneWidget);
+      await shot('screen_check_camera_denied');
     });
 
-    uiTest('TC-UI-172 scanner: enter manually', (tester, _) async {
-      final app = await start(tester);
-      await app.tap(find.byKey(const Key('verify.scan')));
-      await app.tap(find.byKey(const Key('scanner.enterManually')));
-      expect(find.byKey(const Key('fake.camera')), findsNothing);
-      final field = tester.widget<EditableText>(
-        find.descendant(
-          of: find.byKey(const Key('verify.input')),
-          matching: find.byType(EditableText),
-        ),
-      );
-      expect(field.focusNode.hasFocus, isTrue);
+    uiTest('TC-UI-172 the serial field is under the camera', (
+      tester,
+      _,
+    ) async {
+      await start(tester);
+      final camera = tester.getRect(find.byKey(const Key('verify.camera')));
+      final field = tester.getRect(find.byKey(const Key('verify.input')));
+      expect(field.top, greaterThan(camera.bottom));
+      expect(find.text(l10n.typeSerialLabel.toUpperCase()), findsOneWidget);
     });
 
-    uiTest('TC-UI-173 scanner: the torch', (tester, _) async {
+    uiTest('TC-UI-173 the camera: the torch', (tester, _) async {
       final app = await start(tester);
-      await app.tap(find.byKey(const Key('verify.scan')));
-      await app.tap(find.byTooltip(l10n.torch));
+      await app.tap(find.byKey(const Key('scanner.torch')));
       expect(app.scanner.session!.torchToggles, 1);
-      await app.tap(find.byTooltip(l10n.torch));
+      await app.tap(find.byKey(const Key('scanner.torch')));
       expect(app.scanner.session!.torchToggles, 2);
     });
 
@@ -406,7 +389,7 @@ void main() {
       expect(find.text(l10n.reasonCheckedBefore.toUpperCase()), findsOneWidget);
       expect(find.byType(ReasonChip), findsNWidgets(4));
       expect(
-        find.text(l10n.detailsTrackingTitle.toUpperCase()),
+        find.text(l10n.detailsProductTitle.toUpperCase()),
         findsOneWidget,
       );
       expect(find.byType(ItemDetailsCard), findsOneWidget);
@@ -453,7 +436,7 @@ void main() {
         scrollable: find.byType(Scrollable).first,
       );
       expect(
-        find.text(l10n.detailsTrackingTitle.toUpperCase()),
+        find.text(l10n.detailsProductTitle.toUpperCase()),
         findsOneWidget,
       );
       expect(find.text(l10n.checkNumber(2)), findsOneWidget);
@@ -626,19 +609,8 @@ void main() {
       expectVisible(find.byKey(const Key('result.backToVerify')), 'not found');
       await shot('screen_result_not_found_actions');
 
-      // Request access: a grey screen.
-      var app = await startApp(tester, loggedIn: false);
-      await atOneX(tester);
-      await app.tapText(l10n.requestAccessButton);
-      await tester.scrollUntilVisible(
-        tonal,
-        200,
-        scrollable: find.byType(Scrollable).last,
-      );
-      expectVisible(tonal, 'request access');
-
       // Check your email: a white screen.
-      app = await startApp(tester, loggedIn: false);
+      final app = await startApp(tester, loggedIn: false);
       await atOneX(tester);
       await logInToCode(app);
       expectVisible(tonal, 'check your email');
@@ -654,156 +626,6 @@ void main() {
       expect(find.byKey(const Key('result.report')), findsNothing);
       expect(find.byType(ItemDetailsCard), findsOneWidget);
       expect(find.text(l10n.verifyAnother), findsOneWidget);
-    });
-  });
-
-  group('Bulk lookup', () {
-    Map<String, Object?> row(String result, {List<String> reasons = const []}) {
-      final full =
-          (lookup(result, reasons: reasons).body as Map)['data']
-              as Map<String, Object?>;
-      return full;
-    }
-
-    ScriptedAnswer bulk(List<Map<String, Object?>> rows) {
-      int count(String r) => rows.where((x) => x['result'] == r).length;
-      return ok({
-        'summary': {
-          'total': rows.length,
-          'valid': count('valid'),
-          'warning': count('warning'),
-          'by_reason': {
-            'checked_before': rows
-                .where(
-                  (x) => (x['reasons']! as List).contains('checked_before'),
-                )
-                .length,
-          },
-          'not_found': count('not_found'),
-          'unassigned': count('unassigned'),
-        },
-        'results': rows,
-      });
-    }
-
-    final threeRows = bulk([
-      row('valid'),
-      row('warning', reasons: const ['checked_before']),
-      row('not_found'),
-    ]);
-
-    Future<FlowApp> openBulk(
-      WidgetTester tester, {
-      Map<String, Answer> overrides = const {},
-    }) async {
-      final app = await start(tester, overrides: overrides);
-      await app.tap(find.byKey(const Key('verify.tool.bulk')));
-      return app;
-    }
-
-    Future<void> addThree(FlowApp app) async {
-      for (final s in ['1000001', '1000002', '1000003']) {
-        await app.enter(const Key('bulk.input'), s);
-        await app.tap(find.byKey(const Key('bulk.add')));
-      }
-    }
-
-    uiTest('TC-UI-101 bulk lookup: empty', (tester, shot) async {
-      final app = await openBulk(tester);
-      expect(find.text(l10n.waySerial), findsOneWidget);
-      expect(find.byKey(const Key('bulk.input')), findsOneWidget);
-      expect(find.byKey(const Key('bulk.add')), findsOneWidget);
-      expect(find.byKey(const Key('bulk.scan')), findsOneWidget);
-      expect(find.text(l10n.bulkEmpty), findsOneWidget);
-      expect(find.text(l10n.bulkCount(0, 500)), findsWidgets);
-      expect(app.enabled(const Key('bulk.send')), isFalse);
-      await shot('screen_bulk_empty');
-    });
-
-    uiTest('TC-UI-102 bulk lookup: a list', (tester, shot) async {
-      final app = await openBulk(tester);
-      await addThree(app);
-      expect(find.text(l10n.bulkCount(3, 500)), findsWidgets);
-      expect(find.text(l10n.bulkClearList), findsOneWidget);
-      for (final s in ['1000001', '1000002', '1000003']) {
-        expect(find.text(s), findsOneWidget);
-      }
-      expect(find.text(l10n.bulkSend(3)), findsOneWidget);
-      await shot('screen_bulk_list');
-    });
-
-    uiTest('TC-UI-103 bulk lookup: sending', (tester, shot) async {
-      final app = await openBulk(
-        tester,
-        overrides: {
-          'POST lookups/bulk': slow(
-            always(threeRows),
-            const Duration(seconds: 3),
-          ),
-        },
-      );
-      await addThree(app);
-      final semantics = tester.ensureSemantics();
-      await tester.tap(find.byKey(const Key('bulk.send')));
-      await frames(tester);
-      // The send bar shows a spinner; a screen reader hears what it does.
-      expect(find.bySemanticsLabel(l10n.bulkSending(3)), findsOneWidget);
-      expect(loading(), isTrue);
-      semantics.dispose();
-      await shot('screen_bulk_sending');
-      await finish(tester);
-      expect(find.byType(BulkSummaryCard), findsOneWidget);
-    });
-
-    uiTest('TC-UI-104 bulk lookup: results', (tester, shot) async {
-      final app = await openBulk(
-        tester,
-        overrides: {'POST lookups/bulk': always(threeRows)},
-      );
-      await addThree(app);
-      await app.tap(find.byKey(const Key('bulk.send')));
-      expect(find.byType(BulkSummaryCard), findsOneWidget);
-      expect(find.byKey(const Key('bulk.onlyAttention')), findsOneWidget);
-      expect(find.text(l10n.bulkNewList), findsOneWidget);
-      for (final t in ['1. 1000001', '2. 1000002', '3. 1000003']) {
-        expect(find.text(t), findsOneWidget, reason: t);
-      }
-      await shot('screen_bulk_results');
-    });
-
-    uiTest('TC-UI-105 bulk lookup: only items needing attention', (
-      tester,
-      shot,
-    ) async {
-      final app = await openBulk(
-        tester,
-        overrides: {'POST lookups/bulk': always(threeRows)},
-      );
-      await addThree(app);
-      await app.tap(find.byKey(const Key('bulk.send')));
-      await app.tap(find.byKey(const Key('bulk.onlyAttention')));
-      expect(find.text('1. 1000001'), findsNothing);
-      expect(find.text('2. 1000002'), findsOneWidget);
-      expect(find.text('3. 1000003'), findsOneWidget);
-      await shot('screen_bulk_attention');
-    });
-
-    uiTest('TC-UI-106 bulk lookup: nothing checked', (tester, shot) async {
-      final app = await openBulk(
-        tester,
-        overrides: {
-          'POST lookups/bulk': always(
-            apiError(503, 'service_unavailable', requestId: 'req-bulk'),
-          ),
-        },
-      );
-      await addThree(app);
-      await app.tap(find.byKey(const Key('bulk.send')));
-      expect(find.textContaining(l10n.bulkNothingChecked), findsOneWidget);
-      expect(find.text(l10n.bulkSendAgain), findsOneWidget);
-      // The list is kept, ready to send again.
-      expect(find.text('1000001'), findsOneWidget);
-      await shot('screen_bulk_503');
     });
   });
 
@@ -897,7 +719,8 @@ void main() {
       );
       await openHistory(app);
       expect(find.text(l10n.historyEmptyTitle), findsOneWidget);
-      expect(find.text(l10n.historyEmptyBody), findsOneWidget);
+      // No filter: the official has no check yet (§14.2).
+      expect(find.text(l10n.historyNoChecksYet), findsOneWidget);
       await shot('screen_history_empty');
     });
 
@@ -928,7 +751,6 @@ void main() {
         l10n.wayQr,
         l10n.waySerial,
         l10n.historyPickDates,
-        l10n.historyScopeAll,
         l10n.historyApply,
       ]) {
         expect(find.text(t), findsWidgets, reason: t);
@@ -953,16 +775,6 @@ void main() {
       expect(find.text('01'), findsOneWidget);
       expect(find.text(l10n.historyCheckCount(120)), findsOneWidget);
       await shot('screen_history_tracking');
-    });
-
-    uiTest("TC-UI-113 history: everyone's checks", (tester, shot) async {
-      final app = await start(tester, profile: Roles.supervisor);
-      await openHistory(app);
-      await app.tap(find.byKey(const Key('history.filters')));
-      await app.tap(find.byKey(const Key('history.scopeAll')));
-      await app.tapText(l10n.historyApply);
-      expect(find.textContaining(l10n.historyBy('Asha Rao')), findsWidgets);
-      await shot('screen_history_all');
     });
   });
 }

@@ -11,15 +11,14 @@ import 'package:ziska_verify/shared/design_system/tokens/app_spacing.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_typography.dart';
 import 'package:ziska_verify/shared/widgets/label_value_row.dart';
 
-/// The name of a lookup way ("Serial", "Hidden code", "QR code").
+/// The name of a lookup way ("Serial", "QR code").
 String wayName(LookupWay way, AppLocalizations l10n) => switch (way) {
   LookupWay.serial => l10n.waySerial,
-  LookupWay.hiddenCode => l10n.wayHiddenCode,
   LookupWay.qr => l10n.wayQr,
 };
 
 /// **WHAT YOU ENTERED** for a result without an item (final.md Section
-/// 13.1.4, decision 49): the way and the value (a hidden code only masked),
+/// 13.1.4, decision 49): the submitted serial/QR value,
 /// the check time in Bangladesh time, the result, and the reference.
 class EnteredCard extends StatelessWidget {
   const EnteredCard({required this.view, super.key});
@@ -72,7 +71,7 @@ class EnteredCard extends StatelessWidget {
 
 /// **HINTS** for a `not_found` result, built from `GET formats` (final.md
 /// Section 13.1.4; backend D41: no fixed lengths): the serial's digits and
-/// length, each hidden code length, scratching the panel fully, and
+/// length, and
 /// scanning the QR code when it was not scanned.
 class HintsCard extends StatelessWidget {
   const HintsCard({required this.way, this.formats, super.key});
@@ -87,23 +86,8 @@ class HintsCard extends StatelessWidget {
     InputFormats? formats,
   ) {
     final f = formats;
-    final lengths = f == null
-        ? <int>[]
-        : ({for (final c in f.hiddenCodes) c.length}.toList()..sort());
-    String joined() {
-      final words = [for (final n in lengths) '$n'];
-      return words.length == 1
-          ? words.single
-          : l10n.lengthsOr(
-              words.sublist(0, words.length - 1).join(', '),
-              words.last,
-            );
-    }
-
     return [
       if (f != null) l10n.inputWrongSerial(f.serialMaxDigits),
-      if (lengths.isNotEmpty) l10n.hintHiddenCodeLength(joined()),
-      l10n.hintScratch,
       if (way != LookupWay.qr) l10n.hintScanQr,
     ];
   }

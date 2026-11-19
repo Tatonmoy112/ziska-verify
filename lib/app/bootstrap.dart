@@ -9,6 +9,9 @@ import 'package:ziska_verify/app/app.dart';
 import 'package:ziska_verify/app/config/app_config.dart';
 import 'package:ziska_verify/core/network/api_client.dart';
 import 'package:ziska_verify/core/network/auth_interceptor.dart';
+import 'package:ziska_verify/core/network/bodiless_request_interceptor.dart';
+import 'package:ziska_verify/core/network/demo/password_later_demo.dart';
+import 'package:ziska_verify/core/network/demo/postman_mock_routing.dart';
 import 'package:ziska_verify/core/network/logging_interceptor.dart';
 import 'package:ziska_verify/core/services/device/app_info_service.dart';
 import 'package:ziska_verify/core/services/device/phone_id_service.dart';
@@ -25,9 +28,13 @@ import 'package:ziska_verify/core/services/session/forbidden_signal.dart';
 import 'package:ziska_verify/core/services/session/session_service.dart';
 import 'package:ziska_verify/core/services/storage/flutter_secure_storage_service.dart';
 import 'package:ziska_verify/core/services/storage/secure_storage_service.dart';
+import 'package:ziska_verify/features/authentication/data/repositories/access_request_repository_impl.dart';
 import 'package:ziska_verify/features/authentication/data/repositories/auth_repository_impl.dart';
+import 'package:ziska_verify/features/authentication/data/services/access_request_api_service.dart';
 import 'package:ziska_verify/features/authentication/data/services/auth_api_service.dart';
+import 'package:ziska_verify/features/authentication/domain/repositories/access_request_repository.dart';
 import 'package:ziska_verify/features/authentication/domain/repositories/auth_repository.dart';
+import 'package:ziska_verify/features/authentication/domain/usecases/access_request_usecases.dart';
 import 'package:ziska_verify/features/authentication/domain/usecases/auth_usecases.dart';
 import 'package:ziska_verify/features/history/data/repositories/history_repository_impl.dart';
 import 'package:ziska_verify/features/history/data/services/history_api_service.dart';
@@ -79,10 +86,21 @@ Future<void> bootstrap() async {
   registerCore(config: config, crash: crash, logger: logger);
   registerFeatures();
 
-  await locator<PhoneIdService>().getOrCreate();
-  await locator<SessionService>().restore();
+  await prepareSession();
 
   runApp(App(locator: locator));
+}
+
+/// Makes the phone ID and restores the login before the first screen. The
+/// app always starts: a phone ID that cannot be made now is made at the
+/// login, and unreadable passes start at Login (final.md Section 6.1).
+Future<void> prepareSession() async {
+  try {
+    await locator<PhoneIdService>().getOrCreate();
+  } on Object catch (e) {
+    locator<LoggerService>().warning('phone ID not ready: ${e.runtimeType}');
+  }
+  await locator<SessionService>().restore();
 }
 
 /// Registers the core services. Feature registrations are added per build
@@ -97,8 +115,19 @@ void registerCore({
   HttpClientAdapter? httpAdapter,
 }) {
   final secureStorage = storage ?? FlutterSecureStorageService();
+  // Mock build only, until the backend ships `me/password/later`: plays its
+  // answers on both clients (renewals go through `refreshDio`).
+  final demo = config.flavor == AppFlavor.mock && config.demoPasswordLater
+      ? PasswordLaterDemo(logger)
+      : null;
+  // Mock build only: picks the Postman mock's examples, on both clients
+  // (docs/postman-mock-setup.md).
+  final mockRouting =
+      config.flavor == AppFlavor.mock && config.postmanMockRouting
+      ? PostmanMockRouting()
+      : null;
   final refreshDio = Dio(DioFactory.options(config.apiRoot))
-    ..interceptors.add(LoggingInterceptor(logger));
+    ..interceptors.addAll([?demo, ?mockRouting, LoggingInterceptor(logger)]);
   final session = DioSessionService(
     storage: secureStorage,
     refreshDio: refreshDio,
@@ -111,6 +140,9 @@ void registerCore({
   }
   final forbidden = ForbiddenSignal();
   dio.interceptors.addAll([
+    const BodilessRequestInterceptor(),
+    ?demo,
+    ?mockRouting,
     AuthInterceptor(session: session, dio: dio, onForbidden: forbidden.raise),
     LoggingInterceptor(logger),
   ]);
@@ -150,6 +182,15 @@ void registerFeatures() {
       () => ProfileRepositoryImpl(locator(), locator()),
     )
     ..registerFactory(() => GetProfile(locator()))
+    ..registerLazySingleton<AccessRequestApiService>(
+      () => AccessRequestApiService(locator()),
+    )
+    ..registerLazySingleton<AccessRequestRepository>(
+      () => AccessRequestRepositoryImpl(locator()),
+    )
+    ..registerFactory(() => GetRequestableRoles(locator()))
+    ..registerFactory(() => SendAccessCode(locator()))
+    ..registerFactory(() => SubmitAccessRequest(locator()))
     // Authentication
     ..registerLazySingleton<AuthApiService>(
       () => DioAuthApiService(locator()),
@@ -167,6 +208,7 @@ void registerFeatures() {
     ..registerFactory(() => ResendCode(locator()))
     ..registerFactory(() => CancelCode(locator()))
     ..registerFactory(() => ChangePassword(locator()))
+    ..registerFactory(() => PostponePasswordChange(locator()))
     ..registerFactory(() => RequestPasswordReset(locator()))
     ..registerFactory(() => ResetPassword(locator()))
     ..registerFactory(() => Logout(locator()))
@@ -179,7 +221,7 @@ void registerFeatures() {
     )
     ..registerFactory(() => GetFormats(locator()))
     ..registerFactory(() => LookupItem(locator()))
-    ..registerFactory(() => BulkLookup(locator()))
+    ..registerFactory(() => GetSession(locator()))
     // History
     ..registerLazySingleton<HistoryApiService>(
       () => DioHistoryApiService(locator()),
@@ -205,8 +247,5 @@ void registerFeatures() {
     ..registerLazySingleton<RetailUserRepository>(
       () => RetailUserRepositoryImpl(locator()),
     )
-    ..registerFactory(() => SearchRetailUsers(locator()))
-    ..registerFactory(() => GetRetailRoles(locator()))
-    ..registerFactory(() => AddRetailUser(locator()))
-    ..registerFactory(() => EmailNewFirstPassword(locator()));
+    ..registerFactory(() => SearchRetailUsers(locator()));
 }

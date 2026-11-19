@@ -1,3 +1,6 @@
+import 'dart:io' show HttpDate;
+
+import 'package:clock/clock.dart';
 import 'package:dio/dio.dart';
 import 'package:ziska_verify/core/errors/app_exception.dart';
 
@@ -10,14 +13,18 @@ class ErrorMapper {
     switch (e.type) {
       case DioExceptionType.cancel:
         return const RequestCancelledException();
+      // No connection was made: the request never reached a server.
       case DioExceptionType.connectionTimeout:
+      case DioExceptionType.connectionError:
+        return const NetworkException(message: NetworkException.notSent);
+      // Sent, but the answer was lost: it may have been recorded.
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
       case DioExceptionType.transformTimeout:
-      case DioExceptionType.connectionError:
         return const NetworkException();
+      // The secure connection was refused before anything was sent.
       case DioExceptionType.badCertificate:
-        return const NetworkException(message: 'bad_certificate');
+        return const NetworkException(message: NetworkException.notSent);
       case DioExceptionType.badResponse:
       case DioExceptionType.unknown:
         final response = e.response;
@@ -52,6 +59,15 @@ class ErrorMapper {
 
     final s = statusCode;
     switch (code) {
+      case 'session_full':
+      case 'session_ended':
+      case 'session_not_yours':
+        return ScanSessionException(
+          statusCode: s,
+          code: code,
+          message: message,
+          requestId: requestId,
+        );
       case 'validation_failed':
         return ValidationException(
           statusCode: s,
@@ -142,6 +158,30 @@ class ErrorMapper {
         requestId: requestId,
       );
     }
+    // Not our envelope (a proxy or gateway page): the status still says
+    // what happened (guide section 1 table).
+    if (code == null) {
+      switch (s) {
+        case 400 || 413 || 415:
+          return ValidationException(
+            statusCode: s,
+            message: message,
+            requestId: requestId,
+          );
+        case 403:
+          return ForbiddenException(
+            statusCode: s,
+            message: message,
+            requestId: requestId,
+          );
+        case 404:
+          return NotFoundException(
+            statusCode: s,
+            message: message,
+            requestId: requestId,
+          );
+      }
+    }
     if (s == 503) {
       return ServiceUnavailableException(
         statusCode: s,
@@ -158,10 +198,19 @@ class ErrorMapper {
     );
   }
 
-  /// `Retry-After` in seconds; `null` when missing or not a whole number.
+  /// `Retry-After` in seconds, or as an HTTP date still to come (counted
+  /// from now); `null` when missing, unreadable or already past.
   static Duration? parseRetryAfter(String? header) {
-    final seconds = int.tryParse(header?.trim() ?? '');
-    if (seconds == null || seconds < 0) return null;
-    return Duration(seconds: seconds);
+    final text = header?.trim() ?? '';
+    final seconds = int.tryParse(text);
+    if (seconds != null) {
+      return seconds < 0 ? null : Duration(seconds: seconds);
+    }
+    try {
+      final left = HttpDate.parse(text).difference(clock.now().toUtc());
+      return left > Duration.zero ? left : null;
+    } on Object {
+      return null;
+    }
   }
 }

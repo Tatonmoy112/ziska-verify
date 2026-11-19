@@ -36,5 +36,6 @@ extension CheckMapper on CheckDto {
     serial: serial,
     product: product,
     batch: batch,
+    sessionId: sessionId,
   );
 }

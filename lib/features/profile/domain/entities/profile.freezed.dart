@@ -14,7 +14,10 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Profile {
 
- String get id; String get name; String get email; String get role; Set<String> get permissions; bool get mustChangePassword; String? get organisation; String? get supportEmail; String? get supportPhone;
+ String get id; String get name; String get email; String get role; Set<String> get permissions; bool get mustChangePassword;/// With [mustChangePassword]: the official may choose **Not now**.
+ bool get passwordChangeSkippable;/// The password is still the one someone else set: Profile shows a
+/// reminder (final.md Section 13.7).
+ bool get passwordChangePending; String? get organisation; String? get supportEmail; String? get supportPhone;
 /// Create a copy of Profile
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +28,16 @@ $ProfileCopyWith<Profile> get copyWith => _$ProfileCopyWithImpl<Profile>(this as
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Profile&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.email, email) || other.email == email)&&(identical(other.role, role) || other.role == role)&&const DeepCollectionEquality().equals(other.permissions, permissions)&&(identical(other.mustChangePassword, mustChangePassword) || other.mustChangePassword == mustChangePassword)&&(identical(other.organisation, organisation) || other.organisation == organisation)&&(identical(other.supportEmail, supportEmail) || other.supportEmail == supportEmail)&&(identical(other.supportPhone, supportPhone) || other.supportPhone == supportPhone));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Profile&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.email, email) || other.email == email)&&(identical(other.role, role) || other.role == role)&&const DeepCollectionEquality().equals(other.permissions, permissions)&&(identical(other.mustChangePassword, mustChangePassword) || other.mustChangePassword == mustChangePassword)&&(identical(other.passwordChangeSkippable, passwordChangeSkippable) || other.passwordChangeSkippable == passwordChangeSkippable)&&(identical(other.passwordChangePending, passwordChangePending) || other.passwordChangePending == passwordChangePending)&&(identical(other.organisation, organisation) || other.organisation == organisation)&&(identical(other.supportEmail, supportEmail) || other.supportEmail == supportEmail)&&(identical(other.supportPhone, supportPhone) || other.supportPhone == supportPhone));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,name,email,role,const DeepCollectionEquality().hash(permissions),mustChangePassword,organisation,supportEmail,supportPhone);
+int get hashCode => Object.hash(runtimeType,id,name,email,role,const DeepCollectionEquality().hash(permissions),mustChangePassword,passwordChangeSkippable,passwordChangePending,organisation,supportEmail,supportPhone);
 
 @override
 String toString() {
-  return 'Profile(id: $id, name: $name, email: $email, role: $role, permissions: $permissions, mustChangePassword: $mustChangePassword, organisation: $organisation, supportEmail: $supportEmail, supportPhone: $supportPhone)';
+  return 'Profile(id: $id, name: $name, email: $email, role: $role, permissions: $permissions, mustChangePassword: $mustChangePassword, passwordChangeSkippable: $passwordChangeSkippable, passwordChangePending: $passwordChangePending, organisation: $organisation, supportEmail: $supportEmail, supportPhone: $supportPhone)';
 }
 
 
@@ -45,7 +48,7 @@ abstract mixin class $ProfileCopyWith<$Res>  {
   factory $ProfileCopyWith(Profile value, $Res Function(Profile) _then) = _$ProfileCopyWithImpl;
 @useResult
 $Res call({
- String id, String name, String email, String role, Set<String> permissions, bool mustChangePassword, String? organisation, String? supportEmail, String? supportPhone
+ String id, String name, String email, String role, Set<String> permissions, bool mustChangePassword, bool passwordChangeSkippable, bool passwordChangePending, String? organisation, String? supportEmail, String? supportPhone
 });
 
 
@@ -62,7 +65,7 @@ class _$ProfileCopyWithImpl<$Res>
 
 /// Create a copy of Profile
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? email = null,Object? role = null,Object? permissions = null,Object? mustChangePassword = null,Object? organisation = freezed,Object? supportEmail = freezed,Object? supportPhone = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? email = null,Object? role = null,Object? permissions = null,Object? mustChangePassword = null,Object? passwordChangeSkippable = null,Object? passwordChangePending = null,Object? organisation = freezed,Object? supportEmail = freezed,Object? supportPhone = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -70,6 +73,8 @@ as String,email: null == email ? _self.email : email // ignore: cast_nullable_to
 as String,role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
 as String,permissions: null == permissions ? _self.permissions : permissions // ignore: cast_nullable_to_non_nullable
 as Set<String>,mustChangePassword: null == mustChangePassword ? _self.mustChangePassword : mustChangePassword // ignore: cast_nullable_to_non_nullable
+as bool,passwordChangeSkippable: null == passwordChangeSkippable ? _self.passwordChangeSkippable : passwordChangeSkippable // ignore: cast_nullable_to_non_nullable
+as bool,passwordChangePending: null == passwordChangePending ? _self.passwordChangePending : passwordChangePending // ignore: cast_nullable_to_non_nullable
 as bool,organisation: freezed == organisation ? _self.organisation : organisation // ignore: cast_nullable_to_non_nullable
 as String?,supportEmail: freezed == supportEmail ? _self.supportEmail : supportEmail // ignore: cast_nullable_to_non_nullable
 as String?,supportPhone: freezed == supportPhone ? _self.supportPhone : supportPhone // ignore: cast_nullable_to_non_nullable
@@ -158,10 +163,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String email,  String role,  Set<String> permissions,  bool mustChangePassword,  String? organisation,  String? supportEmail,  String? supportPhone)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String email,  String role,  Set<String> permissions,  bool mustChangePassword,  bool passwordChangeSkippable,  bool passwordChangePending,  String? organisation,  String? supportEmail,  String? supportPhone)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Profile() when $default != null:
-return $default(_that.id,_that.name,_that.email,_that.role,_that.permissions,_that.mustChangePassword,_that.organisation,_that.supportEmail,_that.supportPhone);case _:
+return $default(_that.id,_that.name,_that.email,_that.role,_that.permissions,_that.mustChangePassword,_that.passwordChangeSkippable,_that.passwordChangePending,_that.organisation,_that.supportEmail,_that.supportPhone);case _:
   return orElse();
 
 }
@@ -179,10 +184,10 @@ return $default(_that.id,_that.name,_that.email,_that.role,_that.permissions,_th
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String email,  String role,  Set<String> permissions,  bool mustChangePassword,  String? organisation,  String? supportEmail,  String? supportPhone)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String email,  String role,  Set<String> permissions,  bool mustChangePassword,  bool passwordChangeSkippable,  bool passwordChangePending,  String? organisation,  String? supportEmail,  String? supportPhone)  $default,) {final _that = this;
 switch (_that) {
 case _Profile():
-return $default(_that.id,_that.name,_that.email,_that.role,_that.permissions,_that.mustChangePassword,_that.organisation,_that.supportEmail,_that.supportPhone);case _:
+return $default(_that.id,_that.name,_that.email,_that.role,_that.permissions,_that.mustChangePassword,_that.passwordChangeSkippable,_that.passwordChangePending,_that.organisation,_that.supportEmail,_that.supportPhone);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -199,10 +204,10 @@ return $default(_that.id,_that.name,_that.email,_that.role,_that.permissions,_th
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String email,  String role,  Set<String> permissions,  bool mustChangePassword,  String? organisation,  String? supportEmail,  String? supportPhone)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String email,  String role,  Set<String> permissions,  bool mustChangePassword,  bool passwordChangeSkippable,  bool passwordChangePending,  String? organisation,  String? supportEmail,  String? supportPhone)?  $default,) {final _that = this;
 switch (_that) {
 case _Profile() when $default != null:
-return $default(_that.id,_that.name,_that.email,_that.role,_that.permissions,_that.mustChangePassword,_that.organisation,_that.supportEmail,_that.supportPhone);case _:
+return $default(_that.id,_that.name,_that.email,_that.role,_that.permissions,_that.mustChangePassword,_that.passwordChangeSkippable,_that.passwordChangePending,_that.organisation,_that.supportEmail,_that.supportPhone);case _:
   return null;
 
 }
@@ -214,7 +219,7 @@ return $default(_that.id,_that.name,_that.email,_that.role,_that.permissions,_th
 
 
 class _Profile extends Profile {
-  const _Profile({required this.id, required this.name, required this.email, required this.role, required final  Set<String> permissions, required this.mustChangePassword, this.organisation, this.supportEmail, this.supportPhone}): _permissions = permissions,super._();
+  const _Profile({required this.id, required this.name, required this.email, required this.role, required final  Set<String> permissions, required this.mustChangePassword, this.passwordChangeSkippable = false, this.passwordChangePending = false, this.organisation, this.supportEmail, this.supportPhone}): _permissions = permissions,super._();
   
 
 @override final  String id;
@@ -229,6 +234,11 @@ class _Profile extends Profile {
 }
 
 @override final  bool mustChangePassword;
+/// With [mustChangePassword]: the official may choose **Not now**.
+@override@JsonKey() final  bool passwordChangeSkippable;
+/// The password is still the one someone else set: Profile shows a
+/// reminder (final.md Section 13.7).
+@override@JsonKey() final  bool passwordChangePending;
 @override final  String? organisation;
 @override final  String? supportEmail;
 @override final  String? supportPhone;
@@ -243,16 +253,16 @@ _$ProfileCopyWith<_Profile> get copyWith => __$ProfileCopyWithImpl<_Profile>(thi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Profile&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.email, email) || other.email == email)&&(identical(other.role, role) || other.role == role)&&const DeepCollectionEquality().equals(other._permissions, _permissions)&&(identical(other.mustChangePassword, mustChangePassword) || other.mustChangePassword == mustChangePassword)&&(identical(other.organisation, organisation) || other.organisation == organisation)&&(identical(other.supportEmail, supportEmail) || other.supportEmail == supportEmail)&&(identical(other.supportPhone, supportPhone) || other.supportPhone == supportPhone));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Profile&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.email, email) || other.email == email)&&(identical(other.role, role) || other.role == role)&&const DeepCollectionEquality().equals(other._permissions, _permissions)&&(identical(other.mustChangePassword, mustChangePassword) || other.mustChangePassword == mustChangePassword)&&(identical(other.passwordChangeSkippable, passwordChangeSkippable) || other.passwordChangeSkippable == passwordChangeSkippable)&&(identical(other.passwordChangePending, passwordChangePending) || other.passwordChangePending == passwordChangePending)&&(identical(other.organisation, organisation) || other.organisation == organisation)&&(identical(other.supportEmail, supportEmail) || other.supportEmail == supportEmail)&&(identical(other.supportPhone, supportPhone) || other.supportPhone == supportPhone));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,name,email,role,const DeepCollectionEquality().hash(_permissions),mustChangePassword,organisation,supportEmail,supportPhone);
+int get hashCode => Object.hash(runtimeType,id,name,email,role,const DeepCollectionEquality().hash(_permissions),mustChangePassword,passwordChangeSkippable,passwordChangePending,organisation,supportEmail,supportPhone);
 
 @override
 String toString() {
-  return 'Profile(id: $id, name: $name, email: $email, role: $role, permissions: $permissions, mustChangePassword: $mustChangePassword, organisation: $organisation, supportEmail: $supportEmail, supportPhone: $supportPhone)';
+  return 'Profile(id: $id, name: $name, email: $email, role: $role, permissions: $permissions, mustChangePassword: $mustChangePassword, passwordChangeSkippable: $passwordChangeSkippable, passwordChangePending: $passwordChangePending, organisation: $organisation, supportEmail: $supportEmail, supportPhone: $supportPhone)';
 }
 
 
@@ -263,7 +273,7 @@ abstract mixin class _$ProfileCopyWith<$Res> implements $ProfileCopyWith<$Res> {
   factory _$ProfileCopyWith(_Profile value, $Res Function(_Profile) _then) = __$ProfileCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String name, String email, String role, Set<String> permissions, bool mustChangePassword, String? organisation, String? supportEmail, String? supportPhone
+ String id, String name, String email, String role, Set<String> permissions, bool mustChangePassword, bool passwordChangeSkippable, bool passwordChangePending, String? organisation, String? supportEmail, String? supportPhone
 });
 
 
@@ -280,7 +290,7 @@ class __$ProfileCopyWithImpl<$Res>
 
 /// Create a copy of Profile
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? email = null,Object? role = null,Object? permissions = null,Object? mustChangePassword = null,Object? organisation = freezed,Object? supportEmail = freezed,Object? supportPhone = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? email = null,Object? role = null,Object? permissions = null,Object? mustChangePassword = null,Object? passwordChangeSkippable = null,Object? passwordChangePending = null,Object? organisation = freezed,Object? supportEmail = freezed,Object? supportPhone = freezed,}) {
   return _then(_Profile(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -288,6 +298,8 @@ as String,email: null == email ? _self.email : email // ignore: cast_nullable_to
 as String,role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
 as String,permissions: null == permissions ? _self._permissions : permissions // ignore: cast_nullable_to_non_nullable
 as Set<String>,mustChangePassword: null == mustChangePassword ? _self.mustChangePassword : mustChangePassword // ignore: cast_nullable_to_non_nullable
+as bool,passwordChangeSkippable: null == passwordChangeSkippable ? _self.passwordChangeSkippable : passwordChangeSkippable // ignore: cast_nullable_to_non_nullable
+as bool,passwordChangePending: null == passwordChangePending ? _self.passwordChangePending : passwordChangePending // ignore: cast_nullable_to_non_nullable
 as bool,organisation: freezed == organisation ? _self.organisation : organisation // ignore: cast_nullable_to_non_nullable
 as String?,supportEmail: freezed == supportEmail ? _self.supportEmail : supportEmail // ignore: cast_nullable_to_non_nullable
 as String?,supportPhone: freezed == supportPhone ? _self.supportPhone : supportPhone // ignore: cast_nullable_to_non_nullable

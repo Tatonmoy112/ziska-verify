@@ -12,19 +12,39 @@ class AppConfig {
     required this.clientSlug,
     required this.officeEmail,
     required this.officePhone,
+    this.demoPasswordLater = false,
+    this.postmanMockRouting = false,
   });
 
   /// Reads the values passed with `--dart-define-from-file`.
   ///
   /// Throws [StateError] when a value is missing or the base URL is not
   /// HTTPS, so a wrongly built app fails at start, never at the first call.
-  factory AppConfig.fromEnvironment() {
-    const flavorName = String.fromEnvironment('FLAVOR');
-    const baseUrl = String.fromEnvironment('API_BASE_URL');
-    const clientSlug = String.fromEnvironment('CLIENT_SLUG');
-    const officeEmail = String.fromEnvironment('OFFICE_EMAIL');
-    const officePhone = String.fromEnvironment('OFFICE_PHONE');
+  factory AppConfig.fromEnvironment() => AppConfig.fromValues(
+    flavorName: const String.fromEnvironment('FLAVOR'),
+    baseUrl: const String.fromEnvironment('API_BASE_URL'),
+    clientSlug: const String.fromEnvironment('CLIENT_SLUG'),
+    officeEmail: const String.fromEnvironment('OFFICE_EMAIL'),
+    officePhone: const String.fromEnvironment('OFFICE_PHONE'),
+    // Read at build time: true in the mock build (config/mock.json), though
+    // the analyzer sees the default.
+    // ignore: avoid_redundant_argument_values
+    demoPasswordLater: const bool.fromEnvironment('DEMO_PASSWORD_LATER'),
+    // True in the mock build too; the analyzer sees the default.
+    // ignore: avoid_redundant_argument_values
+    postmanMockRouting: const bool.fromEnvironment('POSTMAN_MOCK_ROUTING'),
+  );
 
+  /// [AppConfig.fromEnvironment] on given values (for tests).
+  factory AppConfig.fromValues({
+    required String flavorName,
+    required String baseUrl,
+    required String clientSlug,
+    required String officeEmail,
+    required String officePhone,
+    bool demoPasswordLater = false,
+    bool postmanMockRouting = false,
+  }) {
     final flavor = AppFlavor.values.where((f) => f.name == flavorName);
     if (flavor.isEmpty) {
       throw StateError(
@@ -35,12 +55,22 @@ class AppConfig {
     if (clientSlug.isEmpty) {
       throw StateError('CLIENT_SLUG is missing.');
     }
+    // The demo plays answers the backend does not send yet: never outside
+    // the mock build.
+    if (demoPasswordLater && flavor.single != AppFlavor.mock) {
+      throw StateError('DEMO_PASSWORD_LATER is for the mock build only.');
+    }
+    if (postmanMockRouting && flavor.single != AppFlavor.mock) {
+      throw StateError('POSTMAN_MOCK_ROUTING is for the mock build only.');
+    }
     return AppConfig(
       flavor: flavor.single,
       baseUrl: validateBaseUrl(baseUrl),
       clientSlug: clientSlug,
       officeEmail: officeEmail,
       officePhone: officePhone,
+      demoPasswordLater: demoPasswordLater,
+      postmanMockRouting: postmanMockRouting,
     );
   }
 
@@ -52,9 +82,19 @@ class AppConfig {
   /// The client's short name in every path (`/v1/clients/{slug}/…`).
   final String clientSlug;
 
-  /// The client office's contact for Request access (final.md Section 13.9).
+  /// The client office's contact for Sign up (final.md Section 13.9).
   final String officeEmail;
   final String officePhone;
+
+  /// Mock build only: plays the backend's coming answers for **Not now** on
+  /// a forced password change (`PasswordLaterDemo`). Removed when the
+  /// backend ships `me/password/later`
+  /// (docs/backend-requests/password-change-later.md).
+  final bool demoPasswordLater;
+
+  /// Mock build only: lets the Postman mock tell apart the flows it cannot
+  /// by itself (`PostmanMockRouting`, docs/postman-mock-setup.md).
+  final bool postmanMockRouting;
 
   /// The base of every app route: `{base}/v1/clients/{slug}/`.
   String get apiRoot => '$baseUrl/v1/clients/$clientSlug/';

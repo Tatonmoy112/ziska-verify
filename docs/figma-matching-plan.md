@@ -25,7 +25,7 @@ Status on 2026-11-15: steps 1 to 7 are done; step 8 (closeout) is next.
 | Login | Login | 1 | Checked; no change needed |
 | Request for id | Request access | 2 | Done |
 | scan by barcode | QR scanner | 3 | Done |
-| Home page | Verify tab | 4 | Done |
+| Home page | Check tab | 4 | Done |
 | product history | History | 5 | Done |
 | batch details by id | History, serial search (tracking log) | 5 | Done |
 | 11 _ Profile 1 | Profile | 6 | Done |
@@ -53,7 +53,7 @@ Status on 2026-11-15: steps 1 to 7 are done; step 8 (closeout) is next.
 ## Done: Steps 1 to 7
 
 ### Step 1: Splash in the Figma Landing look
-- **Splash:** a dot pattern, the logo on a white card, "Track & Trace" and "Product Verification System", and a navy glow at the bottom. The glow holds "Verify genuine products instantly" and the progress, or the error with **Try again** (a white button).
+- **Splash:** a dot pattern, the logo on a white card, "Track & Trace" and "Product Authenticity Check", and a navy glow at the bottom. The glow holds "Check genuine products instantly" and the progress, or the error with **Try again** (a white button).
 - **Login:** no change. EMAIL with an envelope icon (backend D13) and **Forgot password?** differ from Figma by design.
 - **New:** `PatternBackground`, the `display` text style, a colour option on `ReferenceText`.
 - **Cases:** TC-UI-169 and TC-UI-170.
@@ -71,13 +71,13 @@ Status on 2026-11-15: steps 1 to 7 are done; step 8 (closeout) is next.
 ### Step 3: QR scanner
 - **Camera view:** the camera is dimmed in navy around a square scan window with green corners and a moving scan line. The line holds still with the phone's "Remove animations" setting.
 - **Text:** **PLACE THE QR CODE INSIDE THE FRAME** above the window; "Looking for a QR code · hold steady" below it.
-- **Bottom bar:** **Enter manually** (back to Verify with the field focused) and the torch.
+- **Bottom bar:** **Enter manually** (back to Check with the field focused) and the torch.
 - **Tests:** flow tests run with animations off.
 - **Cases:** TC-UI-094 and -095 (updated); TC-UI-172 to -174.
 
-### Step 4: Verify tab
+### Step 4: Check tab
 - **Decoration:** a faint honeycomb on the header and a large faint QR corner on the Scan QR code card.
-- **Icon:** a hidden code shows a tag icon everywhere (Verify, Bulk lookup, History).
+- **Icon:** a hidden code shows a tag icon everywhere (Check, Bulk lookup, History).
 - **New token:** `onPrimaryFaint`.
 - **Case:** TC-UI-087 (updated).
 
@@ -108,7 +108,7 @@ Status on 2026-11-15: steps 1 to 7 are done; step 8 (closeout) is next.
 1. **New section, "Figma reference: adopted and not adopted":** the screen map and the Not Adopted table above, so the gaps are documented in the spec, not only here.
 2. **New decisions 50 to 54** in the decision list, worded as decided:
    - **50:** the Splash takes the Figma Landing look, without intro pages.
-   - **51:** the QR scanner layout. Enter manually returns to Verify with the field focused; one torch, in the bottom bar; the scan line holds still with "Remove animations".
+   - **51:** the QR scanner layout. Enter manually returns to Check with the field focused; one torch, in the bottom bar; the scan line holds still with "Remove animations".
    - **52:** History result chips with counts. They count without the result filter (a `limit=1` request when a chip is picked) and replace the totals line; the sheet keeps way, dates and scope.
    - **53:** a chosen segment or chip is navy with white text (Q21, option A).
    - **54:** Profile check counts from `GET checks?limit=1` for profiles with History. They are asked for again when the tab comes back.

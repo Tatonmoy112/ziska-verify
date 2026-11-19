@@ -26,12 +26,10 @@ abstract final class Roles {
     'supervisor@example.com',
     'Supervisor',
     [
-      'history:all',
       'history:own',
       'incident:report',
       'item:bulk_lookup',
       'item:lookup',
-      'retail_user:add',
     ],
   );
 
@@ -48,7 +46,7 @@ abstract final class Roles {
     'Nusrat Auditor',
     'auditor@example.com',
     'Head office auditor',
-    ['history:all', 'history:own', 'item:lookup'],
+    ['history:own', 'item:lookup'],
   );
 
   static final Map<String, dynamic> seniorSeller = _profile(

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../fakes/roles.dart';
 import 'harness.dart';
@@ -93,60 +92,31 @@ void main() {
 
     await app.tap(tab('History'));
     await app.tap(find.byKey(const Key('history.filters')));
-    await app.tap(find.byKey(const Key('history.scopeAll')));
     await app.tapText('Apply');
     await app.enter(const Key('history.search'), '1000001');
     await app.settleAfter(const Duration(milliseconds: 500));
     expectTrackingLog('1000001');
     stillIn();
 
-    await app.tap(tab('Verify'));
-    await app.tap(find.byKey(const Key('verify.tool.retailUsers')));
-    await app.tap(find.byKey(const Key('retailUsers.add')));
-    await app.enter(const Key('addRetail.name'), 'Karim Store');
-    await app.enter(const Key('addRetail.email'), 'karim.store@gmail.com');
-    await app.tap(find.byKey(const Key('addRetail.role')));
-    await app.tapText('Retail seller');
-    await app.enter(const Key('addRetail.password'), 'first-pass-1');
-    await app.tap(find.byKey(const Key('addRetail.sendEmail')));
-    await app.tap(find.byKey(const Key('addRetail.submit')));
-    expect(find.textContaining('was added'), findsOneWidget);
-    await back(tester);
-    await app.tap(find.byIcon(LucideIcons.ellipsisVertical));
-    await app.tapText('Email a new first password');
-    await app.tap(
-      find.descendant(
-        of: find.byType(AlertDialog),
-        matching: find.text('Email it'),
-      ),
-    );
-    expect(find.textContaining('A new first password was emailed'), findsOne);
-    await back(tester);
-    stillIn();
-
+    await app.tap(tab('Check'));
+    expect(find.byKey(const Key('verify.tool.retailUsers')), findsNothing);
     await logOut(app);
   });
 
   testWidgets("TC-E2E-002 a field inspector's day", (tester) async {
     final app = await logIn(tester, Roles.fieldInspector);
 
-    await app.tap(find.byKey(const Key('verify.scan')));
+    // The Check tab is the camera: the scan is the trigger.
     app.scanner.scan('https://www.ziskaverify.com/q/Q8F2KD91XA7M');
     await tester.pumpAndSettle();
     expect(find.text('Genuine product'), findsOneWidget);
     await back(tester);
-    if (find.byKey(const Key('fake.camera')).evaluate().isNotEmpty) {
-      await back(tester);
-    }
 
-    await app.tap(find.byKey(const Key('verify.tool.bulk')));
-    for (final serial in ['1000001', '1000002', '1000003']) {
-      await app.enter(const Key('bulk.input'), serial);
-      await app.tap(find.byKey(const Key('bulk.add')));
-    }
-    await app.tap(find.byKey(const Key('bulk.send')));
-    expect(find.text('Summary'), findsOneWidget);
-    await app.tap(find.textContaining('1.').first);
+    await app.tap(find.byKey(const Key('verify.tool.serials')));
+    await app.enter(const Key('serials.input'), '1000001,1000002,1000003');
+    await app.tap(find.byKey(const Key('serials.submit')));
+    expect(find.bySemanticsLabel('Scanned: 3'), findsOneWidget);
+    await app.tap(find.text('1000001').first);
     await app.tap(find.byKey(const Key('result.report')));
     await fileReport(app, 'Label print is blurred');
     expect(find.text('Report 1042 filed.'), findsOneWidget);
@@ -169,14 +139,13 @@ void main() {
 
     await app.tap(tab('History'));
     await app.tap(find.byKey(const Key('history.filters')));
-    await app.tap(find.byKey(const Key('history.scopeAll')));
     await app.tapText('Apply');
     await app.enter(const Key('history.search'), '1000001');
     await app.settleAfter(const Duration(milliseconds: 500));
     expectTrackingLog('1000001');
     expect(
       app.backend.sent('GET', 'checks').last.queryParameters['scope'],
-      'all',
+      isNull,
     );
     await logOut(app);
   });
@@ -185,13 +154,10 @@ void main() {
     final app = await logIn(tester, Roles.seniorSeller);
     expect(find.byKey(const Key('verify.tool.report')), findsNothing);
     expect(find.byKey(const Key('verify.tool.retailUsers')), findsNothing);
-    await app.tap(find.byKey(const Key('verify.tool.bulk')));
-    for (final serial in ['1000001', '1000002', '1000003']) {
-      await app.enter(const Key('bulk.input'), serial);
-      await app.tap(find.byKey(const Key('bulk.add')));
-    }
-    await app.tap(find.byKey(const Key('bulk.send')));
-    expect(find.text('Summary'), findsOneWidget);
+    await app.tap(find.byKey(const Key('verify.tool.serials')));
+    await app.enter(const Key('serials.input'), '1000001,1000002,1000003');
+    await app.tap(find.byKey(const Key('serials.submit')));
+    expect(find.bySemanticsLabel('Scanned: 3'), findsOneWidget);
     await back(tester);
     await app.tap(tab('History'));
     expect(find.text('1000001'), findsOneWidget);
@@ -202,12 +168,11 @@ void main() {
 
   testWidgets("TC-E2E-005 a retail seller's day", (tester) async {
     final app = await logIn(tester, Roles.retailSeller);
-    await app.tapText('Hidden code');
-    await app.enter(const Key('verify.input'), '481516234200');
+    await app.enter(const Key('verify.input'), '1000001');
     await app.tap(find.byKey(const Key('verify.submit')));
     expect(find.text('Genuine product'), findsOneWidget);
     await back(tester);
-    expect(app.fieldText(const Key('verify.input')), isEmpty);
+    expect(app.fieldText(const Key('verify.input')), '1000001');
 
     await app.tap(tab('History'));
     for (final r in app.backend.sent('GET', 'checks')) {

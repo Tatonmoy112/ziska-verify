@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../fakes/roles.dart';
 import '../fakes/scripted_adapter.dart';
 import 'harness.dart';
 
@@ -10,7 +11,7 @@ import 'harness.dart';
 void main() {
   const formatsFailed = 'Could not load the code formats.';
   const general = 'Something went wrong. Try again.';
-  const lookupNetwork = 'Unable to verify. Check the connection and try again.';
+  const lookupNetwork = 'Unable to check. Check the connection and try again.';
   final input = find.byKey(const Key('verify.input'));
 
   /// A `POST lookups` answer (app API guide §4.2).
@@ -106,7 +107,7 @@ void main() {
     testWidgets('TC-LOOK-022 formats load once per session', (tester) async {
       final app = await startApp(tester);
       await app.tap(tab('History'));
-      await app.tap(tab('Verify'));
+      await app.tap(tab('Check'));
       for (var i = 0; i < 3; i++) {
         await app.enter(const Key('verify.input'), '1000001');
         await app.tap(find.byKey(const Key('verify.submit')));
@@ -281,40 +282,6 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('TC-LOOK-047 earlier checkers only when listed', (
-      tester,
-    ) async {
-      await lookUp(
-        tester,
-        always(
-          lookup(
-            result: 'warning',
-            reasons: ['checked_before'],
-            count: {
-              'this_check': 3,
-              'last_at': '2026-10-12T09:14:00Z',
-              'by': ['Asha Rao', 'Karim'],
-            },
-          ),
-        ),
-      );
-      // A row of TRACKING DETAILS (final.md Section 13.1.4).
-      expect(find.text('Checked before by'), findsOneWidget);
-      expect(find.text('Asha Rao, Karim'), findsOneWidget);
-
-      await lookUp(
-        tester,
-        always(
-          lookup(
-            result: 'warning',
-            reasons: ['checked_before'],
-            count: {'this_check': 3, 'last_at': '2026-10-12T09:14:00Z'},
-          ),
-        ),
-      );
-      expect(find.textContaining('Checked before by'), findsNothing);
-    });
-
     testWidgets('TC-LOOK-048 a first check has no last time', (tester) async {
       await lookUp(tester, always(lookup()));
       expect(find.textContaining('Last check'), findsNothing);
@@ -322,7 +289,11 @@ void main() {
     });
 
     for (final (result, title, body) in [
-      ('not_found', 'Not found', 'No product of this company has this code.'),
+      (
+        'not_found',
+        'Not found',
+        'No product of this company has this serial or QR code.',
+      ),
       (
         'unassigned',
         'Not in a batch',
@@ -410,20 +381,6 @@ void main() {
       expect(find.textContaining('2:30'), findsNWidgets(2));
     });
 
-    testWidgets('TC-LOOK-054 the masked code as received; the typed code '
-        'nowhere', (tester) async {
-      final app = await startApp(
-        tester,
-        overrides: {'POST lookups': always(lookup())},
-      );
-      await app.tapText('Hidden code');
-      await app.enter(const Key('verify.input'), '481516234200');
-      await app.tap(find.byKey(const Key('verify.submit')));
-
-      expect(find.text('*****7K2'), findsOneWidget);
-      expect(find.textContaining('481516234200'), findsNothing);
-    });
-
     testWidgets('TC-LOOK-055 unknown fields are ignored', (tester) async {
       await lookUp(
         tester,
@@ -508,10 +465,135 @@ void main() {
       ) async {
         await lookUp(tester, always(answer));
         expect(find.text('Genuine product'), findsNothing);
-        expect(find.text('Verification result'), findsNothing);
+        expect(find.text('Check result'), findsNothing);
         expect(input, findsOneWidget);
         expect(tester.takeException(), isNull);
       });
     }
+  });
+
+  // Audit (final.md Section 13.7): without the formats only the serial form
+  // waits; scanning and the tools need no formats.
+  testWidgets('TC-LOOK-120 a formats failure keeps the camera and the '
+      'tools', (tester) async {
+    var calls = 0;
+    final app = await startApp(
+      tester,
+      profile: Roles.supervisor,
+      overrides: {
+        'GET formats': (r) async => calls++ == 0
+            ? offline()(r)
+            : FakeBackend.example(200, 'Input formats', '200 The formats'),
+      },
+    );
+    expect(find.byKey(const Key('verify.formatsRetry')), findsOneWidget);
+    expect(find.byKey(const Key('verify.input')), findsNothing);
+    expect(find.byKey(const Key('verify.camera')), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('verify.tool.bulk')),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.byKey(const Key('verify.tool.bulk')), findsOneWidget);
+
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('verify.formatsRetry')),
+      -200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await app.tap(find.byKey(const Key('verify.formatsRetry')));
+    expect(find.byKey(const Key('verify.input')), findsOneWidget);
+  });
+
+  // Audit (guide §4.6, FR-LKP-02): after a failed lookup the same QR can be
+  // scanned again; nothing is sent again by itself.
+  testWidgets('TC-LOOK-121 Scan again after a failed QR lookup', (
+    tester,
+  ) async {
+    var calls = 0;
+    final app = await startApp(
+      tester,
+      overrides: {
+        'POST lookups': (r) async => calls++ == 0
+            ? offline()(r)
+            : FakeBackend.example(
+                200,
+                'Look up one item',
+                '200 valid: genuine, first check',
+              ),
+      },
+    );
+    const qr = 'https://www.ziskaverify.com/q/Q8F2KD91XA7M';
+    app.scanner.scan(qr);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('scanner.scanAgain')), findsOneWidget);
+    expect(app.backend.sent('POST', 'lookups'), hasLength(1));
+
+    await app.tap(find.byKey(const Key('scanner.scanAgain')));
+    app.scanner.scan(qr);
+    await tester.pumpAndSettle();
+    expect(app.backend.sent('POST', 'lookups'), hasLength(2));
+    expect(find.text('Genuine product'), findsWidgets);
+  });
+
+  // Data-flow audit A2 (guide §1): the scanner says the formats failed and
+  // offers Try again; it never spins.
+  testWidgets('TC-LOOK-122 the camera shows a formats failure', (
+    tester,
+  ) async {
+    var calls = 0;
+    final app = await startApp(
+      tester,
+      overrides: {
+        'GET formats': (r) async => calls++ < 1
+            ? offline()(r)
+            : FakeBackend.example(200, 'Input formats', '200 The formats'),
+      },
+    );
+    // The camera says why it cannot check yet; Try again is under it.
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('verify.camera')),
+        matching: find.text('Scanning waits for the code formats.'),
+      ),
+      findsOneWidget,
+    );
+    expect(find.byKey(const Key('scanner.status')), findsNothing);
+    await app.tap(find.byKey(const Key('verify.formatsRetry')));
+    expect(find.byKey(const Key('verify.formatsRetry')), findsNothing);
+    // A scan now is sent.
+    app.scanner.scan('https://www.ziskaverify.com/q/Q8F2KD91XA7M');
+    await tester.pumpAndSettle();
+    expect(app.backend.sent('POST', 'lookups'), hasLength(1));
+  });
+
+  testWidgets('TC-LOOK-123 a 429 on the formats counts down before Retry', (
+    tester,
+  ) async {
+    var calls = 0;
+    final app = await startApp(
+      tester,
+      overrides: {
+        'GET formats': (_) => calls++ == 0
+            ? apiError(429, 'rate_limited', retryAfter: 20)
+            : FakeBackend.example(200, 'Input formats', '200 The formats'),
+      },
+    );
+    final retry = find.byKey(const Key('verify.formatsRetry'));
+    expect(
+      find.descendant(
+        of: retry,
+        matching: find.text('Too many attempts. Try again in 20 s.'),
+      ),
+      findsOneWidget,
+    );
+    await tester.tap(retry, warnIfMissed: false);
+    await tester.pump();
+    expect(app.backend.sent('GET', 'formats'), hasLength(1));
+
+    await tester.pump(const Duration(seconds: 21));
+    await app.tap(retry);
+    expect(retry, findsNothing);
+    expect(app.backend.sent('GET', 'formats'), hasLength(2));
   });
 }

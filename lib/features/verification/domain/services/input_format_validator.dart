@@ -20,9 +20,6 @@ class InputFormatValidator {
     final ok = switch (way) {
       LookupWay.serial =>
         _digits.hasMatch(value) && value.length <= formats.serialMaxDigits,
-      LookupWay.hiddenCode => formats.hiddenCodes.any(
-        (f) => _matches(value, f),
-      ),
       LookupWay.qr => _matches(value, formats.qr),
     };
     return ok ? null : InputProblem.wrongFormat;

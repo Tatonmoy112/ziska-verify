@@ -123,7 +123,7 @@ class VerifyCodeBloc extends Bloc<VerifyCodeEvent, VerifyCodeState> {
             resendFailure: failure,
             resendLimitReached: exception is UnauthenticatedException,
             resendAvailableAt: exception is RateLimitedException
-                ? _now().add(failure.retryAfter ?? resendWait)
+                ? failure.retryAtFrom(_now()) ?? state.resendAvailableAt
                 : state.resendAvailableAt,
           ),
         );

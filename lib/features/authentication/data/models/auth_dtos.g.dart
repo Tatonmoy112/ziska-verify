@@ -13,7 +13,12 @@ LoginResponseDto _$LoginResponseDtoFromJson(Map<String, dynamic> json) =>
       accessToken: json['access_token'] as String?,
       refreshToken: json['refresh_token'] as String?,
       mustChangePassword: json['must_change_password'] as bool?,
+      passwordChangeSkippable: json['password_change_skippable'] as bool?,
     );
+
+PasswordLaterResponseDto _$PasswordLaterResponseDtoFromJson(
+  Map<String, dynamic> json,
+) => PasswordLaterResponseDto(accessToken: json['access_token'] as String);
 
 PasswordChangeResponseDto _$PasswordChangeResponseDtoFromJson(
   Map<String, dynamic> json,

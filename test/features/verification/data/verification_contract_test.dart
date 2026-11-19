@@ -36,7 +36,6 @@ void main() {
   test('GET formats', () async {
     next = example(200, 'Input formats', '200 The formats');
     final formats = (await service.getFormats()).toEntity();
-    expect(formats.hiddenCodes.single.length, 12);
     expect(formats.serialMaxDigits, 19);
     expect(formats.qr.length, 12);
   });

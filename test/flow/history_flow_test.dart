@@ -55,27 +55,6 @@ void main() {
     );
   });
 
-  testWidgets("TC-HIST-009 everyone's checks only with history:all", (
-    tester,
-  ) async {
-    var app = await startApp(tester, profile: Roles.fieldInspector);
-    await openHistory(app);
-    await app.tap(find.byKey(const Key('history.filters')));
-    expect(find.byKey(const Key('history.scopeAll')), findsNothing);
-
-    app = await startApp(tester, profile: Roles.supervisor);
-    await openHistory(app);
-    await app.tap(find.byKey(const Key('history.filters')));
-    await app.tap(find.byKey(const Key('history.scopeAll')));
-    await app.tapText('Apply');
-
-    expect(
-      app.backend.sent('GET', 'checks').last.queryParameters['scope'],
-      'all',
-    );
-    expect(find.textContaining('by Asha Rao'), findsOneWidget);
-  });
-
   testWidgets('TC-HIST-011 a filter starts again; reset keeps the search', (
     tester,
   ) async {
@@ -106,7 +85,7 @@ void main() {
     // A filter of the sheet: the first page again, with both.
     before = app.backend.sent('GET', 'checks').length;
     await app.tap(find.byKey(const Key('history.filters')));
-    await app.tap(find.widgetWithText(ChoiceChip, 'QR code'));
+    await app.tap(find.byKey(const Key('history.way.qr')));
     await app.tapText('Apply');
     final applied = firstPageAfter(before);
     expect(applied['way'], 'qr');

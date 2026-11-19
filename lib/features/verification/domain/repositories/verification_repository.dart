@@ -1,16 +1,19 @@
 import 'package:ziska_verify/core/errors/result.dart';
-import 'package:ziska_verify/features/verification/domain/entities/bulk.dart';
+import 'package:ziska_verify/core/pagination/cursor_page.dart';
+import 'package:ziska_verify/core/pagination/page_request.dart';
 import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
+import 'package:ziska_verify/features/verification/domain/entities/scan_session.dart';
+import 'package:ziska_verify/features/verification/domain/entities/serial_stack.dart';
 
 abstract interface class VerificationRepository {
-  /// The client's formats, loaded once per login and kept in memory
-  /// (final.md Section 13.1.3).
   Future<Result<InputFormats>> getFormats();
-
-  /// `POST lookups`. Every call is a recorded check.
   Future<Result<LookupResult>> lookup(LookupWay way, String value);
-
-  /// `POST lookups/bulk`, 1 to 500 items. Results are matched to [entries]
-  /// by position (final.md Section 13.2).
-  Future<Result<BulkOutcome>> bulkLookup(List<BulkEntry> entries);
+  Future<Result<ScanResult>> scan(String value, String sessionId);
+  Future<Result<SerialStackResult>> serials(List<String> values);
+  Future<Result<void>> endSession(String id);
+  Future<Result<ScanSessionSummary>> session(String id);
+  Future<Result<CursorPage<ScanSessionSummary>>> sessions(
+    SessionQuery query,
+    PageRequest page,
+  );
 }

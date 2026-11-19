@@ -11,14 +11,12 @@ import 'package:ziska_verify/app/app.dart';
 import 'package:ziska_verify/app/bootstrap.dart';
 import 'package:ziska_verify/app/config/app_config.dart';
 import 'package:ziska_verify/core/services/device/app_info_service.dart';
-import 'package:ziska_verify/core/services/device/phone_id_service.dart';
 import 'package:ziska_verify/core/services/launcher/launcher_service.dart';
 import 'package:ziska_verify/core/services/media/photo_service.dart';
 import 'package:ziska_verify/core/services/monitoring/crash_reporting_service.dart';
 import 'package:ziska_verify/core/services/permission/permission_service.dart';
 import 'package:ziska_verify/core/services/picture/picture_images.dart';
 import 'package:ziska_verify/core/services/scanner/scanner_service.dart';
-import 'package:ziska_verify/core/services/session/session_service.dart';
 import 'package:ziska_verify/core/services/storage/secure_storage_service.dart';
 import 'package:ziska_verify/shared/design_system/components/chips/count_chip.dart';
 
@@ -61,6 +59,41 @@ class FakeBackend {
     postmanExample(request: request, example: name),
     headers: headers,
   );
+
+  ScriptedAnswer _serials(RequestOptions request) {
+    final body = postmanExample(
+      request: 'A stack of serials',
+      example: '200 Three serials, one sent twice',
+    );
+    final data = body['data'] as Map<String, dynamic>;
+    final samples = (data['items'] as List).cast<Map<String, dynamic>>();
+    final serials = ((request.data as Map)['serials'] as List)
+        .cast<String>()
+        .toSet();
+    final items = [
+      for (final serial in serials)
+        samples.where((item) => item['serial'] == serial).firstOrNull ??
+            {'serial': serial, 'ref': 'MA-2026-$serial', 'result': 'not_found'},
+    ];
+    data['items'] = items;
+    data['session'] = {
+      ...data['session'] as Map<String, dynamic>,
+      'scanned': items.length,
+      for (final outcome in ['valid', 'warning', 'not_found', 'unassigned'])
+        outcome: items.where((i) => i['result'] == outcome).length,
+    };
+    return ScriptedAnswer(200, body);
+  }
+
+  ScriptedAnswer _scan(RequestOptions request) {
+    final body = postmanExample(
+      request: '1. A scan in the session',
+      example: '200 first scan of an item: warning',
+    );
+    ((body['data'] as Map)['session'] as Map)['id'] =
+        (request.data as Map)['session_id'];
+    return ScriptedAnswer(200, body);
+  }
 
   Future<ScriptedAnswer> answer(RequestOptions r) async {
     requests.add(r);
@@ -109,17 +142,40 @@ class FakeBackend {
         'Change the password',
         '200 Changed: a new access pass',
       ),
+      // Not in the backend's Postman collection yet: the answer of the
+      // contract in docs/backend-requests/password-change-later.md.
+      'POST me/password/later' => ok({
+        'access_token': 'access-later',
+        'access_expires_in': 900,
+        'must_change_password': false,
+        'password_change_pending': true,
+      }),
       'GET formats' => example(200, 'Input formats', '200 The formats'),
-      'POST lookups' => example(
+      'POST lookups' =>
+        r.data is Map && (r.data as Map).containsKey('session_id')
+            ? _scan(r)
+            : example(
+                200,
+                'Look up one item',
+                '200 valid: genuine, first check',
+              ),
+      'GET roles/requestable' => example(
         200,
-        'Look up one item',
-        '200 valid: genuine, first check',
+        '1. The roles that can be requested',
+        '200 The roles',
       ),
-      'POST lookups/bulk' => example(
+      'POST auth/access/code' => example(
         200,
-        'Look up many items (bulk)',
-        '200 Three items',
+        '2. Email a code',
+        '200 Always the same answer',
       ),
+      'POST auth/access' => example(
+        200,
+        '3. Send the request',
+        '200 Sent: waiting for the office',
+      ),
+      'POST lookups/serials' => _serials(r),
+      'GET lookups/sessions' => example(200, '3. My sessions', '200 Sessions'),
       'GET checks' =>
         r.queryParameters['cursor'] == null
             ? example(200, 'History of checks', '200 First page')
@@ -131,25 +187,16 @@ class FakeBackend {
         'Pick a retail user',
         '200 The retail users',
       ),
-      'GET retail-roles' => example(
-        200,
-        'Retail roles',
-        '200 The retail roles',
-      ),
-      'POST retail-users' => example(
-        201,
-        'Add a retail user',
-        '201 Added, mail sent',
-      ),
       _ when key.startsWith('POST incidents/') => example(
         201,
         'Add a photo to the report',
         '201 Uploaded as photo 1',
       ),
-      _ when key.startsWith('POST retail-users/') => example(
+      _ when key.startsWith('POST lookups/sessions/') => ok(null),
+      _ when key.startsWith('GET lookups/sessions/') => example(
         200,
-        'Email a new first password',
-        '200 Emailed',
+        '4. One session',
+        '200 Session',
       ),
       _ => throw StateError('No fake answer for $key'),
     };
@@ -208,6 +255,10 @@ class FakeLauncher implements LauncherService {
   final emails = <({String to, String subject, String body})>[];
   final calls = <String>[];
 
+  /// False: the phone has no mail app / no phone app.
+  bool hasMailApp = true;
+  bool hasDialler = true;
+
   @override
   Future<bool> email({
     required String to,
@@ -215,34 +266,54 @@ class FakeLauncher implements LauncherService {
     required String body,
   }) async {
     emails.add((to: to, subject: subject, body: body));
-    return true;
+    return hasMailApp;
   }
 
   @override
   Future<bool> call(String phone) async {
     calls.add(phone);
-    return true;
+    return hasDialler;
   }
 }
 
 /// A camera stand-in: tests "show" a QR code with [scan].
 class FakeScanner implements ScannerService {
+  /// The newest camera made.
   FakeScannerSession? session;
+  final sessions = <FakeScannerSession>[];
 
-  /// The camera fails with this problem (access denied, say) when set.
-  ScannerProblem? problem;
+  /// The camera fails with this problem (access denied, say) when set;
+  /// a camera already made shows it the next time it is drawn.
+  ScannerProblem? get problem => _problem;
+  set problem(ScannerProblem? value) {
+    _problem = value;
+    for (final s in sessions) {
+      s.problem = value;
+    }
+  }
 
-  void scan(String raw) => session?.onCode?.call(raw);
+  ScannerProblem? _problem;
+
+  /// Shows [raw] to the camera that is running (the newest one, as only
+  /// one camera runs at a time); a stopped camera reads nothing.
+  void scan(String raw) {
+    for (final s in sessions.reversed) {
+      if (s.running && s.onCode != null) return s.onCode!(raw);
+    }
+  }
 
   @override
-  ScannerSession createSession() =>
-      session = FakeScannerSession(problem: problem);
+  ScannerSession createSession() {
+    final made = FakeScannerSession(problem: problem);
+    sessions.add(made);
+    return session = made;
+  }
 }
 
 class FakeScannerSession implements ScannerSession {
   FakeScannerSession({this.problem});
 
-  final ScannerProblem? problem;
+  ScannerProblem? problem;
   void Function(String raw)? onCode;
 
   @override
@@ -262,10 +333,22 @@ class FakeScannerSession implements ScannerSession {
     );
   }
 
+  /// The plugin's camera starts by itself when its preview is shown.
+  bool running = true;
+  int starts = 0;
+  int stops = 0;
+
   @override
-  Future<void> start() async {}
+  Future<void> start() async {
+    running = true;
+    starts++;
+  }
+
   @override
-  Future<void> stop() async {}
+  Future<void> stop() async {
+    running = false;
+    stops++;
+  }
 
   /// How many times the torch was switched.
   int torchToggles = 0;
@@ -273,7 +356,7 @@ class FakeScannerSession implements ScannerSession {
   @override
   Future<void> toggleTorch() async => torchToggles++;
   @override
-  Future<void> dispose() async {}
+  Future<void> dispose() async => running = false;
 }
 
 /// A 1×1 PNG, so photo thumbnails decode in tests.
@@ -437,6 +520,9 @@ Future<FlowApp> startApp(
   bool loggedIn = true,
   FakeSecureStorageService? storage,
   Map<String, Answer> overrides = const {},
+
+  /// The mock build's **Not now** demo (`DEMO_PASSWORD_LATER`).
+  bool demoPasswordLater = false,
 }) async {
   if (!_timezonesLoaded) {
     tz_data.initializeTimeZones();
@@ -471,7 +557,16 @@ Future<FlowApp> startApp(
   final logger = FakeLoggerService();
 
   registerCore(
-    config: testConfig,
+    config: demoPasswordLater
+        ? AppConfig(
+            flavor: testConfig.flavor,
+            baseUrl: testConfig.baseUrl,
+            clientSlug: testConfig.clientSlug,
+            officeEmail: testConfig.officeEmail,
+            officePhone: testConfig.officePhone,
+            demoPasswordLater: true,
+          )
+        : testConfig,
     crash: const NoOpCrashReportingService(),
     logger: logger,
     storage: store,
@@ -486,8 +581,8 @@ Future<FlowApp> startApp(
     ..registerSingleton<AppInfoService>(_FakeAppInfo())
     ..registerSingleton<PermissionService>(_FakePermission());
 
-  await locator<PhoneIdService>().getOrCreate();
-  await locator<SessionService>().restore();
+  // The app's own start: the phone ID and the stored login.
+  await prepareSession();
   // The test product picture, decoded once in real time (no network).
   await tester.runAsync(FakePictureImages.prepare);
 
@@ -523,14 +618,15 @@ Future<void> logInToCode(FlowApp app, {String password = 'secret-pass'}) async {
 }
 
 /// The `logged_in` answer of a login or a code, with or without a forced
-/// password change.
-ScriptedAnswer loggedIn({bool mustChange = false}) => ok({
+/// password change; [canSkip] adds `password_change_skippable`.
+ScriptedAnswer loggedIn({bool mustChange = false, bool canSkip = false}) => ok({
   'status': 'logged_in',
   'access_token': 'access-new',
   'access_expires_in': 900,
   'refresh_token': 'refresh-new',
   'refresh_expires_in': 2592000,
   'must_change_password': mustChange,
+  if (canSkip) 'password_change_skippable': true,
 });
 
 /// Logs in through the screens: email, password, emailed code.
@@ -550,9 +646,9 @@ Finder tab(String label) => find.descendant(
 
 const tiles = {
   'bulk': Key('verify.tool.bulk'),
+  'serials': Key('verify.tool.serials'),
   'report': Key('verify.tool.report'),
   'myReports': Key('verify.tool.myReports'),
-  'retailUsers': Key('verify.tool.retailUsers'),
 };
 
 /// Checks the tabs, the lookup form, and the MORE tiles of a role.
@@ -563,7 +659,7 @@ Future<void> expectRole(
   required Set<String> tileNames,
   bool noFeatures = false,
 }) async {
-  expect(tab('Verify'), findsOneWidget);
+  expect(tab('Check'), findsOneWidget);
   expect(tab('Profile'), findsOneWidget);
   expect(tab('History'), history ? findsOneWidget : findsNothing);
   expect(
@@ -615,4 +711,16 @@ void expectTrackingLog(String serial) {
   );
   expect(find.byKey(const Key('history.trackingLog')), findsOneWidget);
   expect(find.byKey(const Key('checkTile.number')), findsWidgets);
+}
+
+/// Fill the public access form without sending its code yet.
+Future<void> fillAccessForm(
+  FlowApp app, {
+  String email = 'person@example.com',
+}) async {
+  await app.enter(const Key('access.name'), 'Rahim Store');
+  await app.tap(find.byType(DropdownButtonFormField<int>));
+  await app.tap(find.text('Retail seller').last);
+  await app.enter(const Key('access.password'), 'chosen-pass-1');
+  await app.enter(const Key('access.email'), email);
 }

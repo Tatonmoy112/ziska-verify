@@ -8,6 +8,7 @@ import 'package:ziska_verify/shared/design_system/tokens/app_spacing.dart';
 import 'package:ziska_verify/shared/extensions/failure_message.dart';
 import 'package:ziska_verify/shared/widgets/app_empty_state.dart';
 import 'package:ziska_verify/shared/widgets/failure_banner.dart';
+import 'package:ziska_verify/shared/widgets/retry_countdown.dart';
 
 /// A cursor-paged list (final.md Sections 10.4, 14.1). Builds every status
 /// and asks for the next page when the list is scrolled to within 5 items
@@ -80,7 +81,14 @@ class AppPaginatedList<T> extends StatelessWidget {
                 message: state.failure!.message(l10n),
               ),
               const SizedBox(height: AppSpacing.md),
-              AppButton(label: l10n.retry, onPressed: onRetry),
+              // After a 429 the banner counts down; Retry waits for it.
+              RetryCountdown(
+                until: state.retryAt,
+                builder: (_, wait) => AppButton(
+                  label: l10n.retry,
+                  onPressed: wait > 0 ? null : onRetry,
+                ),
+              ),
             ],
           ),
         );
@@ -161,10 +169,13 @@ class _Footer<T> extends StatelessWidget {
               message: state.failure!.message(l10n),
             ),
             const SizedBox(height: AppSpacing.sm),
-            AppButton(
-              label: l10n.retry,
-              variant: AppButtonVariant.outlined,
-              onPressed: onRetry,
+            RetryCountdown(
+              until: state.retryAt,
+              builder: (_, wait) => AppButton(
+                label: l10n.retry,
+                variant: AppButtonVariant.outlined,
+                onPressed: wait > 0 ? null : onRetry,
+              ),
             ),
           ],
         ),

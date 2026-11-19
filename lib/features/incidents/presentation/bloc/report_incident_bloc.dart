@@ -13,6 +13,12 @@ sealed class ReportIncidentEvent {
   const ReportIncidentEvent();
 }
 
+/// One of the official's own checks, picked for the report (SRS UC-08).
+final class CheckRefChosen extends ReportIncidentEvent {
+  const CheckRefChosen(this.ref);
+  final String ref;
+}
+
 final class CheckRefCleared extends ReportIncidentEvent {
   const CheckRefCleared();
 }
@@ -59,6 +65,7 @@ class ReportPhoto {
     this.status = PhotoStatus.waiting,
     this.number,
     this.failure,
+    this.retryAt,
   });
 
   final int localId;
@@ -68,6 +75,9 @@ class ReportPhoto {
   /// The photo's number on the report (`n`), once sent.
   final int? number;
   final Failure? failure;
+
+  /// After a `429`: not sent again before this time (guide section 1).
+  final DateTime? retryAt;
 
   Uint8List get bytes => photo.bytes;
 
@@ -87,16 +97,25 @@ class ReportPhoto {
     PhotoStatus? status,
     int? number,
     Failure? Function()? failure,
+    DateTime? Function()? retryAt,
   }) => ReportPhoto(
     localId: localId,
     photo: photo,
     status: status ?? this.status,
     number: number ?? this.number,
+    retryAt: retryAt == null ? this.retryAt : retryAt(),
     failure: failure == null ? this.failure : failure(),
   );
 }
 
-enum FilingStatus { editing, filing, filed, failed }
+/// [unconfirmed]: the connection dropped while filing, so the report may
+/// have been filed; it is never filed again from this screen (build guide
+/// step 7, SRS FR-INC-05).
+enum FilingStatus { editing, filing, filed, failed, unconfirmed }
+
+/// What a `404` on filing says is gone (app API guide §6.1): the linked
+/// check, the linked retail user, or the route itself ("Not available").
+enum MissingLink { check, retailUser, route }
 
 class ReportIncidentState {
   const ReportIncidentState({
@@ -109,7 +128,9 @@ class ReportIncidentState {
     this.failure,
     this.photoProblem,
     this.photoProblemCount = 0,
+    this.samePhotoCount = 0,
     this.retryAt,
+    this.missing,
   });
 
   final String? checkRef;
@@ -125,6 +146,13 @@ class ReportIncidentState {
   /// Why the last photo could not be prepared, and a counter to show it.
   final PhotoProblem? photoProblem;
   final int photoProblemCount;
+
+  /// Counts photos the server already had on this report (it answered an
+  /// `n` another tile holds); each one is shown once.
+  final int samePhotoCount;
+
+  /// After a `404` on filing: what was not found.
+  final MissingLink? missing;
 
   /// After a `429` on filing: no new filing before this time (final.md
   /// Sections 13.5.2, 15.4).
@@ -144,7 +172,9 @@ class ReportIncidentState {
     Failure? Function()? failure,
     PhotoProblem? photoProblem,
     int? photoProblemCount,
+    int? samePhotoCount,
     DateTime? Function()? retryAt,
+    MissingLink? Function()? missing,
   }) => ReportIncidentState(
     checkRef: checkRef == null ? this.checkRef : checkRef(),
     retailUser: retailUser == null ? this.retailUser : retailUser(),
@@ -155,7 +185,9 @@ class ReportIncidentState {
     failure: failure == null ? this.failure : failure(),
     photoProblem: photoProblem ?? this.photoProblem,
     photoProblemCount: photoProblemCount ?? this.photoProblemCount,
+    samePhotoCount: samePhotoCount ?? this.samePhotoCount,
     retryAt: retryAt == null ? this.retryAt : retryAt(),
+    missing: missing == null ? this.missing : missing(),
   );
 }
 
@@ -175,6 +207,9 @@ class ReportIncidentBloc
        _photos = photos,
        _now = now ?? clock.now,
        super(ReportIncidentState(checkRef: checkRef)) {
+    on<CheckRefChosen>((e, emit) {
+      if (state.canEdit) emit(state.copyWith(checkRef: () => e.ref));
+    });
     on<CheckRefCleared>((_, emit) {
       if (state.canEdit) emit(state.copyWith(checkRef: () => null));
     });
@@ -198,6 +233,9 @@ class ReportIncidentBloc
   /// Photos may be added or sent again: before filing, or within the hour.
   bool get canAddPhoto =>
       state.photos.length < ReportRules.maxPhotos && _withinWindow;
+
+  /// The hour for photos after filing is over (guide section 6.2).
+  bool get photoHourOver => state.isFiled && !_withinWindow;
 
   bool get _withinWindow {
     final filedAt = state.filedAt;
@@ -257,7 +295,13 @@ class ReportIncidentBloc
     if (!state.canEdit || event.note.trim().isEmpty) return;
     final wait = state.retryAt;
     if (wait != null && _now().isBefore(wait)) return;
-    emit(state.copyWith(filing: FilingStatus.filing, failure: () => null));
+    emit(
+      state.copyWith(
+        filing: FilingStatus.filing,
+        failure: () => null,
+        missing: () => null,
+      ),
+    );
     final result = await _fileReport(
       note: event.note,
       checkRef: state.checkRef,
@@ -273,31 +317,76 @@ class ReportIncidentBloc
           ),
         );
         add(const _UploadRequested());
+      // Sent and lost: it may be filed. Never sent: filing again is safe.
+      // Answered 2xx but unreadable: the server took it, so it may be
+      // filed too (a 5xx stays failed: the guide allows filing again).
+      case Err(:final failure)
+          when (failure.exception is NetworkException &&
+                  !(failure.exception as NetworkException).wasNotSent) ||
+              _acceptedUnreadable(failure.exception):
+        emit(
+          state.copyWith(
+            filing: FilingStatus.unconfirmed,
+            failure: () => failure,
+          ),
+        );
       case Err(:final failure):
+        final missing = failure.exception is NotFoundException
+            ? _missing(failure.exception)
+            : null;
         emit(
           state.copyWith(
             filing: FilingStatus.failed,
             failure: () => failure,
             retryAt: () => failure.exception is RateLimitedException
-                ? _now().add(
-                    failure.retryAfter ?? const Duration(seconds: 60),
-                  )
+                ? failure.retryAtFrom(_now())
                 : null,
+            missing: () => missing,
+            // A retail user that cannot be named any more is taken off, so
+            // the picker is offered again.
+            retailUser: missing == MissingLink.retailUser ? () => null : null,
           ),
         );
     }
+  }
+
+  /// By the server's message ("Check not found.", "Retail user not
+  /// found."), else by the one link sent; else the route itself.
+  MissingLink _missing(AppException e) {
+    final text = e.message?.toLowerCase() ?? '';
+    if (text.contains('retail user')) return MissingLink.retailUser;
+    if (text.contains('check')) return MissingLink.check;
+    final check = state.checkRef != null;
+    final retail = state.retailUser != null;
+    if (check && !retail) return MissingLink.check;
+    if (retail && !check) return MissingLink.retailUser;
+    return MissingLink.route;
+  }
+
+  /// A success status whose body could not be read.
+  static bool _acceptedUnreadable(AppException e) {
+    if (e is! InternalErrorException) return false;
+    final status = e.statusCode;
+    return e.message == 'incident_id_shape' ||
+        (status != null && status >= 200 && status < 300);
   }
 
   void _onRetry(PhotoRetried event, Emitter<ReportIncidentState> emit) {
     if (!state.isFiled || !_withinWindow) return;
     final target = state.photos.where((p) => p.localId == event.localId);
     if (target.isEmpty || !target.single.canRetry) return;
+    final wait = target.single.retryAt;
+    if (wait != null && _now().isBefore(wait)) return;
     emit(
       state.copyWith(
         photos: [
           for (final p in state.photos)
             p.localId == event.localId
-                ? p.copyWith(status: PhotoStatus.waiting, failure: () => null)
+                ? p.copyWith(
+                    status: PhotoStatus.waiting,
+                    failure: () => null,
+                    retryAt: () => null,
+                  )
                 : p,
         ],
       ),
@@ -325,6 +414,26 @@ class ReportIncidentBloc
       final current = state.photos.firstWhere(
         (p) => p.localId == next.localId,
       );
+      // The same file again answers the `n` it already has (guide section
+      // 6.2): one photo, one tile.
+      if (result case Success(:final value)
+          when state.photos.any(
+            (p) =>
+                p.localId != next.localId &&
+                p.status == PhotoStatus.sent &&
+                p.number == value,
+          )) {
+        emit(
+          state.copyWith(
+            photos: [
+              for (final p in state.photos)
+                if (p.localId != next.localId) p,
+            ],
+            samePhotoCount: state.samePhotoCount + 1,
+          ),
+        );
+        continue;
+      }
       _replace(
         emit,
         switch (result) {
@@ -336,9 +445,18 @@ class ReportIncidentBloc
           Err(:final failure) => current.copyWith(
             status: PhotoStatus.failed,
             failure: () => failure,
+            // A 429 waits its Retry-After; without one, the photo can be
+            // tapped again (guide section 1: never a number in the app).
+            retryAt: () => failure.retryAtFrom(_now()),
           ),
         },
       );
+      // Over the limit: the next photo would be refused too; stop here.
+      if (result case Err(
+        :final failure,
+      ) when failure.exception is RateLimitedException) {
+        return;
+      }
     }
   }
 

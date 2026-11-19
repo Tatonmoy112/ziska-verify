@@ -15,6 +15,7 @@ import 'package:ziska_verify/shared/design_system/tokens/app_spacing.dart';
 import 'package:ziska_verify/shared/extensions/failure_message.dart';
 import 'package:ziska_verify/shared/widgets/failure_banner.dart';
 import 'package:ziska_verify/shared/widgets/gradient_header.dart';
+import 'package:ziska_verify/shared/widgets/retry_countdown.dart';
 
 /// `auth/password/reset`: ends every login and forgets every trusted phone;
 /// the official logs in again (final.md Section 6.6).
@@ -102,28 +103,48 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     onChanged: (_) => setState(() {}),
                   ),
                   if (state.status == SubmitStatus.failure) ...[
+                    const SizedBox(height: AppSpacing.md),
                     FailureBanner(
                       failure: state.failure!,
                       retryAt: state.retryAt,
                       message: switch (state.failure!.exception) {
-                        UnauthenticatedException() => l10n.codeWrong,
+                        // Also after 10 wrong codes in an hour (backend
+                        // D64): the answer is the same, so is the text.
+                        UnauthenticatedException() => l10n.resetCodeWrong,
                         PolicyDeniedException() => l10n.passwordRuleBroken,
                         _ => state.failure!.message(l10n),
                       },
                     ),
                     const SizedBox(height: AppSpacing.md),
                   ],
-                  AppButton(
-                    key: const Key('reset.submit'),
-                    label: l10n.resetButton,
-                    loading: state.isSubmitting,
-                    onPressed: _ready
-                        ? () => context.read<ResetPasswordCubit>().submit(
-                            email: widget.email,
-                            code: _code.text,
-                            newPassword: _new.text,
-                          )
-                        : null,
+                  RetryCountdown(
+                    until: state.retryAt,
+                    builder: (context, seconds) => AppButton(
+                      key: const Key('reset.submit'),
+                      label: l10n.resetButton,
+                      loading: state.isSubmitting,
+                      onPressed: _ready && seconds == 0
+                          ? () => context.read<ResetPasswordCubit>().submit(
+                              email: widget.email,
+                              code: _code.text,
+                              newPassword: _new.text,
+                            )
+                          : null,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  // Step 1 again, with the email kept (guide §3.7, D64).
+                  Center(
+                    child: TextButton(
+                      key: const Key('reset.newCode'),
+                      onPressed: state.isSubmitting
+                          ? null
+                          : () => context.pushReplacementNamed(
+                              RouteNames.forgotPassword,
+                              extra: widget.email,
+                            ),
+                      child: Text(l10n.resetNewCode),
+                    ),
                   ),
                 ],
               ),

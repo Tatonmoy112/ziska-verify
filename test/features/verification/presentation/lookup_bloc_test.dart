@@ -96,19 +96,18 @@ void main() {
     );
 
     blocTest<LookupBloc, LookupState>(
-      'a hidden code is kept only masked, with the check time',
+      'a serial is kept with the check time',
       build: build,
       act: (bloc) async {
         bloc.add(const FormatsRequested());
         await Future<void>.delayed(Duration.zero);
-        bloc.add(const LookupRequested(LookupWay.hiddenCode, '4815 1623-4200'));
+        bloc.add(const LookupRequested(LookupWay.serial, '4815 1623-4200'));
       },
       verify: (bloc) {
         final checked = bloc.state.checked!;
-        expect(checked.way, LookupWay.hiddenCode);
-        expect(checked.shown, '*****200');
+        expect(checked.way, LookupWay.serial);
+        expect(checked.shown, '481516234200');
         expect(checked.at, DateTime(2026, 11, 10));
-        expect(bloc.state.toString(), isNot(contains('481516234200')));
       },
     );
 

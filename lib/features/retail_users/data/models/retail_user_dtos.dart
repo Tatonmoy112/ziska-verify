@@ -30,34 +30,3 @@ class RetailUserDto {
   final String name;
   final String email;
 }
-
-@JsonSerializable(fieldRename: FieldRename.snake, createToJson: false)
-class RetailRoleDto {
-  const RetailRoleDto({required this.id, required this.name});
-
-  factory RetailRoleDto.fromJson(Map<String, dynamic> json) =>
-      _$RetailRoleDtoFromJson(json);
-
-  final int id;
-  final String name;
-}
-
-/// `POST retail-users` → `data` (app API guide §7.3). `email_sent` is
-/// `true`, `false`, or `null` (not sent, as asked).
-@JsonSerializable(fieldRename: FieldRename.snake, createToJson: false)
-class AddedRetailUserDto {
-  const AddedRetailUserDto({
-    required this.id,
-    required this.name,
-    required this.email,
-    this.emailSent,
-  });
-
-  factory AddedRetailUserDto.fromJson(Map<String, dynamic> json) =>
-      _$AddedRetailUserDtoFromJson(json);
-
-  final String id;
-  final String name;
-  final String email;
-  final bool? emailSent;
-}

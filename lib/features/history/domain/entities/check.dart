@@ -27,9 +27,6 @@ enum CheckResult {
   final String wire;
 }
 
-/// Whose checks (final.md Section 7).
-enum CheckScope { own, all }
-
 /// One check in History (final.md Section 13.4).
 class CheckRecord {
   const CheckRecord({
@@ -42,6 +39,7 @@ class CheckRecord {
     this.serial,
     this.product,
     this.batch,
+    this.sessionId,
   });
 
   final String ref;
@@ -59,6 +57,7 @@ class CheckRecord {
   final String? serial;
   final String? product;
   final String? batch;
+  final String? sessionId;
 }
 
 /// Counts of every check matching the filters (first page only).
@@ -91,7 +90,7 @@ abstract class CheckQuery with _$CheckQuery {
 
     /// A serial or a reference number.
     String? search,
-    @Default(CheckScope.own) CheckScope scope,
+    String? sessionId,
   }) = _CheckQuery;
 
   const CheckQuery._();

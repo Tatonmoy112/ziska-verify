@@ -23,10 +23,9 @@ void main() {
 
   Future<void> addAndSend(FlowApp app) async {
     for (final serial in ['1000001', '1000002', '1000003']) {
-      await app.enter(const Key('bulk.input'), serial);
-      await app.tap(find.byKey(const Key('bulk.add')));
+      await app.enter(const Key('serials.input'), serial);
     }
-    await app.tap(find.byKey(const Key('bulk.send')));
+    await app.tap(find.byKey(const Key('serials.submit')));
   }
 
   group('ROLE', () {
@@ -57,7 +56,7 @@ void main() {
         tester,
         history: false,
         lookupForm: true,
-        tileNames: {'bulk'},
+        tileNames: {'bulk', 'serials'},
       );
     });
 
@@ -97,9 +96,9 @@ void main() {
         tester,
         history: false,
         lookupForm: false,
-        tileNames: {'bulk'},
+        tileNames: {'bulk', 'serials'},
       );
-      expect(find.byKey(const Key('verify.scan')), findsNothing);
+      expect(find.byKey(const Key('verify.camera')), findsNothing);
     });
 
     testWidgets('TC-ROLE-014 history only', (tester) async {
@@ -113,22 +112,14 @@ void main() {
       );
     });
 
-    testWidgets('TC-ROLE-015 history:all without history:own', (
-      tester,
-    ) async {
-      final app = await startApp(tester, profile: Roles.only(['history:all']));
-      await app.tap(tab('History'));
-      await app.tap(find.byKey(const Key('history.filters')));
-      expect(find.byKey(const Key('history.scopeAll')), findsOneWidget);
-    });
-
     testWidgets('TC-ROLE-016 retail users only', (tester) async {
       await startApp(tester, profile: Roles.only(['retail_user:add']));
       await expectRole(
         tester,
         history: false,
         lookupForm: false,
-        tileNames: {'retailUsers'},
+        tileNames: {},
+        noFeatures: true,
       );
     });
 
@@ -145,10 +136,10 @@ void main() {
         'official Home', (tester) async {
       final app = await startApp(
         tester,
-        overrides: {'POST lookups/bulk': always(apiError(403, 'forbidden'))},
+        overrides: {'POST lookups/serials': always(apiError(403, 'forbidden'))},
       );
       final mesBefore = app.backend.sent('GET', 'me').length;
-      await app.tap(find.byKey(const Key('verify.tool.bulk')));
+      await app.tap(find.byKey(const Key('verify.tool.serials')));
       app.backend.profile = Roles.only([
         'history:own',
         'incident:report',
@@ -157,27 +148,27 @@ void main() {
       await addAndSend(app);
 
       expect(app.backend.sent('GET', 'me').length, mesBefore + 1);
-      expect(find.byKey(const Key('bulk.input')), findsNothing);
+      expect(find.byKey(const Key('serials.input')), findsNothing);
       expect(lookupForm, findsOneWidget);
       await tester.drag(find.byType(Scrollable).first, const Offset(0, -3000));
       await tester.pumpAndSettle();
-      expect(find.byKey(const Key('verify.tool.bulk')), findsNothing);
+      expect(find.byKey(const Key('verify.tool.serials')), findsNothing);
     });
 
     testWidgets('TC-ROLE-020 a 403 while the profile still lists the '
         'permission: one reload, no loop', (tester) async {
       final app = await startApp(
         tester,
-        overrides: {'POST lookups/bulk': always(apiError(403, 'forbidden'))},
+        overrides: {'POST lookups/serials': always(apiError(403, 'forbidden'))},
       );
       final mesBefore = app.backend.sent('GET', 'me').length;
-      await app.tap(find.byKey(const Key('verify.tool.bulk')));
+      await app.tap(find.byKey(const Key('verify.tool.serials')));
       await addAndSend(app);
       await tester.pump(const Duration(seconds: 5));
       await tester.pumpAndSettle();
 
       expect(app.backend.sent('GET', 'me').length, mesBefore + 1);
-      expect(app.backend.sent('POST', 'lookups/bulk'), hasLength(1));
+      expect(app.backend.sent('POST', 'lookups/serials'), hasLength(1));
       expect(find.textContaining('Reference'), findsWidgets);
     });
   });
@@ -205,10 +196,6 @@ void main() {
         expect(home, findsOneWidget);
       }
 
-      await openAndBack(
-        () => app.tap(find.byKey(const Key('verify.scan'))),
-        lookupForm,
-      );
       await openAndBack(() async {
         await app.enter(const Key('verify.input'), '1000001');
         await app.tap(find.byKey(const Key('verify.submit')));

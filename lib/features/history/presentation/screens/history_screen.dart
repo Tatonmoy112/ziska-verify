@@ -8,7 +8,6 @@ import 'package:ziska_verify/core/utils/display_time.dart';
 import 'package:ziska_verify/features/history/domain/entities/check.dart';
 import 'package:ziska_verify/features/history/presentation/bloc/history_bloc.dart';
 import 'package:ziska_verify/features/history/presentation/widgets/check_tile.dart';
-import 'package:ziska_verify/features/profile/presentation/bloc/profile_cubit.dart';
 import 'package:ziska_verify/l10n/generated/app_localizations.dart';
 import 'package:ziska_verify/shared/design_system/components/buttons/app_button.dart';
 import 'package:ziska_verify/shared/design_system/components/chips/count_chip.dart';
@@ -19,20 +18,60 @@ import 'package:ziska_verify/shared/design_system/tokens/app_spacing.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_typography.dart';
 import 'package:ziska_verify/shared/widgets/app_paginated_list.dart';
 import 'package:ziska_verify/shared/widgets/label_value_row.dart';
+import 'package:ziska_verify/shared/widgets/navy_app_bar.dart';
 
 /// The History tab (final.md Section 13.4). A serial search shows the
-/// item's tracking log (Section 13.4.1).
+/// item's tracking log (Section 13.4).
+///
+/// With [sessions], a **Checks | Sessions** switch sits under the title and
+/// **Sessions** shows that view (the official's own sessions, Section
+/// 13.4). Without it (one session's checks), only the checks list shows,
+/// under [title].
 class HistoryScreen extends StatefulWidget {
-  const HistoryScreen({super.key});
+  const HistoryScreen({
+    this.sessions,
+    this.title,
+    this.top,
+    this.onSessionsShown,
+    super.key,
+  });
+
+  /// Called when the tab comes back with the Sessions view open, so the
+  /// list is fresh (final.md Section 13.4).
+  final void Function(BuildContext context)? onSessionsShown;
+
+  final Widget? sessions;
+
+  /// Shown above the checks (one session's summary, SRS FR-SCN-16).
+  final Widget? top;
+
+  /// The app bar's title; the History tab's name when `null`.
+  final String? title;
 
   @override
   State<HistoryScreen> createState() => _HistoryScreenState();
 }
 
+enum _HistoryView { checks, sessions }
+
 class _HistoryScreenState extends State<HistoryScreen> {
+  _HistoryView _view = _HistoryView.checks;
+
   late final TextEditingController _search = TextEditingController(
     text: context.read<HistoryBloc>().state.query.search,
   );
+
+  bool? _shown;
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final shown = TickerMode.valuesOf(context).enabled;
+    if (shown && _shown == false) {
+      context.read<HistoryBloc>().add(const HistoryRefreshed());
+      if (_view == _HistoryView.sessions) widget.onSessionsShown?.call(context);
+    }
+    _shown = shown;
+  }
 
   @override
   void dispose() {
@@ -40,12 +79,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
     super.dispose();
   }
 
-  Future<void> _openFilters(CheckQuery query, bool canSeeAll) async {
+  Future<void> _openFilters(CheckQuery query) async {
     final picked = await showModalBottomSheet<CheckQuery>(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
-      builder: (_) => _FilterSheet(query: query, canSeeAll: canSeeAll),
+      builder: (_) => _FilterSheet(query: query),
     );
     if (picked != null && mounted) {
       context.read<HistoryBloc>().add(HistoryQueryChanged(picked));
@@ -55,69 +94,137 @@ class _HistoryScreenState extends State<HistoryScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final canSeeAll = context.select<ProfileCubit, bool>(
-      (c) => c.state.permissions.contains('history:all'),
-    );
 
+    final sessions = widget.sessions;
+    final body = sessions != null && _view == _HistoryView.sessions
+        ? sessions
+        : _checks(l10n);
+    final top = widget.top;
     return Scaffold(
       backgroundColor: AppColors.surfaceMuted,
-      appBar: AppBar(title: Text(l10n.tabHistory)),
-      body: BlocBuilder<HistoryBloc, HistoryState>(
-        builder: (context, state) {
-          final bloc = context.read<HistoryBloc>();
-          final tracking = _trackedSerial(state.query);
-          // A tracking log numbers the checks, newest first.
-          final places = Map<CheckRecord, int>.identity();
-          if (tracking != null) {
-            for (final (i, c) in state.list.items.indexed) {
-              places[c] = i + 1;
-            }
-          }
-          return AppPaginatedList<CheckRecord>(
-            state: state.list,
-            placeholderItem: _placeholder,
-            itemBuilder: (context, check) => CheckTile(
-              check: check,
-              showOfficial: state.query.scope == CheckScope.all,
-              number: places[check],
-            ),
-            onNextPage: () => bloc.add(const HistoryNextPageRequested()),
-            onRetry: () => bloc.add(const HistoryRetried()),
-            onRefresh: () async {
-              bloc.add(const HistoryRefreshed());
-              await bloc.stream.firstWhere((s) => !s.list.isLoading);
-            },
-            emptyTitle: l10n.historyEmptyTitle,
-            emptyBody: l10n.historyEmptyBody,
-            header: _Header(
-              search: _search,
-              state: state,
-              tracking: tracking,
-              onSearch: (text) => bloc.add(HistorySearchTyped(text)),
-              onResult: (result) => bloc.add(HistoryResultPicked(result)),
-              onClearSearch: () {
-                _search.clear();
-                bloc.add(const HistorySearchTyped(''));
-              },
-              onFilters: () => unawaited(_openFilters(state.query, canSeeAll)),
-              onClearFilters: () => bloc.add(
-                // The chips' result stays: only the sheet's filters go.
-                HistoryQueryChanged(
-                  CheckQuery(
-                    search: state.query.search,
-                    result: state.query.result,
+      appBar: NavyAppBar(title: widget.title ?? l10n.tabHistory),
+      body: sessions == null
+          ? top == null
+                ? body
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          AppSpacing.screen,
+                          AppSpacing.md,
+                          AppSpacing.screen,
+                          0,
+                        ),
+                        child: top,
+                      ),
+                      Expanded(child: body),
+                    ],
+                  )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // In the body, not the app bar, so it grows with the font
+                // size (TC-NFR-014).
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.screen,
+                    AppSpacing.sm,
+                    AppSpacing.screen,
+                    0,
                   ),
+                  child: SegmentedButton<_HistoryView>(
+                    key: const Key('history.view'),
+                    segments: [
+                      ButtonSegment(
+                        value: _HistoryView.checks,
+                        label: Text(
+                          l10n.historyChecksView,
+                          key: const Key('history.view.checks'),
+                        ),
+                      ),
+                      ButtonSegment(
+                        value: _HistoryView.sessions,
+                        label: Text(
+                          l10n.sessionsTitle,
+                          key: const Key('history.view.sessions'),
+                        ),
+                      ),
+                    ],
+                    selected: {_view},
+                    showSelectedIcon: false,
+                    onSelectionChanged: (s) => setState(() => _view = s.single),
+                  ),
+                ),
+                Expanded(child: body),
+              ],
+            ),
+    );
+  }
+
+  Widget _checks(AppLocalizations l10n) {
+    return BlocBuilder<HistoryBloc, HistoryState>(
+      builder: (context, state) {
+        final bloc = context.read<HistoryBloc>();
+        final tracking = _trackedSerial(state.query);
+        // A tracking log numbers the checks, newest first.
+        final places = Map<CheckRecord, int>.identity();
+        if (tracking != null) {
+          for (final (i, c) in state.list.items.indexed) {
+            places[c] = i + 1;
+          }
+        }
+        return AppPaginatedList<CheckRecord>(
+          state: state.list,
+          placeholderItem: _placeholder,
+          itemBuilder: (context, check) => CheckTile(
+            check: check,
+            number: places[check],
+          ),
+          onNextPage: () => bloc.add(const HistoryNextPageRequested()),
+          onRetry: () => bloc.add(const HistoryRetried()),
+          onRefresh: () async {
+            // A 429 wait: nothing is asked for, so nothing to wait for.
+            if (bloc.state.list.isWaiting) return;
+            bloc.add(const HistoryRefreshed());
+            await bloc.stream.firstWhere((s) => !s.list.isLoading);
+          },
+          // No check at all yet, or none for these filters (§14.2).
+          emptyTitle: l10n.historyEmptyTitle,
+          emptyBody:
+              state.query.hasFilters ||
+                  (state.query.search?.trim().isNotEmpty ?? false)
+              ? l10n.historyEmptyBody
+              : l10n.historyNoChecksYet,
+          header: _Header(
+            search: _search,
+            state: state,
+            tracking: tracking,
+            onSearch: (text) => bloc.add(HistorySearchTyped(text)),
+            onResult: (result) => bloc.add(HistoryResultPicked(result)),
+            onClearSearch: () {
+              _search.clear();
+              bloc.add(const HistorySearchTyped(''));
+            },
+            onFilters: () => unawaited(_openFilters(state.query)),
+            onClearFilters: () => bloc.add(
+              // The chips' result stays: only the sheet's filters go.
+              HistoryQueryChanged(
+                CheckQuery(
+                  search: state.query.search,
+                  result: state.query.result,
+                  sessionId: state.query.sessionId,
                 ),
               ),
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 }
 
-/// The serial a digits-only search tracks (Section 13.4.1); `null` for no
+/// The serial a digits-only search tracks (Section 13.4); `null` for no
 /// search or a reference number.
 String? _trackedSerial(CheckQuery query) {
   final searched = query.search?.trim();
@@ -165,10 +272,7 @@ class _Header extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final query = state.query;
     final counts = state.chipTotals;
-    final filtered =
-        query.way != null ||
-        query.from != null ||
-        query.scope == CheckScope.all;
+    final filtered = query.way != null || query.from != null;
     final chips = [
       (null, l10n.historyAll, counts?.total),
       (CheckResult.valid, l10n.bulkValid, counts?.valid),
@@ -365,10 +469,9 @@ class _ItemCard extends StatelessWidget {
 }
 
 class _FilterSheet extends StatefulWidget {
-  const _FilterSheet({required this.query, required this.canSeeAll});
+  const _FilterSheet({required this.query});
 
   final CheckQuery query;
-  final bool canSeeAll;
 
   @override
   State<_FilterSheet> createState() => _FilterSheetState();
@@ -424,14 +527,18 @@ class _FilterSheetState extends State<_FilterSheet> {
               l10n.historyWay.toUpperCase(),
               style: AppTypography.fieldLabel,
             ),
+            const SizedBox(height: AppSpacing.xs),
+            // The same chip as the result chips on the screen (one style).
             Wrap(
               spacing: AppSpacing.xs,
+              runSpacing: AppSpacing.xs,
               children: [
                 for (final (value, label) in ways)
-                  ChoiceChip(
-                    label: Text(label),
+                  CountChip(
+                    key: Key('history.way.${value?.name ?? 'any'}'),
+                    label: label,
                     selected: _query.way == value,
-                    onSelected: (_) =>
+                    onTap: () =>
                         setState(() => _query = _query.copyWith(way: value)),
                   ),
               ],
@@ -461,21 +568,6 @@ class _FilterSheetState extends State<_FilterSheet> {
                   child: Text(l10n.historyReset),
                 ),
               ),
-            if (widget.canSeeAll) ...[
-              const SizedBox(height: AppSpacing.sm),
-              SwitchListTile(
-                key: const Key('history.scopeAll'),
-                contentPadding: EdgeInsets.zero,
-                title: Text(l10n.historyScopeAll),
-                subtitle: Text(l10n.historyScopeAllHint),
-                value: _query.scope == CheckScope.all,
-                onChanged: (v) => setState(
-                  () => _query = _query.copyWith(
-                    scope: v ? CheckScope.all : CheckScope.own,
-                  ),
-                ),
-              ),
-            ],
             const SizedBox(height: AppSpacing.lg),
             AppButton(
               label: l10n.historyApply,

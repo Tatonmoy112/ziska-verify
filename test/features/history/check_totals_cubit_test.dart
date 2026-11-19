@@ -72,7 +72,6 @@ void main() {
       expect(cubit.state.totals, _totals);
       final (query, page) = asked.single;
       expect(query, const CheckQuery());
-      expect(query.scope, CheckScope.own);
       expect(page.limit, 1);
       expect(page.cursor, isNull);
     },

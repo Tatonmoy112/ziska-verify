@@ -5,11 +5,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:ziska_verify/core/errors/app_exception.dart';
+import 'package:ziska_verify/core/navigation/route_names.dart';
 import 'package:ziska_verify/core/services/media/photo_service.dart';
 import 'package:ziska_verify/features/incidents/domain/entities/report.dart';
 import 'package:ziska_verify/features/incidents/presentation/bloc/report_incident_bloc.dart';
 import 'package:ziska_verify/l10n/generated/app_localizations.dart';
 import 'package:ziska_verify/shared/design_system/components/buttons/app_button.dart';
+import 'package:ziska_verify/shared/design_system/components/inputs/app_password_field.dart';
 import 'package:ziska_verify/shared/design_system/components/inputs/app_text_field.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_colors.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_radius.dart';
@@ -17,10 +19,20 @@ import 'package:ziska_verify/shared/design_system/tokens/app_spacing.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_typography.dart';
 import 'package:ziska_verify/shared/extensions/failure_message.dart';
 import 'package:ziska_verify/shared/widgets/failure_banner.dart';
+import 'package:ziska_verify/shared/widgets/navy_app_bar.dart';
+import 'package:ziska_verify/shared/widgets/retry_countdown.dart';
 
 /// Report incident (final.md Section 13.5).
 class ReportIncidentScreen extends StatefulWidget {
-  const ReportIncidentScreen({required this.pickRetailUser, super.key});
+  const ReportIncidentScreen({
+    required this.pickRetailUser,
+    this.pickCheck,
+    super.key,
+  });
+
+  /// Picks one of the official's own checks; `null` without `history:own`
+  /// (the picker reads the history).
+  final Future<String?> Function(BuildContext context)? pickCheck;
 
   /// Opens the retail user picker; wired by the router (Section 4.2).
   final Future<({String id, String name})?> Function(BuildContext context)
@@ -32,6 +44,9 @@ class ReportIncidentScreen extends StatefulWidget {
 
 class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
   final _note = TextEditingController();
+
+  /// The last [ReportIncidentState.samePhotoCount] already shown.
+  int _shownSame = 0;
 
   @override
   void dispose() {
@@ -67,6 +82,47 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
     }
   }
 
+  /// Done: while a photo is sending or can be sent again, leaving loses
+  /// it, so ask first (guide 6.2: keep a failed photo and send it again).
+  Future<void> _done(ReportIncidentState state) async {
+    final pending = state.photos.any(
+      (p) =>
+          p.status == PhotoStatus.waiting ||
+          p.status == PhotoStatus.sending ||
+          (p.status == PhotoStatus.failed && p.canRetry),
+    );
+    if (pending) {
+      final l10n = AppLocalizations.of(context);
+      final leave = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(l10n.reportLeaveTitle),
+          content: Text(l10n.reportLeaveBody),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text(l10n.reportStay),
+            ),
+            TextButton(
+              key: const Key('report.leave'),
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: Text(l10n.reportLeave),
+            ),
+          ],
+        ),
+      );
+      if (leave != true || !mounted) return;
+    }
+    if (mounted) context.pop();
+  }
+
+  Future<void> _chooseCheck() async {
+    final ref = await widget.pickCheck!(context);
+    if (ref != null && mounted) {
+      context.read<ReportIncidentBloc>().add(CheckRefChosen(ref));
+    }
+  }
+
   Future<void> _chooseRetailUser() async {
     final user = await widget.pickRetailUser(context);
     if (user != null && mounted) {
@@ -74,10 +130,40 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
     }
   }
 
+  static ReportPhoto? _lastPhotoFailure(ReportIncidentState state) => state
+      .photos
+      .where(
+        (p) =>
+            p.status == PhotoStatus.failed &&
+            p.failure != null &&
+            p.failure!.exception is! RateLimitedException,
+      )
+      .lastOrNull;
+
+  /// A 409 shows the server's message when it gives one ("The report has 3
+  /// photos already.", guide section 6.2); the app's text otherwise.
+  static String _photoMessage(AppLocalizations l10n, ReportPhoto photo) {
+    final failure = photo.failure!;
+    final e = failure.exception;
+    if (photo.canRetry) return failure.message(l10n);
+    if (e is ConflictException) {
+      final text = e.message?.trim();
+      return text == null || text.isEmpty ? l10n.reportPhotoConflict : text;
+    }
+    return l10n.reportPhotoRefused;
+  }
+
   String _filingError(AppLocalizations l10n, ReportIncidentState state) =>
       switch (state.failure!.exception) {
-        NotFoundException() => l10n.reportNotFound,
-        NetworkException() => l10n.reportUnconfirmed,
+        NotFoundException() => switch (state.missing) {
+          MissingLink.check => l10n.reportCheckGone,
+          MissingLink.retailUser => l10n.reportRetailUserGone,
+          MissingLink.route || null => l10n.errorNotAvailable,
+        },
+        NetworkException(:final wasNotSent) =>
+          wasNotSent ? l10n.errorNetwork : l10n.reportUnconfirmed,
+        _ when state.filing == FilingStatus.unconfirmed =>
+          l10n.reportUnreadable,
         _ => state.failure!.message(l10n),
       };
 
@@ -85,22 +171,30 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return BlocConsumer<ReportIncidentBloc, ReportIncidentState>(
-      listenWhen: (a, b) => a.photoProblemCount != b.photoProblemCount,
-      listener: (context, state) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            state.photoProblem == PhotoProblem.tooLarge
-                ? l10n.reportPhotoTooLarge
-                : l10n.reportPhotoUnreadable,
+      listenWhen: (a, b) =>
+          a.photoProblemCount != b.photoProblemCount ||
+          a.samePhotoCount != b.samePhotoCount,
+      listener: (context, state) {
+        final previous = _shownSame;
+        _shownSame = state.samePhotoCount;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              state.samePhotoCount != previous
+                  ? l10n.reportPhotoSame
+                  : state.photoProblem == PhotoProblem.tooLarge
+                  ? l10n.reportPhotoTooLarge
+                  : l10n.reportPhotoUnreadable,
+            ),
           ),
-        ),
-      ),
+        );
+      },
       builder: (context, state) {
         final bloc = context.read<ReportIncidentBloc>();
         final editable = state.canEdit;
         return Scaffold(
           backgroundColor: AppColors.surfaceMuted,
-          appBar: AppBar(title: Text(l10n.reportTitle)),
+          appBar: NavyAppBar(title: l10n.reportTitle),
           body: ListView(
             padding: const EdgeInsets.all(AppSpacing.screen),
             children: [
@@ -117,8 +211,13 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
                 enabled: editable,
                 minLines: 4,
                 maxLines: 8,
-                maxLength: ReportRules.noteMaxLength,
-                showCounter: true,
+                // The server counts characters as code points (guide
+                // sections 3.6, 6.1), so an emoji of two counts as two.
+                inputFormatters: const [
+                  CodePointLimit(ReportRules.noteMaxLength),
+                ],
+                counter:
+                    '${_note.text.runes.length}/${ReportRules.noteMaxLength}',
                 textCapitalization: TextCapitalization.sentences,
                 onChanged: (_) => setState(() {}),
               ),
@@ -130,6 +229,16 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
                   onClear: editable
                       ? () => bloc.add(const CheckRefCleared())
                       : null,
+                )
+              else if (editable && widget.pickCheck != null)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    key: const Key('report.check'),
+                    onPressed: () => unawaited(_chooseCheck()),
+                    icon: const Icon(LucideIcons.fileCheck, size: 18),
+                    label: Text(l10n.reportChooseCheck),
+                  ),
                 ),
               if (state.retailUser != null)
                 _LinkRow(
@@ -174,13 +283,26 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
                     ),
                 ],
               ),
-              if (state.isFiled &&
-                  !bloc.canAddPhoto &&
-                  state.photos.any((p) => p.canRetry)) ...[
+              // The last refused or failed photo, with its reference (guide
+              // section 1); a 429 counts down on its own tile.
+              if (_lastPhotoFailure(state) case final failed?) ...[
+                const SizedBox(height: AppSpacing.sm),
+                FailureBanner(
+                  key: const Key('report.photoFailure'),
+                  failure: failed.failure!,
+                  message: _photoMessage(l10n, failed),
+                ),
+              ],
+              // The hour is over: a photo still waiting or failed is not sent.
+              if (bloc.photoHourOver &&
+                  state.photos.any(
+                    (p) => p.canRetry || p.status == PhotoStatus.waiting,
+                  )) ...[
                 const SizedBox(height: AppSpacing.sm),
                 Text(l10n.reportPhotoWindowOver, style: AppTypography.caption),
               ],
-              if (state.filing == FilingStatus.failed) ...[
+              if (state.filing == FilingStatus.failed ||
+                  state.filing == FilingStatus.unconfirmed) ...[
                 const SizedBox(height: AppSpacing.md),
                 FailureBanner(
                   failure: state.failure!,
@@ -191,8 +313,17 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
               const SizedBox(height: AppSpacing.xl),
               if (state.isFiled)
                 AppButton(
+                  key: const Key('report.done'),
                   label: l10n.reportDone,
-                  onPressed: () => context.pop(),
+                  onPressed: () => unawaited(_done(state)),
+                )
+              else if (state.filing == FilingStatus.unconfirmed)
+                // The report may be filed: look, never file again here.
+                AppButton(
+                  key: const Key('report.checkMyReports'),
+                  label: l10n.reportCheckMyReports,
+                  onPressed: () =>
+                      context.pushReplacementNamed(RouteNames.myReports),
                 )
               else
                 AppButton(
@@ -321,7 +452,12 @@ class _PhotoTile extends StatelessWidget {
           photo.canRetry ? LucideIcons.refreshCw : LucideIcons.circleX,
           color: AppColors.onPrimary,
         ),
-        photo.canRetry ? l10n.reportPhotoFailedRetry : l10n.reportPhotoRefused,
+        photo.canRetry
+            ? l10n.reportPhotoFailedRetry
+            // 409: three photos already, or the hour is over (guide 6.2).
+            : photo.failure?.exception is ConflictException
+            ? l10n.reportPhotoConflict
+            : l10n.reportPhotoRefused,
       ),
     };
     final removable =
@@ -367,11 +503,16 @@ class _PhotoTile extends StatelessWidget {
             ],
           ),
           if (hint != null)
-            Text(
-              hint,
-              style: AppTypography.caption,
-              textAlign: TextAlign.center,
-              maxLines: 2,
+            // A 429 counts down before the photo can be sent again.
+            RetryCountdown(
+              until: photo.retryAt,
+              builder: (context, seconds) => Text(
+                seconds > 0 ? l10n.errorRateLimited(seconds) : hint,
+                style: AppTypography.caption,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
         ],
       ),

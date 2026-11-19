@@ -29,7 +29,7 @@ void main() {
       LookupOutcome.warning: 'Genuine, needs attention',
       LookupOutcome.notFound: 'Not found',
       LookupOutcome.unassigned: 'Not in a batch',
-      LookupOutcome.unknown: 'Unable to verify',
+      LookupOutcome.unknown: 'Unable to check',
     };
     for (final MapEntry(key: outcome, value: title) in titles.entries) {
       await pump(
@@ -51,7 +51,7 @@ void main() {
       ),
     );
     expect(find.text('Genuine product'), findsNothing);
-    expect(find.text('Unable to verify'), findsOneWidget);
+    expect(find.text('Unable to check'), findsOneWidget);
   });
 
   testWidgets('a warning shows every reason, with the check count', (

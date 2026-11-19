@@ -36,7 +36,11 @@ class RouteGuard {
             path == RoutePaths.verifyCode) {
           return RoutePaths.home;
         }
-        final allowed = permissionByPath[path];
+        final allowed =
+            permissionByPath[path] ??
+            (path.startsWith('/history/sessions/')
+                ? permissionByPath['/history/sessions']
+                : null);
         if (allowed != null && !allowed(permissions)) return RoutePaths.home;
         return null;
     }

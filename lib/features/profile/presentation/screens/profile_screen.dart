@@ -15,7 +15,7 @@ import 'package:ziska_verify/shared/design_system/tokens/app_typography.dart';
 import 'package:ziska_verify/shared/widgets/label_value_row.dart';
 import 'package:ziska_verify/shared/widgets/large_text.dart';
 
-/// The Profile tab (Figma "Profile"; final.md Section 13.8). Actions that
+/// The Profile tab (Figma "Profile"; final.md Section 13.7). Actions that
 /// belong to other features are passed in by the router. With a
 /// [CheckTotalsCubit] above it (the profile can read History), it shows the
 /// official's check counts and asks for them again each time the tab comes
@@ -31,7 +31,10 @@ class ProfileScreen extends StatefulWidget {
 
   final Future<({String version, String build})> versionInfo;
   final VoidCallback onChangePassword;
-  final void Function(Profile profile) onContactSupport;
+
+  /// Opens the mail app for `email` or the dialler for `phone`; `false`
+  /// when the phone has no such app.
+  final Future<bool> Function({String? email, String? phone}) onContactSupport;
   final Future<void> Function() onLogout;
 
   @override
@@ -42,6 +45,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   /// Whether the tab was in view at the last check; the shell turns
   /// tickers off for the tabs it keeps off stage.
   bool? _shown;
+
+  /// Log out is running: the button spins (the login ends either way).
+  bool _loggingOut = false;
 
   @override
   void didChangeDependencies() {
@@ -81,7 +87,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ],
       ),
     );
-    if (confirmed ?? false) await widget.onLogout();
+    if (!(confirmed ?? false) || _loggingOut) return;
+    setState(() => _loggingOut = true);
+    try {
+      await widget.onLogout();
+    } finally {
+      if (mounted) setState(() => _loggingOut = false);
+    }
+  }
+
+  /// Contacts support; says so when the phone has no mail or phone app.
+  Future<void> _contact(
+    BuildContext context, {
+    String? email,
+    String? phone,
+  }) async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final opened = await widget.onContactSupport(email: email, phone: phone);
+    if (opened) return;
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          email != null ? l10n.noMailApp(email) : l10n.noPhoneApp(phone!),
+        ),
+      ),
+    );
   }
 
   @override
@@ -89,7 +120,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final l10n = AppLocalizations.of(context);
     final profile = context.watch<ProfileCubit>().state.profile;
     if (profile == null) return const SizedBox.shrink();
-    final support = profile.supportEmail ?? profile.supportPhone;
+    final supportEmail = profile.supportEmail;
+    final supportPhone = profile.supportPhone;
 
     final totals = _totals;
 
@@ -125,6 +157,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  if (profile.passwordChangePending) ...[
+                    _PasswordPendingBanner(onChange: widget.onChangePassword),
+                    const SizedBox(height: AppSpacing.lg),
+                  ],
                   if (totals != null) ...[
                     BlocBuilder<CheckTotalsCubit, CheckTotalsState>(
                       bloc: totals,
@@ -135,6 +171,51 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     const SizedBox(height: AppSpacing.xl),
                   ],
+                  // What the role allows, by the SRS names (FR-ACC-15).
+                  Text(
+                    l10n.permissionsSection,
+                    style: AppTypography.fieldLabel,
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  _Card(
+                    key: const Key('profile.permissions'),
+                    children: [
+                      for (final (key, icon, title) in [
+                        (
+                          'item:lookup',
+                          LucideIcons.shieldCheck,
+                          l10n.permissionLookup,
+                        ),
+                        (
+                          'item:bulk_lookup',
+                          LucideIcons.layers,
+                          l10n.permissionBulkLookup,
+                        ),
+                        (
+                          'history:own',
+                          LucideIcons.clock,
+                          l10n.permissionHistory,
+                        ),
+                        (
+                          'incident:report',
+                          LucideIcons.flag,
+                          l10n.permissionReport,
+                        ),
+                      ])
+                        if (profile.can(key))
+                          _ActionRow(
+                            key: Key('profile.permission.$key'),
+                            icon: icon,
+                            title: title,
+                          ),
+                      if (!_knownPermissions.any(profile.can))
+                        _ActionRow(
+                          icon: LucideIcons.circleSlash,
+                          title: l10n.permissionsNone,
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.xl),
                   Text(l10n.accountSection, style: AppTypography.fieldLabel),
                   const SizedBox(height: AppSpacing.xs),
                   _Card(
@@ -144,14 +225,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         title: l10n.changePasswordRow,
                         onTap: widget.onChangePassword,
                       ),
-                      _ActionRow(
-                        icon: LucideIcons.mail,
-                        title: l10n.supportContactRow,
-                        subtitle: support ?? l10n.supportNotSet,
-                        onTap: support == null
-                            ? null
-                            : () => widget.onContactSupport(profile),
-                      ),
+                      // Each channel the office set (guide section 3.8):
+                      // email and phone both, or "Not set".
+                      if (supportEmail != null)
+                        _ActionRow(
+                          key: const Key('profile.supportEmail'),
+                          icon: LucideIcons.mail,
+                          title: l10n.supportContactRow,
+                          subtitle: supportEmail,
+                          onTap: () => unawaited(
+                            _contact(context, email: supportEmail),
+                          ),
+                        ),
+                      if (supportPhone != null)
+                        _ActionRow(
+                          key: const Key('profile.supportPhone'),
+                          icon: LucideIcons.phone,
+                          title: l10n.supportContactRow,
+                          subtitle: supportPhone,
+                          onTap: () => unawaited(
+                            _contact(context, phone: supportPhone),
+                          ),
+                        ),
+                      if (supportEmail == null && supportPhone == null)
+                        _ActionRow(
+                          icon: LucideIcons.mail,
+                          title: l10n.supportContactRow,
+                          subtitle: l10n.supportNotSet,
+                        ),
                       FutureBuilder(
                         future: widget.versionInfo,
                         builder: (context, snapshot) => _ActionRow(
@@ -173,7 +274,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     variant: AppButtonVariant.danger,
                     icon: LucideIcons.logOut,
                     label: l10n.logout,
-                    onPressed: () => unawaited(_confirmLogout(context)),
+                    loading: _loggingOut,
+                    onPressed: _loggingOut
+                        ? null
+                        : () => unawaited(_confirmLogout(context)),
                   ),
                 ],
               ),
@@ -400,10 +504,14 @@ class _Stats extends StatelessWidget {
     final cards = [
       (l10n.statChecks, totals?.total, AppColors.textStrong),
       (l10n.statValid, totals?.valid, AppColors.success),
+      // Everything that is not valid, so the three add up (Checks = Valid
+      // + Needs attention): warnings, not found, not in a batch.
       (
         l10n.statNotVerified,
-        totals == null ? null : totals.notFound + totals.unassigned,
-        AppColors.danger,
+        totals == null
+            ? null
+            : totals.warning + totals.notFound + totals.unassigned,
+        AppColors.warning,
       ),
     ];
     final stacked = isLargeText(context);
@@ -563,12 +671,21 @@ class _InfoRow extends StatelessWidget {
   }
 }
 
+/// The four permissions of the app (backend D61, SRS 4.2).
+const _knownPermissions = [
+  'item:lookup',
+  'item:bulk_lookup',
+  'history:own',
+  'incident:report',
+];
+
 class _ActionRow extends StatelessWidget {
   const _ActionRow({
     required this.icon,
     required this.title,
     this.subtitle,
     this.onTap,
+    super.key,
   });
 
   final IconData icon;
@@ -600,6 +717,66 @@ class _ActionRow extends StatelessWidget {
       trailing: onTap == null
           ? null
           : const Icon(LucideIcons.chevronRight, color: AppColors.textMuted),
+    );
+  }
+}
+
+/// After **Not now** on a forced change: the password is still the one
+/// someone else set (final.md Section 13.7). Change password opens the
+/// voluntary change.
+class _PasswordPendingBanner extends StatelessWidget {
+  const _PasswordPendingBanner({required this.onChange});
+
+  final VoidCallback onChange;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return DecoratedBox(
+      key: const Key('profile.passwordPending'),
+      decoration: BoxDecoration(
+        color: AppColors.warningBackground,
+        borderRadius: AppRadius.card,
+        border: Border.all(color: AppColors.warning.withValues(alpha: 0.35)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.md,
+          AppSpacing.md,
+          AppSpacing.md,
+          AppSpacing.xs,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(
+                  LucideIcons.triangleAlert,
+                  size: 20,
+                  color: AppColors.warning,
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Text(
+                    l10n.passwordPendingBanner,
+                    style: AppTypography.body,
+                  ),
+                ),
+              ],
+            ),
+            Align(
+              alignment: AlignmentDirectional.centerEnd,
+              child: TextButton(
+                key: const Key('profile.passwordPending.change'),
+                onPressed: onChange,
+                child: Text(l10n.changePasswordRow),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

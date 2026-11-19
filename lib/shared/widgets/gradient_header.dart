@@ -5,7 +5,7 @@ import 'package:ziska_verify/shared/design_system/tokens/app_radius.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_spacing.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_typography.dart';
 
-/// The navy header of the Request access design: a back button, a title,
+/// The navy header of the Sign up design: a back button, a title,
 /// and a subtitle.
 class GradientHeader extends StatelessWidget {
   const GradientHeader({

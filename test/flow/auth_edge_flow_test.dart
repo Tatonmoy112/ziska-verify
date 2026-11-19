@@ -13,9 +13,6 @@ void main() {
   const loginFailed = 'Email or password is incorrect.';
   const invalidEmail = 'Enter a valid email address';
   const noConnection = 'No connection. Check the internet and try again.';
-  const codeWrong =
-      'The code is wrong or has expired. Check the latest email, or log in '
-      'again for a new code.';
   const ruleBroken = 'The password does not meet the rules below.';
   const rules = ['8 characters or more', 'a letter', 'a number'];
 
@@ -695,7 +692,10 @@ void main() {
         },
       );
       await toReset(app);
-      expect(find.text(codeWrong), findsOneWidget);
+      expect(
+        find.text('The code is wrong or has expired. Ask for a new code.'),
+        findsOneWidget,
+      );
       expect(find.byKey(const Key('reset.code')), findsOneWidget);
     });
 
@@ -720,19 +720,5 @@ void main() {
       expect(find.byKey(const Key('forgot.email')), findsOneWidget);
       expect(find.byKey(const Key('reset.code')), findsNothing);
     });
-  });
-
-  testWidgets('TC-AUTH-083 request access sends nothing to the backend', (
-    tester,
-  ) async {
-    final app = await startApp(tester, loggedIn: false);
-    final before = app.backend.requests.length;
-    await app.tapText('Contact us to request access');
-    await app.tapText('Email the office');
-    await app.tapText('Call the office');
-
-    expect(app.backend.requests, hasLength(before));
-    expect(app.launcher.emails, hasLength(1));
-    expect(app.launcher.calls, hasLength(1));
   });
 }

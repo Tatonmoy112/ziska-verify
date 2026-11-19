@@ -1,5 +1,8 @@
 # SEC: Security
 
+> **2026-11-16 baseline:** [16-mobile-migration.md](16-mobile-migration.md) replaces conflicting cases for hidden-code input, bulk submission, everyone scope, retail administration, certificates, and email-only access requests. Historical IDs/counts below remain for traceability; do not execute retired cases as release requirements. Current architecture: ../../final.md.
+
+
 | Field | Value |
 |---|---|
 | Spec | final.md §9.5, §12 |
@@ -19,11 +22,11 @@
 | TC-SEC-008 | Release build log | SEC | P1 | DEVICE | ✋ | Real phone; release build; `adb logcat` | Log in with a code; look up by hidden code; change the password; add a retail user; watch `adb logcat` the whole time | No pass, password, emailed code, hidden code, or phone ID in logcat | §12.2 |
 | TC-SEC-009 | Plain storage holds preferences only | SEC | P1 | AUTO | ✅ `flow/security_flow_test` | Fake backend | After a whole session, read the plain app storage | Only preferences (language, theme); no pass, phone ID, item, or check | §12.1 Local data |
 | TC-SEC-010 | Nothing about items or checks on disk | SEC | P1 | DEVICE | ✋ | Real phone; debuggable build (`run-as`) | After lookups, a bulk, and History, list the app's files and caches | No item or check data, no queued scans, no cached answers | §12.1 Local data |
-| TC-SEC-011 | Backup holds no secret | SEC | P1 | DEVICE | ✋ | Real phone; a backup of the app | Back up the app data; read it | No pass and no phone ID in a readable form | §12.1 Device integrity |
+| TC-SEC-011 | Backup holds no secret | SEC | P1 | AUTO | ✅ `features/authentication/password_length_test` | The Android manifest; an emulator for the device part | Read the manifest; on the emulator `dumpsys package` shows the backup flag off | `android:allowBackup="false"` with backup and data-extraction rules that leave everything out; no backup of passes or the phone ID | §12.1 Device integrity |
 | TC-SEC-012 | App switcher and screenshots | SEC | P3 | DEVICE | ✋ | Real phone | Open the recent apps on a result and on "… was added" with the first password shown; take a screenshot | Spec gap 14 | §12.1 |
 | TC-SEC-013 | Password fields hidden everywhere | SEC | P1 | AUTO | ✅ `flow/security_flow_test` | Fake backend | Open Login, Set a new password, Change password, Reset password, Add retail user | Every password field hidden until **Show password** | §6.6 |
 | TC-SEC-014 | The keyboard does not learn hidden codes | SEC | P2 | AUTO + DEVICE | ✅ `flow/security_flow_test` | Fake backend | Type a hidden code; check the field settings; on a phone, look at the keyboard suggestions | No suggestions and no autocorrect on the hidden code field | §12.1 Hidden code protection |
-| TC-SEC-015 | Only `mailto:` and `tel:` links opened | SEC | P1 | AUTO | ✅ `flow/security_flow_test` | Fake backend | A whole session including Request access, Support contact, every lookup way | Every launched link is `mailto:` or `tel:`; never `http(s)` or `intent:` | §12.1 External links |
+| TC-SEC-015 | Only `mailto:` and `tel:` links opened | SEC | P1 | AUTO | ✅ `flow/security_flow_test` | Fake backend | A whole session including Sign up, Support contact, every lookup way | Every launched link is `mailto:` or `tel:`; never `http(s)` or `intent:` | §12.1 External links |
 | TC-SEC-016 | QR holding a script or a very long text | SEC | P1 | AUTO | ✅ `input_preparation_test` | Fake backend | Scan `javascript:alert(1)/q/Q8F2KD91XA7M`; a 4 000-character text; `intent://scan/#Intent;end` | The first sends `Q8F2KD91XA7M` and opens nothing; the others: "This QR code is not a product code of this company."; nothing opened | §12.1 QR link safety |
 | TC-SEC-017 | Lookalike characters in a QR value | SEC | P2 | AUTO | ✅ `input_preparation_test` | Fake backend | Scan a link whose value has a full-width `Ｍ`, then a zero-width space | Refused as not a product code; never sent | §12.1 Input safety, §13.1.3 |
 | TC-SEC-018 | Requests only to the configured host over HTTPS | SEC | P1 | AUTO | ✅ `flow/security_flow_test` | Fake backend | A whole session | Every request goes to the base URL of the flavor's config, over HTTPS | §12.1 Transport, §17 |

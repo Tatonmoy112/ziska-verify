@@ -12,20 +12,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appTitle => 'Track & Trace';
 
   @override
-  String get appSubtitle => 'Product Verification System';
+  String get appSubtitle => 'Product Authenticity Check';
 
   @override
-  String get splashTagline => 'Verify genuine products instantly';
+  String get splashTagline => 'Check genuine products instantly';
 
   @override
-  String get brandTagline => 'TRACK · TRACE · VERIFY';
+  String get brandTagline => 'TRACK · TRACE · CHECK';
 
   @override
   String get loginTitle => 'Login to Track & Trace';
 
   @override
   String get loginSubtitle =>
-      'Enter your email and password to verify products.';
+      'Enter your email and password to check products.';
 
   @override
   String get emailLabel => 'Email';
@@ -52,10 +52,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noAccountDivider => 'NO ACCOUNT?';
 
   @override
-  String get noAccountQuestion => 'Don\'t have an ID and password?';
+  String get noAccountQuestion => 'Don\'t have an account?';
 
   @override
-  String get requestAccessButton => 'Contact us to request access';
+  String get requestAccessButton => 'Sign up';
 
   @override
   String get authorizedOnly => 'Only authorized users can access this system';
@@ -78,14 +78,14 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get codeLabel => 'Verification code';
+  String get codeLabel => 'Code from the email';
 
   @override
-  String get verifyButton => 'Verify';
+  String get verifyButton => 'Continue';
 
   @override
   String get codeWrong =>
-      'The code is wrong or has expired. Check the latest email, or log in again for a new code.';
+      'The code is wrong or has expired. Check the latest email, or send the code again.';
 
   @override
   String get resendCode => 'Send the code again';
@@ -110,6 +110,17 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get changePasswordForcedSubtitle =>
       'Your password was set by someone else. Choose your own password to continue.';
+
+  @override
+  String get changePasswordChoiceSubtitle =>
+      'Your password was set by someone else. Choose your own now, or later from Profile.';
+
+  @override
+  String get changePasswordLater => 'Not now';
+
+  @override
+  String get passwordLaterRefused =>
+      'Not now is not available for your account. Choose a new password or log out.';
 
   @override
   String get changePasswordSubtitle =>
@@ -149,6 +160,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ruleNumber => 'a number';
 
   @override
+  String get ruleNoControl => 'no tabs or line breaks';
+
+  @override
   String get passwordRuleBroken =>
       'The password does not meet the rules below.';
 
@@ -169,52 +183,35 @@ class AppLocalizationsEn extends AppLocalizations {
   String get resetTitle => 'Reset password';
 
   @override
+  String get resetCodeWrong =>
+      'The code is wrong or has expired. Ask for a new code.';
+
+  @override
+  String get resetNewCode => 'Send a new code';
+
+  @override
   String resetSubtitle(String email) {
-    return 'Enter the code sent to $email and choose a new password.';
+    return 'If $email has an account, a code was sent to it. Enter the code and choose a new password.';
   }
 
   @override
   String get resetButton => 'Reset password';
 
   @override
-  String get resetDone => 'Password changed. Log in with your new password.';
+  String get resetDone =>
+      'Password changed. Log in with your new password; every phone needs the emailed code at its next login.';
 
   @override
-  String get requestAccessTitle => 'Request access';
+  String get requestAccessTitle => 'Sign up';
 
   @override
   String get requestAccessSubtitle =>
-      'Accounts are created by your office. Email or call them with the details below.';
+      'Create your account. Your office checks it and emails you when it is approved.';
 
   @override
-  String get pleaseInclude => 'Please include';
-
-  @override
-  String get includeName => 'Full name';
-
-  @override
-  String get includeOrganisation => 'Organization';
-
-  @override
-  String get includePhone => 'Phone number';
-
-  @override
-  String get includeEmail => 'Email address';
-
-  @override
-  String get includeReason => 'Reason for access';
-
-  @override
-  String get includeJobTitle => 'Job title';
-
-  @override
-  String get emailTeamButton => 'Email the office';
-
-  @override
-  String get callTeamButton => 'Call the office';
-
-  @override
-  String get accessRequestSubject => 'Access request';
+  String noPhoneApp(String phone) {
+    return 'No phone app found. Call $phone.';
+  }
 
   @override
   String noMailApp(String email) {
@@ -256,7 +253,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get tabVerify => 'Verify';
+  String get tabVerify => 'Check';
 
   @override
   String get tabHistory => 'History';
@@ -272,9 +269,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your role does not allow any features yet. Contact your office.';
 
   @override
-  String get comingSoon => 'This part of the app is being built.';
-
-  @override
   String get profileTitle => 'Profile';
 
   @override
@@ -282,6 +276,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get roleLabel => 'Role';
+
+  @override
+  String get permissionsSection => 'WHAT YOU CAN DO';
+
+  @override
+  String get permissionLookup => 'Check one item';
+
+  @override
+  String get permissionBulkLookup => 'Check many items';
+
+  @override
+  String get permissionHistory => 'Own history';
+
+  @override
+  String get permissionReport => 'Report incidents';
+
+  @override
+  String get permissionsNone => 'None. Ask your office.';
 
   @override
   String get accountSection => 'ACCOUNT';
@@ -293,13 +305,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statValid => 'Valid';
 
   @override
-  String get statNotVerified => 'Not verified';
+  String get statNotVerified => 'Needs attention';
 
   @override
   String get statsFailed => 'Your counts couldn\'t load.';
 
   @override
   String get changePasswordRow => 'Change password';
+
+  @override
+  String get passwordPendingBanner =>
+      'Your password was set by someone else. Change it to keep your account safe.';
 
   @override
   String get supportContactRow => 'Support contact';
@@ -326,39 +342,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cancel => 'Cancel';
 
   @override
-  String get howItWorks => 'How it works';
-
-  @override
-  String get requestStepSendTitle => 'Send your request';
-
-  @override
-  String get requestStepSendBody =>
-      'Email or call the office with the details below.';
-
-  @override
-  String get requestStepSendBodyEmailOnly =>
-      'Email the office with the details below.';
-
-  @override
-  String get requestStepCheckTitle => 'Your office checks it';
-
-  @override
-  String get requestStepCheckBody =>
-      'An administrator checks your request and creates your account.';
-
-  @override
-  String get requestStepLoginTitle => 'Receive your login';
-
-  @override
-  String get requestStepLoginBody =>
-      'Your first password is emailed to you or given to you in person. You change it at your first login.';
-
-  @override
-  String get verifyItemTitle => 'Verify an item';
-
-  @override
-  String get verifyItemSubtitle =>
-      'Type the serial or the hidden code, or scan the QR code.';
+  String get verifyItemTitle => 'Check authenticity';
 
   @override
   String get waySerial => 'Serial';
@@ -370,33 +354,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get wayQr => 'QR code';
 
   @override
+  String get wayOther => 'Other';
+
+  @override
   String serialHint(int digits) {
     return 'Up to $digits digits';
   }
 
   @override
-  String get hiddenCodeHint => 'The code under the scratch layer';
-
-  @override
-  String get verifyButtonLookup => 'Verify product';
+  String get verifyButtonLookup => 'Check';
 
   @override
   String get clear => 'Clear';
-
-  @override
-  String get scanQrTitle => 'Scan QR code';
-
-  @override
-  String get scanQrSubtitle => 'Point your camera at the product\'s QR code';
 
   @override
   String get scanFrameHint => 'Place the QR code inside the frame';
 
   @override
   String get scanLooking => 'Looking for a QR code · hold steady';
-
-  @override
-  String get enterManually => 'Enter manually';
 
   @override
   String get inputEmpty => 'Enter a value first';
@@ -407,10 +382,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get inputWrongHiddenCode =>
-      'This is not a hidden code of this company. Check each character.';
-
-  @override
   String get notProductQr =>
       'This QR code is not a product code of this company.';
 
@@ -419,25 +390,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lookupNetworkError =>
-      'Unable to verify. Check the connection and try again.';
+      'Unable to check. Check the connection and try again.';
 
   @override
-  String get verifying => 'Verifying…';
+  String get verifying => 'Checking…';
 
   @override
   String get toolsTitle => 'MORE';
-
-  @override
-  String get toolBulk => 'Bulk lookup';
 
   @override
   String get toolReport => 'Report incident';
 
   @override
   String get toolMyReports => 'My reports';
-
-  @override
-  String get toolRetailUsers => 'Retail users';
 
   @override
   String get scannerPermissionDenied =>
@@ -457,7 +422,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get torch => 'Torch';
 
   @override
-  String get resultTitle => 'Verification result';
+  String get resultTitle => 'Check result';
 
   @override
   String get resultValidTitle => 'Genuine product';
@@ -476,7 +441,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get resultNotFoundTitle => 'Not found';
 
   @override
-  String get resultNotFoundBody => 'No product of this company has this code.';
+  String get resultNotFoundBody =>
+      'No product of this company has this serial or QR code.';
 
   @override
   String get resultUnassignedTitle => 'Not in a batch';
@@ -486,7 +452,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'This item exists but has not been given to a batch yet.';
 
   @override
-  String get resultUnknownTitle => 'Unable to verify';
+  String get resultUnknownTitle => 'Unable to check';
 
   @override
   String get resultUnknownBody =>
@@ -543,76 +509,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get expiresLabel => 'Expires';
 
   @override
-  String get verifyAnother => 'Verify another item';
+  String get verifyAnother => 'Check another item';
 
   @override
   String get copied => 'Copied';
 
   @override
   String get copyReference => 'Copy reference number';
-
-  @override
-  String get copyPassword => 'Copy password';
-
-  @override
-  String get bulkTitle => 'Bulk lookup';
-
-  @override
-  String bulkCount(int count, int max) {
-    return '$count / $max items';
-  }
-
-  @override
-  String get bulkScanStart => 'Scan QR codes';
-
-  @override
-  String get bulkScanStop => 'Stop scanning';
-
-  @override
-  String get bulkAdd => 'Add';
-
-  @override
-  String bulkAdded(String label) {
-    return 'Added $label';
-  }
-
-  @override
-  String get bulkDuplicate => 'This item is already in the list.';
-
-  @override
-  String bulkFull(int max) {
-    return 'The list is full ($max items).';
-  }
-
-  @override
-  String get bulkEmpty =>
-      'Scan QR codes or type serials and hidden codes to build the list.';
-
-  @override
-  String get bulkClearList => 'Clear list';
-
-  @override
-  String bulkSend(int count) {
-    return 'Check $count items';
-  }
-
-  @override
-  String bulkSending(int count) {
-    return 'Checking $count items…';
-  }
-
-  @override
-  String get bulkNothingChecked =>
-      'Nothing was checked. Send the same list again.';
-
-  @override
-  String get bulkSendAgain => 'Send again';
-
-  @override
-  String get bulkSummaryTitle => 'Summary';
-
-  @override
-  String get bulkTotal => 'Total';
 
   @override
   String get bulkValid => 'Valid';
@@ -625,15 +528,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bulkUnassigned => 'Not in a batch';
-
-  @override
-  String get bulkOnlyAttention => 'Only items that need attention';
-
-  @override
-  String get bulkNewList => 'New list';
-
-  @override
-  String get bulkNoAttention => 'No item needs attention.';
 
   @override
   String get removeItem => 'Remove';
@@ -666,21 +560,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get historyPickDates => 'Choose dates';
 
   @override
-  String get historyScopeAll => 'Everyone\'s checks';
-
-  @override
-  String get historyScopeAllHint => 'Include the checks of every official';
-
-  @override
   String get historyEmptyTitle => 'No checks';
+
+  @override
+  String get historyInSession => 'In a session';
 
   @override
   String get historyEmptyBody => 'No check matches these filters.';
 
   @override
-  String historyBy(String name) {
-    return 'by $name';
-  }
+  String get historyNoChecksYet =>
+      'Your checks appear here after your first check.';
 
   @override
   String get historyAll => 'All';
@@ -710,7 +600,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String historyTracking(String serial) {
-    return 'Every check of serial $serial';
+    return 'Your checks of serial $serial';
   }
 
   @override
@@ -745,6 +635,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reportChooseRetailUser => 'Choose a retail user (optional)';
 
   @override
+  String get reportChooseCheck => 'Link one of your checks (optional)';
+
+  @override
+  String get pickCheck => 'Choose a check';
+
+  @override
   String get reportPhotosLabel => 'Photos';
 
   @override
@@ -769,13 +665,27 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get reportPhotosSending => 'Sending photos…';
-
-  @override
   String get reportPhotoFailedRetry => 'Not sent. Tap to send again.';
 
   @override
   String get reportPhotoRefused => 'This photo was refused.';
+
+  @override
+  String get reportPhotoConflict =>
+      'No more photos: the report has 3, or its hour is over.';
+
+  @override
+  String get reportLeaveTitle => 'Photos not sent';
+
+  @override
+  String get reportLeaveBody =>
+      'Some photos are still sending or can be sent again. If you leave, they are not sent.';
+
+  @override
+  String get reportStay => 'Stay';
+
+  @override
+  String get reportLeave => 'Leave';
 
   @override
   String reportPhotoSent(int n) {
@@ -798,18 +708,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reportDone => 'Done';
 
   @override
-  String get reportNotFound =>
-      'The check or the retail user was not found. Remove it and try again.';
-
-  @override
   String get reportUnconfirmed =>
       'The connection dropped. The report may have been filed: check My reports before filing it again.';
+
+  @override
+  String get reportCheckMyReports => 'Check My reports';
 
   @override
   String get myReportsTitle => 'My reports';
 
   @override
   String get myReportsEmpty => 'You have not filed any report yet.';
+
+  @override
+  String get myReportsEmptyBody =>
+      'Reports you file appear here. Use New report to file one.';
 
   @override
   String myReportsPhotos(int count) {
@@ -828,119 +741,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reportFromResult => 'Report incident';
-
-  @override
-  String get retailUsersTitle => 'Retail users';
-
-  @override
-  String get retailUsersAdd => 'Add retail user';
-
-  @override
-  String get retailUsersSearchHint => 'Part of a name, or a whole email';
-
-  @override
-  String get retailUsersEmpty => 'No retail user yet.';
-
-  @override
-  String get retailUserEmailPassword => 'Email a new first password';
-
-  @override
-  String retailUserEmailPasswordConfirm(String name) {
-    return 'A new first password is emailed to $name. The old one stops working at once.';
-  }
-
-  @override
-  String get retailUserEmailPasswordSend => 'Email it';
-
-  @override
-  String retailUserPasswordEmailed(String name) {
-    return 'A new first password was emailed to $name.';
-  }
-
-  @override
-  String retailUserOwnPassword(String name) {
-    return '$name has set their own password. Only your office can change it now.';
-  }
-
-  @override
-  String get retailUserNotFound =>
-      'This retail user was not found or is blocked.';
-
-  @override
-  String get addRetailUserTitle => 'Add retail user';
-
-  @override
-  String get addRetailUserName => 'Name';
-
-  @override
-  String get addRetailUserNameHint => 'Shop or person name';
-
-  @override
-  String get addRetailUserEmail => 'Email';
-
-  @override
-  String get addRetailUserEmailHint =>
-      'The address they log in with and read mail at';
-
-  @override
-  String get addRetailUserRole => 'Role';
-
-  @override
-  String get addRetailUserPassword => 'First password';
-
-  @override
-  String get addRetailUserPasswordHint =>
-      'Used once; they change it at the first login';
-
-  @override
-  String get addRetailUserSendEmail => 'Email the login details';
-
-  @override
-  String get addRetailUserSendEmailOff =>
-      'Give the password to the retail user yourself.';
-
-  @override
-  String get addRetailUserSubmit => 'Add retail user';
-
-  @override
-  String get addRetailUserNoRoles =>
-      'Your office has not marked any role as a retail role yet, so no retail user can be added.';
-
-  @override
-  String get addRetailUserEmailInUse =>
-      'An official with this email already exists.';
-
-  @override
-  String get addRetailUserRoleGone =>
-      'This role is no longer a retail role. Choose another.';
-
-  @override
-  String addRetailUserDoneTitle(String name) {
-    return '$name was added';
-  }
-
-  @override
-  String addRetailUserEmailed(String email) {
-    return 'The login details were emailed to $email.';
-  }
-
-  @override
-  String get addRetailUserMailFailed =>
-      'The account was made, but the email could not be sent. Give them the password below, or use \"Email a new first password\" a little later.';
-
-  @override
-  String get addRetailUserGiveYourself =>
-      'Give the password to the retail user yourself.';
-
-  @override
-  String get addRetailUserPasswordOnce => 'Password (shown once):';
-
-  @override
-  String get addRetailUserFirstLogin =>
-      'They change it at the first login, and their phone needs the emailed code.';
-
-  @override
-  String get addAnother => 'Add another';
 
   @override
   String get pictureTitle => 'Product image';
@@ -969,9 +769,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get detailsProductTitle => 'Product details';
 
   @override
-  String get detailsTrackingTitle => 'Tracking details';
-
-  @override
   String checkNumber(int count) {
     return 'Check $count';
   }
@@ -995,20 +792,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hintsTitle => 'Hints';
 
   @override
-  String hintHiddenCodeLength(String lengths) {
-    return 'A hidden code has $lengths characters.';
-  }
-
-  @override
-  String lengthsOr(String first, String last) {
-    return '$first or $last';
-  }
-
-  @override
-  String get hintScratch =>
-      'Scratch the panel off fully before typing the hidden code.';
-
-  @override
   String get hintScanQr => 'Scan the QR code instead of typing.';
 
   @override
@@ -1018,7 +801,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get contactSupport => 'Contact support';
 
   @override
-  String get backToVerify => 'Back to Verify';
+  String get backToVerify => 'Back to Check';
+
+  @override
+  String get backToList => 'Back to the list';
 
   @override
   String supportEmailSubject(String ref) {
@@ -1051,4 +837,239 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get stepWaiting => 'waiting';
+
+  @override
+  String get accessPending =>
+      'Thanks for signing up. Your office will check your details and email you when your account is ready.';
+
+  @override
+  String get accessWrongCode =>
+      'The code is wrong or expired. Request a new code if needed.';
+
+  @override
+  String get accessTryLater =>
+      'Try again later. Get a new code before you sign up again.';
+
+  @override
+  String get accessRoleUnavailable =>
+      'This role is no longer available. Choose another role.';
+
+  @override
+  String get accessNoRoles => 'Ask the office for an account.';
+
+  @override
+  String get accessContactOffice => 'Contact the office';
+
+  @override
+  String get accessName => 'Name';
+
+  @override
+  String get accessRole => 'Role';
+
+  @override
+  String get accessRoleHint => 'Choose a role';
+
+  @override
+  String get accessPassword => 'Choose a password';
+
+  @override
+  String get accessShowPassword => 'Show password';
+
+  @override
+  String get accessHidePassword => 'Hide password';
+
+  @override
+  String get accessEmail => 'Email';
+
+  @override
+  String get accessCode => 'Code from the email';
+
+  @override
+  String get accessResend => 'Send a new code';
+
+  @override
+  String get accessSendCode => 'Send code';
+
+  @override
+  String get accessCodeSent => 'A code was sent to the address.';
+
+  @override
+  String get accessSubmit => 'Sign up';
+
+  @override
+  String get scannerModeTitle => 'Scanner mode';
+
+  @override
+  String get serialStackTitle => 'Serial stack';
+
+  @override
+  String get serialStackHint =>
+      'Type or paste up to 50 serials, separated by spaces, commas, or new lines. Repeated serials are checked once.';
+
+  @override
+  String get serialStackLimit =>
+      'Enter 1 to 50 different serials. Submit another stack for additional items.';
+
+  @override
+  String get serialStackUncertain =>
+      'The answer was lost. These checks may already be recorded. Retrying may record them again.';
+
+  @override
+  String get serialStackNotSent =>
+      'No connection. Nothing was sent; send the stack again when you are online.';
+
+  @override
+  String serialStackBadSerial(int position, String value, int digits) {
+    return 'Serial $position ($value) is not a serial: digits only, up to $digits digits.';
+  }
+
+  @override
+  String serialStackCount(int count) {
+    return '$count of 50 serials';
+  }
+
+  @override
+  String serialStackCountRepeats(int count, int repeats) {
+    return '$count of 50 serials · $repeats repeated, sent once';
+  }
+
+  @override
+  String get serialStackRecorded =>
+      'These checks were recorded, but their answer could not be shown. See them in History → Sessions. Do not send the same stack again.';
+
+  @override
+  String get serialStackRetry => 'Send the same stack again';
+
+  @override
+  String get serialStackSubmit => 'Check serials';
+
+  @override
+  String get serialStackNew => 'Start another stack';
+
+  @override
+  String get serialStackHistory => 'View this session\'s checks';
+
+  @override
+  String get sessionScanned => 'Scanned';
+
+  @override
+  String get sessionValid => 'Valid';
+
+  @override
+  String get sessionWarning => 'Warning';
+
+  @override
+  String get sessionNotFound => 'Not found';
+
+  @override
+  String get sessionUnassigned => 'Not in a batch';
+
+  @override
+  String get sessionLeft => 'Remaining';
+
+  @override
+  String get sessionRepeat => 'Already scanned';
+
+  @override
+  String get sessionScanAgain => 'Scan again';
+
+  @override
+  String get sessionNoConnection => 'No connection, scan again.';
+
+  @override
+  String get sessionBusy =>
+      'The service is busy. Nothing was recorded; scan again.';
+
+  @override
+  String get sessionRestarted => 'A new session started.';
+
+  @override
+  String get sessionsTitle => 'Sessions';
+
+  @override
+  String get sessionsMore => 'Load more';
+
+  @override
+  String get sessionsAll => 'All';
+
+  @override
+  String get sessionsOpen => 'Open';
+
+  @override
+  String get sessionsEnded => 'Ended';
+
+  @override
+  String get sessionsDates => 'Choose dates';
+
+  @override
+  String get sessionsLastSevenDays => 'Showing the last 7 days';
+
+  @override
+  String get sessionsEmpty => 'No sessions found.';
+
+  @override
+  String get historyChecksView => 'Checks';
+
+  @override
+  String get sessionsStarted => 'Started';
+
+  @override
+  String get sessionsLastScan => 'Last scan';
+
+  @override
+  String get sessionChecksTitle => 'Session checks';
+
+  @override
+  String get rateLimitedUnknown => 'Too many attempts. Try again later.';
+
+  @override
+  String get sessionRowsFailed => 'Couldn\'t load this session\'s scans.';
+
+  @override
+  String get reportPhotoSame => 'That photo is already on the report.';
+
+  @override
+  String get reportUnreadable =>
+      'The report was sent, but its answer could not be read. It may have been filed: check My reports before filing it again.';
+
+  @override
+  String get reportCheckGone =>
+      'The check was not found. Remove it and try again.';
+
+  @override
+  String get reportRetailUserGone =>
+      'This retail user can no longer be named. Choose another, or file without one.';
+
+  @override
+  String get sessionResumedCounts =>
+      'Resumed session. The counts show after the next scan.';
+
+  @override
+  String get sessionChecking => 'Checking…';
+
+  @override
+  String sessionCheckingMore(int count) {
+    return 'Checking… $count more';
+  }
+
+  @override
+  String sessionNotChecked(int count) {
+    return '$count more scans were not checked. Scan them again.';
+  }
+
+  @override
+  String get typeSerialLabel => 'Or type the serial';
+
+  @override
+  String get scanNotReady => 'Scanning waits for the code formats.';
+
+  @override
+  String copyrightNotice(String year) {
+    return '© $year Ziska Pharmaceuticals Ltd. All rights reserved.';
+  }
+
+  @override
+  String appVersionShort(String version, String build) {
+    return 'Version $version ($build)';
+  }
 }

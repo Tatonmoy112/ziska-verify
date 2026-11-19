@@ -22,17 +22,30 @@ abstract interface class SessionService {
   void cancelCode();
 
   /// Stores both passes from a `logged_in` answer, before anything else.
+  /// [canSkip] is the answer's `password_change_skippable`.
   Future<void> saveLogin({
     required String accessToken,
     required String refreshToken,
     required bool mustChangePassword,
+    bool canSkip = false,
   });
 
   /// `me/password` answered with a new access pass (the refresh pass stays).
-  Future<void> savePasswordChange(String accessToken);
+  /// [mustChangePassword] is the answer's `must_change_password`.
+  Future<void> savePasswordChange(
+    String accessToken, {
+    bool mustChangePassword = false,
+  });
 
-  /// Marks that `GET me` or a route reported `must_change_password`.
-  void requirePasswordChange();
+  /// `me/password/later` answered with a normal access pass (the refresh
+  /// pass stays): the official chose **Not now** (final.md Section 6.6).
+  Future<void> postponePasswordChange(String accessToken);
+
+  /// Marks that `GET me`, a renewal, or a route reported
+  /// `must_change_password`. [canSkip] is `password_change_skippable` when
+  /// the answer says; `null` (a bare `403 password_change_required`) keeps
+  /// the last known value.
+  void requirePasswordChange({bool? canSkip});
 
   /// One renewal at a time, app-wide: concurrent callers share it
   /// (final.md Section 6.4).

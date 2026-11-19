@@ -13,13 +13,12 @@ abstract final class RoutePaths {
   static const profile = '/profile';
 
   // Full-screen flows above the bottom bar (final.md Section 9.2).
-  static const scan = '/home/scan';
   static const lookupResult = '/home/result';
-  static const bulkLookup = '/home/bulk-lookup';
+  static const scannerMode = '/home/scanner-mode';
+  static const serialStack = '/home/serial-stack';
+  static const sessionChecks = '/history/sessions/:id';
   static const myReports = '/home/reports';
   static const reportIncident = '/home/reports/new';
-  static const retailUsers = '/home/retail-users';
-  static const addRetailUser = '/home/retail-users/new';
 
   /// Open without login (final.md Section 9.4).
   static const Set<String> preLogin = {

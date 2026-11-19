@@ -35,6 +35,15 @@ class CancelCode {
   void call() => _repository.cancelCode();
 }
 
+/// **Not now** on a forced change: a normal pass, the password unchanged
+/// (final.md Section 6.6).
+class PostponePasswordChange {
+  const PostponePasswordChange(this._repository);
+  final AuthRepository _repository;
+
+  Future<Result<void>> call() => _repository.postponePasswordChange();
+}
+
 class ChangePassword {
   const ChangePassword(this._repository);
   final AuthRepository _repository;

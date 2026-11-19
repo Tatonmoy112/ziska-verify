@@ -1,6 +1,6 @@
 import 'package:ziska_verify/core/errors/result.dart';
-import 'package:ziska_verify/features/verification/domain/entities/bulk.dart';
 import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
+import 'package:ziska_verify/features/verification/domain/entities/scan_session.dart';
 import 'package:ziska_verify/features/verification/domain/repositories/verification_repository.dart';
 import 'package:ziska_verify/features/verification/domain/services/code_normalizer.dart';
 import 'package:ziska_verify/features/verification/domain/services/input_format_validator.dart';
@@ -53,7 +53,9 @@ class PrepareInput {
       if (parsed == null) {
         return const RefusedInput(LookupWay.qr, InputProblem.wrongFormat);
       }
-      value = normalizer.normalize(parsed);
+      // The QR value is sent as read (guide section 4): only the spaces
+      // around it go; the formats' characters decide whether it is valid.
+      value = parsed.trim();
     } else {
       value = normalizer.normalize(raw);
     }
@@ -61,6 +63,54 @@ class PrepareInput {
     return problem == null
         ? ReadyInput(way, value)
         : RefusedInput(way, problem);
+  }
+}
+
+/// A stack of serials as typed: split by commas, spaces or new lines, each
+/// prepared like one serial, repeats kept once (app API guide §4.7).
+class ParsedStack {
+  const ParsedStack({
+    required this.serials,
+    required this.typed,
+    this.bad,
+  });
+
+  /// The serials sent, each once, in the order typed.
+  final List<String> serials;
+
+  /// How many values were typed, repeats included.
+  final int typed;
+
+  /// The first value that is not a serial, by its place (from 1).
+  final ({int position, String value})? bad;
+
+  /// Values typed more than once, counted after preparing them, so
+  /// "1000-001" and "1000001" are one serial.
+  int get repeats => bad == null ? typed - serials.length : 0;
+}
+
+class ParseStack {
+  const ParseStack([this._prepare = const PrepareInput()]);
+  final PrepareInput _prepare;
+
+  ParsedStack call(String text, InputFormats formats) {
+    final serials = <String>[];
+    final tokens = text
+        .split(RegExp(r'[,\s]+'))
+        .where((t) => t.isNotEmpty)
+        .toList();
+    for (final (index, token) in tokens.indexed) {
+      final input = _prepare(LookupWay.serial, token, formats);
+      if (input is! ReadyInput) {
+        return ParsedStack(
+          serials: serials,
+          typed: tokens.length,
+          bad: (position: index + 1, value: token),
+        );
+      }
+      if (!serials.contains(input.value)) serials.add(input.value);
+    }
+    return ParsedStack(serials: serials, typed: tokens.length);
   }
 }
 
@@ -73,10 +123,11 @@ class LookupItem {
       _repository.lookup(input.way, input.value);
 }
 
-class BulkLookup {
-  const BulkLookup(this._repository);
+/// One session of the official (`GET lookups/sessions/{id}`, app API guide
+/// §4.5): the header of its checks.
+class GetSession {
+  const GetSession(this._repository);
   final VerificationRepository _repository;
 
-  Future<Result<BulkOutcome>> call(List<BulkEntry> entries) =>
-      _repository.bulkLookup(entries);
+  Future<Result<ScanSessionSummary>> call(String id) => _repository.session(id);
 }

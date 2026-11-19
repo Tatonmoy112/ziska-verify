@@ -158,6 +158,17 @@ void main() {
     expect(find.text('No check matches these filters.'), findsOneWidget);
   });
 
+  // Audit (§14.2): a new official has no checks; there is no filter to blame.
+  testWidgets('TC-HIST-049 no checks yet, without filters', (tester) async {
+    await openHistory(tester, overrides: {'GET checks': (r) => page([])});
+    expect(find.text('No checks'), findsOneWidget);
+    expect(
+      find.text('Your checks appear here after your first check.'),
+      findsOneWidget,
+    );
+    expect(find.text('No check matches these filters.'), findsNothing);
+  });
+
   testWidgets('TC-HIST-025 a 1-character search waits, then sends once', (
     tester,
   ) async {
@@ -314,47 +325,6 @@ void main() {
     );
     expect(find.textContaining('Checked before'), findsOneWidget);
     expect(find.textContaining('Expired'), findsOneWidget);
-  });
-
-  testWidgets("TC-HIST-042 everyone's checks refused: the switch goes", (
-    tester,
-  ) async {
-    final app = await openHistory(
-      tester,
-      profile: Roles.supervisor,
-      overrides: {
-        'GET checks': (r) => r.queryParameters['scope'] == 'all'
-            ? apiError(403, 'forbidden')
-            : FakeBackend.example(200, 'History of checks', '200 First page'),
-      },
-    );
-    app.backend.profile = Roles.only([
-      'history:own',
-      'incident:report',
-      'item:bulk_lookup',
-      'item:lookup',
-      'retail_user:add',
-    ]);
-    await app.tap(find.byKey(const Key('history.filters')));
-    await app.tap(find.byKey(const Key('history.scopeAll')));
-    await app.tapText('Apply');
-
-    await app.tap(find.byKey(const Key('history.filters')));
-    expect(find.byKey(const Key('history.scopeAll')), findsNothing);
-  });
-
-  testWidgets("TC-HIST-043 everyone's checks of one serial", (tester) async {
-    final app = await openHistory(tester, profile: Roles.supervisor);
-    await app.tap(find.byKey(const Key('history.filters')));
-    await app.tap(find.byKey(const Key('history.scopeAll')));
-    await app.tapText('Apply');
-    await app.enter(const Key('history.search'), '1000001');
-    await app.settleAfter(const Duration(milliseconds: 500));
-
-    final last = checksSent(app).last;
-    expect(last['scope'], 'all');
-    expect(last['search'], '1000001');
-    expect(find.textContaining('by Asha Rao'), findsWidgets);
   });
 
   testWidgets('TC-HIST-045 no history left after logout', (tester) async {

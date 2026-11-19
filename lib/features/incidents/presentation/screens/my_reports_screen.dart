@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -13,6 +15,7 @@ import 'package:ziska_verify/shared/design_system/tokens/app_radius.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_spacing.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_typography.dart';
 import 'package:ziska_verify/shared/widgets/app_paginated_list.dart';
+import 'package:ziska_verify/shared/widgets/navy_app_bar.dart';
 
 /// My reports (final.md Section 13.5.4): the official's own reports, newest
 /// first, with their photo counts. Photos cannot be downloaded.
@@ -33,7 +36,7 @@ class MyReportsScreen extends StatelessWidget {
     final bloc = context.read<MyReportsBloc>();
     return Scaffold(
       backgroundColor: AppColors.surfaceMuted,
-      appBar: AppBar(title: Text(l10n.myReportsTitle)),
+      appBar: NavyAppBar(title: l10n.myReportsTitle),
       floatingActionButton: FloatingActionButton.extended(
         key: const Key('reports.new'),
         onPressed: () async {
@@ -52,10 +55,12 @@ class MyReportsScreen extends StatelessWidget {
           onNextPage: () => bloc.add(const MyReportsNextPageRequested()),
           onRetry: () => bloc.add(const MyReportsRetried()),
           onRefresh: () async {
+            if (bloc.state.isWaiting) return;
             bloc.add(const MyReportsStarted(keepItems: true));
             await bloc.stream.firstWhere((s) => !s.isLoading);
           },
           emptyTitle: l10n.myReportsEmpty,
+          emptyBody: l10n.myReportsEmptyBody,
           header: const SizedBox(height: AppSpacing.md),
         ),
       ),
@@ -79,60 +84,120 @@ class _ReportTile extends StatelessWidget {
         AppSpacing.screen,
         AppSpacing.xs,
       ),
-      child: DecoratedBox(
-        decoration: const BoxDecoration(
-          color: AppColors.background,
+      // A report opens in full: the list cuts the note at two lines.
+      child: Material(
+        color: AppColors.background,
+        shape: const RoundedRectangleBorder(
           borderRadius: AppRadius.card,
+          side: BorderSide(color: AppColors.border),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Text('#${report.id}', style: AppTypography.bodyStrong),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: Text(
-                      DisplayTime.dateTime(report.at, locale),
-                      style: AppTypography.caption,
-                      textAlign: TextAlign.end,
+        child: InkWell(
+          // No key on the skeleton's repeated placeholder (id 0).
+          key: report.id == 0 ? null : Key('reports.row.${report.id}'),
+          borderRadius: AppRadius.card,
+          onTap: () => unawaited(_showReport(context, report)),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text('#${report.id}', style: AppTypography.bodyStrong),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Text(
+                        DisplayTime.dateTime(report.at, locale),
+                        style: AppTypography.caption,
+                        textAlign: TextAlign.end,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.xxs),
-              Text(
-                report.note,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: AppTypography.body,
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              Wrap(
-                spacing: AppSpacing.md,
-                runSpacing: AppSpacing.xxs,
-                children: [
-                  _Meta(
-                    icon: LucideIcons.image,
-                    text: l10n.myReportsPhotos(report.photos),
-                  ),
-                  if (report.checkRef != null)
-                    _Meta(icon: LucideIcons.fileCheck, text: report.checkRef!),
-                  if (report.retailUserName != null)
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.xxs),
+                Text(
+                  report.note,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.body,
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Wrap(
+                  spacing: AppSpacing.md,
+                  runSpacing: AppSpacing.xxs,
+                  children: [
                     _Meta(
-                      icon: LucideIcons.store,
-                      text: report.retailUserName!,
+                      icon: LucideIcons.image,
+                      text: l10n.myReportsPhotos(report.photos),
                     ),
-                ],
-              ),
-            ],
+                    if (report.checkRef != null)
+                      _Meta(
+                        icon: LucideIcons.fileCheck,
+                        text: report.checkRef!,
+                      ),
+                    if (report.retailUserName != null)
+                      _Meta(
+                        icon: LucideIcons.store,
+                        text: report.retailUserName!,
+                      ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
+}
+
+/// One report in full: the whole note, its time, photos, check, and retail
+/// user (SRS UC-09). Photos are not downloadable in the app (FR-INC-06).
+Future<void> _showReport(BuildContext context, Report report) {
+  final l10n = AppLocalizations.of(context);
+  final locale = Localizations.localeOf(context).toLanguageTag();
+  return showModalBottomSheet<void>(
+    context: context,
+    showDragHandle: true,
+    isScrollControlled: true,
+    useSafeArea: true,
+    builder: (_) => SingleChildScrollView(
+      key: const Key('reports.detail'),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.screen,
+        0,
+        AppSpacing.screen,
+        AppSpacing.screen,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('#${report.id}', style: AppTypography.headline),
+          Text(
+            DisplayTime.dateTime(report.at, locale),
+            style: AppTypography.caption,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          SelectableText(report.note, style: AppTypography.body),
+          const SizedBox(height: AppSpacing.md),
+          Wrap(
+            spacing: AppSpacing.md,
+            runSpacing: AppSpacing.xs,
+            children: [
+              _Meta(
+                icon: LucideIcons.image,
+                text: l10n.myReportsPhotos(report.photos),
+              ),
+              if (report.checkRef != null)
+                _Meta(icon: LucideIcons.fileCheck, text: report.checkRef!),
+              if (report.retailUserName != null)
+                _Meta(icon: LucideIcons.store, text: report.retailUserName!),
+            ],
+          ),
+        ],
+      ),
+    ),
+  );
 }
 
 class _Meta extends StatelessWidget {

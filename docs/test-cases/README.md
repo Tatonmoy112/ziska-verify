@@ -1,5 +1,8 @@
 # Track & Trace — Test Cases
 
+> **2026-11-16 baseline:** [16-mobile-migration.md](16-mobile-migration.md) replaces conflicting cases for hidden-code input, bulk submission, everyone scope, retail administration, certificates, and email-only access requests. Historical IDs/counts below remain for traceability; do not execute retired cases as release requirements. Current architecture: ../../final.md.
+
+
 This folder holds every test case of the app, one file per area. [`docs/test-plan.md`](../test-plan.md) is the master plan: strategy, environments, roles, priorities, exit criteria, traceability, and status.
 
 ## 1. Rules
@@ -11,24 +14,27 @@ This folder holds every test case of the app, one file per area. [`docs/test-pla
 
 ## 2. Files
 
+Current migration acceptance: [16-mobile-migration.md](16-mobile-migration.md). The following inventory is the pre-migration snapshot.
+
 | Area | File | Cases | P1 | P2 | P3 | ✅ Auto | ⏳ To automate | ✋ Manual | ⛔ Blocked |
 |---|---|---|---|---|---|---|---|---|---|
-| AUTH | [01-auth.md](01-auth.md) | 84 | 32 | 36 | 16 | 65 | 0 | 19 | 0 |
-| SESS | [02-session.md](02-session.md) | 32 | 17 | 12 | 3 | 25 | 0 | 7 | 0 |
+| AUTH | [01-auth.md](01-auth.md) | 117 | 42 | 54 | 21 | 103 | 0 | 13 | 1 |
+| SESS | [02-session.md](02-session.md) | 44 | 20 | 19 | 5 | 39 | 0 | 5 | 0 |
 | ROLE and NAV | [03-roles-nav.md](03-roles-nav.md) | 35 | 13 | 16 | 6 | 32 | 0 | 3 | 0 |
-| LOOK | [04-lookup.md](04-lookup.md) | 117 | 45 | 50 | 22 | 83 | 0 | 13 | 21 |
-| BULK | [05-bulk.md](05-bulk.md) | 37 | 13 | 16 | 8 | 31 | 0 | 6 | 0 |
-| HIST | [06-history.md](06-history.md) | 48 | 15 | 24 | 9 | 44 | 0 | 3 | 1 |
-| REP | [07-reports.md](07-reports.md) | 49 | 14 | 26 | 9 | 37 | 0 | 12 | 0 |
-| RTL | [08-retail-users.md](08-retail-users.md) | 44 | 10 | 26 | 8 | 38 | 0 | 6 | 0 |
-| PROF | [09-profile.md](09-profile.md) | 40 | 3 | 22 | 15 | 18 | 0 | 3 | 19 |
-| ERR | [10-errors-network.md](10-errors-network.md) | 46 | 10 | 23 | 13 | 31 | 0 | 4 | 11 |
-| SEC | [11-security.md](11-security.md) | 28 | 18 | 8 | 2 | 20 | 0 | 8 | 0 |
+| LOOK | [04-lookup.md](04-lookup.md) | 97 | 39 | 42 | 16 | 84 | 0 | 13 | 0 |
+| BULK | [05-bulk.md](05-bulk.md) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| HIST | [06-history.md](06-history.md) | 49 | 15 | 24 | 10 | 45 | 0 | 3 | 1 |
+| REP | [07-reports.md](07-reports.md) | 59 | 17 | 32 | 10 | 47 | 0 | 12 | 0 |
+| RTL | [08-retail-users.md](08-retail-users.md) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| PROF | [09-profile.md](09-profile.md) | 41 | 3 | 23 | 15 | 19 | 0 | 3 | 19 |
+| ERR | [10-errors-network.md](10-errors-network.md) | 49 | 10 | 25 | 14 | 34 | 0 | 4 | 11 |
+| SEC | [11-security.md](11-security.md) | 28 | 18 | 8 | 2 | 21 | 0 | 7 | 0 |
 | NFR | [12-device-a11y-perf.md](12-device-a11y-perf.md) | 27 | 0 | 17 | 10 | 8 | 0 | 19 | 0 |
 | E2E | [13-e2e-journeys.md](13-e2e-journeys.md) | 16 | 7 | 9 | 0 | 10 | 0 | 6 | 0 |
 | Exploratory | [14-exploratory-charters.md](14-exploratory-charters.md) | 9 | 0 | 6 | 3 | 0 | 0 | 9 | 0 |
-| UI | [15-ui.md](15-ui.md) | 178 | 28 | 97 | 53 | 164 | 0 | 14 | 0 |
-| **Total** | | **790** | 225 | 388 | 177 | 606 | 0 | 132 | 52 |
+| UI | [15-ui.md](15-ui.md) | 184 | 30 | 100 | 54 | 170 | 0 | 14 | 0 |
+| MIG | [16-mobile-migration.md](16-mobile-migration.md) | 50 | 36 | 13 | 1 | 50 | 0 | 0 | 0 |
+| **Total** | | **805** | 250 | 388 | 167 | 662 | 0 | 111 | 32 |
 
 ## 3. Case Format
 
@@ -94,7 +100,7 @@ Each spec rule, the cases that cover it today, and what is missing. The step is 
 | Forced change | §6.6, §9.4 | AUTH-013, -014, -055, -060 … -062 | — | 2 ✓ |
 | Voluntary change | §6.6, §13.8 | AUTH-019, -063, -064, -066, -067, PROF-005 | — | 2 ✓ |
 | Forgotten password | §6.6 | AUTH-020, -021, -075 … -082 | — | 2 ✓ |
-| Request access | §13.9 | AUTH-022 … -025, -083, -084 | — | 2 ✓ |
+| Sign up | §13.9 | AUTH-022 … -025, -083, -084 | — | 2 ✓ |
 | Passes and renewal | §6.3, §6.4 | SESS-003, -004, -011 … -022, -031 | — | 2 ✓ |
 | Session end | §6.5 | SESS-005 … -009, -027 … -030 | — | 2 ✓ |
 | Start-up | §6.7, §9.4 | SESS-002, -010, -023 … -026, UI-001 … -005 | — | 2 ✓ |
@@ -138,11 +144,11 @@ To settle them, fill in the [decision sheet](../decision-sheet.md): each questio
 | 1 | The certificate (§13.3) is in the spec but not built in the app. | LOOK-068 … -088 (⛔) | App |
 | 2 | The language switch (§13.8, §16) is in the spec but not built in the app; the Bangla texts come from the client (§20.3). | PROF-006 and I18N cases | App, client |
 | 3 | Which time zone defines a day for History `from` / `to` (§16, §20.2). | HIST-010 | Backend |
-| 4 | Email input is not defined beyond "a valid email address": spaces around it, capitals, and which addresses the app refuses. App today: removes spaces, needs an `@`. Whether the backend matches emails without case is not stated. | AUTH-027 … -030 | App, backend |
+| 4 | Email input is not defined beyond "a valid email address": spaces around it, capitals, and which addresses the app refuses. **Fixed 2026-11-16 (decision 56): spaces around it removed; one `@` with text on both sides; no space or invisible character inside (AUTH-110).** Whether the backend matches emails without case is not stated. | AUTH-027 … -030 | App, backend |
 | 5 | A login or code answer with an unknown `data.status` has no defined display. App today: not logged in, the Login screen stays. | AUTH-036 | App |
 | 6 | A new password equal to the current one: neither final.md nor the API guide says whether it is refused. | AUTH-063 | Backend |
-| 7 | "Call the office" on a phone without a dialler has no message (Email has "No email app found. Write to …"). | AUTH-084 | App |
-| 8 | Secure storage that cannot be read at start: the screen is not defined (§6.1 only says the phone ID is never regenerated on an error). App today: the phone ID is not replaced (the screen shown is not tested). | SESS-025 | App |
+| 7 | "Call the office" on a phone without a dialler has no message (Email has "No email app found. Write to …"). **Fixed 2026-11-16: "No phone app found. Call …" (AUTH-084).** | AUTH-084 | App |
+| 8 | Secure storage that cannot be read at start: the screen is not defined (§6.1 only says the phone ID is never regenerated on an error). **Fixed 2026-11-16 (decision 56): the app opens on Login; the phone ID is not replaced and is read again at the next try (SESS-034).** | SESS-025, -034 | App |
 | 9 | `GET me` without `permissions`, or with `permissions: null`: no defined display (the API guide always sends a list). App today (after the ROLE-012 fix): read as no permission, "No features yet". | ROLE-012 | App |
 | 10 | A bulk send cut off by a lost connection, Android back, or closing the app: the spec does not say whether the list stays and what the official is told. Unlike `503` and `429`, the items may already have been checked. App today: nothing is sent again by itself. | BULK-024, -025 | App |
 | 11 | Camera or gallery access denied while adding a report photo has no defined message (the scanner has "Camera access is off…"). | REP-040 | App |
@@ -173,3 +179,5 @@ To settle them, fill in the [decision sheet](../decision-sheet.md): each questio
 | 10 | Remaining work planned in [`../remaining-work-test-plan.md`](../remaining-work-test-plan.md): dependency scan in CI (SEC-024 … -026 ✅); 41 new blocked cases with entry criteria (52 ⛔); [decision sheet](../decision-sheet.md) for 19 questions; [run kit](../manual-test-checklist.md#run-kit) for sessions A–D | Done; the decisions, the three features, and the manual runs are open |
 | 11 | UI: [15-ui.md](15-ui.md) written (159 cases, sections A–G); 145 automated in `test/ui/` (assertions run everywhere, CI too; 118 golden images on the development PC, each looked at); 14 by hand (the Figma comparisons and the splash on a phone); 27 bug entries found and fixed (test-plan §12.1, some covering several screens); decision sheet Q20 (updated) and Q21 (new) | Done |
 | 12 | Result screen, loader, and product picture (final.md §13.1.2, §13.1.4, decisions 46–49): 39 new cases (LOOK-089 … -117, SEC-027, -028, UI-160 … -167) and 12 UI cases rewritten; all automated but TC-LOOK-116 (a real picture on a phone, checklist session C) | Done |
+| 13 | Login and authentication edge and worst cases (final.md §6, decision 56): 27 new cases (AUTH-097 … -114, SESS-033 … -041); 11 manual cases automated (AUTH-025, -037, -038, -049 … -051, -084, SESS-010, -022, -031, SEC-011); 15 bugs proven by a failing test and fixed (test-plan §12.1); AUTH-114 and SESS-041 stay on the test server and a real phone | Done |
+| 14 | Backend D56–D63 and D59 (SRS v1.2): the migration cases as TC-MIG-001 … -031 in the standard table; certificates (LOOK-068 … -088) and hidden-code entry (LOOK-004, -005, -013, -023, -033 … -036, -095) withdrawn, listed at the end of their files; BULK and RTL traceability replaced by TC-MIG cases; new AUTH-115 (D59; Not now kept, restored 2026-11-17) and PROF-041 (permissions on Profile); a blank result screen after losing `item:lookup` found and fixed (TC-MIG-018 flow) | Done |

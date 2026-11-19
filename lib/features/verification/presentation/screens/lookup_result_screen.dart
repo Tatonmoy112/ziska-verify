@@ -20,12 +20,13 @@ import 'package:ziska_verify/l10n/generated/app_localizations.dart';
 import 'package:ziska_verify/shared/design_system/components/buttons/app_button.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_colors.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_spacing.dart';
+import 'package:ziska_verify/shared/widgets/navy_app_bar.dart';
 
 /// The lookup result (final.md Section 13.1.4, decisions 46, 47, 49),
 /// shown unaltered from the backend. A genuine result: the top card, the
 /// item's details, and its picture. A result without an item (`not_found`,
 /// `unassigned`, unknown): the top card, what was entered, hints for
-/// `not_found`, and Try again, Contact support, and Back to Verify.
+/// `not_found`, and Try again, Contact support, and Back to Check.
 class LookupResultScreen extends StatelessWidget {
   const LookupResultScreen({
     required this.view,
@@ -41,6 +42,7 @@ class LookupResultScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final fromList = view.origin == ResultOrigin.manyItems;
     final l10n = AppLocalizations.of(context);
     final result = view.result;
     final item = result.item;
@@ -55,7 +57,7 @@ class LookupResultScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: AppColors.surfaceMuted,
-      appBar: AppBar(title: Text(l10n.resultTitle)),
+      appBar: NavyAppBar(title: l10n.resultTitle),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(AppSpacing.screen),
@@ -63,15 +65,8 @@ class LookupResultScreen extends StatelessWidget {
             VerificationResultCard(result: result),
             const SizedBox(height: AppSpacing.lg),
             if (item != null) ...[
-              ItemDetailsCard(
-                item: item,
-                // A checked-before item shows its tracking details.
-                tracking:
-                    result.outcome == LookupOutcome.warning &&
-                        result.reasons.contains(LookupReason.checkedBefore)
-                    ? result.count
-                    : null,
-              ),
+              // Every field, and the check count of every found item.
+              ItemDetailsCard(item: item, count: result.count),
               const SizedBox(height: AppSpacing.lg),
               ProductPictureCard(
                 pictureUrl: item.product.pictureUrl,
@@ -104,17 +99,16 @@ class LookupResultScreen extends StatelessWidget {
             ],
             if (item != null)
               AppButton(
-                label: l10n.verifyAnother,
+                label: fromList ? l10n.backToList : l10n.verifyAnother,
                 onPressed: () => context.pop(),
               )
             else ...[
-              // Back to where the lookup started: the Verify form (a typed
-              // hidden code already cleared), the scanner, or the Bulk
-              // results.
+              // Back to where the lookup started: the Check form, the
+              // scanner, or the scanner-mode or stack list.
               AppButton(
                 key: const Key('result.tryAgain'),
-                label: l10n.tryAgainLookup,
-                icon: LucideIcons.rotateCcw,
+                label: fromList ? l10n.backToList : l10n.tryAgainLookup,
+                icon: fromList ? LucideIcons.list : LucideIcons.rotateCcw,
                 onPressed: () => context.pop(),
               ),
               if (hasSupport) ...[
@@ -128,13 +122,17 @@ class LookupResultScreen extends StatelessWidget {
                       unawaited(_contactSupport(context, profile!)),
                 ),
               ],
-              const SizedBox(height: AppSpacing.sm),
-              AppButton(
-                key: const Key('result.backToVerify'),
-                label: l10n.backToVerify,
-                variant: AppButtonVariant.tonal,
-                onPressed: () => context.goNamed(RouteNames.home),
-              ),
+              // From scanner mode or a stack, Home would end the session or
+              // drop the stack's results: back to the list only.
+              if (!fromList) ...[
+                const SizedBox(height: AppSpacing.sm),
+                AppButton(
+                  key: const Key('result.backToVerify'),
+                  label: l10n.backToVerify,
+                  variant: AppButtonVariant.tonal,
+                  onPressed: () => context.goNamed(RouteNames.home),
+                ),
+              ],
             ],
           ],
         ),

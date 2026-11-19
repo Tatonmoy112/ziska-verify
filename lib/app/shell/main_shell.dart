@@ -25,8 +25,7 @@ class ShellTab {
   final bool Function(Set<String> permissions)? isAllowed;
 }
 
-bool _canSeeHistory(Set<String> p) =>
-    p.contains('history:own') || p.contains('history:all');
+bool _canSeeHistory(Set<String> p) => p.contains('history:own');
 
 /// The three tabs, in order (final.md Section 9.3.1).
 final List<ShellTab> shellTabs = [
@@ -44,15 +43,14 @@ final List<ShellTab> shellTabs = [
 final Map<String, bool Function(Set<String>)> tabPermissionByPath = {
   '/history': _canSeeHistory,
   '/home/scan': _canLookup,
-  '/home/result': _canLookup,
-  '/home/bulk-lookup': (p) => p.contains('item:bulk_lookup'),
+  '/home/result': (p) => _canLookup(p) || p.contains('item:bulk_lookup'),
+  '/home/scanner-mode': (p) => p.contains('item:bulk_lookup'),
+  '/home/serial-stack': (p) => p.contains('item:bulk_lookup'),
+  // The prefix of one session's checks, `/history/sessions/{id}`.
+  '/history/sessions': _canSeeHistory,
   '/home/reports': _canReport,
   '/home/reports/new': _canReport,
-  '/home/retail-users': _canAddRetail,
-  '/home/retail-users/new': _canAddRetail,
 };
-
-bool _canAddRetail(Set<String> p) => p.contains('retail_user:add');
 
 bool _canReport(Set<String> p) => p.contains('incident:report');
 
