@@ -45,9 +45,10 @@ String checkSentence(CheckRecord check, AppLocalizations l10n) =>
 
 /// One check in History (final.md Section 13.4), in the Figma "product
 /// history" layout: the serial and the result badge; batch, day, and time;
-/// a grey box saying what the result means; the way, "In a session" when
-/// the check belongs to one (SRS FR-HIS-04), and the reference. Always the
-/// official's own check (backend D61), so no checker's name.
+/// who checked it; a grey box saying what the result means; the way, the
+/// session when the check belongs to one, and the reference (SRS
+/// FR-HIS-04: "the official, and the session if any"). The official is
+/// always the one logged in (backend D61).
 class CheckTile extends StatelessWidget {
   const CheckTile({required this.check, this.number, super.key});
 
@@ -127,6 +128,12 @@ class CheckTile extends StatelessWidget {
                           key: const Key('checkTile.when'),
                           style: AppTypography.caption,
                         ),
+                        if (check.official.trim().isNotEmpty)
+                          Text(
+                            l10n.historyCheckedBy(check.official.trim()),
+                            key: const Key('checkTile.official'),
+                            style: AppTypography.caption,
+                          ),
                       ],
                     ),
                   ),
@@ -170,9 +177,13 @@ class CheckTile extends StatelessWidget {
                     const SizedBox(width: AppSpacing.xxs),
                     Flexible(
                       child: Text(
-                        check.sessionId == null
-                            ? wayLabel
-                            : '$wayLabel · ${l10n.historyInSession}',
+                        switch (check.sessionId) {
+                          final id? => [
+                            wayLabel,
+                            l10n.historySession(shortSessionId(id)),
+                          ].join(' · '),
+                          null => wayLabel,
+                        },
                         key: const Key('checkTile.way'),
                         style: AppTypography.caption,
                       ),
@@ -193,6 +204,13 @@ class CheckTile extends StatelessWidget {
       ),
     );
   }
+}
+
+/// A session as officials see it: the ID's first 8 characters in capitals
+/// ("7F3C2A10"), enough to tell sessions apart on a screen.
+String shortSessionId(String id) {
+  final plain = id.replaceAll('-', '').toUpperCase();
+  return plain.length <= 8 ? plain : plain.substring(0, 8);
 }
 
 /// The result as a coloured pill.

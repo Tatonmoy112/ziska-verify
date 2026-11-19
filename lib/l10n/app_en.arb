@@ -285,7 +285,24 @@
   "historyAny": "Any",
   "historyPickDates": "Choose dates",
   "historyEmptyTitle": "No checks",
-  "historyInSession": "In a session",
+  "historySession": "Session {id}",
+  "@historySession": {
+    "description": "The scanner session or stack a check belongs to, by the first 8 characters of its ID.",
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "historyCheckedBy": "Checked by {name}",
+  "@historyCheckedBy": {
+    "description": "Who made the check: always the official logged in (SRS FR-HIS-04).",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "historyEmptyBody": "No check matches these filters.",
   "historyNoChecksYet": "Your checks appear here after your first check.",
   "historyAll": "All",

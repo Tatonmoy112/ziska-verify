@@ -350,7 +350,10 @@ void main() {
     );
 
     uiTest('TC-UI-065 history rows: every result badge', (tester, shot) async {
-      await tiles(tester, [for (final r in CheckResult.values) _check(r)]);
+      // Five rows, each with its official's line: a tall page shows all.
+      await tiles(tester, [
+        for (final r in CheckResult.values) _check(r),
+      ], height: 1100);
       for (final r in CheckResult.values) {
         final (label, color) = checkResultStyle(r, l10n);
         final text = find.text(label);
@@ -390,15 +393,23 @@ void main() {
       expect(find.textContaining('Paracetamol'), findsNothing);
     });
 
-    // SRS FR-HIS-04: the session if any; never a checker's name (D61).
-    uiTest('TC-UI-067 history row: the session marker', (tester, shot) async {
-      await tiles(tester, [_check(CheckResult.valid)], height: 240);
-      expect(find.textContaining(l10n.historyInSession), findsNothing);
-      expect(find.textContaining('Asha Rao'), findsNothing);
+    // SRS FR-HIS-04: "the official, and the session if any".
+    uiTest('TC-UI-067 history row: the official and the session', (
+      tester,
+      shot,
+    ) async {
+      await tiles(tester, [_check(CheckResult.valid)], height: 260);
+      expect(find.text('Checked by Asha Rao'), findsOneWidget);
+      expect(find.textContaining('Session'), findsNothing);
       await tiles(tester, [
-        _check(CheckResult.valid, sessionId: '7f3c2a10'),
-      ], height: 240);
-      expect(find.textContaining(l10n.historyInSession), findsOneWidget);
+        _check(
+          CheckResult.valid,
+          sessionId: '7f3c2a10-5b1e-4c8e-9d4a-2e6f0b9c1d33',
+        ),
+      ], height: 260);
+      expect(find.text('Checked by Asha Rao'), findsOneWidget);
+      expect(find.text('${l10n.wayQr} · Session 7F3C2A10'), findsOneWidget);
+      expect(tester.takeException(), isNull);
       await shot('check_tile_session');
     });
 

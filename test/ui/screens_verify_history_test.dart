@@ -705,7 +705,8 @@ void main() {
         findsOneWidget,
       );
       expect(find.byKey(const Key('checkTile.number')), findsNothing);
-      expect(find.textContaining('by '), findsNothing);
+      // Every row names its official: always the one logged in (FR-HIS-04).
+      expect(find.textContaining('Checked by '), findsWidgets);
       await shot('screen_history');
     });
 

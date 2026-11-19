@@ -1130,11 +1130,17 @@ abstract class AppLocalizations {
   /// **'No checks'**
   String get historyEmptyTitle;
 
-  /// No description provided for @historyInSession.
+  /// The scanner session or stack a check belongs to, by the first 8 characters of its ID.
   ///
   /// In en, this message translates to:
-  /// **'In a session'**
-  String get historyInSession;
+  /// **'Session {id}'**
+  String historySession(String id);
+
+  /// Who made the check: always the official logged in (SRS FR-HIS-04).
+  ///
+  /// In en, this message translates to:
+  /// **'Checked by {name}'**
+  String historyCheckedBy(String name);
 
   /// No description provided for @historyEmptyBody.
   ///

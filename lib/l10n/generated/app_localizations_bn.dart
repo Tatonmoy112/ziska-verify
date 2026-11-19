@@ -567,7 +567,14 @@ class AppLocalizationsBn extends AppLocalizations {
   String get historyEmptyTitle => 'কোনো যাচাই নেই';
 
   @override
-  String get historyInSession => 'একটি সেশনে';
+  String historySession(String id) {
+    return 'সেশন $id';
+  }
+
+  @override
+  String historyCheckedBy(String name) {
+    return 'যাচাই করেছেন $name';
+  }
 
   @override
   String get historyEmptyBody => 'এই ফিল্টারের সাথে কোনো যাচাই মেলেনি।';

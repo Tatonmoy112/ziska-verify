@@ -183,8 +183,13 @@ void main() {
         expect(request.queryParameters.containsKey('scope'), isFalse);
       }
 
-      // No other officials: no checker's name, no "Everyone's checks".
-      expect(find.textContaining('by '), findsNothing);
+      // Only one's own checks: the name on every row is the official's
+      // (SRS FR-HIS-04), and there is no "Everyone's checks".
+      final names = find.byKey(const Key('checkTile.official'));
+      expect(names, findsWidgets);
+      for (final name in tester.widgetList<Text>(names)) {
+        expect(name.data, startsWith('Checked by '));
+      }
       await app.tap(find.byKey(const Key('history.filters')));
       expect(find.byKey(const Key('history.scopeAll')), findsNothing);
       await tester.binding.handlePopRoute();

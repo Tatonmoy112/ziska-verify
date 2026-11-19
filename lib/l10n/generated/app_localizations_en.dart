@@ -569,7 +569,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get historyEmptyTitle => 'No checks';
 
   @override
-  String get historyInSession => 'In a session';
+  String historySession(String id) {
+    return 'Session $id';
+  }
+
+  @override
+  String historyCheckedBy(String name) {
+    return 'Checked by $name';
+  }
 
   @override
   String get historyEmptyBody => 'No check matches these filters.';
