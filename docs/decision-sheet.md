@@ -10,7 +10,7 @@
 
 | Field | Value |
 |---|---|
-| Version | 1.0 — 2026-11-14 |
+| Version | 1.1 — 2026-11-19 (statuses brought up to date) |
 | Questions | 20 (the same numbers as [test-cases README §7](test-cases/README.md#7-open-questions-spec-gaps)) |
 | Plan | [remaining-work-test-plan.md §5](remaining-work-test-plan.md#5-item-3--open-questions) |
 
@@ -21,27 +21,27 @@
 | 3 | Which time zone defines a History day | Backend | Open |
 | 4B | Are emails matched without case | Backend | Open |
 | 6 | May a new password equal the current one | Backend | Open |
-| 12B | Is `Retry-After` always whole seconds | Backend | Open |
+| 12B | Is `Retry-After` always whole seconds | Backend | **Answered by the app 2026-11-18:** seconds, or an HTTP date still to come, both read (TC-ERR-048) |
 | 19B | Does the server accept only Latin digits | Backend | Open |
-| 1 | Certificate: when | Client | Open |
+| 1 | Certificate: when | Client | **Withdrawn** (removed by the backend, SRS v1.2) |
 | 2 | Language switch: when, and the Bangla texts | Client | Open |
 | 14 | Hide sensitive screens from screenshots | Client | Open |
 | 15 | Dark mode | Client | Open |
-| 17 | Certificate language | Client | Open |
-| 4A | Which email addresses the app refuses | App owner | Open |
+| 17 | Certificate language | Client | **Withdrawn** (no certificate) |
+| 4A | Which email addresses the app refuses | App owner | **Decided 2026-11-16** (decision 56) |
 | 5 | An unknown login status | App owner | Open |
-| 7 | "Call the office" without a dialler | App owner | Open |
-| 8 | Secure storage that cannot be read | App owner | Open |
+| 7 | "Call the office" without a dialler | App owner | **Decided 2026-11-16:** "No phone app found. Call …" |
+| 8 | Secure storage that cannot be read | App owner | **Decided 2026-11-16** (logged out, never stuck; TC-SESS-034) |
 | 9 | A profile without a permissions list | App owner | Open |
-| 10 | A bulk send cut off | App owner | Open |
+| 10 | A bulk send cut off | App owner | **Withdrawn** (bulk removed; stacks are one request, guide §4.7) |
 | 11 | Camera or gallery access denied for a photo | App owner | Open |
-| 12A | A `429` without a usable `Retry-After` | App owner | Open |
+| 12A | A `429` without a usable `Retry-After` | App owner | **Decided 2026-11-17: B** (guide §1: never a number in the app) |
 | 13 | Offline banner: when | App owner | Open |
-| 16 | A certificate that cannot be made | App owner | Open |
+| 16 | A certificate that cannot be made | App owner | **Withdrawn** (no certificate) |
 | 18 | The language at the first start | App owner, client | Open |
 | 19A | Bangla digits typed into a serial | App owner | Open |
 | 20 | The §14.1 component list against what is built | App owner | Open |
-| 21 | The colour of a chosen segment or chip | App owner | Open |
+| 21 | The colour of a chosen segment or chip | App owner | **Decided 2026-11-15:** navy fill, white text |
 
 ---
 
@@ -232,7 +232,7 @@ Other: ______________________ Decided by: __________ Date: ________
 Other: ______________________ Decided by: __________ Date: ________
 
 ### Q12A. A `429` without a usable `Retry-After`
-Today: a 60-second countdown; nothing is retried by itself. **Cases:** ERR-025, -027.
+**Decided 2026-11-17: B.** The backend's guide says to go by `Retry-After` and "never by a number written into the app": without a usable value the screen says "Try again later" and a retry is allowed at once; nothing is retried by itself. **Cases:** ERR-025, -027.
 
 | | Option | Effect |
 |---|---|---|

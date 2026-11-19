@@ -141,7 +141,7 @@ To settle them, fill in the [decision sheet](../decision-sheet.md): each questio
 
 | # | Question | Cases waiting | Owner |
 |---|---|---|---|
-| 1 | The certificate (§13.3) is in the spec but not built in the app. | LOOK-068 … -088 (⛔) | App |
+| 1 | The certificate (§13.3). **Withdrawn:** the backend removed certificates (SRS v1.2); not built, not a release feature. | LOOK-068 … -088 (withdrawn) | — |
 | 2 | The language switch (§13.8, §16) is in the spec but not built in the app; the Bangla texts come from the client (§20.3). | PROF-006 and I18N cases | App, client |
 | 3 | Which time zone defines a day for History `from` / `to` (§16, §20.2). | HIST-010 | Backend |
 | 4 | Email input is not defined beyond "a valid email address": spaces around it, capitals, and which addresses the app refuses. **Fixed 2026-11-16 (decision 56): spaces around it removed; one `@` with text on both sides; no space or invisible character inside (AUTH-110).** Whether the backend matches emails without case is not stated. | AUTH-027 … -030 | App, backend |
@@ -150,14 +150,14 @@ To settle them, fill in the [decision sheet](../decision-sheet.md): each questio
 | 7 | "Call the office" on a phone without a dialler has no message (Email has "No email app found. Write to …"). **Fixed 2026-11-16: "No phone app found. Call …" (AUTH-084).** | AUTH-084 | App |
 | 8 | Secure storage that cannot be read at start: the screen is not defined (§6.1 only says the phone ID is never regenerated on an error). **Fixed 2026-11-16 (decision 56): the app opens on Login; the phone ID is not replaced and is read again at the next try (SESS-034).** | SESS-025, -034 | App |
 | 9 | `GET me` without `permissions`, or with `permissions: null`: no defined display (the API guide always sends a list). App today (after the ROLE-012 fix): read as no permission, "No features yet". | ROLE-012 | App |
-| 10 | A bulk send cut off by a lost connection, Android back, or closing the app: the spec does not say whether the list stays and what the official is told. Unlike `503` and `429`, the items may already have been checked. App today: nothing is sent again by itself. | BULK-024, -025 | App |
+| 10 | A bulk send cut off by a lost connection. **Withdrawn:** the 500-item bulk lookup is removed; a stack of serials is one request (guide §4.7; TC-MIG cases). | — | — |
 | 11 | Camera or gallery access denied while adding a report photo has no defined message (the scanner has "Camera access is off…"). | REP-040 | App |
-| 12 | `429` without `Retry-After`, or with a date instead of seconds: no defined countdown (the API guide always gives seconds). App today: a 60-second countdown; nothing is retried by itself. | ERR-025, -027 | App, backend |
+| 12 | `429` without `Retry-After`, or with a date. **Decided 2026-11-17/18:** a `Retry-After` in seconds, or an HTTP date still to come, counts down; otherwise "Try again later." and a manual retry at once; no wait is made up (guide §1: "never by a number written into the app"). | ERR-025, -027, -048 | — |
 | 13 | The offline banner (`NetworkStatusBanner`, `ConnectivityService`, §14.2) is in the spec but not built. | ERR-036 … -046 | App |
 | 14 | Screens showing a first password or a result are not hidden from the app switcher or screenshots; §12 does not ask for it. | SEC-012 | App, client |
 | 15 | Dark mode: §12.1 stores a theme preference, but no dark theme is defined, and the app has none. | NFR-020 | App, client |
-| 16 | A certificate that cannot be made (no space left, a font error): no message is defined. | LOOK-083 | App |
-| 17 | The certificate's language when the app is in Bangla: English always, or the app's language (§13.3 waits for the client's layout, §20.3). | LOOK-088 | Client |
+| 16 | A certificate that cannot be made. **Withdrawn** (no certificate). | — | — |
+| 17 | The certificate's language. **Withdrawn** (no certificate). | — | — |
 | 18 | The language at the first start: the phone's language when it is Bangla, or English always (§16 lists both languages, not the default). | PROF-030 | User, client |
 | 19 | Bangla digits (১২৩) typed into a serial or hidden code: refused, or read as 0–9 (the formats list Latin digits only). | PROF-035 | User, backend |
 | 20 | `final.md` §14.1 names components that are built under other names or not built (15-ui.md, section G). | UI-159 | App |
