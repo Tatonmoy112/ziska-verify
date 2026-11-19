@@ -810,7 +810,7 @@ Content-Length: 612480
 | 404 | `not_found` | "Report not found." | no such report, or another official's |
 | 409 | `conflict` | "The report has 3 photos already." | a 4th photo |
 | 409 | `conflict` | "Photos can be added only within an hour of the report." | after the hour |
-| 503 | `service_unavailable` | "Service temporarily unavailable." | the photo storage cannot be reached: send it again shortly |
+| 503 | `service_unavailable` | "Service temporarily unavailable." | the photo storage cannot be reached, or did not take the photo within 10 seconds, or the client's other uploads keep it waiting as long: send it again shortly |
 
 **On the phone:** a report and its photos are separate requests. When a
 photo fails with 503 or a lost connection, keep it and send it again; the

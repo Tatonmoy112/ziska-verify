@@ -2511,7 +2511,7 @@
     },
     {
       "name": "Scanner sessions",
-      "description": "**Changing (decided 2026-11-10, not built yet).** Replaces the bulk lookup. A supervisor with a stack of products opens scanner mode: the camera reads one QR, the app sends it at once with the session's ID, shows the result, and the supervisor takes the next product. Needs `item:bulk_lookup`. Guide §4.3–4.6.\n\nThe phone keeps only the session ID (to carry on after a crash), never the list.",
+      "description": "**Built and tested (replaced the bulk lookup, 2026-11-11).** A supervisor with a stack of products opens scanner mode: the camera reads one QR, the app sends it at once with the session's ID, shows the result, and the supervisor takes the next product. Needs `item:bulk_lookup`. Guide §4.3–4.6.\n\nThe phone keeps only the session ID (to carry on after a crash), never the list.",
       "item": [
         {
           "name": "1. A scan in the session",

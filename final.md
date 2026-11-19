@@ -7,7 +7,7 @@
 | Platforms | Flutter Android and iOS |
 | Backend | ProtectB mobile-app-api, `/v1/clients/{slug}/` |
 | Contract baseline | ProtectB mobile guide dated 2026-11-16; mobile decisions D1-D63, including D56 and D58-D63 |
-| Evidence | `docs/protectb-api/` is the app-owned contract snapshot; its Postman examples drive contract and flow tests |
+| Evidence | `docs/protectb-api/` is the app-owned contract snapshot, copied from `ProtectB-DOCS-initial` at commit 4ec8318 (2026-11-18); its Postman examples drive contract and flow tests |
 
 The previous architecture is preserved in `docs/archive/app-architecture-1.6.md` for traceability. Its hidden-code submission, bulk endpoint, everyone scope, retail administration, and certificate requirements are superseded.
 
@@ -344,6 +344,10 @@ Approved for this migration: full Flutter contract migration; serial entry limit
 ## 20. Remaining dependencies
 
 See `docs/release-backlog.md` for the test server, backend day boundary, the client's review of the Bangla texts, release signing, Firebase/Crashlytics and iOS schemes. The architecture is not evidence that manual/staging acceptance has run. Record actual tool results in the migration report.
+
+### 20.0 The backend plan of 2026-11-18
+
+The plan at commit 4ec8318 changed two things the app meets, and neither needs an app change: the Scanner sessions routes are final (built and tested), and a photo's `503` also means the storage did not take it within 10 seconds (the app already offers "Tap to send again"). The app was checked against it line by line on 2026-11-19 (`docs/backend-alignment-2026-11-19.md`).
 
 ### 20.1 Backend questions (2026-11-17)
 

@@ -2,7 +2,7 @@
 
 The mock build (`config/mock.json`) talks to a Postman mock server made from the backend's collection. The mock answers each request with its saved example (build guide §6). It has no emails, accepts every code, and gives every lookup a fixed answer.
 
-The mock must be made from the **current** collection (`docs/protectb-api/ProtectB-mobile-app.postman_collection.json`, backend commit ebff1d9, 2026-11-17). A mock made from an older copy lacks:
+The mock must be made from the **current** collection (`docs/protectb-api/ProtectB-mobile-app.postman_collection.json`, backend commit 4ec8318, 2026-11-18; it differs from 2026-11-17's only in a folder description, so a mock made from that one still serves the app). A mock made from an older copy lacks:
 - Request access (`roles/requestable`);
 - Scanner mode and Sessions (`lookups/sessions`);
 - Serial stacks (`lookups/serials`).
