@@ -108,6 +108,69 @@ void main() {
       isA<Err<SerialStackResult>>(),
     );
   });
+  // TC-MIG-056 (audit 2026-11-19): a 200 means the stack was recorded
+  // (guide section 4.7), so an answer that cannot be read is "recorded",
+  // never an error that lets the same stack go again.
+  group('TC-MIG-056 a 200 that cannot be read is recorded', () {
+    Map<String, dynamic> stack() =>
+        postmanExample(
+              request: 'A stack of serials',
+              example: '200 Three serials, one sent twice',
+            )
+            as Map<String, dynamic>;
+    const serials = ['1000001', '1000002', '1000003'];
+
+    Future<void> expectRecorded() async {
+      final result =
+          await repository.serials(serials) as Err<SerialStackResult>;
+      expect(
+        result.failure.exception,
+        isA<InternalErrorException>().having(
+          (e) => e.message,
+          'message',
+          'serial_stack_mismatch',
+        ),
+      );
+    }
+
+    test('a field of the wrong type', () async {
+      final body = stack();
+      (((body['data'] as Map)['items'] as List).first as Map)['result'] = 7;
+      next = ScriptedAnswer(200, body);
+      await expectRecorded();
+    });
+
+    test('no items list', () async {
+      final body = stack();
+      (body['data'] as Map).remove('items');
+      next = ScriptedAnswer(200, body);
+      await expectRecorded();
+    });
+
+    test('data that is not an object', () async {
+      next = const ScriptedAnswer(200, {
+        'success': true,
+        'message': 'ok',
+        'data': 'done',
+      });
+      await expectRecorded();
+    });
+
+    test('a 200 that is not the envelope', () async {
+      next = const ScriptedAnswer.raw(200, '<html>ok</html>');
+      await expectRecorded();
+    });
+
+    test('a non-200 page is not recorded', () async {
+      next = const ScriptedAnswer.raw(502, '<html>Bad gateway</html>');
+      final result =
+          await repository.serials(serials) as Err<SerialStackResult>;
+      expect(
+        (result.failure.exception as InternalErrorException?)?.message,
+        isNot('serial_stack_mismatch'),
+      );
+    });
+  });
   test('session list accepts kind and sends only documented filters', () async {
     next = example('3. My sessions', '200 Sessions');
     final result = await repository.sessions(
