@@ -1,9 +1,20 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
+
+// The upload key, once the client has one (docs/run.md, "Release signing").
+// `android/key.properties` and the keystore are git-ignored: never committed.
+val keyProperties = Properties().apply {
+    val file = rootProject.file("key.properties")
+    if (file.exists()) FileInputStream(file).use { load(it) }
+}
+val hasReleaseKey = keyProperties.getProperty("storeFile") != null
 
 android {
     namespace = "com.ziskapharma.trackandtrace"
@@ -49,11 +60,24 @@ android {
         }
     }
 
+    signingConfigs {
+        if (hasReleaseKey) {
+            create("release") {
+                storeFile = file(keyProperties.getProperty("storeFile"))
+                storePassword = keyProperties.getProperty("storePassword")
+                keyAlias = keyProperties.getProperty("keyAlias")
+                keyPassword = keyProperties.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // Release signing is configured in CI (final.md Section 2.3).
-            // Debug keys keep `flutter run --release` working locally.
-            signingConfig = signingConfigs.getByName("debug")
+            // With `android/key.properties` the upload key; without it the
+            // debug key, which installs for testing but cannot go to a store.
+            signingConfig = signingConfigs.getByName(
+                if (hasReleaseKey) "release" else "debug",
+            )
         }
     }
 }

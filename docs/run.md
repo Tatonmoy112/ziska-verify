@@ -39,7 +39,29 @@ D:\flutter\bin\flutter build apk --release --flavor mock --dart-define-from-file
 & $adb shell monkey -p com.ziskapharma.trackandtrace.mock -c android.intent.category.LAUNCHER 1
 ```
 
-Request access, Scanner mode, Serial stack and the History → Sessions view will show "not found" errors until you import the new collection (`docs\protectb-api\ProtectB-mobile-app.postman_collection.json`) into the Postman mock server named in `config\mock.json`. Login, Verify, the Checks list and Profile work now.
+The mock server named in `config\mock.json` serves the current collection; how it was set up, and the test logins: `docs\postman-mock-setup.md`.
 
+**Release APKs for real phones** (one per phone type; most phones take `arm64-v8a`):
+```powershell
+D:\flutter\bin\flutter build apk --release --flavor mock --dart-define-from-file=config/mock.json --split-per-abi
+```
+The APKs are in `build\app\outputs\flutter-apk\` (`app-arm64-v8a-mock-release.apk`, `app-armeabi-v7a-mock-release.apk`, `app-x86_64-mock-release.apk`).
 
-/d/flutter/bin/flutter build apk --release --flavor mock --dart-define-from-file=config/mock.json 2>&1 | tail -3
+## Release signing
+
+Without a key the release build is signed with the debug key: it installs on any phone for testing, but a store refuses it. The upload key is made once the client has decided who owns it (`docs/release-backlog.md`):
+
+1. Make the keystore, outside the project, and keep it and its passwords in the owner's password manager:
+   ```powershell
+   keytool -genkey -v -keystore D:\keys\ziska-upload.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+   ```
+2. Write `android\key.properties` (git-ignored, never committed):
+   ```properties
+   storeFile=D:/keys/ziska-upload.jks
+   storePassword=<the keystore password>
+   keyAlias=upload
+   keyPassword=<the key password>
+   ```
+3. Build as above. `android\app\build.gradle.kts` uses the key whenever `key.properties` names a `storeFile`, and the debug key otherwise. Check the signer with `apksigner verify --print-certs <apk>`: the debug key shows `CN=Android Debug`.
+
+CI builds only the debug mock APK, so it needs no key.
