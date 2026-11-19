@@ -1059,6 +1059,32 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get sessionFinish => 'Finish';
+
+  @override
+  String get sessionFinishing => 'Checking the last scans…';
+
+  @override
+  String get sessionSummaryTitle => 'Session finished';
+
+  @override
+  String sessionSummaryCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count products scanned',
+      one: '1 product scanned',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sessionScanMore => 'Scan more';
+
+  @override
+  String get sessionDone => 'Done';
+
+  @override
   String sessionNotChecked(int count) {
     return '$count more scans were not checked. Scan them again.';
   }

@@ -10,7 +10,7 @@ The app is built and runs on the test (mock) server. Before it can be released, 
 
 The app now switches between English and Bangla (Profile → Language). We drafted every Bangla text ourselves, so a Bangla reader at Ziska should check them.
 
-- **What to do:** go through `docs/bangla-drafts-for-review.md` (320 texts, English beside Bangla). Mark each one as fine or write the correction. Then use the app in Bangla on a phone and note anything that reads oddly.
+- **What to do:** go through `docs/bangla-drafts-for-review.md` (326 texts, English beside Bangla). Mark each one as fine or write the correction. Then use the app in Bangla on a phone and note anything that reads oddly.
 - **Today:** the drafts are in the app as they are.
 
 ## B6. The company name in the copyright line

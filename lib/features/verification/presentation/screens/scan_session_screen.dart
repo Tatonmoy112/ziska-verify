@@ -21,6 +21,7 @@ import 'package:ziska_verify/shared/design_system/tokens/app_spacing.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_typography.dart';
 import 'package:ziska_verify/shared/extensions/failure_message.dart';
 import 'package:ziska_verify/shared/widgets/failure_banner.dart';
+import 'package:ziska_verify/shared/widgets/large_text.dart';
 import 'package:ziska_verify/shared/widgets/navy_app_bar.dart';
 import 'package:ziska_verify/shared/widgets/retry_countdown.dart';
 
@@ -57,6 +58,7 @@ class _ScanSessionScreenState extends State<ScanSessionScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (_cubit.state.done) return;
     if (state == AppLifecycleState.resumed && !_detail) {
       _cubit.resume();
       unawaited(_camera.start());
@@ -88,22 +90,43 @@ class _ScanSessionScreenState extends State<ScanSessionScreen>
 
   Future<void> _open(ScanSessionState state) async {
     final result = state.latest;
-    if (result == null || state.checked == null || _detail) return;
+    final checked = state.checked;
+    if (result == null || checked == null) return;
+    await _openAnswer(ScanAnswer(result, checked), state);
+  }
+
+  /// Opens one scan's full result; the camera waits meanwhile, and stays
+  /// off on the summary.
+  Future<void> _openAnswer(ScanAnswer answer, ScanSessionState state) async {
+    if (_detail) return;
     _detail = true;
-    _cubit.pause();
-    await _camera.stop();
-    if (mounted) {
-      await widget.onOpenResult(
-        result,
-        state.checked!,
-        state.formats,
-      );
+    final scanning = !state.done;
+    if (scanning) {
+      _cubit.pause();
+      await _camera.stop();
     }
     if (mounted) {
-      _detail = false;
+      await widget.onOpenResult(answer.result, answer.checked, state.formats);
+    }
+    if (!mounted) return;
+    _detail = false;
+    if (scanning && !_cubit.state.done && !_cubit.state.finishing) {
       _cubit.resume();
       await _camera.start();
     }
+  }
+
+  /// Finish: the camera stops, the reads already taken are answered, then
+  /// the summary shows.
+  Future<void> _finish() async {
+    await _camera.stop();
+    await _cubit.complete();
+  }
+
+  /// Scan more: a new session on the camera.
+  Future<void> _scanMore() async {
+    await _cubit.restart();
+    if (mounted) await _camera.start();
   }
 
   @override
@@ -125,6 +148,14 @@ class _ScanSessionScreenState extends State<ScanSessionScreen>
             ),
           ],
         ),
+        bottomNavigationBar: BlocBuilder<ScanSessionCubit, ScanSessionState>(
+          builder: (_, state) => _BottomBar(
+            state: state,
+            onFinish: () => unawaited(_finish()),
+            onScanMore: () => unawaited(_scanMore()),
+            onDone: () => unawaited(Navigator.of(context).maybePop()),
+          ),
+        ),
         body: BlocConsumer<ScanSessionCubit, ScanSessionState>(
           // Every answer is felt: one short buzz for Genuine, a longer one
           // for anything else, a tick for "already scanned".
@@ -133,6 +164,12 @@ class _ScanSessionScreenState extends State<ScanSessionScreen>
           builder: (_, state) {
             if (state.loading) {
               return const Center(child: CircularProgressIndicator());
+            }
+            if (state.done) {
+              return _SessionSummary(
+                state: state,
+                onOpen: (answer) => unawaited(_openAnswer(answer, state)),
+              );
             }
             if (state.id == null) {
               return ListView(
@@ -391,20 +428,13 @@ class _ScanSessionScreenState extends State<ScanSessionScreen>
                       );
                     }
                     final row = state.rows[i];
-                    final style = outcomeStyle(row.outcome, l);
-                    return ListTile(
+                    final answer = state.answers[row.ref];
+                    return _ScanRow(
                       key: ValueKey(row.ref),
-                      leading: Icon(style.icon, color: style.color),
-                      title: Text(
-                        row.serial ?? row.ref,
-                        style: AppTypography.bodyStrong,
-                      ),
-                      subtitle: Text(
-                        [style.title, ?row.product].join(' · '),
-                        style: AppTypography.caption.copyWith(
-                          color: style.color,
-                        ),
-                      ),
+                      row: row,
+                      onTap: answer == null
+                          ? null
+                          : () => unawaited(_openAnswer(answer, state)),
                     );
                   },
                 ),
@@ -672,6 +702,179 @@ class _LiveResult extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// One scan in the list: its result's icon and colour, serial and product.
+/// Opens the full result when this run answered it.
+class _ScanRow extends StatelessWidget {
+  const _ScanRow({required this.row, this.onTap, super.key});
+
+  final RecoveredScan row;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final style = outcomeStyle(row.outcome, AppLocalizations.of(context));
+    return ListTile(
+      onTap: onTap,
+      leading: Icon(style.icon, color: style.color),
+      title: Text(row.serial ?? row.ref, style: AppTypography.bodyStrong),
+      subtitle: Text(
+        [style.title, ?row.product].join(' · '),
+        style: AppTypography.caption.copyWith(color: style.color),
+      ),
+      trailing: onTap == null
+          ? null
+          : const Icon(LucideIcons.chevronRight, color: AppColors.textMuted),
+    );
+  }
+}
+
+/// Finish while scanning; Scan more and Done on the summary.
+class _BottomBar extends StatelessWidget {
+  const _BottomBar({
+    required this.state,
+    required this.onFinish,
+    required this.onScanMore,
+    required this.onDone,
+  });
+
+  final ScanSessionState state;
+  final VoidCallback onFinish;
+  final VoidCallback onScanMore;
+  final VoidCallback onDone;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    if (state.loading || (state.id == null && !state.done)) {
+      return const SizedBox.shrink();
+    }
+    final Widget child;
+    if (state.done) {
+      final scanMore = AppButton(
+        key: const Key('session.scanMore'),
+        variant: AppButtonVariant.outlined,
+        label: l.sessionScanMore,
+        onPressed: onScanMore,
+      );
+      final done = AppButton(
+        key: const Key('session.done'),
+        label: l.sessionDone,
+        onPressed: onDone,
+      );
+      // Side by side; stacked at a large font, so no label is cut.
+      child = isLargeText(context)
+          ? Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                done,
+                const SizedBox(height: AppSpacing.xs),
+                scanMore,
+              ],
+            )
+          : Row(
+              children: [
+                Expanded(child: scanMore),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(child: done),
+              ],
+            );
+    } else {
+      child = AppButton(
+        key: const Key('session.finish'),
+        label: state.finishing ? l.sessionFinishing : l.sessionFinish,
+        loading: state.finishing,
+        // Once a scan has been answered: an empty summary says nothing.
+        onPressed: state.finishing || state.rows.isEmpty ? null : onFinish,
+      );
+    }
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        color: AppColors.background,
+        border: Border(top: BorderSide(color: AppColors.border)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.screen,
+            AppSpacing.sm,
+            AppSpacing.screen,
+            AppSpacing.sm,
+          ),
+          child: child,
+        ),
+      ),
+    );
+  }
+}
+
+/// After Finish: every scan of the session together, with the totals.
+class _SessionSummary extends StatelessWidget {
+  const _SessionSummary({required this.state, required this.onOpen});
+
+  final ScanSessionState state;
+  final ValueChanged<ScanAnswer> onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final totals = state.totals;
+    final count = totals?.scanned ?? state.rows.length;
+    return ListView(
+      key: const Key('session.summary'),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screen),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Semantics(
+                header: true,
+                child: Text(
+                  l.sessionSummaryTitle,
+                  style: AppTypography.heading,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xxs),
+              Text(
+                l.sessionSummaryCount(count),
+                key: const Key('session.summary.count'),
+                style: AppTypography.body,
+              ),
+              if (totals != null) ...[
+                const SizedBox(height: AppSpacing.md),
+                SessionCounters(totals: totals),
+              ],
+              if (state.notChecked > 0) ...[
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  l.sessionNotChecked(state.notChecked),
+                  key: const Key('session.summary.notChecked'),
+                  style: AppTypography.bodyStrong.copyWith(
+                    color: AppColors.danger,
+                  ),
+                ),
+              ],
+              const SizedBox(height: AppSpacing.sm),
+            ],
+          ),
+        ),
+        for (final row in state.rows)
+          _ScanRow(
+            key: ValueKey('summary.${row.ref}'),
+            row: row,
+            onTap: switch (state.answers[row.ref]) {
+              final answer? => () => onOpen(answer),
+              null => null,
+            },
+          ),
+      ],
     );
   }
 }

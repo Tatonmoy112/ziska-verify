@@ -18,6 +18,13 @@ part 'scan_session_cubit.freezed.dart';
 typedef LoadRecoveredScans =
     Future<Result<RecoveredScans>> Function(String id, String? cursor);
 
+/// A scan answered in this run, kept so its row opens the full result.
+class ScanAnswer {
+  const ScanAnswer(this.result, this.checked);
+  final LookupResult result;
+  final CheckedInput checked;
+}
+
 @freezed
 abstract class ScanSessionState with _$ScanSessionState {
   const factory ScanSessionState({
@@ -54,6 +61,16 @@ abstract class ScanSessionState with _$ScanSessionState {
 
     /// After a `429` on loading those scans: not asked again before this.
     DateTime? rowsRetryAt,
+
+    /// Finish was pressed: no new read is taken, and those already read
+    /// are still sent and answered.
+    @Default(false) bool finishing,
+
+    /// The session ended with Finish: its summary shows every row.
+    @Default(false) bool done,
+
+    /// This run's answers by `ref`, so a row opens its result.
+    @Default(<String, ScanAnswer>{}) Map<String, ScanAnswer> answers,
     @Default(true) bool loading,
     @Default(false) bool busy,
     @Default(false) bool paused,
@@ -99,6 +116,9 @@ class ScanSessionCubit extends Cubit<ScanSessionState> {
   static const scanSpacing = Duration(milliseconds: 500);
   bool _ended = false;
   bool _starting = false;
+
+  /// Completed when nothing is being checked and no read waits (Finish).
+  Completer<void>? _idle;
   int _generation = 0;
   String? _lastRaw;
   Future<void> _persist(Future<void> Function() action) {
@@ -211,6 +231,8 @@ class ScanSessionCubit extends Cubit<ScanSessionState> {
     if (_ended ||
         state.loading ||
         state.paused ||
+        state.finishing ||
+        state.done ||
         formats == null ||
         state.id == null) {
       return Future<void>.value();
@@ -243,6 +265,7 @@ class ScanSessionCubit extends Cubit<ScanSessionState> {
   /// Sends the next read when nothing is being checked, the spacing has
   /// passed and no 429 wait runs; otherwise comes back when it may.
   void _pump() {
+    if (_inFlight == null && _line.isEmpty) _signalIdle();
     if (_inFlight != null ||
         _line.isEmpty ||
         _ended ||
@@ -312,6 +335,7 @@ class ScanSessionCubit extends Cubit<ScanSessionState> {
         state.copyWith(
           id: id,
           rows: [],
+          answers: const {},
           nextCursor: null,
           latest: null,
           checked: null,
@@ -339,11 +363,18 @@ class ScanSessionCubit extends Cubit<ScanSessionState> {
           product: value.result.item?.product.name,
         );
         _inFlight = null;
+        final checked = CheckedInput.of(LookupWay.qr, sent, clock.now());
         emit(
           state.copyWith(
             busy: false,
             latest: value.result,
-            checked: CheckedInput.of(LookupWay.qr, sent, clock.now()),
+            checked: checked,
+            answers: state.answers.containsKey(row.ref)
+                ? state.answers
+                : {
+                    ...state.answers,
+                    row.ref: ScanAnswer(value.result, checked),
+                  },
             repeat: value.repeat,
             restarted: false,
             totals: value.session,
@@ -400,6 +431,52 @@ class ScanSessionCubit extends Cubit<ScanSessionState> {
     _line.clear();
     current?.letGo();
     if (identical(_inFlight, current)) _inFlight = null;
+    if (_inFlight == null) _signalIdle();
+  }
+
+  void _signalIdle() {
+    final idle = _idle;
+    _idle = null;
+    if (idle != null && !idle.isCompleted) idle.complete();
+  }
+
+  /// Finish: no new read is taken; those already read are still sent and
+  /// answered (a 429's wait included), then the session ends without
+  /// waiting for the server (guide section 4.4). The rows, the totals and
+  /// the answers stay for the summary.
+  Future<void> complete() async {
+    if (_ended || state.finishing || state.done || state.id == null) return;
+    emit(state.copyWith(finishing: true, paused: false));
+    if (_inFlight != null || _line.isNotEmpty) {
+      final idle = _idle ??= Completer<void>();
+      _pump();
+      await idle.future;
+    }
+    if (_ended || isClosed) return;
+    _ended = true;
+    ++_generation;
+    _pace?.cancel();
+    final id = state.id!;
+    emit(
+      state.copyWith(finishing: false, done: true, busy: false, pending: 0),
+    );
+    unawaited(_repository.endSession(id));
+    try {
+      await _persist(_store.clear);
+    } on Object {
+      // The summary still shows; the server closes an idle session itself.
+    }
+  }
+
+  /// Scan more after a summary: a new session from an empty screen.
+  Future<void> restart() async {
+    if (!state.done || isClosed) return;
+    _ended = false;
+    _lastRaw = null;
+    _lastSentAt = null;
+    ++_generation;
+    emit(const ScanSessionState());
+    await start();
   }
 
   /// The camera stops (a result opened, the app in the background): the

@@ -1982,6 +1982,42 @@ abstract class AppLocalizations {
   /// **'Checking… {count} more'**
   String sessionCheckingMore(int count);
 
+  /// Scanner mode: ends the session and shows every scan together.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish'**
+  String get sessionFinish;
+
+  /// Finish was pressed; scans already read are still being answered.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking the last scans…'**
+  String get sessionFinishing;
+
+  /// Title of the summary after Finish in scanner mode.
+  ///
+  /// In en, this message translates to:
+  /// **'Session finished'**
+  String get sessionSummaryTitle;
+
+  /// How many different products the finished session scanned.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 product scanned} other{{count} products scanned}}'**
+  String sessionSummaryCount(int count);
+
+  /// On the summary: starts a new scanner session.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan more'**
+  String get sessionScanMore;
+
+  /// On the summary: back to the Check tab.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get sessionDone;
+
   /// No description provided for @sessionNotChecked.
   ///
   /// In en, this message translates to:

@@ -2,7 +2,7 @@
 
 **From:** the mobile app team. **Date:** 2026-11-19 (replaces the list of 2026-11-17, which is included). **Status:** drafts, to be read and corrected by a Bangla reader chosen by Ziska (client question B5; final.md Section 20.3).
 
-The app has 320 texts. **218** of them were drafted on 2026-11-19 so that the language switch could ship; the other 102 were written earlier, with the screens they belong to, and are listed at the end. Both lists are part of the review; every text is in `lib/l10n/app_bn.arb`.
+The app has 326 texts. **224** of them were drafted on 2026-11-19 so that the language switch could ship; the other 102 were written earlier, with the screens they belong to, and are listed at the end. Both lists are part of the review; every text is in `lib/l10n/app_bn.arb`.
 
 ## How to review
 
@@ -235,6 +235,12 @@ The app has 320 texts. **218** of them were drafted on 2026-11-19 so that the la
 | 216 | `stepCheckCount` | Check count | যাচাইয়ের সংখ্যা | |
 | 217 | `stepDone` | done | সম্পন্ন | |
 | 218 | `stepWaiting` | waiting | অপেক্ষমাণ | |
+| 219 | `sessionFinish` | Finish | শেষ করুন | |
+| 220 | `sessionFinishing` | Checking the last scans… | শেষ স্ক্যানগুলো যাচাই হচ্ছে… | |
+| 221 | `sessionSummaryTitle` | Session finished | সেশন শেষ হয়েছে | |
+| 222 | `sessionSummaryCount` | {count, plural, =1{1 product scanned} other{{count} products scanned}} | {count, plural, =1{১টি পণ্য স্ক্যান হয়েছে} other{{count}টি পণ্য স্ক্যান হয়েছে}} | |
+| 223 | `sessionScanMore` | Scan more | আরও স্ক্যান | |
+| 224 | `sessionDone` | Done | সম্পন্ন | |
 
 ## Written earlier (102)
 

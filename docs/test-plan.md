@@ -9,7 +9,7 @@
 | Spec | `final.md` (v1.6 and later), Sections 6–18 |
 | Backend contract | `docs/protectb-api/app-api-guide.md`, `app-build-guide.md`, Postman collection |
 | Version | 2.0 — 2026-11-14: 543 cases in `docs/test-cases/` (positive, negative, boundary, edge, worst case, network, security, device, journeys, charters) |
-| Status | `flutter analyze` clean; 1173 automated tests passing; 688 of 805 cases automated (Section 12) |
+| Status | `flutter analyze` clean; 1189 automated tests passing; 692 of 810 cases automated (Section 12) |
 
 ---
 
@@ -149,8 +149,8 @@ The cases live in one file per area in [`docs/test-cases/`](test-cases/README.md
 | E2E | [13-e2e-journeys.md](test-cases/13-e2e-journeys.md) | 16 | 7 | 9 | 0 | 10 | 0 | 6 | 0 |
 | Exploratory | [14-exploratory-charters.md](test-cases/14-exploratory-charters.md) | 9 | 0 | 6 | 3 | 0 | 0 | 9 | 0 |
 | UI | [15-ui.md](test-cases/15-ui.md) | 184 | 30 | 100 | 54 | 170 | 0 | 14 | 0 |
-| MIG | [16-mobile-migration.md](test-cases/16-mobile-migration.md) | 50 | 36 | 13 | 1 | 50 | 0 | 0 | 0 |
-| **Total** | | **805** | 250 | 388 | 167 | 688 | 0 | 116 | 1 |
+| MIG | [16-mobile-migration.md](test-cases/16-mobile-migration.md) | 55 | 38 | 16 | 1 | 54 | 0 | 1 | 0 |
+| **Total** | | **810** | 252 | 391 | 167 | 692 | 0 | 117 | 1 |
 
 ---
 
@@ -165,7 +165,7 @@ The backend team's checklist (`app-build-guide.md` §5) mapped to test cases. **
 | 3. Staying logged in | Silent renewal; logout keeps phone ID; `401` → Login; Home shows only permitted features | SESS-002 … -010, -023 … -032, ROLE-001 … -020, NAV-001 … -015 | 54: 46 ✅, 8 ✋ |
 | 4. Single lookup | QR sends value after `/q/`; formats checked; every result and reason; `app_preparing`; hidden without `item:lookup` | LOOK-001 … -003, -006 … -012, -014 … -022, -024 … -032, -037 … -067, SEC-016, -017 | 61: 49 ✅, 12 ✋ |
 | 4a. Result screen and product picture | One screen for every path; the loader after 300 ms with honest steps; what was entered (hidden code masked) and hints from the formats; the picture card in each state; HTTPS only, no access pass, memory only | LOOK-089 … -094, -096 … -117, SEC-027, -028 | 30: 29 ✅, 1 ✋ |
-| 5. Checking many items | Scanner sessions: a UUID, QR only, each scan answered at once, `repeat`, `session_full`/`session_ended` start a new session and resend, `session_not_yours`, back ends without waiting, crash resume; serial stacks of 1 to 50, all or nothing, a `503` sent again once; hidden without `item:bulk_lookup` | MIG-012 … -028 | 17: 17 ✅ |
+| 5. Checking many items | Scanner sessions: a UUID, QR only, each scan answered at once, `repeat`, `session_full`/`session_ended` start a new session and resend, `session_not_yours`, back ends without waiting, crash resume; every read kept and answered live; Finish shows every scan together; serial stacks of 1 to 50, all or nothing, a `503` sent again once; hidden without `item:bulk_lookup` | MIG-012 … -028, -046 … -049, -053 … -055 | 24: 23 ✅, 1 ✋ |
 | 6. History | Filters; paging until `null`; totals; `scope=all` only with `history:all` | HIST-001 … -046 | 46: 43 ✅, 3 ✋ |
 | 7. Reports and photos | `check_ref` from a result; photos shrunk, raw, retried, never duplicated; never re-filed; My reports | REP-001 … -049 | 49: 37 ✅, 12 ✋ |
 | 8. Retail users | Picker only: search by name or whole email, masked emails, cursor paging; hidden without `incident:report`; adding withdrawn (404) | REP-013, MIG-002, -030 | 3: 3 ✅ |
@@ -241,11 +241,11 @@ One line per run:
 | Check | Result |
 |---|---|
 | `flutter analyze` | No issues found |
-| `flutter test` | 1173 passed, 0 failed (133 of them goldens; CI runs the other 1040) |
-| Covered by automated tests (✅) | 688 of 805 (796 test cases and 9 exploratory charters) |
+| `flutter test` | 1189 passed, 0 failed (136 of them goldens; CI runs the other 1053) |
+| Covered by automated tests (✅) | 692 of 810 (801 test cases and 9 exploratory charters) |
 | To be automated (⏳) | 0 |
 | Dependency scan (CI, TC-SEC-024) | OSV-Scanner v2.7.0 on `pubspec.lock`: 195 packages, no known vulnerability (2026-11-14) |
-| Manual only (✋) | 116: 107 cases (12 of them Figma comparisons) and 9 charters, all in `manual-test-checklist.md` (sessions A–D) |
+| Manual only (✋) | 117: 108 cases (12 of them Figma comparisons) and 9 charters, all in `manual-test-checklist.md` (sessions A–D) |
 | Blocked (⛔) | 1: TC-AUTH-095 (Not now on the test server, waiting for the backend route). The offline banner and the language switch are built (2026-11-19); their cases are automated or in the checklist. Certificates are withdrawn by the backend (SRS v1.2), not blocked |
 
 Remaining work (the dependency scan, the blocked features, the open questions, the manual runs): [`remaining-work-test-plan.md`](remaining-work-test-plan.md).

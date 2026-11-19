@@ -1058,6 +1058,32 @@ class AppLocalizationsBn extends AppLocalizations {
   }
 
   @override
+  String get sessionFinish => 'শেষ করুন';
+
+  @override
+  String get sessionFinishing => 'শেষ স্ক্যানগুলো যাচাই হচ্ছে…';
+
+  @override
+  String get sessionSummaryTitle => 'সেশন শেষ হয়েছে';
+
+  @override
+  String sessionSummaryCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countটি পণ্য স্ক্যান হয়েছে',
+      one: '১টি পণ্য স্ক্যান হয়েছে',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sessionScanMore => 'আরও স্ক্যান';
+
+  @override
+  String get sessionDone => 'সম্পন্ন';
+
+  @override
   String sessionNotChecked(int count) {
     return 'আরও $countটি স্ক্যান যাচাই হয়নি। আবার স্ক্যান করুন।';
   }

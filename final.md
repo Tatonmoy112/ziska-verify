@@ -182,6 +182,8 @@ Show each answer on the camera screen immediately, with authoritative `session` 
 
 Only the latest full live response opens full result details. Older/recovered summary rows do not pretend to contain full product data.
 
+
+**Finish (2026-11-19).** A **Finish** bar under the camera (off until a scan is answered) ends the session with a summary. No read is taken after it; the reads already taken are still sent and answered, a 429's wait included. Then `POST lookups/sessions/{id}/end` is sent without waiting and the session ID is forgotten. The summary shows "Session finished", how many products were scanned, the counts, any reads let go, and every product with its result, newest first; a product answered in this run opens its full result. **Scan more** starts a new session on the camera; **Done** returns to the Check tab. Back (the app's or the phone's) still leaves at once, as guide §4.4 asks.
 ### 13.3 Serial stacks
 
 Type or paste serials separated by comma/whitespace/newlines. Normalize, validate, preserve first occurrence order and leading zeros, and deduplicate. Accept 1-50 distinct serials. Reject overflow without truncation or splitting.
@@ -355,3 +357,5 @@ Four points are with the backend team in `docs/backend-requests/data-flow-questi
 ### 20.2 The Postman mock (2026-11-18)
 
 The mock build talks to a Postman mock made from the 2026-11-17 collection with `tool/postman/ziska-mock.postman_environment.json` (steps in `docs/postman-mock-setup.md`). The mock-only `PostmanMockRouting` (`POSTMAN_MOCK_ROUTING`) picks the example where the mock cannot: a single check by the value's last digit (1 genuine, 2 needs attention, 3 not found, 4 not in a batch), scanner-mode scans, sessions under the app's own ID, and History's next page. Staging and live refuse the flag.
+
+Scanner mode on the mock build runs as a server does: each scan's result follows the QR value's last character (1 genuine, 2 needs attention, 3 not found, 4 not in a batch, anything else genuine); each different QR of a session gets its own reference and serial; the same QR again is a repeat with its first answer; the counts add up per session. `docs/test-qr-sheet.pdf` page 2 has 8 such products for a phone.

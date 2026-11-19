@@ -545,6 +545,35 @@
       }
     }
   },
+  "sessionFinish": "Finish",
+  "@sessionFinish": {
+    "description": "Scanner mode: ends the session and shows every scan together."
+  },
+  "sessionFinishing": "Checking the last scans…",
+  "@sessionFinishing": {
+    "description": "Finish was pressed; scans already read are still being answered."
+  },
+  "sessionSummaryTitle": "Session finished",
+  "@sessionSummaryTitle": {
+    "description": "Title of the summary after Finish in scanner mode."
+  },
+  "sessionSummaryCount": "{count, plural, =1{1 product scanned} other{{count} products scanned}}",
+  "@sessionSummaryCount": {
+    "description": "How many different products the finished session scanned.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sessionScanMore": "Scan more",
+  "@sessionScanMore": {
+    "description": "On the summary: starts a new scanner session."
+  },
+  "sessionDone": "Done",
+  "@sessionDone": {
+    "description": "On the summary: back to the Check tab."
+  },
   "sessionNotChecked": "{count} more scans were not checked. Scan them again.",
   "@sessionNotChecked": {
     "placeholders": {

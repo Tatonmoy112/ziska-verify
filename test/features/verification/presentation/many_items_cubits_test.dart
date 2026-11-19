@@ -603,4 +603,158 @@ void main() {
     expect(cubit.state.rowsFailed, isFalse);
     expect(cubit.state.rows.single.ref, 'R1');
   });
+
+  group('Finish (TC-MIG-053, -054)', () {
+    /// Each QR answered with its own reference: the value itself.
+    void answerByValue({Completer<void>? hold}) {
+      var first = true;
+      when(() => repo.scan(any(), any())).thenAnswer((i) async {
+        if (first && hold != null) {
+          first = false;
+          await hold.future;
+        }
+        return Success(
+          scanResult(
+            i.positionalArguments[1] as String,
+            ref: i.positionalArguments[0] as String,
+          ),
+        );
+      });
+    }
+
+    test('TC-MIG-053 Finish answers the reads already taken, then ends the '
+        'session and keeps every row for the summary', () async {
+      final hold = Completer<void>();
+      answerByValue(hold: hold);
+      final cubit = scanner();
+      await cubit.start();
+      final id = cubit.state.id!;
+      final reads = [
+        cubit.scan(raw),
+        cubit.scan('https://x/q/A1B2C3D4E5F6'),
+        cubit.scan('https://x/q/B1B2C3D4E5F6'),
+      ];
+      final finished = cubit.complete();
+      expect(cubit.state.finishing, isTrue);
+      expect(cubit.state.done, isFalse);
+      // No new read once Finish is pressed.
+      await cubit.scan('https://x/q/C1B2C3D4E5F6');
+      verifyNever(() => repo.endSession(any()));
+
+      hold.complete();
+      await Future.wait(reads);
+      await finished;
+      expect(cubit.state.done, isTrue);
+      expect(cubit.state.finishing, isFalse);
+      expect(cubit.state.id, id);
+      expect(
+        cubit.state.rows.map((r) => r.ref),
+        ['B1B2C3D4E5F6', 'A1B2C3D4E5F6', 'Q8F2KD91XA7M'],
+      );
+      expect(cubit.state.answers.keys.toSet(), {
+        'Q8F2KD91XA7M',
+        'A1B2C3D4E5F6',
+        'B1B2C3D4E5F6',
+      });
+      expect(
+        cubit.state.answers['A1B2C3D4E5F6']!.checked.shown,
+        'A1B2C3D4E5F6',
+      );
+      expect(cubit.state.totals, isNotNull);
+      verify(() => repo.endSession(id)).called(1);
+      verify(() => repo.scan(any(), any())).called(3);
+      expect(storage.values, isEmpty, reason: 'the session is forgotten');
+
+      // The summary stays when the screen is left.
+      await cubit.finish();
+      expect(cubit.state.rows, hasLength(3));
+      verifyNever(() => repo.endSession(any()));
+    });
+
+    test('Finish keeps the count of reads let go by a failure', () async {
+      final gate = Completer<void>();
+      when(() => repo.scan(any(), any())).thenAnswer((i) async {
+        await gate.future;
+        return const Err(Failure(NetworkException()));
+      });
+      final cubit = scanner();
+      await cubit.start();
+      final reads = [
+        cubit.scan(raw),
+        cubit.scan('https://x/q/A1B2C3D4E5F6'),
+        cubit.scan('https://x/q/B1B2C3D4E5F6'),
+      ];
+      final finished = cubit.complete();
+      gate.complete();
+      await Future.wait(reads);
+      await finished;
+      expect(cubit.state.done, isTrue);
+      expect(cubit.state.notChecked, 2);
+      expect(cubit.state.rows, isEmpty);
+    });
+
+    test('Finish waits out a 429, then sends the held read', () async {
+      var calls = 0;
+      when(() => repo.scan(any(), any())).thenAnswer((i) async {
+        if (calls++ == 0) {
+          return const Err(
+            Failure(RateLimitedException(retryAfter: Duration(seconds: 1))),
+          );
+        }
+        return Success(
+          scanResult(
+            i.positionalArguments[1] as String,
+            ref: i.positionalArguments[0] as String,
+          ),
+        );
+      });
+      final cubit = scanner();
+      await cubit.start();
+      unawaited(cubit.scan(raw));
+      await Future<void>.delayed(Duration.zero);
+      final watch = Stopwatch()..start();
+      await cubit.complete();
+      expect(watch.elapsedMilliseconds, greaterThanOrEqualTo(900));
+      expect(calls, 2);
+      expect(cubit.state.done, isTrue);
+      expect(cubit.state.rows.single.ref, 'Q8F2KD91XA7M');
+    });
+
+    test(
+      'TC-MIG-054 Scan more starts a new session from an empty screen',
+      () async {
+        answerByValue();
+        final cubit = scanner();
+        await cubit.start();
+        final old = cubit.state.id!;
+        await cubit.scan(raw);
+        await cubit.complete();
+        expect(cubit.state.done, isTrue);
+
+        await cubit.restart();
+        expect(cubit.state.done, isFalse);
+        expect(cubit.state.id, isNot(old));
+        expect(cubit.state.rows, isEmpty);
+        expect(cubit.state.answers, isEmpty);
+        expect(storage.values.values, [cubit.state.id]);
+        // The same QR counts again in the new session.
+        await cubit.scan(raw);
+        expect(cubit.state.rows.single.ref, 'Q8F2KD91XA7M');
+        verify(() => repo.scan('Q8F2KD91XA7M', cubit.state.id!)).called(1);
+      },
+    );
+
+    test('nothing to finish: Finish before the session or twice', () async {
+      final cubit = scanner();
+      await cubit.complete();
+      expect(cubit.state.done, isFalse);
+      await cubit.start();
+      await cubit.complete();
+      await cubit.complete();
+      verify(() => repo.endSession(any())).called(1);
+      await cubit.restart();
+      await cubit.restart();
+      expect(cubit.state.done, isFalse);
+    });
+  });
 }

@@ -202,6 +202,17 @@ Expected: the torch turns on, then off.
 
 - [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
 
+#### TC-MIG-055 · Scanner mode on a phone with the test sheet · P1
+Open `docs/test-qr-sheet.pdf` page 2 ("Scanner mode: 8 products") on the PC screen.
+1. Check tab → **Scanner mode**. **Finish** is off.
+2. Scan S1 to S8 one after another, without waiting for each answer.
+3. Scan S1 again.
+4. Tap **Finish**, then a row, then Back; then **Done**.
+
+Expected: each result shows on the camera as it comes, in its colour, with a vibration, and joins the list below; "Checking… N more" while answers are on their way; nothing is skipped. S1 again: "Already scanned", the counts unchanged. Finish: "Session finished", "8 products scanned" (4 genuine, 2 needing attention, 1 not found, 1 not in a batch), every product with its result; a row opens its full result; Done returns to the Check tab. **Scan more** (try once) starts again with an empty list.
+
+- [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
+
 ### A3. Reports and photos
 
 #### TC-REP-012 · Camera and gallery · P1

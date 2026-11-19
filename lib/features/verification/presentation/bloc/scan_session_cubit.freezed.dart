@@ -27,7 +27,11 @@ mixin _$ScanSessionState {
  int get notChecked;/// Goes up with every answered scan, so each answer is announced, even
 /// two equal ones in a row.
  int get answered;/// After a `429` on loading those scans: not asked again before this.
- DateTime? get rowsRetryAt; bool get loading; bool get busy; bool get paused; bool get loadingMore; List<RecoveredScan> get rows; String? get nextCursor; Failure? get failure; DateTime? get retryAt;
+ DateTime? get rowsRetryAt;/// Finish was pressed: no new read is taken, and those already read
+/// are still sent and answered.
+ bool get finishing;/// The session ended with Finish: its summary shows every row.
+ bool get done;/// This run's answers by `ref`, so a row opens its result.
+ Map<String, ScanAnswer> get answers; bool get loading; bool get busy; bool get paused; bool get loadingMore; List<RecoveredScan> get rows; String? get nextCursor; Failure? get failure; DateTime? get retryAt;
 /// Create a copy of ScanSessionState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -38,16 +42,16 @@ $ScanSessionStateCopyWith<ScanSessionState> get copyWith => _$ScanSessionStateCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ScanSessionState&&(identical(other.id, id) || other.id == id)&&(identical(other.formats, formats) || other.formats == formats)&&(identical(other.totals, totals) || other.totals == totals)&&(identical(other.latest, latest) || other.latest == latest)&&(identical(other.checked, checked) || other.checked == checked)&&(identical(other.repeat, repeat) || other.repeat == repeat)&&(identical(other.restarted, restarted) || other.restarted == restarted)&&(identical(other.rowsFailed, rowsFailed) || other.rowsFailed == rowsFailed)&&(identical(other.resumed, resumed) || other.resumed == resumed)&&(identical(other.pending, pending) || other.pending == pending)&&(identical(other.notChecked, notChecked) || other.notChecked == notChecked)&&(identical(other.answered, answered) || other.answered == answered)&&(identical(other.rowsRetryAt, rowsRetryAt) || other.rowsRetryAt == rowsRetryAt)&&(identical(other.loading, loading) || other.loading == loading)&&(identical(other.busy, busy) || other.busy == busy)&&(identical(other.paused, paused) || other.paused == paused)&&(identical(other.loadingMore, loadingMore) || other.loadingMore == loadingMore)&&const DeepCollectionEquality().equals(other.rows, rows)&&(identical(other.nextCursor, nextCursor) || other.nextCursor == nextCursor)&&(identical(other.failure, failure) || other.failure == failure)&&(identical(other.retryAt, retryAt) || other.retryAt == retryAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ScanSessionState&&(identical(other.id, id) || other.id == id)&&(identical(other.formats, formats) || other.formats == formats)&&(identical(other.totals, totals) || other.totals == totals)&&(identical(other.latest, latest) || other.latest == latest)&&(identical(other.checked, checked) || other.checked == checked)&&(identical(other.repeat, repeat) || other.repeat == repeat)&&(identical(other.restarted, restarted) || other.restarted == restarted)&&(identical(other.rowsFailed, rowsFailed) || other.rowsFailed == rowsFailed)&&(identical(other.resumed, resumed) || other.resumed == resumed)&&(identical(other.pending, pending) || other.pending == pending)&&(identical(other.notChecked, notChecked) || other.notChecked == notChecked)&&(identical(other.answered, answered) || other.answered == answered)&&(identical(other.rowsRetryAt, rowsRetryAt) || other.rowsRetryAt == rowsRetryAt)&&(identical(other.finishing, finishing) || other.finishing == finishing)&&(identical(other.done, done) || other.done == done)&&const DeepCollectionEquality().equals(other.answers, answers)&&(identical(other.loading, loading) || other.loading == loading)&&(identical(other.busy, busy) || other.busy == busy)&&(identical(other.paused, paused) || other.paused == paused)&&(identical(other.loadingMore, loadingMore) || other.loadingMore == loadingMore)&&const DeepCollectionEquality().equals(other.rows, rows)&&(identical(other.nextCursor, nextCursor) || other.nextCursor == nextCursor)&&(identical(other.failure, failure) || other.failure == failure)&&(identical(other.retryAt, retryAt) || other.retryAt == retryAt));
 }
 
 
 @override
-int get hashCode => Object.hashAll([runtimeType,id,formats,totals,latest,checked,repeat,restarted,rowsFailed,resumed,pending,notChecked,answered,rowsRetryAt,loading,busy,paused,loadingMore,const DeepCollectionEquality().hash(rows),nextCursor,failure,retryAt]);
+int get hashCode => Object.hashAll([runtimeType,id,formats,totals,latest,checked,repeat,restarted,rowsFailed,resumed,pending,notChecked,answered,rowsRetryAt,finishing,done,const DeepCollectionEquality().hash(answers),loading,busy,paused,loadingMore,const DeepCollectionEquality().hash(rows),nextCursor,failure,retryAt]);
 
 @override
 String toString() {
-  return 'ScanSessionState(id: $id, formats: $formats, totals: $totals, latest: $latest, checked: $checked, repeat: $repeat, restarted: $restarted, rowsFailed: $rowsFailed, resumed: $resumed, pending: $pending, notChecked: $notChecked, answered: $answered, rowsRetryAt: $rowsRetryAt, loading: $loading, busy: $busy, paused: $paused, loadingMore: $loadingMore, rows: $rows, nextCursor: $nextCursor, failure: $failure, retryAt: $retryAt)';
+  return 'ScanSessionState(id: $id, formats: $formats, totals: $totals, latest: $latest, checked: $checked, repeat: $repeat, restarted: $restarted, rowsFailed: $rowsFailed, resumed: $resumed, pending: $pending, notChecked: $notChecked, answered: $answered, rowsRetryAt: $rowsRetryAt, finishing: $finishing, done: $done, answers: $answers, loading: $loading, busy: $busy, paused: $paused, loadingMore: $loadingMore, rows: $rows, nextCursor: $nextCursor, failure: $failure, retryAt: $retryAt)';
 }
 
 
@@ -58,7 +62,7 @@ abstract mixin class $ScanSessionStateCopyWith<$Res>  {
   factory $ScanSessionStateCopyWith(ScanSessionState value, $Res Function(ScanSessionState) _then) = _$ScanSessionStateCopyWithImpl;
 @useResult
 $Res call({
- String? id, InputFormats? formats, SessionTotals? totals, LookupResult? latest, CheckedInput? checked, bool repeat, bool restarted, bool rowsFailed, bool resumed, int pending, int notChecked, int answered, DateTime? rowsRetryAt, bool loading, bool busy, bool paused, bool loadingMore, List<RecoveredScan> rows, String? nextCursor, Failure? failure, DateTime? retryAt
+ String? id, InputFormats? formats, SessionTotals? totals, LookupResult? latest, CheckedInput? checked, bool repeat, bool restarted, bool rowsFailed, bool resumed, int pending, int notChecked, int answered, DateTime? rowsRetryAt, bool finishing, bool done, Map<String, ScanAnswer> answers, bool loading, bool busy, bool paused, bool loadingMore, List<RecoveredScan> rows, String? nextCursor, Failure? failure, DateTime? retryAt
 });
 
 
@@ -75,7 +79,7 @@ class _$ScanSessionStateCopyWithImpl<$Res>
 
 /// Create a copy of ScanSessionState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = freezed,Object? formats = freezed,Object? totals = freezed,Object? latest = freezed,Object? checked = freezed,Object? repeat = null,Object? restarted = null,Object? rowsFailed = null,Object? resumed = null,Object? pending = null,Object? notChecked = null,Object? answered = null,Object? rowsRetryAt = freezed,Object? loading = null,Object? busy = null,Object? paused = null,Object? loadingMore = null,Object? rows = null,Object? nextCursor = freezed,Object? failure = freezed,Object? retryAt = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = freezed,Object? formats = freezed,Object? totals = freezed,Object? latest = freezed,Object? checked = freezed,Object? repeat = null,Object? restarted = null,Object? rowsFailed = null,Object? resumed = null,Object? pending = null,Object? notChecked = null,Object? answered = null,Object? rowsRetryAt = freezed,Object? finishing = null,Object? done = null,Object? answers = null,Object? loading = null,Object? busy = null,Object? paused = null,Object? loadingMore = null,Object? rows = null,Object? nextCursor = freezed,Object? failure = freezed,Object? retryAt = freezed,}) {
   return _then(_self.copyWith(
 id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String?,formats: freezed == formats ? _self.formats : formats // ignore: cast_nullable_to_non_nullable
@@ -90,7 +94,10 @@ as bool,pending: null == pending ? _self.pending : pending // ignore: cast_nulla
 as int,notChecked: null == notChecked ? _self.notChecked : notChecked // ignore: cast_nullable_to_non_nullable
 as int,answered: null == answered ? _self.answered : answered // ignore: cast_nullable_to_non_nullable
 as int,rowsRetryAt: freezed == rowsRetryAt ? _self.rowsRetryAt : rowsRetryAt // ignore: cast_nullable_to_non_nullable
-as DateTime?,loading: null == loading ? _self.loading : loading // ignore: cast_nullable_to_non_nullable
+as DateTime?,finishing: null == finishing ? _self.finishing : finishing // ignore: cast_nullable_to_non_nullable
+as bool,done: null == done ? _self.done : done // ignore: cast_nullable_to_non_nullable
+as bool,answers: null == answers ? _self.answers : answers // ignore: cast_nullable_to_non_nullable
+as Map<String, ScanAnswer>,loading: null == loading ? _self.loading : loading // ignore: cast_nullable_to_non_nullable
 as bool,busy: null == busy ? _self.busy : busy // ignore: cast_nullable_to_non_nullable
 as bool,paused: null == paused ? _self.paused : paused // ignore: cast_nullable_to_non_nullable
 as bool,loadingMore: null == loadingMore ? _self.loadingMore : loadingMore // ignore: cast_nullable_to_non_nullable
@@ -183,10 +190,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String? id,  InputFormats? formats,  SessionTotals? totals,  LookupResult? latest,  CheckedInput? checked,  bool repeat,  bool restarted,  bool rowsFailed,  bool resumed,  int pending,  int notChecked,  int answered,  DateTime? rowsRetryAt,  bool loading,  bool busy,  bool paused,  bool loadingMore,  List<RecoveredScan> rows,  String? nextCursor,  Failure? failure,  DateTime? retryAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String? id,  InputFormats? formats,  SessionTotals? totals,  LookupResult? latest,  CheckedInput? checked,  bool repeat,  bool restarted,  bool rowsFailed,  bool resumed,  int pending,  int notChecked,  int answered,  DateTime? rowsRetryAt,  bool finishing,  bool done,  Map<String, ScanAnswer> answers,  bool loading,  bool busy,  bool paused,  bool loadingMore,  List<RecoveredScan> rows,  String? nextCursor,  Failure? failure,  DateTime? retryAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ScanSessionState() when $default != null:
-return $default(_that.id,_that.formats,_that.totals,_that.latest,_that.checked,_that.repeat,_that.restarted,_that.rowsFailed,_that.resumed,_that.pending,_that.notChecked,_that.answered,_that.rowsRetryAt,_that.loading,_that.busy,_that.paused,_that.loadingMore,_that.rows,_that.nextCursor,_that.failure,_that.retryAt);case _:
+return $default(_that.id,_that.formats,_that.totals,_that.latest,_that.checked,_that.repeat,_that.restarted,_that.rowsFailed,_that.resumed,_that.pending,_that.notChecked,_that.answered,_that.rowsRetryAt,_that.finishing,_that.done,_that.answers,_that.loading,_that.busy,_that.paused,_that.loadingMore,_that.rows,_that.nextCursor,_that.failure,_that.retryAt);case _:
   return orElse();
 
 }
@@ -204,10 +211,10 @@ return $default(_that.id,_that.formats,_that.totals,_that.latest,_that.checked,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String? id,  InputFormats? formats,  SessionTotals? totals,  LookupResult? latest,  CheckedInput? checked,  bool repeat,  bool restarted,  bool rowsFailed,  bool resumed,  int pending,  int notChecked,  int answered,  DateTime? rowsRetryAt,  bool loading,  bool busy,  bool paused,  bool loadingMore,  List<RecoveredScan> rows,  String? nextCursor,  Failure? failure,  DateTime? retryAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String? id,  InputFormats? formats,  SessionTotals? totals,  LookupResult? latest,  CheckedInput? checked,  bool repeat,  bool restarted,  bool rowsFailed,  bool resumed,  int pending,  int notChecked,  int answered,  DateTime? rowsRetryAt,  bool finishing,  bool done,  Map<String, ScanAnswer> answers,  bool loading,  bool busy,  bool paused,  bool loadingMore,  List<RecoveredScan> rows,  String? nextCursor,  Failure? failure,  DateTime? retryAt)  $default,) {final _that = this;
 switch (_that) {
 case _ScanSessionState():
-return $default(_that.id,_that.formats,_that.totals,_that.latest,_that.checked,_that.repeat,_that.restarted,_that.rowsFailed,_that.resumed,_that.pending,_that.notChecked,_that.answered,_that.rowsRetryAt,_that.loading,_that.busy,_that.paused,_that.loadingMore,_that.rows,_that.nextCursor,_that.failure,_that.retryAt);case _:
+return $default(_that.id,_that.formats,_that.totals,_that.latest,_that.checked,_that.repeat,_that.restarted,_that.rowsFailed,_that.resumed,_that.pending,_that.notChecked,_that.answered,_that.rowsRetryAt,_that.finishing,_that.done,_that.answers,_that.loading,_that.busy,_that.paused,_that.loadingMore,_that.rows,_that.nextCursor,_that.failure,_that.retryAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -224,10 +231,10 @@ return $default(_that.id,_that.formats,_that.totals,_that.latest,_that.checked,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String? id,  InputFormats? formats,  SessionTotals? totals,  LookupResult? latest,  CheckedInput? checked,  bool repeat,  bool restarted,  bool rowsFailed,  bool resumed,  int pending,  int notChecked,  int answered,  DateTime? rowsRetryAt,  bool loading,  bool busy,  bool paused,  bool loadingMore,  List<RecoveredScan> rows,  String? nextCursor,  Failure? failure,  DateTime? retryAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String? id,  InputFormats? formats,  SessionTotals? totals,  LookupResult? latest,  CheckedInput? checked,  bool repeat,  bool restarted,  bool rowsFailed,  bool resumed,  int pending,  int notChecked,  int answered,  DateTime? rowsRetryAt,  bool finishing,  bool done,  Map<String, ScanAnswer> answers,  bool loading,  bool busy,  bool paused,  bool loadingMore,  List<RecoveredScan> rows,  String? nextCursor,  Failure? failure,  DateTime? retryAt)?  $default,) {final _that = this;
 switch (_that) {
 case _ScanSessionState() when $default != null:
-return $default(_that.id,_that.formats,_that.totals,_that.latest,_that.checked,_that.repeat,_that.restarted,_that.rowsFailed,_that.resumed,_that.pending,_that.notChecked,_that.answered,_that.rowsRetryAt,_that.loading,_that.busy,_that.paused,_that.loadingMore,_that.rows,_that.nextCursor,_that.failure,_that.retryAt);case _:
+return $default(_that.id,_that.formats,_that.totals,_that.latest,_that.checked,_that.repeat,_that.restarted,_that.rowsFailed,_that.resumed,_that.pending,_that.notChecked,_that.answered,_that.rowsRetryAt,_that.finishing,_that.done,_that.answers,_that.loading,_that.busy,_that.paused,_that.loadingMore,_that.rows,_that.nextCursor,_that.failure,_that.retryAt);case _:
   return null;
 
 }
@@ -239,7 +246,7 @@ return $default(_that.id,_that.formats,_that.totals,_that.latest,_that.checked,_
 
 
 class _ScanSessionState implements ScanSessionState {
-  const _ScanSessionState({this.id, this.formats, this.totals, this.latest, this.checked, this.repeat = false, this.restarted = false, this.rowsFailed = false, this.resumed = false, this.pending = 0, this.notChecked = 0, this.answered = 0, this.rowsRetryAt, this.loading = true, this.busy = false, this.paused = false, this.loadingMore = false, final  List<RecoveredScan> rows = const <RecoveredScan>[], this.nextCursor, this.failure, this.retryAt}): _rows = rows;
+  const _ScanSessionState({this.id, this.formats, this.totals, this.latest, this.checked, this.repeat = false, this.restarted = false, this.rowsFailed = false, this.resumed = false, this.pending = 0, this.notChecked = 0, this.answered = 0, this.rowsRetryAt, this.finishing = false, this.done = false, final  Map<String, ScanAnswer> answers = const <String, ScanAnswer>{}, this.loading = true, this.busy = false, this.paused = false, this.loadingMore = false, final  List<RecoveredScan> rows = const <RecoveredScan>[], this.nextCursor, this.failure, this.retryAt}): _answers = answers,_rows = rows;
   
 
 @override final  String? id;
@@ -268,6 +275,20 @@ class _ScanSessionState implements ScanSessionState {
 @override@JsonKey() final  int answered;
 /// After a `429` on loading those scans: not asked again before this.
 @override final  DateTime? rowsRetryAt;
+/// Finish was pressed: no new read is taken, and those already read
+/// are still sent and answered.
+@override@JsonKey() final  bool finishing;
+/// The session ended with Finish: its summary shows every row.
+@override@JsonKey() final  bool done;
+/// This run's answers by `ref`, so a row opens its result.
+ final  Map<String, ScanAnswer> _answers;
+/// This run's answers by `ref`, so a row opens its result.
+@override@JsonKey() Map<String, ScanAnswer> get answers {
+  if (_answers is EqualUnmodifiableMapView) return _answers;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableMapView(_answers);
+}
+
 @override@JsonKey() final  bool loading;
 @override@JsonKey() final  bool busy;
 @override@JsonKey() final  bool paused;
@@ -293,16 +314,16 @@ _$ScanSessionStateCopyWith<_ScanSessionState> get copyWith => __$ScanSessionStat
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ScanSessionState&&(identical(other.id, id) || other.id == id)&&(identical(other.formats, formats) || other.formats == formats)&&(identical(other.totals, totals) || other.totals == totals)&&(identical(other.latest, latest) || other.latest == latest)&&(identical(other.checked, checked) || other.checked == checked)&&(identical(other.repeat, repeat) || other.repeat == repeat)&&(identical(other.restarted, restarted) || other.restarted == restarted)&&(identical(other.rowsFailed, rowsFailed) || other.rowsFailed == rowsFailed)&&(identical(other.resumed, resumed) || other.resumed == resumed)&&(identical(other.pending, pending) || other.pending == pending)&&(identical(other.notChecked, notChecked) || other.notChecked == notChecked)&&(identical(other.answered, answered) || other.answered == answered)&&(identical(other.rowsRetryAt, rowsRetryAt) || other.rowsRetryAt == rowsRetryAt)&&(identical(other.loading, loading) || other.loading == loading)&&(identical(other.busy, busy) || other.busy == busy)&&(identical(other.paused, paused) || other.paused == paused)&&(identical(other.loadingMore, loadingMore) || other.loadingMore == loadingMore)&&const DeepCollectionEquality().equals(other._rows, _rows)&&(identical(other.nextCursor, nextCursor) || other.nextCursor == nextCursor)&&(identical(other.failure, failure) || other.failure == failure)&&(identical(other.retryAt, retryAt) || other.retryAt == retryAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ScanSessionState&&(identical(other.id, id) || other.id == id)&&(identical(other.formats, formats) || other.formats == formats)&&(identical(other.totals, totals) || other.totals == totals)&&(identical(other.latest, latest) || other.latest == latest)&&(identical(other.checked, checked) || other.checked == checked)&&(identical(other.repeat, repeat) || other.repeat == repeat)&&(identical(other.restarted, restarted) || other.restarted == restarted)&&(identical(other.rowsFailed, rowsFailed) || other.rowsFailed == rowsFailed)&&(identical(other.resumed, resumed) || other.resumed == resumed)&&(identical(other.pending, pending) || other.pending == pending)&&(identical(other.notChecked, notChecked) || other.notChecked == notChecked)&&(identical(other.answered, answered) || other.answered == answered)&&(identical(other.rowsRetryAt, rowsRetryAt) || other.rowsRetryAt == rowsRetryAt)&&(identical(other.finishing, finishing) || other.finishing == finishing)&&(identical(other.done, done) || other.done == done)&&const DeepCollectionEquality().equals(other._answers, _answers)&&(identical(other.loading, loading) || other.loading == loading)&&(identical(other.busy, busy) || other.busy == busy)&&(identical(other.paused, paused) || other.paused == paused)&&(identical(other.loadingMore, loadingMore) || other.loadingMore == loadingMore)&&const DeepCollectionEquality().equals(other._rows, _rows)&&(identical(other.nextCursor, nextCursor) || other.nextCursor == nextCursor)&&(identical(other.failure, failure) || other.failure == failure)&&(identical(other.retryAt, retryAt) || other.retryAt == retryAt));
 }
 
 
 @override
-int get hashCode => Object.hashAll([runtimeType,id,formats,totals,latest,checked,repeat,restarted,rowsFailed,resumed,pending,notChecked,answered,rowsRetryAt,loading,busy,paused,loadingMore,const DeepCollectionEquality().hash(_rows),nextCursor,failure,retryAt]);
+int get hashCode => Object.hashAll([runtimeType,id,formats,totals,latest,checked,repeat,restarted,rowsFailed,resumed,pending,notChecked,answered,rowsRetryAt,finishing,done,const DeepCollectionEquality().hash(_answers),loading,busy,paused,loadingMore,const DeepCollectionEquality().hash(_rows),nextCursor,failure,retryAt]);
 
 @override
 String toString() {
-  return 'ScanSessionState(id: $id, formats: $formats, totals: $totals, latest: $latest, checked: $checked, repeat: $repeat, restarted: $restarted, rowsFailed: $rowsFailed, resumed: $resumed, pending: $pending, notChecked: $notChecked, answered: $answered, rowsRetryAt: $rowsRetryAt, loading: $loading, busy: $busy, paused: $paused, loadingMore: $loadingMore, rows: $rows, nextCursor: $nextCursor, failure: $failure, retryAt: $retryAt)';
+  return 'ScanSessionState(id: $id, formats: $formats, totals: $totals, latest: $latest, checked: $checked, repeat: $repeat, restarted: $restarted, rowsFailed: $rowsFailed, resumed: $resumed, pending: $pending, notChecked: $notChecked, answered: $answered, rowsRetryAt: $rowsRetryAt, finishing: $finishing, done: $done, answers: $answers, loading: $loading, busy: $busy, paused: $paused, loadingMore: $loadingMore, rows: $rows, nextCursor: $nextCursor, failure: $failure, retryAt: $retryAt)';
 }
 
 
@@ -313,7 +334,7 @@ abstract mixin class _$ScanSessionStateCopyWith<$Res> implements $ScanSessionSta
   factory _$ScanSessionStateCopyWith(_ScanSessionState value, $Res Function(_ScanSessionState) _then) = __$ScanSessionStateCopyWithImpl;
 @override @useResult
 $Res call({
- String? id, InputFormats? formats, SessionTotals? totals, LookupResult? latest, CheckedInput? checked, bool repeat, bool restarted, bool rowsFailed, bool resumed, int pending, int notChecked, int answered, DateTime? rowsRetryAt, bool loading, bool busy, bool paused, bool loadingMore, List<RecoveredScan> rows, String? nextCursor, Failure? failure, DateTime? retryAt
+ String? id, InputFormats? formats, SessionTotals? totals, LookupResult? latest, CheckedInput? checked, bool repeat, bool restarted, bool rowsFailed, bool resumed, int pending, int notChecked, int answered, DateTime? rowsRetryAt, bool finishing, bool done, Map<String, ScanAnswer> answers, bool loading, bool busy, bool paused, bool loadingMore, List<RecoveredScan> rows, String? nextCursor, Failure? failure, DateTime? retryAt
 });
 
 
@@ -330,7 +351,7 @@ class __$ScanSessionStateCopyWithImpl<$Res>
 
 /// Create a copy of ScanSessionState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = freezed,Object? formats = freezed,Object? totals = freezed,Object? latest = freezed,Object? checked = freezed,Object? repeat = null,Object? restarted = null,Object? rowsFailed = null,Object? resumed = null,Object? pending = null,Object? notChecked = null,Object? answered = null,Object? rowsRetryAt = freezed,Object? loading = null,Object? busy = null,Object? paused = null,Object? loadingMore = null,Object? rows = null,Object? nextCursor = freezed,Object? failure = freezed,Object? retryAt = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = freezed,Object? formats = freezed,Object? totals = freezed,Object? latest = freezed,Object? checked = freezed,Object? repeat = null,Object? restarted = null,Object? rowsFailed = null,Object? resumed = null,Object? pending = null,Object? notChecked = null,Object? answered = null,Object? rowsRetryAt = freezed,Object? finishing = null,Object? done = null,Object? answers = null,Object? loading = null,Object? busy = null,Object? paused = null,Object? loadingMore = null,Object? rows = null,Object? nextCursor = freezed,Object? failure = freezed,Object? retryAt = freezed,}) {
   return _then(_ScanSessionState(
 id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String?,formats: freezed == formats ? _self.formats : formats // ignore: cast_nullable_to_non_nullable
@@ -345,7 +366,10 @@ as bool,pending: null == pending ? _self.pending : pending // ignore: cast_nulla
 as int,notChecked: null == notChecked ? _self.notChecked : notChecked // ignore: cast_nullable_to_non_nullable
 as int,answered: null == answered ? _self.answered : answered // ignore: cast_nullable_to_non_nullable
 as int,rowsRetryAt: freezed == rowsRetryAt ? _self.rowsRetryAt : rowsRetryAt // ignore: cast_nullable_to_non_nullable
-as DateTime?,loading: null == loading ? _self.loading : loading // ignore: cast_nullable_to_non_nullable
+as DateTime?,finishing: null == finishing ? _self.finishing : finishing // ignore: cast_nullable_to_non_nullable
+as bool,done: null == done ? _self.done : done // ignore: cast_nullable_to_non_nullable
+as bool,answers: null == answers ? _self._answers : answers // ignore: cast_nullable_to_non_nullable
+as Map<String, ScanAnswer>,loading: null == loading ? _self.loading : loading // ignore: cast_nullable_to_non_nullable
 as bool,busy: null == busy ? _self.busy : busy // ignore: cast_nullable_to_non_nullable
 as bool,paused: null == paused ? _self.paused : paused // ignore: cast_nullable_to_non_nullable
 as bool,loadingMore: null == loadingMore ? _self.loadingMore : loadingMore // ignore: cast_nullable_to_non_nullable

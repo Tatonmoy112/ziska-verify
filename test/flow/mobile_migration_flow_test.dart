@@ -508,4 +508,187 @@ void main() {
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
   });
+
+  group('Finish: every scan together (TC-MIG-053, -054)', () {
+    /// A backend that counts like a real session: one reference per QR,
+    /// a repeat for the same QR again, results by the last character.
+    Answer countingBackend(List<String> sessions) {
+      final seen = <String, Map<String, Object?>>{};
+      return (r) async {
+        final sent = r.data as Map;
+        final value = sent['value'] as String;
+        final session = sent['session_id'] as String;
+        if (!sessions.contains(session)) {
+          sessions.add(session);
+          seen.clear();
+        }
+        final repeat = seen.containsKey(value);
+        final result =
+            seen[value] ??
+            {
+              'ref': 'MA-$value',
+              'result': value.endsWith('3') ? 'not_found' : 'valid',
+              'reasons': <String>[],
+              if (!value.endsWith('3')) ...{
+                'count': {'this_check': 1, 'last_at': null},
+                'item': {
+                  'serial': '41${seen.length}',
+                  'code': '*****7K2',
+                  'product': {
+                    'name': 'Paracetamol 500',
+                    'generic_name': 'Paracetamol',
+                    'short_name': 'PCM500',
+                    'picture_url': null,
+                  },
+                  'batch': {
+                    'number': 'B-1042',
+                    'made': '2026-01-10',
+                    'expires': '2027-09-30',
+                  },
+                },
+              },
+            };
+        seen[value] = result;
+        final notFound = seen.values
+            .where((v) => v['result'] == 'not_found')
+            .length;
+        return ok({
+          ...result,
+          'repeat': repeat,
+          'session': {
+            'id': session,
+            'scanned': seen.length,
+            'valid': seen.length - notFound,
+            'warning': 0,
+            'not_found': notFound,
+            'unassigned': 0,
+            'left': 5000 - seen.length,
+          },
+        });
+      };
+    }
+
+    /// Lets every queued read go out and be answered.
+    Future<void> settleScans(WidgetTester tester) async {
+      for (var i = 0; i < 8; i++) {
+        await tester.pump(const Duration(milliseconds: 300));
+      }
+      await tester.pumpAndSettle();
+    }
+
+    for (final (name, profile) in [
+      ('a supervisor', Roles.supervisor),
+      ('a bulk-only role', Roles.only(['item:bulk_lookup'])),
+    ]) {
+      testWidgets('TC-MIG-053 Finish shows every scan together: $name', (
+        tester,
+      ) async {
+        final sessions = <String>[];
+        final app = await startApp(
+          tester,
+          profile: profile,
+          overrides: {'POST lookups': countingBackend(sessions)},
+        );
+        await app.tap(find.byKey(const Key('verify.tool.bulk')));
+        final finish = find.byKey(const Key('session.finish'));
+        expect(app.enabled(const Key('session.finish')), isFalse);
+
+        // Three products one after another, then the first one again.
+        app.scanner
+          ..scan('https://example.test/q/Q8F2KD91XA7M')
+          ..scan('https://example.test/q/A1B2C3D4E5F3')
+          ..scan('https://example.test/q/B1B2C3D4E5F6');
+        await settleScans(tester);
+        app.scanner.scan('https://example.test/q/Q8F2KD91XA7M');
+        await settleScans(tester);
+        expect(find.byKey(const Key('session.repeat')), findsOneWidget);
+        expect(app.backend.sent('POST', 'lookups'), hasLength(4));
+
+        await app.tap(finish);
+        final summary = find.byKey(const Key('session.summary'));
+        expect(summary, findsOneWidget);
+        expect(find.byKey(const Key('session.camera')), findsNothing);
+        expect(find.text('Session finished'), findsOneWidget);
+        expect(find.text('3 products scanned'), findsOneWidget);
+        for (final ref in [
+          'MA-Q8F2KD91XA7M',
+          'MA-A1B2C3D4E5F3',
+          'MA-B1B2C3D4E5F6',
+        ]) {
+          expect(
+            find.byKey(ValueKey('summary.$ref')),
+            findsOneWidget,
+            reason: ref,
+          );
+        }
+        expect(
+          find.descendant(
+            of: find.byKey(const ValueKey('summary.MA-A1B2C3D4E5F3')),
+            matching: find.textContaining('Not found'),
+          ),
+          findsOneWidget,
+        );
+        final ended = [
+          for (final r in app.backend.requests)
+            if (r.method == 'POST' && r.path.endsWith('/end')) r.path,
+        ];
+        expect(ended, ['lookups/sessions/${sessions.single}/end']);
+
+        // A row opens its result; Back returns to the summary.
+        await app.tap(find.byKey(const ValueKey('summary.MA-B1B2C3D4E5F6')));
+        expect(summary, findsNothing);
+        expect(find.text('Genuine product'), findsWidgets);
+        await tester.binding.handlePopRoute();
+        await tester.pumpAndSettle();
+        expect(summary, findsOneWidget);
+        expect(app.scanner.sessions.last.running, isFalse);
+
+        // Done: back on the Check tab.
+        await app.tap(find.byKey(const Key('session.done')));
+        expect(summary, findsNothing);
+        expect(find.byKey(const Key('verify.tool.bulk')), findsOneWidget);
+      });
+    }
+
+    testWidgets('TC-MIG-054 Scan more starts a new session on the camera', (
+      tester,
+    ) async {
+      final sessions = <String>[];
+      final app = await startApp(
+        tester,
+        profile: Roles.supervisor,
+        overrides: {'POST lookups': countingBackend(sessions)},
+      );
+      await app.tap(find.byKey(const Key('verify.tool.bulk')));
+      app.scanner.scan('https://example.test/q/Q8F2KD91XA7M');
+      await settleScans(tester);
+      await app.tap(find.byKey(const Key('session.finish')));
+      expect(find.text('1 product scanned'), findsOneWidget);
+
+      await app.tap(find.byKey(const Key('session.scanMore')));
+      expect(find.byKey(const Key('session.summary')), findsNothing);
+      expect(find.byKey(const Key('session.camera')), findsOneWidget);
+      expect(app.enabled(const Key('session.finish')), isFalse);
+      expect(app.scanner.sessions.last.running, isTrue);
+
+      // The same product counts again, in a new session.
+      app.scanner.scan('https://example.test/q/Q8F2KD91XA7M');
+      await settleScans(tester);
+      expect(sessions, hasLength(2));
+      expect(find.byKey(const Key('session.repeat')), findsNothing);
+      await tester.scrollUntilVisible(
+        find.byKey(const ValueKey('MA-Q8F2KD91XA7M')),
+        200,
+        scrollable: find
+            .descendant(
+              of: find.byKey(const Key('session.rows')),
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
+      expect(find.byKey(const ValueKey('MA-Q8F2KD91XA7M')), findsOneWidget);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+    });
+  });
 }
