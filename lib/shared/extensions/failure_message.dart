@@ -4,8 +4,12 @@ import 'package:ziska_verify/l10n/generated/app_localizations.dart';
 
 /// The general message for a failure (final.md Section 16). Screens handle
 /// their own cases first (for example `401` on Login) and fall back to this.
+/// An `error.code` this app does not know shows the server's message,
+/// whatever the status (a new busy or wait reason included).
 extension FailureMessage on Failure {
-  String message(AppLocalizations l10n) => switch (exception) {
+  String message(AppLocalizations l10n) => _serverFallback ?? _appText(l10n);
+
+  String _appText(AppLocalizations l10n) => switch (exception) {
     NetworkException() => l10n.errorNetwork,
     RateLimitedException(:final retryAfter) =>
       retryAfter == null
@@ -14,7 +18,7 @@ extension FailureMessage on Failure {
     AppPreparingException() => l10n.errorPreparing,
     ServiceUnavailableException() => l10n.errorUnavailable,
     NotFoundException() => l10n.errorNotAvailable,
-    _ => _serverFallback ?? l10n.errorGeneral,
+    _ => l10n.errorGeneral,
   };
 
   /// The server's message is used only for an `error.code` this app does

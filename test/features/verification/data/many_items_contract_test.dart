@@ -112,12 +112,10 @@ void main() {
   // (guide section 4.7), so an answer that cannot be read is "recorded",
   // never an error that lets the same stack go again.
   group('TC-MIG-056 a 200 that cannot be read is recorded', () {
-    Map<String, dynamic> stack() =>
-        postmanExample(
-              request: 'A stack of serials',
-              example: '200 Three serials, one sent twice',
-            )
-            as Map<String, dynamic>;
+    Map<String, dynamic> stack() => postmanExample(
+      request: 'A stack of serials',
+      example: '200 Three serials, one sent twice',
+    );
     const serials = ['1000001', '1000002', '1000003'];
 
     Future<void> expectRecorded() async {

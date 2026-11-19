@@ -127,6 +127,41 @@ void main() {
     expectNoResult();
   });
 
+  // TC-ERR-050 (audit 2026-11-19): the rule holds for a busy (503) or a
+  // wait (429) answer too; a known code keeps the app's text.
+  for (final (status, code, message, expected) in [
+    (
+      503,
+      'storage_slow',
+      'Photo storage is slow. Try again in a minute.',
+      'Photo storage is slow. Try again in a minute.',
+    ),
+    (
+      503,
+      'service_unavailable',
+      'Service temporarily unavailable.',
+      'The service is busy. Try again shortly.',
+    ),
+    (
+      429,
+      'daily_quota',
+      'You reached the checks allowed today.',
+      'You reached the checks allowed today.',
+    ),
+  ]) {
+    testWidgets('TC-ERR-050 $status $code: the right message', (
+      tester,
+    ) async {
+      await lookUp(
+        tester,
+        always(apiError(status, code, requestId: 'req-49', message: message)),
+      );
+      expect(find.textContaining(expected), findsOneWidget);
+      expect(find.textContaining('req-49'), findsOneWidget);
+      expectNoResult();
+    });
+  }
+
   testWidgets('TC-ERR-018 an error without a reference', (tester) async {
     await lookUp(
       tester,
