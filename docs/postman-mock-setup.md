@@ -39,8 +39,9 @@ A fixed mock cannot tell some requests apart, and it scores a body unlike the sa
 | … ends in 3 | Not found |
 | … ends in 4 | Not in a batch |
 | … ends in anything else | Genuine |
-| Scanner mode: a QR value ending in 3 | Not found |
-| Scanner mode: any other QR | The "first scan" example (needs attention) |
+| Scanner mode: a QR value | Its result by the last character, as above; each different QR of a session gets its own reference (`MA-MOCK-000001`, …) and serial |
+| Scanner mode: the same QR again in a session | "Already scanned": its first answer, not counted again |
+| Scanner mode: the counts | Added up per session as a server does (scanned, each result, 5,000 minus scanned left); the session itself shows the same counts |
 | History, next page | "A later page" |
 | A session (open one, end one) | The example session, shown under the app's own session ID |
 | Log in | "New phone: a code was emailed"; any 6 digits log in |

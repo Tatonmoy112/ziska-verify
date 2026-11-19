@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 
 /// **Mock build only.** Lets the Postman mock (build guide §6) serve the
@@ -6,9 +8,13 @@ import 'package:dio/dio.dart';
 /// backend needs none of this.
 ///
 /// - A single check and a scanner-mode scan share `POST lookups`: the
-///   `x-mock-response-name` header picks the example. A single check's
-///   result follows the value's last digit (1 genuine, 2 needs attention,
-///   3 not found, 4 not in a batch); a scan ending in 3 is not found.
+///   `x-mock-response-name` header picks the example. The result follows
+///   the value's last character (1 genuine, 2 needs attention, 3 not
+///   found, 4 not in a batch; anything else genuine).
+/// - Scanner mode as a real server runs it: each different QR of a
+///   session gets its own reference and serial, the same QR again is a
+///   repeat with its first answer, and the session's counts add up (the
+///   examples carry one fixed item and fixed counts).
 /// - The examples carry one fixed session ID: a session's path asks for it,
 ///   and the answer gets the app's own session ID back.
 /// - History's next page has the same query as the first: its cursor asks
@@ -31,6 +37,15 @@ class PostmanMockRouting extends Interceptor {
 
   /// The photos numbered so far, per report.
   final _photos = <String, int>{};
+
+  /// Scanner sessions so far, by the app's session ID.
+  final _sessions = <String, _MockSession>{};
+
+  /// References handed out to scans so far.
+  int _refs = 0;
+
+  static const _scanSession = 'postman_mock_scan_session';
+  static const _scanValue = 'postman_mock_scan_value';
 
   static final _photoPath = RegExp(r'^incidents/(\d+)/photos$');
 
@@ -69,16 +84,18 @@ class PostmanMockRouting extends Interceptor {
     if (options.method == 'POST' && options.path == 'lookups' && body is Map) {
       final value = '${body['value'] ?? ''}';
       final last = value.isEmpty ? '' : value.substring(value.length - 1);
-      options.headers[header] = body.containsKey('session_id')
-          ? (last == '3'
-                ? '200 not_found'
-                : '200 first scan of an item: warning')
-          : switch (last) {
-              '2' => '200 warning: checked before and expired',
-              '3' => '200 not_found',
-              '4' => '200 unassigned',
-              _ => '200 valid: genuine, first check',
-            };
+      final session = body['session_id'];
+      if (session is String) {
+        options.extra[_scanSession] = session;
+        options.extra[_scanValue] = value;
+      }
+      options.headers[header] = switch (last) {
+        '2' when session is String => '200 first scan of an item: warning',
+        '2' => '200 warning: checked before and expired',
+        '3' => '200 not_found',
+        '4' => '200 unassigned',
+        _ => '200 valid: genuine, first check',
+      };
     } else if (options.method == 'GET' && options.path == 'checks') {
       options.headers[header] = options.queryParameters['cursor'] != null
           ? '200 A later page'
@@ -114,16 +131,16 @@ class PostmanMockRouting extends Interceptor {
     final body = response.data;
     final data = body is Map<String, dynamic> ? body['data'] : null;
     if (data is Map<String, dynamic>) {
-      final sent = options.data;
-      final scan = data['session'];
-      if (options.path == 'lookups' &&
-          sent is Map &&
-          sent['session_id'] is String &&
-          scan is Map<String, dynamic>) {
-        scan['id'] = sent['session_id'];
+      final session = options.extra[_scanSession];
+      final value = options.extra[_scanValue];
+      if (session is String && value is String) {
+        _tally(session, value, data);
       }
       final realId = options.extra[_realId];
-      if (realId is String && data['id'] is String) data['id'] = realId;
+      if (realId is String && data['id'] is String) {
+        data['id'] = realId;
+        _sessions[realId]?.countsInto(data);
+      }
       for (final key in const ['access_token', 'refresh_token']) {
         final pass = data[key];
         if (pass is String && !_headerSafe.hasMatch(pass)) {
@@ -136,5 +153,62 @@ class PostmanMockRouting extends Interceptor {
       }
     }
     handler.next(response);
+  }
+
+  /// A scan's answer as a real session gives it (guide section 4.3).
+  void _tally(String id, String value, Map<String, dynamic> data) {
+    final session = _sessions.putIfAbsent(id, _MockSession.new);
+    final first = session.answers[value];
+    if (first != null) {
+      data
+        ..clear()
+        ..addAll(_copy(first))
+        ..['repeat'] = true;
+    } else {
+      final n = ++_refs;
+      data['ref'] = 'MA-MOCK-${n.toString().padLeft(6, '0')}';
+      final item = data['item'];
+      if (item is Map<String, dynamic>) item['serial'] = '${4100000 + n}';
+      data
+        ..remove('session')
+        ..['repeat'] = false;
+      session.add(value, data['result'], _copy(data));
+    }
+    data['session'] = session.json(id);
+  }
+
+  static Map<String, dynamic> _copy(Map<String, dynamic> data) =>
+      jsonDecode(jsonEncode(data)) as Map<String, dynamic>;
+}
+
+/// One scanner session of the mock build: each QR's first answer and the
+/// counts by result.
+class _MockSession {
+  final answers = <String, Map<String, dynamic>>{};
+  final counts = <String, int>{
+    'valid': 0,
+    'warning': 0,
+    'not_found': 0,
+    'unassigned': 0,
+  };
+
+  void add(String value, Object? result, Map<String, dynamic> answer) {
+    answers[value] = answer;
+    if (result is String && counts.containsKey(result)) {
+      counts[result] = counts[result]! + 1;
+    }
+  }
+
+  /// The counts in a session answer: `scanned` is the different QRs.
+  void countsInto(Map<String, dynamic> data) {
+    data['scanned'] = answers.length;
+    data.addAll(counts);
+  }
+
+  Map<String, dynamic> json(String id) {
+    final data = <String, dynamic>{'id': id};
+    countsInto(data);
+    data['left'] = 5000 - answers.length;
+    return data;
   }
 }

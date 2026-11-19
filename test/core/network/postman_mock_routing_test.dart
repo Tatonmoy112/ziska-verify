@@ -5,8 +5,9 @@ import 'package:ziska_verify/core/network/demo/postman_mock_routing.dart';
 
 import '../../fakes/scripted_adapter.dart';
 
-/// The mock build's routing for the Postman mock (TC-MIG-050): the right
-/// example for shared routes, and the app's own session IDs echoed back.
+/// The mock build's routing for the Postman mock (TC-MIG-050 … -052): the
+/// right example for shared routes, the app's own session IDs echoed back,
+/// and scanner sessions that count like a real one.
 void main() {
   const example = PostmanMockRouting.exampleSessionId;
   const mine = '11111111-1111-4111-8111-111111111111';
@@ -64,21 +65,102 @@ void main() {
     }
   });
 
-  test('a scan asks for the session example and gets its own session ID '
-      'back', () async {
+  Future<Map<String, dynamic>> scan(
+    String value, {
+    String session = mine,
+  }) async {
     final answer = await dio.post<Object?>(
       'lookups',
-      data: {'way': 'qr', 'value': 'Q8F2KD91XA7M', 'session_id': mine},
+      data: {'way': 'qr', 'value': value, 'session_id': session},
     );
-    expect(asked(), '200 first scan of an item: warning');
-    final data = (answer.data! as Map)['data'] as Map;
-    expect((data['session'] as Map)['id'], mine);
+    return (answer.data! as Map)['data'] as Map<String, dynamic>;
+  }
 
-    await dio.post<Object?>(
-      'lookups',
-      data: {'way': 'qr', 'value': 'Q8F2KD91XA73', 'session_id': mine},
+  test('TC-MIG-051 a scan picks its example by the last character and gets '
+      'its own session ID back', () async {
+    for (final (value, name) in [
+      ('K7M2PX4Q9AB1', '200 valid: genuine, first check'),
+      ('R3T8WZ5N2CD2', '200 first scan of an item: warning'),
+      ('H6J9LV1B4EF3', '200 not_found'),
+      ('P2Q7XM8S5GH4', '200 unassigned'),
+      ('Q8F2KD91XA7M', '200 valid: genuine, first check'),
+    ]) {
+      final data = await scan(value);
+      expect(asked(), name, reason: value);
+      expect((data['session'] as Map)['id'], mine, reason: value);
+    }
+  });
+
+  test('TC-MIG-052 each different QR its own reference and serial; the '
+      'counts add up; the same QR again is a repeat', () async {
+    dio.httpClientAdapter = ScriptedAdapter((o) async {
+      sent.add(o);
+      if (o.method == 'GET') {
+        return ScriptedAnswer(200, okBody({'id': example, 'scanned': 41}));
+      }
+      final value = (o.data as Map)['value'] as String;
+      final result = switch (value[value.length - 1]) {
+        '2' => 'warning',
+        '3' => 'not_found',
+        '4' => 'unassigned',
+        _ => 'valid',
+      };
+      return ScriptedAnswer(
+        200,
+        okBody({
+          'ref': 'MA-2026-004103',
+          'result': result,
+          if (result == 'valid' || result == 'warning')
+            'item': {'serial': '1000001'},
+          'repeat': false,
+          'session': {'id': example, 'scanned': 41, 'valid': 38},
+        }),
+      );
+    });
+
+    final first = await scan('K7M2PX4Q9AB1');
+    final second = await scan('R3T8WZ5N2CD2');
+    final third = await scan('H6J9LV1B4EF3');
+    expect(
+      {first['ref'], second['ref'], third['ref']},
+      hasLength(3),
+      reason: 'one reference per QR',
     );
-    expect(asked(), '200 not_found');
+    expect(
+      (first['item'] as Map)['serial'],
+      isNot((second['item'] as Map)['serial']),
+    );
+    expect(third['session'], {
+      'id': mine,
+      'scanned': 3,
+      'valid': 1,
+      'warning': 1,
+      'not_found': 1,
+      'unassigned': 0,
+      'left': 4997,
+    });
+    expect(third['repeat'], isFalse);
+
+    final again = await scan('K7M2PX4Q9AB1');
+    expect(again['repeat'], isTrue);
+    expect(again['ref'], first['ref']);
+    expect(again['result'], 'valid');
+    expect((again['session'] as Map)['scanned'], 3, reason: 'not counted');
+
+    // Another session starts from nothing.
+    final other = await scan(
+      'K7M2PX4Q9AB1',
+      session: '22222222-2222-4222-8222-222222222222',
+    );
+    expect(other['repeat'], isFalse);
+    expect((other['session'] as Map)['scanned'], 1);
+
+    // The session itself has the same counts.
+    final session = await dio.get<Object?>('lookups/sessions/$mine');
+    final data = (session.data! as Map)['data'] as Map;
+    expect(data['id'], mine);
+    expect(data['scanned'], 3);
+    expect(data['not_found'], 1);
   });
 
   test('a session path asks for the example ID; the answer has the real '
