@@ -1,6 +1,6 @@
 # The app against the backend plan: what matches, what is left, what differs
 
-> **Update 2026-11-19 (same day): the 4 mismatches and the History difference are fixed** (commits `a7e2ef0`, `f482451`, `1fc6024`, `d9d9ee8` and the History commit after them), at the user's decision that this plan is the one to follow. `docs/protectb-api/` is now copied from `4ec8318` too (`834fda7`). Only **Not now** remains, waiting for the backend (B2).
+> **Update 2026-11-19 (same day): the 4 mismatches and the History difference are fixed** (commits `a7e2ef0`, `f482451`, `1fc6024`, `d9d9ee8`, History `922b471`), at the user's decision that this plan is the one to follow. `docs/protectb-api/` is now copied from `4ec8318` too (`834fda7`). Only **Not now** remains, waiting for the backend (B2).
 
 **Date:** 2026-11-19. **Backend plan audited:** `ProtectB-DOCS-initial` at commit `4ec8318` (2026-11-18 15:42), the latest on `main`. **App:** branch `feature/backend-plan-alignment` at `93ada90`.
 
