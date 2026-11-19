@@ -13,6 +13,7 @@ import 'package:ziska_verify/core/network/bodiless_request_interceptor.dart';
 import 'package:ziska_verify/core/network/demo/password_later_demo.dart';
 import 'package:ziska_verify/core/network/demo/postman_mock_routing.dart';
 import 'package:ziska_verify/core/network/logging_interceptor.dart';
+import 'package:ziska_verify/core/services/connectivity/connectivity_service.dart';
 import 'package:ziska_verify/core/services/device/app_info_service.dart';
 import 'package:ziska_verify/core/services/device/phone_id_service.dart';
 import 'package:ziska_verify/core/services/launcher/launcher_service.dart';
@@ -164,6 +165,7 @@ void registerCore({
     ..registerSingleton<ApiClient>(ApiClient(dio))
     ..registerLazySingleton<LauncherService>(UrlLauncherService.new)
     ..registerLazySingleton<AppInfoService>(PackageInfoAppInfoService.new)
+    ..registerLazySingleton<ConnectivityService>(PlusConnectivityService.new)
     ..registerLazySingleton<ScannerService>(MobileScannerService.new)
     ..registerLazySingleton<PermissionService>(PermissionHandlerService.new)
     ..registerLazySingleton<PhotoService>(ImagePickerPhotoService.new)

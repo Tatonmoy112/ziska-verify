@@ -27,14 +27,14 @@ Current migration acceptance: [16-mobile-migration.md](16-mobile-migration.md). 
 | REP | [07-reports.md](07-reports.md) | 59 | 17 | 32 | 10 | 47 | 0 | 12 | 0 |
 | RTL | [08-retail-users.md](08-retail-users.md) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 | PROF | [09-profile.md](09-profile.md) | 41 | 3 | 23 | 15 | 19 | 0 | 3 | 19 |
-| ERR | [10-errors-network.md](10-errors-network.md) | 49 | 10 | 25 | 14 | 34 | 0 | 4 | 11 |
+| ERR | [10-errors-network.md](10-errors-network.md) | 49 | 10 | 25 | 14 | 43 | 0 | 5 | 1 |
 | SEC | [11-security.md](11-security.md) | 28 | 18 | 8 | 2 | 21 | 0 | 7 | 0 |
 | NFR | [12-device-a11y-perf.md](12-device-a11y-perf.md) | 27 | 0 | 17 | 10 | 8 | 0 | 19 | 0 |
 | E2E | [13-e2e-journeys.md](13-e2e-journeys.md) | 16 | 7 | 9 | 0 | 10 | 0 | 6 | 0 |
 | Exploratory | [14-exploratory-charters.md](14-exploratory-charters.md) | 9 | 0 | 6 | 3 | 0 | 0 | 9 | 0 |
 | UI | [15-ui.md](15-ui.md) | 184 | 30 | 100 | 54 | 170 | 0 | 14 | 0 |
 | MIG | [16-mobile-migration.md](16-mobile-migration.md) | 50 | 36 | 13 | 1 | 50 | 0 | 0 | 0 |
-| **Total** | | **805** | 250 | 388 | 167 | 662 | 0 | 111 | 32 |
+| **Total** | | **805** | 250 | 388 | 167 | 671 | 0 | 112 | 22 |
 
 ## 3. Case Format
 
@@ -153,7 +153,7 @@ To settle them, fill in the [decision sheet](../decision-sheet.md): each questio
 | 10 | A bulk send cut off by a lost connection. **Withdrawn:** the 500-item bulk lookup is removed; a stack of serials is one request (guide §4.7; TC-MIG cases). | — | — |
 | 11 | Camera or gallery access denied while adding a report photo has no defined message (the scanner has "Camera access is off…"). | REP-040 | App |
 | 12 | `429` without `Retry-After`, or with a date. **Decided 2026-11-17/18:** a `Retry-After` in seconds, or an HTTP date still to come, counts down; otherwise "Try again later." and a manual retry at once; no wait is made up (guide §1: "never by a number written into the app"). | ERR-025, -027, -048 | — |
-| 13 | The offline banner (`NetworkStatusBanner`, `ConnectivityService`, §14.2) is in the spec but not built. | ERR-036 … -046 | App |
+| 13 | The offline banner (`NetworkStatusBanner`, `ConnectivityService`, §14.2). **Built 2026-11-19** (`NetworkStatusShell`). | ERR-036 … -046 | — |
 | 14 | Screens showing a first password or a result are not hidden from the app switcher or screenshots; §12 does not ask for it. | SEC-012 | App, client |
 | 15 | Dark mode: §12.1 stores a theme preference, but no dark theme is defined, and the app has none. | NFR-020 | App, client |
 | 16 | A certificate that cannot be made. **Withdrawn** (no certificate). | — | — |
@@ -179,5 +179,5 @@ To settle them, fill in the [decision sheet](../decision-sheet.md): each questio
 | 10 | Remaining work planned in [`../remaining-work-test-plan.md`](../remaining-work-test-plan.md): dependency scan in CI (SEC-024 … -026 ✅); 41 new blocked cases with entry criteria (52 ⛔); [decision sheet](../decision-sheet.md) for 19 questions; [run kit](../manual-test-checklist.md#run-kit) for sessions A–D | Done; the decisions, the three features, and the manual runs are open |
 | 11 | UI: [15-ui.md](15-ui.md) written (159 cases, sections A–G); 145 automated in `test/ui/` (assertions run everywhere, CI too; 118 golden images on the development PC, each looked at); 14 by hand (the Figma comparisons and the splash on a phone); 27 bug entries found and fixed (test-plan §12.1, some covering several screens); decision sheet Q20 (updated) and Q21 (new) | Done |
 | 12 | Result screen, loader, and product picture (final.md §13.1.2, §13.1.4, decisions 46–49): 39 new cases (LOOK-089 … -117, SEC-027, -028, UI-160 … -167) and 12 UI cases rewritten; all automated but TC-LOOK-116 (a real picture on a phone, checklist session C) | Done |
-| 13 | Login and authentication edge and worst cases (final.md §6, decision 56): 27 new cases (AUTH-097 … -114, SESS-033 … -041); 11 manual cases automated (AUTH-025, -037, -038, -049 … -051, -084, SESS-010, -022, -031, SEC-011); 15 bugs proven by a failing test and fixed (test-plan §12.1); AUTH-114 and SESS-041 stay on the test server and a real phone | Done |
+| 13 | The offline banner (`NetworkStatusBanner`, `ConnectivityService`, §14.2). **Built 2026-11-19** (`NetworkStatusShell`). | ERR-036 … -046 | — |
 | 14 | Backend D56–D63 and D59 (SRS v1.2): the migration cases as TC-MIG-001 … -031 in the standard table; certificates (LOOK-068 … -088) and hidden-code entry (LOOK-004, -005, -013, -023, -033 … -036, -095) withdrawn, listed at the end of their files; BULK and RTL traceability replaced by TC-MIG cases; new AUTH-115 (D59; Not now kept, restored 2026-11-17) and PROF-041 (permissions on Profile); a blank result screen after losing `item:lookup` found and fixed (TC-MIG-018 flow) | Done |

@@ -100,5 +100,6 @@
   "appVersionShort": "সংস্করণ {version} ({build})",
   "requestAccessButton": "সাইন আপ",
   "requestAccessTitle": "সাইন আপ",
-  "requestAccessSubtitle": "আপনার অ্যাকাউন্ট তৈরি করুন। অফিস যাচাই করে অনুমোদন হলে ইমেইলে জানাবে।"
+  "requestAccessSubtitle": "আপনার অ্যাকাউন্ট তৈরি করুন। অফিস যাচাই করে অনুমোদন হলে ইমেইলে জানাবে।",
+  "offlineBanner": "ইন্টারনেট সংযোগ নেই। যাচাই করতে সংযোগ প্রয়োজন।"
 }

@@ -1999,6 +1999,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Version {version} ({build})'**
   String appVersionShort(String version, String build);
+
+  /// No description provided for @offlineBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'No internet connection. Checks need a connection.'**
+  String get offlineBanner;
 }
 
 class _AppLocalizationsDelegate

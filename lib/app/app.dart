@@ -7,6 +7,7 @@ import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ziska_verify/app/config/app_config.dart';
 import 'package:ziska_verify/app/router/app_router.dart';
+import 'package:ziska_verify/core/services/connectivity/connectivity_service.dart';
 import 'package:ziska_verify/core/services/scanner/active_scan_store.dart';
 import 'package:ziska_verify/core/services/session/forbidden_signal.dart';
 import 'package:ziska_verify/core/services/session/session_service.dart';
@@ -16,6 +17,7 @@ import 'package:ziska_verify/features/profile/domain/usecases/get_profile.dart';
 import 'package:ziska_verify/features/profile/presentation/bloc/profile_cubit.dart';
 import 'package:ziska_verify/l10n/generated/app_localizations.dart';
 import 'package:ziska_verify/shared/design_system/theme/app_theme.dart';
+import 'package:ziska_verify/shared/widgets/network_status_banner.dart';
 
 /// The root widget: the app-scoped profile (final.md Section 5.9), the
 /// router (Section 9), the theme (Section 14), and localization (Section 16).
@@ -96,6 +98,11 @@ class _AppState extends State<App> {
           GlobalCupertinoLocalizations.delegate,
         ],
         supportedLocales: AppLocalizations.supportedLocales,
+        // The offline banner above every screen (final.md Section 14.2).
+        builder: (context, child) => NetworkStatusShell(
+          connectivity: widget.locator<ConnectivityService>(),
+          child: child ?? const SizedBox.shrink(),
+        ),
       ),
     );
   }

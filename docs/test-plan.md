@@ -9,7 +9,7 @@
 | Spec | `final.md` (v1.6 and later), Sections 6–18 |
 | Backend contract | `docs/protectb-api/app-api-guide.md`, `app-build-guide.md`, Postman collection |
 | Version | 2.0 — 2026-11-14: 543 cases in `docs/test-cases/` (positive, negative, boundary, edge, worst case, network, security, device, journeys, charters) |
-| Status | `flutter analyze` clean; 1128 automated tests passing; 662 of 805 cases automated (Section 12) |
+| Status | `flutter analyze` clean; 1137 automated tests passing; 671 of 805 cases automated (Section 12) |
 
 ---
 
@@ -143,14 +143,14 @@ The cases live in one file per area in [`docs/test-cases/`](test-cases/README.md
 | REP | [07-reports.md](test-cases/07-reports.md) | 59 | 17 | 32 | 10 | 47 | 0 | 12 | 0 |
 | RTL | [08-retail-users.md](test-cases/08-retail-users.md) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 | PROF | [09-profile.md](test-cases/09-profile.md) | 41 | 3 | 23 | 15 | 19 | 0 | 3 | 19 |
-| ERR | [10-errors-network.md](test-cases/10-errors-network.md) | 49 | 10 | 25 | 14 | 34 | 0 | 4 | 11 |
+| ERR | [10-errors-network.md](test-cases/10-errors-network.md) | 49 | 10 | 25 | 14 | 43 | 0 | 5 | 1 |
 | SEC | [11-security.md](test-cases/11-security.md) | 28 | 18 | 8 | 2 | 21 | 0 | 7 | 0 |
 | NFR | [12-device-a11y-perf.md](test-cases/12-device-a11y-perf.md) | 27 | 0 | 17 | 10 | 8 | 0 | 19 | 0 |
 | E2E | [13-e2e-journeys.md](test-cases/13-e2e-journeys.md) | 16 | 7 | 9 | 0 | 10 | 0 | 6 | 0 |
 | Exploratory | [14-exploratory-charters.md](test-cases/14-exploratory-charters.md) | 9 | 0 | 6 | 3 | 0 | 0 | 9 | 0 |
 | UI | [15-ui.md](test-cases/15-ui.md) | 184 | 30 | 100 | 54 | 170 | 0 | 14 | 0 |
 | MIG | [16-mobile-migration.md](test-cases/16-mobile-migration.md) | 50 | 36 | 13 | 1 | 50 | 0 | 0 | 0 |
-| **Total** | | **805** | 250 | 388 | 167 | 662 | 0 | 111 | 32 |
+| **Total** | | **805** | 250 | 388 | 167 | 671 | 0 | 112 | 22 |
 
 ---
 
@@ -241,12 +241,12 @@ One line per run:
 | Check | Result |
 |---|---|
 | `flutter analyze` | No issues found |
-| `flutter test` | 1128 passed, 0 failed (131 of them goldens; CI runs the other 997) |
-| Covered by automated tests (✅) | 662 of 805 (796 test cases and 9 exploratory charters) |
+| `flutter test` | 1137 passed, 0 failed (131 of them goldens; CI runs the other 1006) |
+| Covered by automated tests (✅) | 671 of 805 (796 test cases and 9 exploratory charters) |
 | To be automated (⏳) | 0 |
 | Dependency scan (CI, TC-SEC-024) | OSV-Scanner v2.7.0 on `pubspec.lock`: 195 packages, no known vulnerability (2026-11-14) |
-| Manual only (✋) | 111: 102 cases (12 of them Figma comparisons) and 9 charters, all in `manual-test-checklist.md` (sessions A–D) |
-| Blocked (⛔) | 32: TC-AUTH-095 (Not now on the test server, waiting for the backend route), the language switch (20) and the offline banner (11) are not built; each case set has its entry criteria (`remaining-work-test-plan.md` §4). Certificates are withdrawn by the backend (SRS v1.2), not blocked |
+| Manual only (✋) | 112: 103 cases (12 of them Figma comparisons) and 9 charters, all in `manual-test-checklist.md` (sessions A–D) |
+| Blocked (⛔) | 22: TC-AUTH-095 (Not now on the test server, waiting for the backend route), the language switch (20) and the banner in Bangla (TC-ERR-046, waits for the switch); the offline banner is built (2026-11-19); each case set has its entry criteria (`remaining-work-test-plan.md` §4). Certificates are withdrawn by the backend (SRS v1.2), not blocked |
 
 Remaining work (the dependency scan, the blocked features, the open questions, the manual runs): [`remaining-work-test-plan.md`](remaining-work-test-plan.md).
 

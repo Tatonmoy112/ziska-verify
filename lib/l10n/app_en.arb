@@ -565,5 +565,6 @@
         "type": "String"
       }
     }
-  }
+  },
+  "offlineBanner": "No internet connection. Checks need a connection."
 }

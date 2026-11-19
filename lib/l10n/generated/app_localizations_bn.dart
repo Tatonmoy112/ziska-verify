@@ -1072,4 +1072,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String appVersionShort(String version, String build) {
     return 'সংস্করণ $version ($build)';
   }
+
+  @override
+  String get offlineBanner => 'ইন্টারনেট সংযোগ নেই। যাচাই করতে সংযোগ প্রয়োজন।';
 }

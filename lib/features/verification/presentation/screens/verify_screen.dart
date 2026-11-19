@@ -311,16 +311,20 @@ class _VerifyScreenState extends State<VerifyScreen>
     final session = canLookup
         ? _session ??= widget.scanner.createSession()
         : null;
+    final header = _Header(
+      organisation: profile?.organisation ?? l10n.appTitle,
+      name: profile?.name ?? '',
+      onOpenProfile: widget.onOpenProfile,
+    );
+    // At a large font the header scrolls with the page: fixed above it,
+    // it could be taller than a small phone (TC-ERR-045).
+    final largeText = isLargeText(context);
     return Scaffold(
       backgroundColor: AppColors.surfaceMuted,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _Header(
-            organisation: profile?.organisation ?? l10n.appTitle,
-            name: profile?.name ?? '',
-            onOpenProfile: widget.onOpenProfile,
-          ),
+          if (!largeText) header,
           Expanded(
             child: session != null
                 ? BlocConsumer<LookupBloc, LookupState>(
@@ -340,6 +344,7 @@ class _VerifyScreenState extends State<VerifyScreen>
                         onVerify: _verify,
                         onClear: _clear,
                         tools: tools,
+                        header: largeText ? header : null,
                       ),
                     ),
                   )
@@ -372,8 +377,11 @@ class _LookupForm extends StatelessWidget {
     required this.onVerify,
     required this.onClear,
     required this.tools,
+    this.header,
   });
 
+  /// Scrolls with the page at a large font.
+  final Widget? header;
   final LookupState state;
   final LookupWay way;
 
@@ -434,6 +442,7 @@ class _LookupForm extends StatelessWidget {
     return ListView(
       padding: EdgeInsets.zero,
       children: [
+        ?header,
         camera,
         Padding(
           padding: const EdgeInsets.all(AppSpacing.screen),

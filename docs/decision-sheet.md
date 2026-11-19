@@ -36,7 +36,7 @@
 | 10 | A bulk send cut off | App owner | **Withdrawn** (bulk removed; stacks are one request, guide §4.7) |
 | 11 | Camera or gallery access denied for a photo | App owner | Open |
 | 12A | A `429` without a usable `Retry-After` | App owner | **Decided 2026-11-17: B** (guide §1: never a number in the app) |
-| 13 | Offline banner: when | App owner | Open |
+| 13 | Offline banner: when | App owner | **Built 2026-11-19** |
 | 16 | A certificate that cannot be made | App owner | **Withdrawn** (no certificate) |
 | 18 | The language at the first start | App owner, client | Open |
 | 19A | Bangla digits typed into a serial | App owner | Open |

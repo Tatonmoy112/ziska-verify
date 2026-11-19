@@ -7,7 +7,6 @@ Updated 2026-11-19. These items are intentionally separate from the implemented 
 | Staging acceptance | Backend HTTPS test host, client slug, fixture accounts/items, mail page, and office portal access; never use a live client |
 | Date filter day boundary | Backend confirmation whether inclusive dates denote UTC or Bangladesh calendar days; preserve current date strings until answered |
 | Complete Bangla and locale switch | Remaining translations, client language review, persisted preference and locale state; migration strings alone are not complete localization |
-| Global offline banner | Connectivity wrapper/banner and device validation; no queued submissions |
 | Crashlytics | Registered Firebase projects/platform configs and release-symbol setup; existing no-op service stays until provisioned |
 | iOS flavors and device run | Mac/Xcode, signing and mock/staging/live schemes |
 | Password postponement (Not now) | The backend team ships `POST me/password/later` and `password_change_skippable`/`password_change_pending` in the guide, Postman and the test server; then `DEMO_PASSWORD_LATER` is removed and TC-AUTH-095 runs on staging |
@@ -21,5 +20,6 @@ Done since 2026-11-16 (kept here for the record):
 |---|---|
 | Postman mock | 2026-11-18: a mock of the 2026-11-17 collection, `PostmanMockRouting`; `docs/postman-mock-setup.md` |
 | App icon and launch screen | 2026-11-19: the Ziska Pharma logo replaces Flutter's default |
+| Offline banner | 2026-11-19: `NetworkStatusShell` above every screen (TC-ERR-037…045); TC-ERR-036 on a phone |
 
 Certificates, hidden-code entry, everyone scope and app retail administration are withdrawn requirements, not blocked release features. Preserve historical decisions in the architecture archive and use the migration acceptance document for current behavior.

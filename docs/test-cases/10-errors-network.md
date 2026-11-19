@@ -54,16 +54,16 @@
 
 | ID | Title | Type | Pri | Run on | Auto | Pre-conditions / Data | Steps | Expected | Source |
 |---|---|---|---|---|---|---|---|---|---|
-| TC-ERR-036 | Offline banner | NET | P2 | DEVICE | ⛔ | Real phone | Airplane mode on any screen; then off | The offline banner shows, then goes | §14.2 |
-| TC-ERR-037 | The banner on every main screen | NET | P2 | AUTO | ⛔ | Offline banner built; `FakeConnectivityService` | Set offline on Check, a result, Bulk lookup, History, Report incident, My reports, Retail users, Profile | The banner shows on each | §14.2 |
-| TC-ERR-038 | The banner goes when back online | NET | P2 | AUTO | ⛔ | Offline banner built | Set offline, then online | The banner shows, then goes | §14.2 |
-| TC-ERR-039 | The banner on the login screens | NET | P3 | AUTO | ⛔ | Offline banner built; logged out | Set offline on Login, Check your email, Forgot password | The banner shows on each | §14.2 |
-| TC-ERR-040 | The banner never blocks | STATE | P2 | AUTO | ⛔ | Offline banner built; offline | Type a serial; Check | The lookup is tried and shows its own connection message; every button still works | §13.1.6, §14.2 |
-| TC-ERR-041 | Back online sends nothing by itself | WORST | P1 | AUTO | ⛔ | Offline banner built | A lookup fails offline; set online | No request is sent until the official asks again | §12.1 API protection |
-| TC-ERR-042 | Wi-Fi without internet | EDGE | P3 | AUTO | ⛔ | Offline banner built; connectivity "online", requests fail | Open History | No banner (it follows `ConnectivityService`); the connection message and Try again as today | §14.2 |
-| TC-ERR-043 | A flapping connection | WORST | P3 | AUTO | ⛔ | Offline banner built | Switch offline and online 10 times in 5 s; end online | No crash; no banner at the end | §14.2 |
-| TC-ERR-044 | Read by TalkBack | A11Y | P2 | AUTO + DEVICE | ⛔ | Offline banner built | Set offline | The banner is announced (a live region with a label) | §14 |
-| TC-ERR-045 | Fits at 3× font and 320 px | A11Y | P3 | AUTO | ⛔ | Offline banner built; text scale 3.0; 320 × 568 | Set offline on every main screen | No layout error | §14 |
+| TC-ERR-036 | Offline banner | NET | P2 | DEVICE | ✋ | Real phone | Airplane mode on any screen; then off | The offline banner shows, then goes | §14.2 |
+| TC-ERR-037 | The banner on every main screen | NET | P2 | AUTO | ✅ `flow/offline_banner_flow_test` | `FakeConnectivityService` | Set offline on Check, a result, Bulk lookup, History, Report incident, My reports, Retail users, Profile | The banner shows on each | §14.2 |
+| TC-ERR-038 | The banner goes when back online | NET | P2 | AUTO | ✅ `flow/offline_banner_flow_test` | Fake backend; `FakeConnectivityService` | Set offline, then online | The banner shows, then goes | §14.2 |
+| TC-ERR-039 | The banner on the login screens | NET | P3 | AUTO | ✅ `flow/offline_banner_flow_test` | logged out | Set offline on Login, Check your email, Forgot password | The banner shows on each | §14.2 |
+| TC-ERR-040 | The banner never blocks | STATE | P2 | AUTO | ✅ `flow/offline_banner_flow_test` | offline | Type a serial; Check | The lookup is tried and shows its own connection message; every button still works | §13.1.6, §14.2 |
+| TC-ERR-041 | Back online sends nothing by itself | WORST | P1 | AUTO | ✅ `flow/offline_banner_flow_test` | Fake backend; `FakeConnectivityService` | A lookup fails offline; set online | No request is sent until the official asks again | §12.1 API protection |
+| TC-ERR-042 | Wi-Fi without internet | EDGE | P3 | AUTO | ✅ `flow/offline_banner_flow_test` | connectivity "online", requests fail | Open History | No banner (it follows `ConnectivityService`); the connection message and Try again as today | §14.2 |
+| TC-ERR-043 | A flapping connection | WORST | P3 | AUTO | ✅ `flow/offline_banner_flow_test` | Fake backend; `FakeConnectivityService` | Switch offline and online 10 times in 5 s; end online | No crash; no banner at the end | §14.2 |
+| TC-ERR-044 | Read by TalkBack | A11Y | P2 | AUTO + DEVICE | ✅ `flow/offline_banner_flow_test` (the live region and its label); the spoken text on a phone: ✋ | Fake backend; `FakeConnectivityService` | Set offline | The banner is announced (a live region with a label) | §14 |
+| TC-ERR-045 | Fits at 3× font and 320 px | A11Y | P3 | AUTO | ✅ `flow/offline_banner_flow_test` | text scale 3.0; 320 × 568 | Set offline on every main screen | No layout error | §14 |
 | TC-ERR-046 | The banner in Bangla | I18N | P3 | AUTO | ⛔ | Offline banner and language switch built; app in Bangla | Set offline | The banner text in Bangla | §14.2, §16 |
 | TC-ERR-047 | A proxy page decided by its status | WORST | P2 | AUTO | ✅ `core/network/error_mapper_test` | An answer with no envelope | 400, 413, 415, 403, 404, 502 | A defect (logged) for 400/413/415; a general error for 403 and 502; "Not available." for 404 | Guide §1 |
 | TC-ERR-048 | `Retry-After` as seconds or a date | EDGE | P3 | AUTO | ✅ `core/network/error_mapper_test` | — | `30`, `-1`, `soon`, a date 45 s ahead, a past date | 30 s; none; none; 45 s; none (a manual retry) | Guide §1 |

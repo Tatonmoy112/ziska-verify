@@ -1072,4 +1072,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String appVersionShort(String version, String build) {
     return 'Version $version ($build)';
   }
+
+  @override
+  String get offlineBanner =>
+      'No internet connection. Checks need a connection.';
 }

@@ -10,6 +10,7 @@ import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:ziska_verify/app/app.dart';
 import 'package:ziska_verify/app/bootstrap.dart';
 import 'package:ziska_verify/app/config/app_config.dart';
+import 'package:ziska_verify/core/services/connectivity/connectivity_service.dart';
 import 'package:ziska_verify/core/services/device/app_info_service.dart';
 import 'package:ziska_verify/core/services/launcher/launcher_service.dart';
 import 'package:ziska_verify/core/services/media/photo_service.dart';
@@ -383,6 +384,26 @@ class FakePhotos implements PhotoService {
   }
 }
 
+/// The phone's link, set by the test: online at the start.
+class FakeConnectivityService implements ConnectivityService {
+  final _changes = StreamController<bool>.broadcast();
+  bool _online = true;
+
+  bool get current => _online;
+
+  /// Turns the link on or off, as airplane mode would.
+  void set({required bool online}) {
+    _online = online;
+    _changes.add(online);
+  }
+
+  @override
+  Future<bool> isOnline() async => _online;
+
+  @override
+  Stream<bool> get online => _changes.stream;
+}
+
 class _FakeAppInfo implements AppInfoService {
   @override
   Future<({String build, String version})> versionInfo() async =>
@@ -405,6 +426,7 @@ class FlowApp {
     required this.photos,
     required this.pictures,
     required this.logger,
+    required this.connectivity,
   });
 
   final WidgetTester tester;
@@ -415,6 +437,7 @@ class FlowApp {
   final FakePhotos photos;
   final FakePictureImages pictures;
   final FakeLoggerService logger;
+  final FakeConnectivityService connectivity;
 
   /// Whether the [FilledButton] inside [key] can be pressed.
   bool enabled(Key key) =>
@@ -553,6 +576,7 @@ Future<FlowApp> startApp(
   final launcher = FakeLauncher();
   final scanner = FakeScanner();
   final photos = FakePhotos();
+  final connectivity = FakeConnectivityService();
   final pictures = FakePictureImages();
   final logger = FakeLoggerService();
 
@@ -579,6 +603,7 @@ Future<FlowApp> startApp(
     ..registerSingleton<PhotoService>(photos)
     ..registerSingleton<PictureImages>(pictures)
     ..registerSingleton<AppInfoService>(_FakeAppInfo())
+    ..registerSingleton<ConnectivityService>(connectivity)
     ..registerSingleton<PermissionService>(_FakePermission());
 
   // The app's own start: the phone ID and the stored login.
@@ -607,6 +632,7 @@ Future<FlowApp> startApp(
     photos: photos,
     pictures: pictures,
     logger: logger,
+    connectivity: connectivity,
   );
 }
 

@@ -1248,20 +1248,13 @@ These cases wait for a feature in the spec that is not built ([remaining-work-te
 | TC-PROF-034 | A Bangla reader checks the texts | DEVICE | §16 |
 | TC-PROF-035 | Bangla digits typed into a serial | AUTO | §13.1.2, §16 |
 
-### Offline banner (11)
+### Offline banner (2)
+
+Built 2026-11-19: TC-ERR-037 … -045 are automated (`flow/offline_banner_flow_test`). On a phone:
 
 | Case | Title | Run on | Spec |
 |---|---|---|---|
-| TC-ERR-036 | Offline banner | DEVICE | §14.2 |
-| TC-ERR-037 | The banner on every main screen | AUTO | §14.2 |
-| TC-ERR-038 | The banner goes when back online | AUTO | §14.2 |
-| TC-ERR-039 | The banner on the login screens | AUTO | §14.2 |
-| TC-ERR-040 | The banner never blocks | AUTO | §13.1.6, §14.2 |
-| TC-ERR-041 | Back online sends nothing by itself | AUTO | §12.1 API protection |
-| TC-ERR-042 | Wi-Fi without internet | AUTO | §14.2 |
-| TC-ERR-043 | A flapping connection | AUTO | §14.2 |
-| TC-ERR-044 | Read by TalkBack | AUTO + DEVICE | §14 |
-| TC-ERR-045 | Fits at 3× font and 320 px | AUTO | §14 |
+| TC-ERR-036 | Offline banner: airplane mode on any screen, then off; also listen to TalkBack read it | DEVICE | §14.2, §14 |
 | TC-ERR-046 | The banner in Bangla | AUTO | §14.2, §16 |
 
 ## Summary
