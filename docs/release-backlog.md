@@ -6,13 +6,12 @@ Updated 2026-11-19. These items are intentionally separate from the implemented 
 |---|---|
 | Staging acceptance | Backend HTTPS test host, client slug, fixture accounts/items, mail page, and office portal access; never use a live client |
 | Date filter day boundary | Backend confirmation whether inclusive dates denote UTC or Bangladesh calendar days; preserve current date strings until answered |
-| Complete Bangla and locale switch | Remaining translations, client language review, persisted preference and locale state; migration strings alone are not complete localization |
 | Crashlytics | Registered Firebase projects/platform configs and release-symbol setup; existing no-op service stays until provisioned |
 | iOS flavors and device run | Mac/Xcode, signing and mock/staging/live schemes |
 | Password postponement (Not now) | The backend team ships `POST me/password/later` and `password_change_skippable`/`password_change_pending` in the guide, Postman and the test server; then `DEMO_PASSWORD_LATER` is removed and TC-AUTH-095 runs on staging |
 | Device/release checks | Camera permissions/torch/lifecycle, process-kill recovery, OS back, gallery metadata, release log inspection, larger sessions |
-| Store release signing | The client decides who owns the upload key; then the keystore and `android/key.properties` (git-ignored). Until then the debug key, fine for testing only |
-| Bangla review | The client reviews `docs/bangla-drafts-for-review.md` and confirms or corrects each text |
+| Store release signing | The client decides who owns the upload key; then the keystore and `android/key.properties` (git-ignored; steps in `docs/run.md`, "Release signing"). The build already reads that file when it exists (2026-11-19); until then the debug key, fine for testing only |
+| Bangla review | The client's Bangla reader reviews all 320 texts in `docs/bangla-drafts-for-review.md` (TC-PROF-034) and confirms or corrects each; the client also confirms open questions 18 (English at the first start) and 19 (Bangla digits read as 0–9) |
 
 Done since 2026-11-16 (kept here for the record):
 
@@ -21,5 +20,6 @@ Done since 2026-11-16 (kept here for the record):
 | Postman mock | 2026-11-18: a mock of the 2026-11-17 collection, `PostmanMockRouting`; `docs/postman-mock-setup.md` |
 | App icon and launch screen | 2026-11-19: the Ziska Pharma logo replaces Flutter's default |
 | Offline banner | 2026-11-19: `NetworkStatusShell` above every screen (TC-ERR-037…045); TC-ERR-036 on a phone |
+| Language switch | 2026-11-19: Profile → Language, English and বাংলা, kept on the phone; every text drafted in Bangla (TC-PROF-019…035 automated; TC-PROF-006, -018, -032, -034 on a phone) |
 
 Certificates, hidden-code entry, everyone scope and app retail administration are withdrawn requirements, not blocked release features. Preserve historical decisions in the architecture archive and use the migration acceptance document for current behavior.

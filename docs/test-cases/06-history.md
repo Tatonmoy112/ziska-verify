@@ -55,7 +55,7 @@
 | TC-HIST-041 | Long scroll | PERF | P3 | STAGE + DEVICE | ✋ | Staging; an official with 1 000+ checks; real phone | Scroll through 20+ pages | Smooth scrolling; no row twice; memory steady | §10 |
 | TC-HIST-042 | Everyone's checks refused | STATE | P1 | AUTO | ✅ `flow/history_edge_flow_test` | Fake backend; R1 | Turn on "Everyone's checks"; `GET checks` answers `403 forbidden`; the reloaded `GET me` has no `history:all` | Profile reloaded; the "Everyone's checks" switch hidden | §7.2, §13.4 |
 | TC-HIST-043 | Everyone's checks of one serial | POS | P2 | AUTO | ✅ `flow/history_edge_flow_test` | Fake backend; R1 | Everyone's checks on; search `1000001` | `scope=all&search=1000001`; rows with "by {name}" | §13.4.1 |
-| TC-HIST-044 | Times in Bangla digits | I18N | P3 | AUTO | ⛔ | Fake backend; language Bangla | Open History in Bangla | Times in Bangladesh time with Bangla digits | §16 |
+| TC-HIST-044 | Times in Bangla digits | I18N | P3 | AUTO | ✅ `flow/language_flow_test` | Fake backend; language Bangla | Open History in Bangla | Times in Bangladesh time with Bangla digits | §16 |
 | TC-HIST-045 | No history left after logout | SEC | P1 | AUTO | ✅ `flow/history_edge_flow_test` | Fake backend; R1, then R2 | Load History as R1; log out; log in as R2; open History | None of R1's rows ever shown | §10.6, §1.3 |
 | TC-HIST-046 | Nothing kept on the phone | SEC | P2 | AUTO | ✅ `flow/history_edge_flow_test` | Fake backend | Load History; restart the app offline; open History | An error with Try again, no rows: checks are not stored | §10.6, §12.1 Local data |
 | TC-HIST-047 | The result chips keep their counts | POS | P2 | AUTO | ✅ `flow/history_flow_test`, `features/history/history_bloc_test` | Fake backend; totals 120 / 80 / 30 / 9 / 1 | Open History; pick **Valid**; pick **Warning**; search a serial with a chip picked; pull to refresh | The chips show the totals; picking a chip sends `result` and keeps the counts without another request; a new search with a chip picked asks for the counts once more without `result`, with `limit=1`; a failed count leaves the chips without counts and the list shown; a refresh counts again | §13.4 |
@@ -64,4 +64,4 @@
 
 ## Spec gaps in this file
 
-See [README §7](README.md#7-open-questions-spec-gaps): 2 (the language switch is not built: the Bangla digits case is ⛔), 3 (the day boundary of `from` and `to`).
+See [README §7](README.md#7-open-questions-spec-gaps): 2 (the language switch, built 2026-11-19), 3 (the day boundary of `from` and `to`).

@@ -160,6 +160,14 @@
     "description": "Under the Profile cards' place when GET checks fails; a Try again link follows."
   },
   "changePasswordRow": "Change password",
+  "languageRow": "Language",
+  "@languageRow": {
+    "description": "Profile row that opens the language choice; its subtitle names the current language."
+  },
+  "languageTitle": "App language",
+  "@languageTitle": {
+    "description": "Title of the sheet offering English and Bangla."
+  },
   "passwordPendingBanner": "Your password was set by someone else. Change it to keep your account safe.",
   "supportContactRow": "Support contact",
   "supportNotSet": "Not set by your office",

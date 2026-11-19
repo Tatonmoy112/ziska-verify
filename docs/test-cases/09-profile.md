@@ -4,7 +4,7 @@
 |---|---|
 | Spec | final.md §13.8, §16 |
 | API | `GET me`, `POST me/password` |
-| Automated in | `test/flow/profile_a11y_flow_test.dart` |
+| Automated in | `test/flow/profile_a11y_flow_test.dart`, `test/flow/language_flow_test.dart` |
 | Format | [Case format and type tags](README.md#3-case-format) |
 
 | ID | Title | Type | Pri | Run on | Auto | Pre-conditions / Data | Steps | Expected | Source |
@@ -28,29 +28,29 @@
 
 ## Language
 
-**Blocked until built** (`final.md` §13.8, §16, §12.1). Entry criteria: `PreferencesService` (core, `shared_preferences`), a locale state read by `App`, the switch on Profile, and every text of `app_en.arb` translated in `app_bn.arb` (today only `appTitle`; the client supplies the texts, §20.3). Test fake to add with it: `FakePreferencesService` (in memory), passed to `startApp` so a restart keeps the choice. Times in Bangla digits on History: TC-HIST-044 in [06-history.md](06-history.md). The case plan: [remaining-work-test-plan.md §4.2](../remaining-work-test-plan.md#42-language-switch-english--bangla).
+**Built 2026-11-19** (`final.md` §13.7, §16, §12.1): `PreferencesService` (core, `shared_preferences`), `LocaleCubit` read by `App`, the **Language** row on Profile, and every text of `app_en.arb` in `app_bn.arb`. The Bangla texts are drafts until a Bangla reader approves them ([bangla-drafts-for-review.md](../bangla-drafts-for-review.md), client question B5). Test fake: `FakePreferencesService` (in memory), passed to `startApp` so a restart keeps the choice. Times in Bangla digits on History: TC-HIST-044 in [06-history.md](06-history.md).
 
 | ID | Title | Type | Pri | Run on | Auto | Pre-conditions / Data | Steps | Expected | Source |
 |---|---|---|---|---|---|---|---|---|---|
-| TC-PROF-006 | Language | I18N | P2 | MOCK | ⛔ | Mock build | Switch to Bangla | Texts change (Bangla text pending from the client, `final.md` 20.3) | §16 |
-| TC-PROF-018 | Switch to Bangla | I18N | P2 | MOCK | ⛔ | Mock build | Profile → language → Bangla; visit every screen | Every app text in Bangla; "Reference: …" in Bangla too | §16 |
-| TC-PROF-019 | Language kept after a restart | STATE | P2 | AUTO | ⛔ | Fake backend | Choose Bangla; restart the app | Still Bangla (a stored preference) | §12.1 Local data, §16 |
-| TC-PROF-020 | Every English text has a Bangla text | I18N | P1 | AUTO | ⛔ | `app_en.arb` and `app_bn.arb`; the Bangla texts from the client (§20.3) | Compare the keys of both files | Every key of `app_en.arb` has a non-empty value in `app_bn.arb`; no extra keys | §16, §20.3 |
-| TC-PROF-021 | Placeholders kept in Bangla | I18N | P1 | AUTO | ⛔ | Both ARB files | Compare the `{placeholders}` of every text | Each Bangla text has the same placeholders as its English text (`{seconds}`, `{name}`, `{id}`, …) | §16 |
-| TC-PROF-022 | The switch on Profile | POS | P2 | AUTO | ⛔ | Language switch built; `FakePreferencesService` | Profile → language | English and Bangla offered; the current one marked | §13.8 |
-| TC-PROF-023 | The switch applies at once | STATE | P2 | AUTO | ⛔ | Language switch built | Choose Bangla on Profile; go to the Check tab | Bangla texts at once, without a restart | §13.8, §16 |
-| TC-PROF-024 | Reference line in Bangla | I18N | P2 | AUTO | ⛔ | App in Bangla; a lookup answered `500` with `request_id: "req-9"` | Look up | The reference line in Bangla; the reference `req-9` itself unchanged | §16 |
-| TC-PROF-025 | Messages chosen by error code in Bangla | I18N | P1 | AUTO | ⛔ | App in Bangla | Login answered `401 unauthenticated`; a lookup answered `503 app_preparing` | The Bangla texts for those codes; never the server's English message | §16 |
-| TC-PROF-026 | Unknown code: the server text stays | I18N | P3 | AUTO | ⛔ | App in Bangla | A lookup answered `400` with an unknown `error.code` and a server message | The server message as sent (the fallback, §16), with the reference | §16 |
-| TC-PROF-027 | Times in Bangla digits outside History | I18N | P2 | AUTO | ⛔ | App in Bangla | A result with a last check; My reports | Bangladesh time with Bangla digits on both | §16 |
-| TC-PROF-028 | Date picker in Bangla | I18N | P3 | AUTO | ⛔ | App in Bangla; History | Filters → Choose dates | The calendar in Bangla; the dates sent still `YYYY-MM-DD` with Latin digits | §10.2, §16 |
-| TC-PROF-029 | Kept after logout | STATE | P2 | AUTO | ⛔ | App in Bangla | Log out; log in again | Login and every screen after it still in Bangla (a preference, not part of the login) | §6.5, §12.1 |
-| TC-PROF-030 | Language at the first start | I18N | P2 | AUTO | ⛔ | Fresh install; phone language Bangla, then English | Start the app | Spec gap 18 | §16 |
-| TC-PROF-031 | Bangla at large fonts | A11Y | P2 | AUTO | ⛔ | App in Bangla; text scale 2.0 and 3.0 | The screen tour of `device_a11y_flow_test` | No layout error on any screen | §14, §16 |
-| TC-PROF-032 | TalkBack in Bangla | A11Y | P3 | DEVICE | ⛔ | Real phone; app in Bangla; TalkBack on | Swipe through Login, Check, a result | Every item read in Bangla | §14, §16 |
-| TC-PROF-033 | Password rules in Bangla | I18N | P3 | AUTO | ⛔ | App in Bangla | Set a new password; type `পাসওয়ার্ড১` | The three rules in Bangla, all ticked; Save enabled | §6.6, §16 |
-| TC-PROF-034 | A Bangla reader checks the texts | UI | P2 | DEVICE | ⛔ | Real phone; app in Bangla; a Bangla reader | Visit every screen and every error | Every text correct and natural; none in English except server fallbacks | §16 |
-| TC-PROF-035 | Bangla digits typed into a serial | EDGE | P2 | AUTO | ⛔ | App in Bangla; a Bangla keyboard | Type `১০০০০০১` as a serial | Spec gap 19 | §13.1.2, §16 |
+| TC-PROF-006 | Language | I18N | P2 | MOCK | ✋ | Mock build | Switch to Bangla | Texts change to Bangla at once; the row names the current language | §16 |
+| TC-PROF-018 | Switch to Bangla | I18N | P2 | MOCK | ✋ | Mock build | Profile → language → Bangla; visit every screen | Every app text in Bangla; "Reference: …" in Bangla too | §16 |
+| TC-PROF-019 | Language kept after a restart | STATE | P2 | AUTO | ✅ `flow/language_flow_test` | Fake backend | Choose Bangla; restart the app | Still Bangla (a stored preference) | §12.1 Local data, §16 |
+| TC-PROF-020 | Every English text has a Bangla text | I18N | P1 | AUTO | ✅ `l10n/arb_completeness_test` | `app_en.arb` and `app_bn.arb` | Compare the keys of both files | Every key of `app_en.arb` has a non-empty value in `app_bn.arb`; no extra keys | §16, §20.3 |
+| TC-PROF-021 | Placeholders kept in Bangla | I18N | P1 | AUTO | ✅ `l10n/arb_completeness_test` | Both ARB files | Compare the `{placeholders}` of every text | Each Bangla text has the same placeholders as its English text (`{seconds}`, `{name}`, `{id}`, …) | §16 |
+| TC-PROF-022 | The switch on Profile | POS | P2 | AUTO | ✅ `flow/language_flow_test` | `FakePreferencesService` | Profile → language | English and Bangla offered; the current one marked | §13.8 |
+| TC-PROF-023 | The switch applies at once | STATE | P2 | AUTO | ✅ `flow/language_flow_test` | Fake backend | Choose Bangla on Profile; go to the Check tab | Bangla texts at once, without a restart | §13.8, §16 |
+| TC-PROF-024 | Reference line in Bangla | I18N | P2 | AUTO | ✅ `flow/language_flow_test` | App in Bangla; a lookup answered `500` with `request_id: "req-9"` | Look up | The reference line in Bangla; the reference `req-9` itself unchanged | §16 |
+| TC-PROF-025 | Messages chosen by error code in Bangla | I18N | P1 | AUTO | ✅ `flow/language_flow_test` | App in Bangla | Login answered `401 unauthenticated`; a lookup answered `503 app_preparing` | The Bangla texts for those codes; never the server's English message | §16 |
+| TC-PROF-026 | Unknown code: the server text stays | I18N | P3 | AUTO | ✅ `flow/language_flow_test` | App in Bangla | A lookup answered `400` with an unknown `error.code` and a server message | The server message as sent (the fallback, §16), with the reference | §16 |
+| TC-PROF-027 | Times in Bangla digits outside History | I18N | P2 | AUTO | ✅ `flow/language_flow_test` | App in Bangla | A result with a last check; My reports | Bangladesh time with Bangla digits on both | §16 |
+| TC-PROF-028 | Date picker in Bangla | I18N | P3 | AUTO | ✅ `flow/language_flow_test` | App in Bangla; History | Filters → Choose dates | The calendar in Bangla; the dates sent still `YYYY-MM-DD` with Latin digits | §10.2, §16 |
+| TC-PROF-029 | Kept after logout | STATE | P2 | AUTO | ✅ `flow/language_flow_test` | App in Bangla | Log out; log in again | Login and every screen after it still in Bangla (a preference, not part of the login) | §6.5, §12.1 |
+| TC-PROF-030 | Language at the first start | I18N | P2 | AUTO | ✅ `flow/language_flow_test` | Fresh install; phone language Bangla, then English | Start the app | English, whatever the phone's language (the app's answer to open question 18; the client may change it) | §16 |
+| TC-PROF-031 | Bangla at large fonts | A11Y | P2 | AUTO | ✅ `flow/device_a11y_flow_test`, `ui/consistency_fit_test` (goldens `bn_*`) | App in Bangla; text scale 2.0 and 3.0 | The screen tour of `device_a11y_flow_test` | No layout error on any screen | §14, §16 |
+| TC-PROF-032 | TalkBack in Bangla | A11Y | P3 | DEVICE | ✋ | Real phone; app in Bangla; TalkBack on | Swipe through Login, Check, a result | Every item read in Bangla | §14, §16 |
+| TC-PROF-033 | Password rules in Bangla | I18N | P3 | AUTO | ✅ `flow/language_flow_test` | App in Bangla | Set a new password; type `পাসওয়ার্ড১` | The three rules in Bangla, all ticked; Save enabled | §6.6, §16 |
+| TC-PROF-034 | A Bangla reader checks the texts | UI | P2 | DEVICE | ✋ | Real phone; app in Bangla; a Bangla reader | Visit every screen and every error | Every text correct and natural; none in English except server fallbacks | §16 |
+| TC-PROF-035 | Bangla digits typed into a serial | EDGE | P2 | AUTO | ✅ `flow/language_flow_test`, `verification/presentation/serial_input_formatter_test` | App in Bangla; a Bangla keyboard | Type `১০০০০০১` as a serial | The field shows `1000001` and `1000001` is sent: Bangla digits are read as 0–9 (the app's answer to open question 19) | §13.1.2, §16 |
 | TC-PROF-036 | The check counts | POS | P2 | AUTO | ✅ `ui/screens_reports_profile_test`, `features/history/check_totals_cubit_test` | Fake backend; R2 (field inspector, `history:own`); totals 120 / 80 / 30 / 9 / 1 | Open Profile | **Checks** 120, **Valid** 80 (green), **Not verified** 10 (red: not found + not in a batch); one `GET checks` with `limit=1` and no filters | §13.8 |
 | TC-PROF-037 | No counts without History | ROLE | P2 | AUTO | ✅ `ui/screens_reports_profile_test` | Fake backend; a retail seller without `history:own` | Open Profile | No count cards and no failure line; no `GET checks` sent | §13.8, §7 |
 | TC-PROF-038 | Counts that cannot load | NEG | P2 | AUTO | ✅ `ui/screens_reports_profile_test`, `features/history/check_totals_cubit_test` | Fake backend; `GET checks` answers 500 once, then the first page | Open Profile; tap **Try again** | "Your counts couldn't load." with **Try again**; then the counts; a first page without `totals` counts as not loaded; the last counts stay while asked again | §13.8 |
@@ -60,4 +60,4 @@
 
 ## Spec gaps in this file
 
-See [README §7](README.md#7-open-questions-spec-gaps): 2 (the language switch is not built: PROF-006, -018 … -035 are ⛔), 18 (the language at the first start), 19 (Bangla digits typed into a serial).
+See [README §7](README.md#7-open-questions-spec-gaps): 2 (the language switch, built 2026-11-19; the Bangla texts wait for the client's review), 18 (the language at the first start: English, the app's answer), 19 (Bangla digits typed into a serial: read as 0–9, the app's answer).

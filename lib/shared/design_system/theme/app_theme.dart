@@ -39,10 +39,14 @@ abstract final class AppTheme {
     );
     // The theme's own text styles carry the font family; a token is merged
     // over them, so a replaced style (an app bar or dialog title) keeps it.
-    final text = ThemeData(useMaterial3: true).textTheme;
+    final text = ThemeData(
+      useMaterial3: true,
+      fontFamilyFallback: AppTypography.fontFallback,
+    ).textTheme;
     final title = text.titleLarge!.merge(AppTypography.headline);
     return ThemeData(
       useMaterial3: true,
+      fontFamilyFallback: AppTypography.fontFallback,
       colorScheme: scheme,
       scaffoldBackgroundColor: AppColors.background,
       // One title style per level: app bars and dialogs use `headline`.

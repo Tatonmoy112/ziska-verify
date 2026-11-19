@@ -656,6 +656,18 @@ abstract class AppLocalizations {
   /// **'Change password'**
   String get changePasswordRow;
 
+  /// Profile row that opens the language choice; its subtitle names the current language.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get languageRow;
+
+  /// Title of the sheet offering English and Bangla.
+  ///
+  /// In en, this message translates to:
+  /// **'App language'**
+  String get languageTitle;
+
   /// No description provided for @passwordPendingBanner.
   ///
   /// In en, this message translates to:

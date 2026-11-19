@@ -23,6 +23,7 @@ import 'package:ziska_verify/shared/widgets/large_text.dart';
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({
     required this.versionInfo,
+    required this.onChooseLanguage,
     required this.onChangePassword,
     required this.onContactSupport,
     required this.onLogout,
@@ -30,6 +31,9 @@ class ProfileScreen extends StatefulWidget {
   });
 
   final Future<({String version, String build})> versionInfo;
+
+  /// Applies the language `en` or `bn` at once and keeps it on the phone.
+  final Future<void> Function(String languageCode) onChooseLanguage;
   final VoidCallback onChangePassword;
 
   /// Opens the mail app for `email` or the dialler for `phone`; `false`
@@ -93,6 +97,60 @@ class _ProfileScreenState extends State<ProfileScreen> {
       await widget.onLogout();
     } finally {
       if (mounted) setState(() => _loggingOut = false);
+    }
+  }
+
+  /// The languages offered, each named in its own language.
+  static const _languages = [('en', 'English'), ('bn', 'বাংলা')];
+
+  static String _languageName(String code) => _languages
+      .firstWhere((l) => l.$1 == code, orElse: () => _languages.first)
+      .$2;
+
+  /// English or Bangla, the current one marked (final.md Section 13.7).
+  Future<void> _chooseLanguage(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
+    final current = Localizations.localeOf(context).languageCode;
+    final picked = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.screen,
+                0,
+                AppSpacing.screen,
+                AppSpacing.xs,
+              ),
+              child: Semantics(
+                header: true,
+                child: Text(l10n.languageTitle, style: AppTypography.heading),
+              ),
+            ),
+            for (final (code, name) in _languages)
+              ListTile(
+                key: Key('language.$code'),
+                selected: code == current,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.screen,
+                ),
+                title: Text(name, style: AppTypography.bodyStrong),
+                trailing: code == current
+                    ? const Icon(LucideIcons.check, color: AppColors.primary)
+                    : null,
+                onTap: () => Navigator.of(context).pop(code),
+              ),
+            const SizedBox(height: AppSpacing.md),
+          ],
+        ),
+      ),
+    );
+    if (picked != null && picked != current) {
+      await widget.onChooseLanguage(picked);
     }
   }
 
@@ -224,6 +282,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         icon: LucideIcons.lock,
                         title: l10n.changePasswordRow,
                         onTap: widget.onChangePassword,
+                      ),
+                      _ActionRow(
+                        key: const Key('profile.language'),
+                        icon: LucideIcons.languages,
+                        title: l10n.languageRow,
+                        subtitle: _languageName(
+                          Localizations.localeOf(context).languageCode,
+                        ),
+                        onTap: () => unawaited(_chooseLanguage(context)),
                       ),
                       // Each channel the office set (guide section 3.8):
                       // email and phone both, or "Not set".

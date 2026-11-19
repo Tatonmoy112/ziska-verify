@@ -7,6 +7,7 @@ import 'package:get_it/get_it.dart';
 import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:ziska_verify/app/app.dart';
 import 'package:ziska_verify/app/config/app_config.dart';
+import 'package:ziska_verify/core/locale/locale_cubit.dart';
 import 'package:ziska_verify/core/network/api_client.dart';
 import 'package:ziska_verify/core/network/auth_interceptor.dart';
 import 'package:ziska_verify/core/network/bodiless_request_interceptor.dart';
@@ -28,6 +29,7 @@ import 'package:ziska_verify/core/services/session/dio_session_service.dart';
 import 'package:ziska_verify/core/services/session/forbidden_signal.dart';
 import 'package:ziska_verify/core/services/session/session_service.dart';
 import 'package:ziska_verify/core/services/storage/flutter_secure_storage_service.dart';
+import 'package:ziska_verify/core/services/storage/preferences_service.dart';
 import 'package:ziska_verify/core/services/storage/secure_storage_service.dart';
 import 'package:ziska_verify/features/authentication/data/repositories/access_request_repository_impl.dart';
 import 'package:ziska_verify/features/authentication/data/repositories/auth_repository_impl.dart';
@@ -88,6 +90,7 @@ Future<void> bootstrap() async {
   registerFeatures();
 
   await prepareSession();
+  await prepareLanguage();
 
   runApp(App(locator: locator));
 }
@@ -102,6 +105,16 @@ Future<void> prepareSession() async {
     locator<LoggerService>().warning('phone ID not ready: ${e.runtimeType}');
   }
   await locator<SessionService>().restore();
+}
+
+/// Reads the chosen language before the first screen, so the app never
+/// starts in one language and turns to another (final.md Section 16).
+Future<void> prepareLanguage() async {
+  final initial = await LocaleCubit.stored(locator(), locator());
+  locator.registerSingleton<LocaleCubit>(
+    LocaleCubit(locator(), locator(), initial: initial),
+    dispose: (c) => c.close(),
+  );
 }
 
 /// Registers the core services. Feature registrations are added per build
@@ -166,6 +179,7 @@ void registerCore({
     ..registerLazySingleton<LauncherService>(UrlLauncherService.new)
     ..registerLazySingleton<AppInfoService>(PackageInfoAppInfoService.new)
     ..registerLazySingleton<ConnectivityService>(PlusConnectivityService.new)
+    ..registerLazySingleton<PreferencesService>(SharedPreferencesService.new)
     ..registerLazySingleton<ScannerService>(MobileScannerService.new)
     ..registerLazySingleton<PermissionService>(PermissionHandlerService.new)
     ..registerLazySingleton<PhotoService>(ImagePickerPhotoService.new)

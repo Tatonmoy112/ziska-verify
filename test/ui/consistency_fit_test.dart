@@ -9,6 +9,7 @@ import 'package:ziska_verify/l10n/generated/app_localizations.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_spacing.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_typography.dart';
 
+import '../fakes/fake_preferences_service.dart';
 import '../fakes/roles.dart';
 import '../fakes/scripted_adapter.dart';
 import '../flow/harness.dart';
@@ -28,12 +29,14 @@ void main() {
     Map<String, dynamic>? profile,
     bool loggedIn = true,
     Map<String, Answer> overrides = const {},
+    String? language,
   }) async {
     final app = await startApp(
       tester,
       profile: profile,
       loggedIn: loggedIn,
       overrides: overrides,
+      preferences: FakePreferencesService(language: language),
     );
     await atOneX(tester);
     return app;
@@ -402,6 +405,40 @@ void main() {
       expectNothingCut(tester, 'profile');
       await shot('font2x_profile');
     });
+
+    for (final scale in [1.0, 2.0]) {
+      final name = scale == 1 ? 'bn' : 'bn_font2x';
+      uiTest('TC-PROF-031 key screens in Bangla at font size ${scale}x', (
+        tester,
+        shot,
+      ) async {
+        tester.platformDispatcher.textScaleFactorTestValue = scale;
+        addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+        final bn = lookupAppLocalizations(const Locale('bn'));
+
+        var app = await start(tester, loggedIn: false, language: 'bn');
+        expect(find.text(bn.loginTitle), findsOneWidget);
+        expectFits(tester);
+        expectNothingCut(tester, 'login');
+        await shot('${name}_login');
+
+        app = await start(tester, language: 'bn');
+        expectFits(tester);
+        expectNothingCut(tester, 'check');
+        await shot('${name}_check');
+        await lookUp(app);
+        expect(find.byType(VerificationResultCard), findsOneWidget);
+        expectFits(tester);
+        expectNothingCut(tester, 'result');
+        await shot('${name}_result');
+
+        app = await start(tester, language: 'bn');
+        await app.tap(tab(bn.tabProfile));
+        expectFits(tester);
+        expectNothingCut(tester, 'profile');
+        await shot('${name}_profile');
+      });
+    }
 
     uiTest('TC-UI-143 long texts', (tester, shot) async {
       final longName =

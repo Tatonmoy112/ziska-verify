@@ -24,7 +24,7 @@
 | 12B | Is `Retry-After` always whole seconds | Backend | **Answered by the app 2026-11-18:** seconds, or an HTTP date still to come, both read (TC-ERR-048) |
 | 19B | Does the server accept only Latin digits | Backend | Open |
 | 1 | Certificate: when | Client | **Withdrawn** (removed by the backend, SRS v1.2) |
-| 2 | Language switch: when, and the Bangla texts | Client | Open |
+| 2 | Language switch: when, and the Bangla texts | Client | **Built 2026-11-19;** every text drafted in Bangla, waiting for the client's Bangla reader ([bangla-drafts-for-review.md](bangla-drafts-for-review.md)) |
 | 14 | Hide sensitive screens from screenshots | Client | Open |
 | 15 | Dark mode | Client | Open |
 | 17 | Certificate language | Client | **Withdrawn** (no certificate) |
@@ -38,8 +38,8 @@
 | 12A | A `429` without a usable `Retry-After` | App owner | **Decided 2026-11-17: B** (guide §1: never a number in the app) |
 | 13 | Offline banner: when | App owner | **Built 2026-11-19** |
 | 16 | A certificate that cannot be made | App owner | **Withdrawn** (no certificate) |
-| 18 | The language at the first start | App owner, client | Open |
-| 19A | Bangla digits typed into a serial | App owner | Open |
+| 18 | The language at the first start | App owner, client | **App answer 2026-11-19: B** (English until chosen); the client may change it |
+| 19A | Bangla digits typed into a serial | App owner | **App answer 2026-11-19: B** (read as 0–9); Q19B still open |
 | 20 | The §14.1 component list against what is built | App owner | Open |
 | 21 | The colour of a chosen segment or chip | App owner | **Decided 2026-11-15:** navy fill, white text |
 
@@ -113,7 +113,7 @@ Other: ______________________ Decided by: __________ Date: ________
 Other: ______________________ Decided by: __________ Date: ________
 
 ### Q2. The language switch: when, and who writes the Bangla texts?
-The switch (Profile, §13.8) is not built, and only the app title is in Bangla; about 470 texts are missing. **Cases:** PROF-006, -018 … -035, HIST-044 (20, blocked).
+**Built 2026-11-19:** the **Language** row on Profile switches at once and is kept on the phone; every text has a Bangla draft. The drafts wait for a Bangla reader chosen by the client ([bangla-drafts-for-review.md](bangla-drafts-for-review.md)). **Cases:** PROF-006, -018 … -035, HIST-044 (16 automated; PROF-006, -018, -032, -034 on a phone).
 
 | | Option | Effect |
 |---|---|---|
@@ -242,7 +242,7 @@ Other: ______________________ Decided by: __________ Date: ________
 Other: ______________________ Decided by: __________ Date: ________
 
 ### Q13. The offline banner: when is it built?
-§14.2 lists an offline banner; it is not built. **Cases:** ERR-036 … -046 (11, blocked).
+**Built 2026-11-19** (option A): `NetworkStatusShell` above every screen. **Cases:** ERR-036 … -046 (10 automated; ERR-036 on a phone).
 
 | | Option | Effect |
 |---|---|---|
@@ -267,7 +267,7 @@ Other: ______________________ Decided by: __________ Date: ________
 | | Option | Effect |
 |---|---|---|
 | [ ] | A. The phone's language when it is Bangla, otherwise English | No choice needed for most officials |
-| [ ] | B. English until the official chooses | Same start for everyone |
+| [x] | B. English until the official chooses | Same start for everyone (the app's answer 2026-11-19; the client may change it) |
 | [ ] | C. Asked once at the first start | One extra screen before Login |
 
 Other: ______________________ Decided by: __________ Date: ________
@@ -278,7 +278,7 @@ Other: ______________________ Decided by: __________ Date: ________
 | | Option | Effect |
 |---|---|---|
 | [ ] | A. Refused with the format message | The official retypes with 0–9 |
-| [ ] | B. Read as 0–9 before checking and sending | A Bangla keyboard works as is (the code normalizer converts them) |
+| [x] | B. Read as 0–9 before checking and sending | A Bangla keyboard works as is (the code normalizer converts them; the app's answer 2026-11-19) |
 
 Other: ______________________ Decided by: __________ Date: ________
 

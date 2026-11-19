@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ziska_verify/features/verification/presentation/widgets/verification_result_card.dart';
 
+import '../fakes/fake_preferences_service.dart';
 import '../fakes/roles.dart';
 import '../fakes/scripted_adapter.dart';
 import 'harness.dart';
@@ -17,9 +18,20 @@ void main() {
     WidgetTester tester,
     Future<void> Function(String screen) check, {
     void Function()? setUp,
+
+    /// The tour in Bangla (TC-PROF-031).
+    bool bangla = false,
   }) async {
+    FakePreferencesService language() =>
+        FakePreferencesService(language: bangla ? 'bn' : null);
+    String text(String english, String bn) => bangla ? bn : english;
+
     // Logged out: Login, Check your email.
-    var app = await startApp(tester, loggedIn: false);
+    var app = await startApp(
+      tester,
+      loggedIn: false,
+      preferences: language(),
+    );
     setUp?.call();
     await tester.pumpAndSettle();
     await check('Login');
@@ -27,7 +39,11 @@ void main() {
     await check('Check your email');
 
     // Logged in as a supervisor (every feature).
-    app = await startApp(tester, profile: Roles.supervisor);
+    app = await startApp(
+      tester,
+      profile: Roles.supervisor,
+      preferences: language(),
+    );
     setUp?.call();
     await tester.pumpAndSettle();
     await check('Check');
@@ -68,11 +84,11 @@ void main() {
     await openTile('verify.tool.bulk');
     await check('Scanner mode');
     await back();
-    await app.tap(tab('History'));
+    await app.tap(tab(text('History', 'ইতিহাস')));
     await check('History');
-    await app.tap(tab('Profile'));
+    await app.tap(tab(text('Profile', 'প্রোফাইল')));
     await check('Profile');
-    await app.tapText('Change password');
+    await app.tapText(text('Change password', 'পাসওয়ার্ড বদলান'));
     await check('Change password');
   }
 
@@ -118,6 +134,31 @@ void main() {
         tester,
         (s) => noOverflow(tester, s),
         setUp: () => tester.platformDispatcher.textScaleFactorTestValue = scale,
+      );
+    });
+
+    testWidgets('TC-PROF-031 Bangla at font size ${scale}x on every main '
+        'screen', (tester) async {
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      await tour(
+        tester,
+        (s) => noOverflow(tester, s),
+        setUp: () => tester.platformDispatcher.textScaleFactorTestValue = scale,
+        bangla: true,
+      );
+    });
+
+    testWidgets('TC-PROF-031 Bangla at font size ${scale}x on the '
+        'smallest phone', (tester) async {
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      await tour(
+        tester,
+        (s) => noOverflow(tester, s),
+        setUp: () {
+          size(tester, const Size(320, 568), ratio: 2);
+          tester.platformDispatcher.textScaleFactorTestValue = scale;
+        },
+        bangla: true,
       );
     });
   }

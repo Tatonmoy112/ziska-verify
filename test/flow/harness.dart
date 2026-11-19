@@ -18,11 +18,13 @@ import 'package:ziska_verify/core/services/monitoring/crash_reporting_service.da
 import 'package:ziska_verify/core/services/permission/permission_service.dart';
 import 'package:ziska_verify/core/services/picture/picture_images.dart';
 import 'package:ziska_verify/core/services/scanner/scanner_service.dart';
+import 'package:ziska_verify/core/services/storage/preferences_service.dart';
 import 'package:ziska_verify/core/services/storage/secure_storage_service.dart';
 import 'package:ziska_verify/shared/design_system/components/chips/count_chip.dart';
 
 import '../fakes/fake_logger_service.dart';
 import '../fakes/fake_picture_images.dart';
+import '../fakes/fake_preferences_service.dart';
 import '../fakes/fake_secure_storage_service.dart';
 import '../fakes/postman_examples.dart';
 import '../fakes/roles.dart';
@@ -427,6 +429,7 @@ class FlowApp {
     required this.pictures,
     required this.logger,
     required this.connectivity,
+    required this.preferences,
   });
 
   final WidgetTester tester;
@@ -438,6 +441,7 @@ class FlowApp {
   final FakePictureImages pictures;
   final FakeLoggerService logger;
   final FakeConnectivityService connectivity;
+  final FakePreferencesService preferences;
 
   /// Whether the [FilledButton] inside [key] can be pressed.
   bool enabled(Key key) =>
@@ -542,6 +546,9 @@ Future<FlowApp> startApp(
   Map<String, dynamic>? profile,
   bool loggedIn = true,
   FakeSecureStorageService? storage,
+
+  /// The phone's preferences; the same one again is a restart.
+  FakePreferencesService? preferences,
   Map<String, Answer> overrides = const {},
 
   /// The mock build's **Not now** demo (`DEMO_PASSWORD_LATER`).
@@ -579,6 +586,7 @@ Future<FlowApp> startApp(
   final connectivity = FakeConnectivityService();
   final pictures = FakePictureImages();
   final logger = FakeLoggerService();
+  final prefs = preferences ?? FakePreferencesService();
 
   registerCore(
     config: demoPasswordLater
@@ -604,10 +612,12 @@ Future<FlowApp> startApp(
     ..registerSingleton<PictureImages>(pictures)
     ..registerSingleton<AppInfoService>(_FakeAppInfo())
     ..registerSingleton<ConnectivityService>(connectivity)
+    ..registerSingleton<PreferencesService>(prefs)
     ..registerSingleton<PermissionService>(_FakePermission());
 
   // The app's own start: the phone ID and the stored login.
   await prepareSession();
+  await prepareLanguage();
   // The test product picture, decoded once in real time (no network).
   await tester.runAsync(FakePictureImages.prepare);
 
@@ -633,6 +643,7 @@ Future<FlowApp> startApp(
     pictures: pictures,
     logger: logger,
     connectivity: connectivity,
+    preferences: prefs,
   );
 }
 

@@ -88,16 +88,23 @@ void main() {
       app.storage.values.keys.toSet(),
       {SecureKeys.phoneId, SecureKeys.accessToken, SecureKeys.refreshToken},
     );
-    // Nothing writes plain storage: the app has no shared_preferences use.
-    for (final file in Directory('lib').listSync(recursive: true)) {
-      if (file is File && file.path.endsWith('.dart')) {
-        expect(
-          file.readAsStringSync(),
-          isNot(contains('SharedPreferences')),
-          reason: file.path,
-        );
-      }
-    }
+    // Plain storage holds preferences only: one file uses
+    // shared_preferences, and it writes the language and nothing else.
+    final users = [
+      for (final file in Directory('lib').listSync(recursive: true))
+        if (file is File &&
+            file.path.endsWith('.dart') &&
+            file.readAsStringSync().contains('package:shared_preferences/'))
+          file.uri.pathSegments.last,
+    ];
+    expect(users, ['preferences_service.dart']);
+    final writes = RegExp(r'\.set\w*\(').allMatches(
+      File(
+        'lib/core/services/storage/preferences_service.dart',
+      ).readAsStringSync(),
+    );
+    expect(writes.map((m) => m.group(0)), ['.setString(']);
+    expect(app.preferences.language, isNull);
   });
 
   testWidgets('TC-SEC-020 passes only where they belong; TC-SEC-021 the '

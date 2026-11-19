@@ -41,6 +41,11 @@ void main() {
       expect(normalizer.normalize(' 4815 1623-4200 '), '481516234200');
       expect(normalizer.normalize('q8f2kd91xa7m'), 'Q8F2KD91XA7M');
     });
+
+    test('TC-PROF-035 reads Bangla digits as 0-9 (a paste included)', () {
+      expect(normalizer.normalize('১০০০ ০০১'), '1000001');
+      expect(normalizer.normalize('q8f২kd'), 'Q8F2KD');
+    });
   });
 
   group('InputFormatValidator', () {

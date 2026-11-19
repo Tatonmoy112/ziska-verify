@@ -314,6 +314,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get changePasswordRow => 'Change password';
 
   @override
+  String get languageRow => 'Language';
+
+  @override
+  String get languageTitle => 'App language';
+
+  @override
   String get passwordPendingBanner =>
       'Your password was set by someone else. Change it to keep your account safe.';
 

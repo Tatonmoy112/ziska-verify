@@ -71,6 +71,7 @@ Each feature has its cases written now (⛔). When the feature is built, its cas
 | Test fakes to add with it | `FakePreferencesService` (in-memory), passed to `startApp` so a restart keeps the choice |
 | Cases | TC-PROF-006, -018, -019, TC-HIST-044, and the new PROF cases in [09-profile.md](test-cases/09-profile.md#language) |
 | Exit criteria | ARB completeness test ✅; every language case ✅ or ✋ passed; a Bangla reader has checked the texts on a phone |
+| Status | **Built 2026-11-19.** ARB completeness ✅; every AUTO case ✅ (`flow/language_flow_test` and others); TC-PROF-006, -018, -032, -034 wait for a phone and the client's Bangla reader |
 
 ### 4.3 Offline Banner
 
@@ -81,6 +82,7 @@ Each feature has its cases written now (⛔). When the feature is built, its cas
 | Test fakes to add with it | `FakeConnectivityService` with a stream the test sets online and offline |
 | Cases | TC-ERR-036 and the new ERR cases in [10-errors-network.md](test-cases/10-errors-network.md#offline-banner) |
 | Exit criteria | Every banner case ✅ or ✋ passed |
+| Status | **Built 2026-11-19.** TC-ERR-037 … -046 ✅; TC-ERR-036 waits for a phone |
 
 ## 5. Item 3 — Open Questions
 
@@ -114,6 +116,6 @@ How a session is run, recorded, and retested is the run kit at the top of the [m
 | Item | State |
 |---|---|
 | 1. Dependency scan | Done: CI job `dependency-scan` (OSV-Scanner v2.7.0); TC-SEC-024 … -026 ✅; 195 packages, no known vulnerability (2026-11-14) |
-| 2. Blocked features | Case sets written: 52 ⛔ (certificate 21, language 20, offline banner 11), each with entry criteria and the test fakes it needs; features not built |
+| 2. Blocked features | Certificate withdrawn by the backend (SRS v1.2). Offline banner and language switch **built 2026-11-19**: their cases are automated, the phone ones in the checklist. The Bangla texts wait for the client's review |
 | 3. Open questions | [Decision sheet](decision-sheet.md) ready for 19 questions (backend 5, client 5, app owner 12); no answer yet |
 | 4. Manual runs | [Run kit](manual-test-checklist.md#run-kit) ready (schedule, equipment, pre-flight, recording, triage, exit); sessions not started |

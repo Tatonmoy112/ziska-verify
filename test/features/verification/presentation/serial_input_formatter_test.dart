@@ -24,6 +24,29 @@ void main() {
     expect(type('100', '-'), '100-');
   });
 
+  test('TC-PROF-035 a typed Bangla digit enters as 0-9', () {
+    expect(type('100', '১'), '1001');
+    expect(type('', '০'), '0');
+    expect(type('12', '৯'), '129');
+    // In the middle of the text, the cursor kept.
+    final out = formatter.formatEditUpdate(
+      const TextEditingValue(
+        text: '1200',
+        selection: TextSelection.collapsed(offset: 2),
+      ),
+      const TextEditingValue(
+        text: '12৫00',
+        selection: TextSelection.collapsed(offset: 3),
+      ),
+    );
+    expect(out.text, '12500');
+    expect(out.selection.baseOffset, 3);
+  });
+
+  test('a typed Bangla letter does not enter', () {
+    expect(type('100', 'ক'), '100');
+  });
+
   test('TC-LOOK-030 a paste is kept as it is, to be refused', () {
     expect(
       formatter.formatEditUpdate(value(''), value('10O0001')).text,

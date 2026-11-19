@@ -11,6 +11,7 @@ import 'package:ziska_verify/app/router/route_paths.dart';
 import 'package:ziska_verify/app/router/router_refresh.dart';
 import 'package:ziska_verify/app/shell/main_shell.dart';
 import 'package:ziska_verify/core/errors/result.dart';
+import 'package:ziska_verify/core/locale/locale_cubit.dart';
 import 'package:ziska_verify/core/navigation/route_names.dart';
 import 'package:ziska_verify/core/pagination/cursor_page.dart';
 import 'package:ziska_verify/core/pagination/page_request.dart';
@@ -484,6 +485,8 @@ GoRouter buildRouter({
                 builder: (context, _) {
                   final screen = ProfileScreen(
                     versionInfo: locator<AppInfoService>().versionInfo(),
+                    onChooseLanguage: (code) =>
+                        locator<LocaleCubit>().choose(Locale(code)),
                     onChangePassword: () async {
                       final profiles = context.read<ProfileCubit>();
                       final changed = await context.pushNamed<bool>(

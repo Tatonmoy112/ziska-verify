@@ -208,7 +208,7 @@ Only `GET retail-users` remains. It requires incident permission, searches activ
 
 Retain the current token-based visual design. Home shows serial entry/QR for single permission and separate Scanner mode/Serial stack tools for bulk permission, plus permitted reports. Empty permissions show an empty state.
 
-Profile shows identity, role, organisation, support, version, voluntary password change and logout. While `GET me` says `password_change_pending: true` (after **Not now**), a warning card under the identity card reads "Your password was set by someone else. Change it to keep your account safe." with **Change password**. A **What you can do** card lists the official's permissions by their names in the SRS (FR-ACC-15): Check one item, Check many items, Own history, Report incidents; unknown keys are not shown, and an empty set shows "None. Ask your office.". Check totals require history permission. Language switching and Crashlytics provisioning remain separate release work.
+Profile shows identity, role, organisation, support, language (Section 16), version, voluntary password change and logout. While `GET me` says `password_change_pending: true` (after **Not now**), a warning card under the identity card reads "Your password was set by someone else. Change it to keep your account safe." with **Change password**. A **What you can do** card lists the official's permissions by their names in the SRS (FR-ACC-15): Check one item, Check many items, Own history, Report incidents; unknown keys are not shown, and an empty set shows "None. Ask your office.". Check totals require history permission. Crashlytics provisioning remains separate release work.
 
 ### 13.8 Public access requests
 
@@ -301,7 +301,14 @@ The bulk endpoint and retail administration endpoints are gone. No hidden-code w
 
 ## 16. Localization
 
-Keep English/Bangla ARBs and generated accessors. New migration strings have English and Bangla entries. Existing incomplete Bangla coverage and persistent locale selection are separate release work; this migration does not claim them complete. Use the current Bangladesh date formatting and normalization policies.
+English and Bangla ARBs with generated accessors. Every English text has a Bangla text with the same placeholders and plural cases; `test/l10n/arb_completeness_test.dart` fails otherwise. The Bangla texts are drafts until the client's Bangla reader approves them (`docs/bangla-drafts-for-review.md`).
+
+- **Switch:** Profile → **Language** offers English and বাংলা, each named in its own language, the current one marked. The choice applies at once, without a restart, and is kept on the phone (`PreferencesService` on `shared_preferences`) across restarts and logouts; it is a phone setting, not part of the login. `LocaleCubit` reads it before the first screen.
+- **First start:** English until a choice is made, whatever the phone's language.
+- **Times and dates:** Bangladesh time, written with the chosen language's calendar data (in Bangla: Bangla digits and month names). Dates sent to the API stay `YYYY-MM-DD` in Latin digits.
+- **Digits typed:** Bangla digits typed or pasted into a serial or hidden code are read as 0–9 (`CodeNormalizer`, `SerialInputFormatter`).
+- **Errors:** a known `error.code` shows the app's text in the chosen language; an unknown code shows the server's message, with the reference.
+- **Font:** the platform's Bangla font. The theme names Noto Sans Bengali as its fallback; the tests load it from `test/fonts/` (OFL 1.1), so the Bangla goldens show real letters.
 
 ## 17. Environments
 
@@ -330,10 +337,11 @@ Approved for this migration: full Flutter contract migration; serial entry limit
 | N2 | **The History tracking log is the official's own**: a searched serial shows "Your checks of serial X", never suggesting other officials' checks. | User decision 2026-11-17; backend D61 |
 | N3 | **Report incident links one of the official's own checks** through a picker of the own history (search by serial or reference); offered only with `history:own`. | User decision 2026-11-17; SRS UC-08 |
 | N4 | **Bangla drafts** for the strings added with D56–D63 and the screen fixes are in `app_bn.arb`, listed for the client in `docs/bangla-drafts-for-review.md`. | User decision 2026-11-17 |
+| N5 | **The language switch ships with every text drafted in Bangla**, all marked for the client's review in `docs/bangla-drafts-for-review.md`. The first start is English; Bangla digits in a serial are read as 0–9 (the app's answers to open questions 18 and 19A, sent to the client). | User decision 2026-11-19 |
 
 ## 20. Remaining dependencies
 
-See `docs/release-backlog.md` for the test server, backend day boundary, complete Bangla switch, offline banner, Firebase/Crashlytics and iOS schemes. The architecture is not evidence that manual/staging acceptance has run. Record actual tool results in the migration report.
+See `docs/release-backlog.md` for the test server, backend day boundary, the client's review of the Bangla texts, release signing, Firebase/Crashlytics and iOS schemes. The architecture is not evidence that manual/staging acceptance has run. Record actual tool results in the migration report.
 
 ### 20.1 Backend questions (2026-11-17)
 

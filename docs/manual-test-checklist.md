@@ -238,9 +238,22 @@ Expected: the mail app opens to `help@ziska.example`.
 - [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
 
 #### TC-PROF-006 · Language · P2
-**Blocked: the language switch is not built yet** (`final.md` 13.8 lists it on Profile). Re-test when it is added.
+1. Profile tab → **Language** (under ACCOUNT). It says "English".
+2. The sheet offers **English** (ticked) and **বাংলা**. Tap **বাংলা**.
 
-- [ ] Pass - [ ] Fail - [x] Blocked — Notes: not built
+Expected: the screen turns to Bangla at once, with no restart; the row now reads "ভাষা" with "বাংলা" under it; the tabs read যাচাই, ইতিহাস, প্রোফাইল.
+
+- [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
+
+#### TC-PROF-018 · Switch to Bangla, every screen · P2
+With the app in Bangla (TC-PROF-006):
+1. Visit every screen: Check, a result (serial `1000001`), Scanner mode, Serial stack, Report incident, My reports, History (Checks and Sessions), Profile, Change password.
+2. Look up `1000003` (not found) and read the reference line.
+3. Log out: Login, Forgot password and Sign up.
+
+Expected: every app text in Bangla, Bangla letters drawn properly (no boxes); "রেফারেন্স: …" with the reference itself unchanged; times with Bangla digits. Product names, serials and references stay as sent. Switch back to English at the end.
+
+- [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
 
 ### A5. Start without a connection
 
@@ -1219,43 +1232,17 @@ Time-boxed sessions. Explore freely inside the mission and report every problem 
 
 ---
 
-## Blocked: Not Built Yet
+## Built Since the Plan (2026-11-19)
 
-These cases wait for a feature in the spec that is not built ([remaining-work-test-plan.md §4](remaining-work-test-plan.md#4-item-2--blocked-features)). When it is built, the AUTO ones are automated and the MOCK and DEVICE ones move into Session A.
-
-### Language switch (20)
+The language switch and the offline banner waited for features that are now built ([remaining-work-test-plan.md §4](remaining-work-test-plan.md#4-item-2--blocked-features)). Their AUTO cases are automated (`flow/language_flow_test`, `flow/offline_banner_flow_test`, `l10n/arb_completeness_test`, the Bangla tours of `flow/device_a11y_flow_test` and the `bn_*` goldens). The phone cases:
 
 | Case | Title | Run on | Spec |
 |---|---|---|---|
-| TC-HIST-044 | Times in Bangla digits | AUTO | §16 |
-| TC-PROF-006 | Language | MOCK | §16 |
-| TC-PROF-018 | Switch to Bangla | MOCK | §16 |
-| TC-PROF-019 | Language kept after a restart | AUTO | §12.1 Local data, §16 |
-| TC-PROF-020 | Every English text has a Bangla text | AUTO | §16, §20.3 |
-| TC-PROF-021 | Placeholders kept in Bangla | AUTO | §16 |
-| TC-PROF-022 | The switch on Profile | AUTO | §13.8 |
-| TC-PROF-023 | The switch applies at once | AUTO | §13.8, §16 |
-| TC-PROF-024 | Reference line in Bangla | AUTO | §16 |
-| TC-PROF-025 | Messages chosen by error code in Bangla | AUTO | §16 |
-| TC-PROF-026 | Unknown code: the server text stays | AUTO | §16 |
-| TC-PROF-027 | Times in Bangla digits outside History | AUTO | §16 |
-| TC-PROF-028 | Date picker in Bangla | AUTO | §10.2, §16 |
-| TC-PROF-029 | Kept after logout | AUTO | §6.5, §12.1 |
-| TC-PROF-030 | Language at the first start | AUTO | §16 |
-| TC-PROF-031 | Bangla at large fonts | AUTO | §14, §16 |
-| TC-PROF-032 | TalkBack in Bangla | DEVICE | §14, §16 |
-| TC-PROF-033 | Password rules in Bangla | AUTO | §6.6, §16 |
-| TC-PROF-034 | A Bangla reader checks the texts | DEVICE | §16 |
-| TC-PROF-035 | Bangla digits typed into a serial | AUTO | §13.1.2, §16 |
-
-### Offline banner (2)
-
-Built 2026-11-19: TC-ERR-037 … -045 are automated (`flow/offline_banner_flow_test`). On a phone:
-
-| Case | Title | Run on | Spec |
-|---|---|---|---|
+| TC-PROF-032 | TalkBack in Bangla: swipe through Login, Check and a result | DEVICE | §14, §16 |
+| TC-PROF-034 | A Bangla reader checks every screen and error, with [bangla-drafts-for-review.md](bangla-drafts-for-review.md) | DEVICE | §16 |
 | TC-ERR-036 | Offline banner: airplane mode on any screen, then off; also listen to TalkBack read it | DEVICE | §14.2, §14 |
-| TC-ERR-046 | The banner in Bangla | AUTO | §14.2, §16 |
+
+TC-PROF-006 and -018 are in Session A (A4).
 
 ## Summary
 

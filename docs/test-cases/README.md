@@ -23,18 +23,18 @@ Current migration acceptance: [16-mobile-migration.md](16-mobile-migration.md). 
 | ROLE and NAV | [03-roles-nav.md](03-roles-nav.md) | 35 | 13 | 16 | 6 | 32 | 0 | 3 | 0 |
 | LOOK | [04-lookup.md](04-lookup.md) | 97 | 39 | 42 | 16 | 84 | 0 | 13 | 0 |
 | BULK | [05-bulk.md](05-bulk.md) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| HIST | [06-history.md](06-history.md) | 49 | 15 | 24 | 10 | 45 | 0 | 3 | 1 |
+| HIST | [06-history.md](06-history.md) | 49 | 15 | 24 | 10 | 46 | 0 | 3 | 0 |
 | REP | [07-reports.md](07-reports.md) | 59 | 17 | 32 | 10 | 47 | 0 | 12 | 0 |
 | RTL | [08-retail-users.md](08-retail-users.md) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| PROF | [09-profile.md](09-profile.md) | 41 | 3 | 23 | 15 | 19 | 0 | 3 | 19 |
-| ERR | [10-errors-network.md](10-errors-network.md) | 49 | 10 | 25 | 14 | 43 | 0 | 5 | 1 |
+| PROF | [09-profile.md](09-profile.md) | 41 | 3 | 23 | 15 | 34 | 0 | 7 | 0 |
+| ERR | [10-errors-network.md](10-errors-network.md) | 49 | 10 | 25 | 14 | 44 | 0 | 5 | 0 |
 | SEC | [11-security.md](11-security.md) | 28 | 18 | 8 | 2 | 21 | 0 | 7 | 0 |
 | NFR | [12-device-a11y-perf.md](12-device-a11y-perf.md) | 27 | 0 | 17 | 10 | 8 | 0 | 19 | 0 |
 | E2E | [13-e2e-journeys.md](13-e2e-journeys.md) | 16 | 7 | 9 | 0 | 10 | 0 | 6 | 0 |
 | Exploratory | [14-exploratory-charters.md](14-exploratory-charters.md) | 9 | 0 | 6 | 3 | 0 | 0 | 9 | 0 |
 | UI | [15-ui.md](15-ui.md) | 184 | 30 | 100 | 54 | 170 | 0 | 14 | 0 |
 | MIG | [16-mobile-migration.md](16-mobile-migration.md) | 50 | 36 | 13 | 1 | 50 | 0 | 0 | 0 |
-| **Total** | | **805** | 250 | 388 | 167 | 671 | 0 | 112 | 22 |
+| **Total** | | **805** | 250 | 388 | 167 | 688 | 0 | 116 | 1 |
 
 ## 3. Case Format
 
@@ -119,7 +119,7 @@ Each spec rule, the cases that cover it today, and what is missing. The step is 
 | History filters | §13.4 | HIST-005, -009 … -011, -014 … -023, -042 | — | 4 ✓ |
 | Paging | §10 | HIST-002 … -006, -013, -029 … -038, -041 | — | 4 ✓ |
 | Item tracking and search | §13.4.1 | HIST-007, -008, -024 … -028, -043 | — | 4 ✓ |
-| History rows and data | §13.4, §16, §10.6 | HIST-012, -039, -040, -044 (⛔), -045, -046 | — | 4 ✓ |
+| History rows and data | §13.4, §16, §10.6 | HIST-012, -039, -040, -044, -045, -046 | — | 4 ✓ |
 | Filing a report | §13.5 | REP-001 … -004, -015, -018 … -028, -041, -048 | — | 4 ✓ |
 | Photos | §13.5.1–13.5.3 | REP-005 … -012, -029 … -040, -049 | — | 4 ✓ |
 | My reports | §13.5.4 | REP-016, -017, -042 … -047 | — | 4 ✓ |
@@ -127,7 +127,7 @@ Each spec rule, the cases that cover it today, and what is missing. The step is 
 | Add retail user | §13.6.1 | RTL-003 … -008, -012 … -031 | — | 4 ✓ |
 | Email a new first password | §13.6 | RTL-009 … -011, -032 … -036 | — | 4 ✓ |
 | Profile | §13.8 | PROF-001 … -019 (-018, -019 ⛔) | — | 4 ✓ |
-| Errors | §14.2, §15.2, §15.4, §16 | ERR-001 … -024, -031 … -046 (-036 … -046 ⛔: offline banner) and the request matrix in 10-errors-network.md | — | 5 ✓ |
+| Errors | §14.2, §15.2, §15.4, §16 | ERR-001 … -024, -031 … -046 (-036 … -046: offline banner) and the request matrix in 10-errors-network.md | — | 5 ✓ |
 | Rate limits | §15.5 | ERR-004, -013, -025 … -030, AUTH-007, BULK-012 | — | 5 ✓ |
 | Security | §6.1, §6.3, §9.5, §12, §17 | SEC-001 … -024, LOOK-013, -016, NAV-009, -015 | — | 5 ✓ |
 | Device and accessibility | §14 | NFR-001 … -027 | — | 6 ✓ |
@@ -142,7 +142,7 @@ To settle them, fill in the [decision sheet](../decision-sheet.md): each questio
 | # | Question | Cases waiting | Owner |
 |---|---|---|---|
 | 1 | The certificate (§13.3). **Withdrawn:** the backend removed certificates (SRS v1.2); not built, not a release feature. | LOOK-068 … -088 (withdrawn) | — |
-| 2 | The language switch (§13.8, §16) is in the spec but not built in the app; the Bangla texts come from the client (§20.3). | PROF-006 and I18N cases | App, client |
+| 2 | The language switch (§13.8, §16). **Built 2026-11-19;** every text has a Bangla draft, waiting for the client's Bangla reader (§20.3, [bangla-drafts-for-review.md](../bangla-drafts-for-review.md)). | PROF-006 and I18N cases | Client (review) |
 | 3 | Which time zone defines a day for History `from` / `to` (§16, §20.2). | HIST-010 | Backend |
 | 4 | Email input is not defined beyond "a valid email address": spaces around it, capitals, and which addresses the app refuses. **Fixed 2026-11-16 (decision 56): spaces around it removed; one `@` with text on both sides; no space or invisible character inside (AUTH-110).** Whether the backend matches emails without case is not stated. | AUTH-027 … -030 | App, backend |
 | 5 | A login or code answer with an unknown `data.status` has no defined display. App today: not logged in, the Login screen stays. | AUTH-036 | App |
@@ -158,8 +158,8 @@ To settle them, fill in the [decision sheet](../decision-sheet.md): each questio
 | 15 | Dark mode: §12.1 stores a theme preference, but no dark theme is defined, and the app has none. | NFR-020 | App, client |
 | 16 | A certificate that cannot be made. **Withdrawn** (no certificate). | — | — |
 | 17 | The certificate's language. **Withdrawn** (no certificate). | — | — |
-| 18 | The language at the first start: the phone's language when it is Bangla, or English always (§16 lists both languages, not the default). | PROF-030 | User, client |
-| 19 | Bangla digits (১২৩) typed into a serial or hidden code: refused, or read as 0–9 (the formats list Latin digits only). | PROF-035 | User, backend |
+| 18 | The language at the first start: the phone's language when it is Bangla, or English always (§16 lists both languages, not the default). **App answer 2026-11-19:** English until chosen. | PROF-030 | Client |
+| 19 | Bangla digits (১২৩) typed into a serial or hidden code: refused, or read as 0–9 (the formats list Latin digits only). **App answer 2026-11-19:** read as 0–9. | PROF-035 | Backend (19B) |
 | 20 | `final.md` §14.1 names components that are built under other names or not built (15-ui.md, section G). | UI-159 | App |
 | 21 | A chosen segment or chip has no token colour. **Decided 2026-11-15: navy fill, white text (`primary`, `onPrimary`), as the Figma History chips.** | UI-018 | App |
 

@@ -16,7 +16,8 @@ bool _fontsLoaded = false;
 
 /// Loads real fonts, so goldens show letters and icons instead of the test
 /// font's square boxes: Roboto (the Material default, copied from the
-/// Flutter SDK into `test/fonts/`, Apache 2.0) and every font of the asset
+/// Flutter SDK into `test/fonts/`, Apache 2.0), Noto Sans Bengali (from the
+/// Noto project into `test/fonts/`, OFL 1.1), and every font of the asset
 /// manifest (Lucide and Material icons). Called in `setUpAll` of golden
 /// files only: each test file runs on its own, so other tests keep the
 /// test font their layout checks were written for.
@@ -28,6 +29,16 @@ Future<void> loadUiFonts() async {
     roboto.addFont(Future.value(ByteData.sublistView(bytes)));
   }
   await roboto.load();
+
+  // Bangla letters (the theme's fallback font; Noto Sans Bengali, OFL 1.1).
+  final bangla = FontLoader('Noto Sans Bengali');
+  for (final weight in ['Regular', 'Bold']) {
+    final bytes = File(
+      'test/fonts/NotoSansBengali-$weight.ttf',
+    ).readAsBytesSync();
+    bangla.addFont(Future.value(ByteData.sublistView(bytes)));
+  }
+  await bangla.load();
 
   final manifest =
       jsonDecode(await rootBundle.loadString('FontManifest.json'))

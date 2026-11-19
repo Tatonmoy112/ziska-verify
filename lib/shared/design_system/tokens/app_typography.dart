@@ -5,6 +5,11 @@ import 'package:ziska_verify/shared/design_system/tokens/app_colors.dart';
 /// when the client supplies it (final.md Section 2.2); until then the
 /// platform font is used.
 abstract final class AppTypography {
+  /// Where Bangla letters come from when the main font has none. A phone
+  /// that has no font by this name uses its own Bangla font, as before; the
+  /// tests, which have no system fonts, load it from `test/fonts/`.
+  static const fontFallback = ['Noto Sans Bengali'];
+
   /// The app's name on the Splash (Figma Landing Page).
   static const display = TextStyle(
     fontSize: 30,

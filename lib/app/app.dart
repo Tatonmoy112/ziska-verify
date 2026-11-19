@@ -7,6 +7,7 @@ import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ziska_verify/app/config/app_config.dart';
 import 'package:ziska_verify/app/router/app_router.dart';
+import 'package:ziska_verify/core/locale/locale_cubit.dart';
 import 'package:ziska_verify/core/services/connectivity/connectivity_service.dart';
 import 'package:ziska_verify/core/services/scanner/active_scan_store.dart';
 import 'package:ziska_verify/core/services/session/forbidden_signal.dart';
@@ -20,7 +21,8 @@ import 'package:ziska_verify/shared/design_system/theme/app_theme.dart';
 import 'package:ziska_verify/shared/widgets/network_status_banner.dart';
 
 /// The root widget: the app-scoped profile (final.md Section 5.9), the
-/// router (Section 9), the theme (Section 14), and localization (Section 16).
+/// router (Section 9), the theme (Section 14), and the chosen language
+/// (Section 16), applied at once.
 class App extends StatefulWidget {
   const App({required this.locator, super.key});
 
@@ -86,22 +88,26 @@ class _AppState extends State<App> {
     final flavor = widget.locator<AppConfig>().flavor;
     return BlocProvider.value(
       value: _profile,
-      child: MaterialApp.router(
-        onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
-        debugShowCheckedModeBanner: flavor != AppFlavor.live,
-        theme: AppTheme.light(),
-        routerConfig: _router,
-        localizationsDelegates: const [
-          AppLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        supportedLocales: AppLocalizations.supportedLocales,
-        // The offline banner above every screen (final.md Section 14.2).
-        builder: (context, child) => NetworkStatusShell(
-          connectivity: widget.locator<ConnectivityService>(),
-          child: child ?? const SizedBox.shrink(),
+      child: BlocBuilder<LocaleCubit, Locale>(
+        bloc: widget.locator<LocaleCubit>(),
+        builder: (context, locale) => MaterialApp.router(
+          locale: locale,
+          onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
+          debugShowCheckedModeBanner: flavor != AppFlavor.live,
+          theme: AppTheme.light(),
+          routerConfig: _router,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: AppLocalizations.supportedLocales,
+          // The offline banner above every screen (final.md Section 14.2).
+          builder: (context, child) => NetworkStatusShell(
+            connectivity: widget.locator<ConnectivityService>(),
+            child: child ?? const SizedBox.shrink(),
+          ),
         ),
       ),
     );

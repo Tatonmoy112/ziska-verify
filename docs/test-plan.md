@@ -9,7 +9,7 @@
 | Spec | `final.md` (v1.6 and later), Sections 6–18 |
 | Backend contract | `docs/protectb-api/app-api-guide.md`, `app-build-guide.md`, Postman collection |
 | Version | 2.0 — 2026-11-14: 543 cases in `docs/test-cases/` (positive, negative, boundary, edge, worst case, network, security, device, journeys, charters) |
-| Status | `flutter analyze` clean; 1137 automated tests passing; 671 of 805 cases automated (Section 12) |
+| Status | `flutter analyze` clean; 1173 automated tests passing; 688 of 805 cases automated (Section 12) |
 
 ---
 
@@ -139,18 +139,18 @@ The cases live in one file per area in [`docs/test-cases/`](test-cases/README.md
 | ROLE and NAV | [03-roles-nav.md](test-cases/03-roles-nav.md) | 35 | 13 | 16 | 6 | 32 | 0 | 3 | 0 |
 | LOOK | [04-lookup.md](test-cases/04-lookup.md) | 97 | 39 | 42 | 16 | 84 | 0 | 13 | 0 |
 | BULK | [05-bulk.md](test-cases/05-bulk.md) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| HIST | [06-history.md](test-cases/06-history.md) | 49 | 15 | 24 | 10 | 45 | 0 | 3 | 1 |
+| HIST | [06-history.md](test-cases/06-history.md) | 49 | 15 | 24 | 10 | 46 | 0 | 3 | 0 |
 | REP | [07-reports.md](test-cases/07-reports.md) | 59 | 17 | 32 | 10 | 47 | 0 | 12 | 0 |
 | RTL | [08-retail-users.md](test-cases/08-retail-users.md) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| PROF | [09-profile.md](test-cases/09-profile.md) | 41 | 3 | 23 | 15 | 19 | 0 | 3 | 19 |
-| ERR | [10-errors-network.md](test-cases/10-errors-network.md) | 49 | 10 | 25 | 14 | 43 | 0 | 5 | 1 |
+| PROF | [09-profile.md](test-cases/09-profile.md) | 41 | 3 | 23 | 15 | 34 | 0 | 7 | 0 |
+| ERR | [10-errors-network.md](test-cases/10-errors-network.md) | 49 | 10 | 25 | 14 | 44 | 0 | 5 | 0 |
 | SEC | [11-security.md](test-cases/11-security.md) | 28 | 18 | 8 | 2 | 21 | 0 | 7 | 0 |
 | NFR | [12-device-a11y-perf.md](test-cases/12-device-a11y-perf.md) | 27 | 0 | 17 | 10 | 8 | 0 | 19 | 0 |
 | E2E | [13-e2e-journeys.md](test-cases/13-e2e-journeys.md) | 16 | 7 | 9 | 0 | 10 | 0 | 6 | 0 |
 | Exploratory | [14-exploratory-charters.md](test-cases/14-exploratory-charters.md) | 9 | 0 | 6 | 3 | 0 | 0 | 9 | 0 |
 | UI | [15-ui.md](test-cases/15-ui.md) | 184 | 30 | 100 | 54 | 170 | 0 | 14 | 0 |
 | MIG | [16-mobile-migration.md](test-cases/16-mobile-migration.md) | 50 | 36 | 13 | 1 | 50 | 0 | 0 | 0 |
-| **Total** | | **805** | 250 | 388 | 167 | 671 | 0 | 112 | 22 |
+| **Total** | | **805** | 250 | 388 | 167 | 688 | 0 | 116 | 1 |
 
 ---
 
@@ -166,7 +166,7 @@ The backend team's checklist (`app-build-guide.md` §5) mapped to test cases. **
 | 4. Single lookup | QR sends value after `/q/`; formats checked; every result and reason; `app_preparing`; hidden without `item:lookup` | LOOK-001 … -003, -006 … -012, -014 … -022, -024 … -032, -037 … -067, SEC-016, -017 | 61: 49 ✅, 12 ✋ |
 | 4a. Result screen and product picture | One screen for every path; the loader after 300 ms with honest steps; what was entered (hidden code masked) and hints from the formats; the picture card in each state; HTTPS only, no access pass, memory only | LOOK-089 … -094, -096 … -117, SEC-027, -028 | 30: 29 ✅, 1 ✋ |
 | 5. Checking many items | Scanner sessions: a UUID, QR only, each scan answered at once, `repeat`, `session_full`/`session_ended` start a new session and resend, `session_not_yours`, back ends without waiting, crash resume; serial stacks of 1 to 50, all or nothing, a `503` sent again once; hidden without `item:bulk_lookup` | MIG-012 … -028 | 17: 17 ✅ |
-| 6. History | Filters; paging until `null`; totals; `scope=all` only with `history:all` | HIST-001 … -046 | 46: 42 ✅, 3 ✋, 1 ⛔ |
+| 6. History | Filters; paging until `null`; totals; `scope=all` only with `history:all` | HIST-001 … -046 | 46: 43 ✅, 3 ✋ |
 | 7. Reports and photos | `check_ref` from a result; photos shrunk, raw, retried, never duplicated; never re-filed; My reports | REP-001 … -049 | 49: 37 ✅, 12 ✋ |
 | 8. Retail users | Picker only: search by name or whole email, masked emails, cursor paging; hidden without `incident:report`; adding withdrawn (404) | REP-013, MIG-002, -030 | 3: 3 ✅ |
 
@@ -190,7 +190,7 @@ Every acceptance check has test cases. Two need a real phone or the test server 
 | Navigation | NAV-002, -003, -008 … -015, AUTH-013, -061, SEC-004 | 13: 12 ✅, 1 ✋ |
 | Lookup | LOOK-006 … -009, -015, -020 … -022, -024 … -032, -037 … -061 | 42: 39 ✅, 3 ✋ |
 | Bulk | MIG-012 … -028, -031 | 18: 18 ✅ |
-| History | HIST-002, -003, -009, -014 … -046 | 36: 34 ✅, 1 ✋, 1 ⛔ |
+| History | HIST-002, -003, -009, -014 … -046 | 36: 35 ✅, 1 ✋ |
 | Pagination | HIST-003 … -006, -029 … -035, REP-042 | 12: 12 ✅ |
 | Reports | REP-001, -004 … -006, -018 … -049 | 36: 28 ✅, 8 ✋ |
 | Photo metadata | REP-010 | 1: 0 ✅, 1 ✋ |
@@ -241,12 +241,12 @@ One line per run:
 | Check | Result |
 |---|---|
 | `flutter analyze` | No issues found |
-| `flutter test` | 1137 passed, 0 failed (131 of them goldens; CI runs the other 1006) |
-| Covered by automated tests (✅) | 671 of 805 (796 test cases and 9 exploratory charters) |
+| `flutter test` | 1173 passed, 0 failed (133 of them goldens; CI runs the other 1040) |
+| Covered by automated tests (✅) | 688 of 805 (796 test cases and 9 exploratory charters) |
 | To be automated (⏳) | 0 |
 | Dependency scan (CI, TC-SEC-024) | OSV-Scanner v2.7.0 on `pubspec.lock`: 195 packages, no known vulnerability (2026-11-14) |
-| Manual only (✋) | 112: 103 cases (12 of them Figma comparisons) and 9 charters, all in `manual-test-checklist.md` (sessions A–D) |
-| Blocked (⛔) | 22: TC-AUTH-095 (Not now on the test server, waiting for the backend route), the language switch (20) and the banner in Bangla (TC-ERR-046, waits for the switch); the offline banner is built (2026-11-19); each case set has its entry criteria (`remaining-work-test-plan.md` §4). Certificates are withdrawn by the backend (SRS v1.2), not blocked |
+| Manual only (✋) | 116: 107 cases (12 of them Figma comparisons) and 9 charters, all in `manual-test-checklist.md` (sessions A–D) |
+| Blocked (⛔) | 1: TC-AUTH-095 (Not now on the test server, waiting for the backend route). The offline banner and the language switch are built (2026-11-19); their cases are automated or in the checklist. Certificates are withdrawn by the backend (SRS v1.2), not blocked |
 
 Remaining work (the dependency scan, the blocked features, the open questions, the manual runs): [`remaining-work-test-plan.md`](remaining-work-test-plan.md).
 
