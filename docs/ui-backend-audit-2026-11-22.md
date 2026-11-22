@@ -30,8 +30,8 @@ Nothing in the app is changed during the audit. The user picks what to fix.
 | 5 | Scanner mode | **Done** 2026-11-22 |
 | 6 | Serial stack | **Done** 2026-11-22 |
 | 7 | History | **Done** 2026-11-22 |
-| 8 | Reports | Next |
-| 9 | Profile and across the app | |
+| 8 | Reports | **Done** 2026-11-22 |
+| 9 | Profile and across the app | Next |
 
 ---
 
@@ -693,3 +693,92 @@ Nothing in the app is changed during the audit. The user picks what to fix.
   - a 403 reloads the profile;
   - empty lists say "no checks yet" or "no match".
 - **Display:** "Checked by …" is always the official's own name, and times are in Bangladesh time. Checks and Sessions keep the filters.
+
+---
+
+## Step 8. Reports
+
+**Screens and pieces:**
+- the report: the note, "Link one of your checks", "Choose a retail user", photos (camera or gallery, up to 3), "File report" and Done;
+- a report opened from a check's result;
+- My reports and a report's details.
+
+### Findings
+
+| # | Finding | Class | Severity or impact / effort |
+|---|---|---|---|
+| 8.1 | **Back leaves the report screen without asking**, so photos not yet sent, and a typed note, are lost. Back while filing: the report is filed, but its photos are never sent and an error is thrown | **Mismatch** | **High** |
+| 8.2 | **A photo sent just after the 15-minute pass expired always fails once**: the app renews the pass and sends again, but the photo's bytes were already used, so it says "Not sent" with a working network | **Mismatch** (bug) | Medium |
+| 8.3 | "The report may have been filed" leads only to My reports: the note and the photos picked are dropped, and My reports cannot add photos to a report, though the server allows it for an hour | **Improvement** | Medium / medium |
+| 8.4 | A refused photo shows only "This photo was refused.", not the server's reason ("The photo must be at most 1 MB.", "The file is not a JPEG or PNG photo.", "Report not found.") | **Wording** | Low |
+| 8.5 | The check picker says "Your checks appear here after your first check." when a search finds nothing | **Wording** | Low |
+| 8.6 | A server error (500/503) while filing offers "File report" again, though the report may have been saved; a second tap could make a second report | **Unclear** (ask the backend) | Low |
+| 8.7 | Photos waiting their turn look like photos with nothing to do; after a 429 they wait until the official taps the 429 photo | **Improvement** | Medium / small |
+| 8.8 | After the photo hour is over, Done still says photos "can be sent again", though they cannot | **Wording** | Low |
+| 8.9 | The retail search field limits what is seen, and the search is then cut again in another unit, with no sign | **Mismatch** (minor) | Low |
+| 8.10 | With no retail users at all, the picker says only "No retail user found", so officials keep searching | **Wording** | Low |
+| 8.11 | "Report 1042 filed." here, "#1042" in My reports | **Wording** | Low |
+| 8.12 | "…already sent to your office by the lookup" may not hold if the client switches a kind of warning off (SRS FR-INC-02) | **Unclear** | Low |
+| 8.13 | "1 MB" is counted as 1,048,576 bytes; the backend does not say whether it means 1,000,000 | **Unclear** | Low |
+
+### The details
+
+**8.1 Back without asking (Mismatch, high).**
+- **The guide** (§6.2): "When a photo fails with 503 or a lost connection, keep it and send it again". The spec (`final.md:234`): "Done asks before leaving photos that are not sent".
+- **The app:** only Done asks (`report_incident_screen.dart:91-121`). The screen has no Back guard, while 6 other screens have one.
+- **What happens on Back while filing:** the request still files the report, then the app starts the photo sending on a closed screen (`report_incident_bloc.dart:319`). That throws an error, and the photos are never sent.
+- **The fix:**
+  - Back asks the same question as Done;
+  - the screen cannot be left while filing;
+  - an "is the screen still open?" check before going on after the answer.
+
+**8.2 A photo after the pass expired (Mismatch, medium).**
+- **The app:** a photo is sent as a one-time stream (`api_client.dart:61`). On `401 token_expired` the app renews the pass and sends the same request again (`auth_interceptor.dart:91`), but the stream was already read, so the second try fails as "no connection".
+- **When it happens:** the access pass lasts 15 minutes, so this hits the first photo after a quiet spell. Tapping the photo again works.
+- **The fix:** send the bytes themselves, which can be sent again.
+
+**8.3 "May have been filed" (Improvement, medium).**
+- **The app:** after a lost answer, the button goes to My reports (`report_incident_screen.dart:327-334`), and the note and photos are dropped.
+- **The guide** (§6.2): photos can be added "within 1 hour of filing".
+- **The ideas:**
+  - keep the draft in memory and offer it back;
+  - on My reports, "Add photos" on the official's reports under an hour old with fewer than 3 photos.
+
+**8.4 The reason a photo was refused (Wording, low).** The app shows the server's text only for a 409 (`report_incident_screen.dart:149-158`). For a 400, 404 or 415 it shows "This photo was refused.". Showing the server's reason, as the guide's table gives it, would help.
+
+**8.6 A server error while filing (Unclear).** The guide says "nothing was recorded" for lookups and stacks, but says nothing about a 5xx when filing (§6.1). The app lets the official file again (`report_incident_bloc.dart:320-322`). Ask the backend, or treat a 5xx as "may have been filed".
+
+### Checked and right
+- **My reports:**
+  - rows and details show only documented fields: number, time, note, photo count, check, retail user;
+  - no photo thumbnails, since the app cannot download photos;
+  - 50 a page, with the cursor sent back as given;
+  - empty, error, retry and 429 handled;
+  - New report refreshes the list.
+- **The note:** counted in code points to 1,000, without the spaces around it; File report is off when empty; trimmed before sending.
+- **Photos:**
+  - made at most 2,048 pixels on the longer side, JPEG quality 85 (75 or 65 only if over 1 MB); PNG, HEIC and WebP are turned into JPEG, upright;
+  - **location and other details are really removed:** the picker does not ask for them, and the re-encoding keeps none. No test checks this yet;
+  - sent as the file itself, with its type and size, one at a time, up to 3, within the hour;
+  - the same photo again is shown once ("That photo is already on the report.");
+  - a 409 shows the server's text; a busy server or a lost connection can be tapped to send again; a 429 counts down.
+- **Filing:**
+  - filed once (a second tap is ignored);
+  - a lost or unreadable answer is "may have been filed" and is never filed again;
+  - a 404 says whether the check or the retail user is gone, and a gone retail user is cleared;
+  - a 429 waits;
+  - offline before sending lets the official try again.
+- **Permissions:** both screens need `incident:report`. The check picker needs `history:own` and shows only the official's own checks. Report from a result links its check.
+- **Retail picker:** the search waits for typing to stop; it has paging and masked emails; a search typed during a 429 is sent when the wait ends.
+- **Texts:** "Up to 3 photos", "Photo N" and the 1-hour text are true to the backend.
+
+### More ideas to improve Reports
+
+| Idea | Impact | Effort |
+|---|---|---|
+| Back asks like Done, and the draft (note, links) is offered back (8.1, 8.3) | High | Small |
+| Quick reasons ("Label looks fake", "Seal torn", "Selling where it should not") that add words to the note | Medium | Small |
+| "Sending photo 2 of 3", and a "waiting" label on photos in line | Medium | Small |
+| "Add photos" on a recent report in My reports (8.3) | Medium | Medium |
+| On a warning result, "No report needed: your office already knows" next to Report (as 4.8) | Medium | Small |
+| From the Check tab, offer the last check of the past few minutes as the linked check | Low-medium | Small |
