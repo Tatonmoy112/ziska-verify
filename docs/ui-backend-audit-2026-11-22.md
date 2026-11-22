@@ -28,8 +28,8 @@ Nothing in the app is changed during the audit. The user picks what to fix.
 | 3 | Sign up | **Done** 2026-11-22 |
 | 4 | One check | **Done** 2026-11-22 |
 | 5 | Scanner mode | **Done** 2026-11-22 |
-| 6 | Serial stack | Next |
-| 7 | History | |
+| 6 | Serial stack | **Done** 2026-11-22 |
+| 7 | History | Next |
 | 8 | Reports | |
 | 9 | Profile and across the app | |
 
@@ -521,3 +521,85 @@ Nothing in the app is changed during the audit. The user picks what to fix.
 - **After Finish:** Scan more starts a new session, and Done goes back to Check.
 - **Pausing:** the line and the camera stop in the background.
 - **The camera:** a refused permission offers "Open settings".
+
+---
+
+## Step 6. Serial stack
+
+**Screens and pieces:**
+- the text box, and the live count ("N of 50 serials · M repeated, sent once");
+- a bad serial named by its place;
+- "Check serials", and the results (counters and one row per serial);
+- "View this session's checks" and "Start another stack";
+- a 503 sent again once, a lost answer, an answer that cannot be read, and the waits.
+
+### Findings
+
+| # | Finding | Class | Severity or impact / effort |
+|---|---|---|---|
+| 6.1 | After any failed send, the text box stays locked; to change one serial the official must Clear and type all of them again | **Mismatch** | Medium |
+| 6.2 | After a lost answer, one tap on "Send the same stack again" sends it, and the app gives no way to check first whether it was recorded; if it was, every serial is checked twice | **Mismatch** + **Improvement** | High / small |
+| 6.3 | Going to the background (even pulling down the notifications) cancels the automatic resend after a 503 or a 429, and coming back does not start it again | **Mismatch** | Low (the button still works) |
+| 6.4 | A gateway error (502 or 504) is taken as "nothing recorded" and can be sent again at once, though the server may have recorded the stack | **Unclear** (ask the backend) | Low |
+| 6.5 | "Recorded, but … could not be shown. See them in History → Sessions" also shows to roles without History, and gives no link | **Wording** | Low |
+| 6.6 | During a 503 or 429 the texts say "Try again shortly" or "Try again in N s", though the app sends again by itself; they do not say nothing was recorded | **Wording** | Low |
+| 6.7 | A bad serial over 40 characters is told "up to 19 digits"; "Serial 3 (12AB) is not a serial" reads awkwardly | **Wording** | Low |
+| 6.8 | When the formats fail to load, the banner says "Nothing was sent; send the stack again", though no stack was sent | **Wording** | Low |
+| 6.9 | The 50 is built into the app and its texts; the SRS says 50 in FR-STK-01 but "up to 200" in its overview | **Unclear** (the SRS) | Low |
+| 6.10 | Back is blocked while a stack is sent, which can take up to about 105 seconds, with only a spinner on the button | **Improvement** | Low / small |
+
+### The details
+
+**6.1 The locked text box (Mismatch, medium).**
+- **The app:** the box is off when `submitted` (`serial_stack_screen.dart:183`), and `submitted` is never turned back off after an error (`serial_stack_cubit.dart:142-159`).
+- **The spec** (`final.md:193`): "lock the submitted payload through retries". That is right for a 503, a 429 and a lost answer. For a refusal (400) or a server error (500) the same stack gets the same refusal every time.
+- **The fix:** an "Edit stack" button for a refusal, a server error or "not sent". Never for a lost answer, so it is not sent twice by mistake.
+
+**6.2 A lost answer (Mismatch, Improvement, high).**
+- **The spec** (`final.md:224`): "a stack then warns before sending again". The warning shows ("These checks may already be recorded. Retrying may record them again."), but one tap sends, with no confirmation and no way to look.
+- **The guide** (§4.7): a recorded stack becomes a session of kind `serial` in the sessions list.
+- **The idea:** before sending again, a "Check whether it was recorded" link to History → Sessions (the newest stack, with its count), then a confirmation.
+
+**6.3 The background cancels the resend (Mismatch, low).**
+- **The app:** `pause()` cancels the timer and `resume()` does not set it again (`serial_stack_cubit.dart:175-180`).
+- **What happens:** after a 429 the countdown ends and the box stays locked, with no message. "Check serials" still sends.
+- **The fix:** set the timer again on return.
+
+**6.4 A gateway error (Unclear, low).** The guide says "when the answer is not 200, nothing was recorded", which is about the server's own answers. A 504 from a gateway can come after the server recorded the stack. Ask the backend, or treat a 504 like a lost answer.
+
+### More ideas to improve the serial stack
+
+| Idea | Impact | Effort |
+|---|---|---|
+| The rows that need attention first (warnings, not found, not in a batch), or a filter | High | Small |
+| "Check whether it was recorded" after a lost answer (6.2) | High | Small |
+| Name a bad serial in the count before sending, with "Remove it" | Medium | Small |
+| "Edit stack" after a refusal (6.1) | Medium | Small |
+| Copy or share the results as text (serial, result, reference) | Medium | Small |
+| Over 50 serials: "send the first 50 now, the rest next" (the guide allows splitting; `final.md:189` refuses it, so the owner decides) | Medium | Medium |
+| Accept `;` between serials (lists from some spreadsheets) | Low | Small |
+| "Checking 37 serials…" while waiting | Low | Small |
+
+### Checked and right
+- **Shown data:**
+  - the counters come from the server (no "remaining" for a stack);
+  - the rows follow the server's order, each with the serial as sent, its result, product, reference and reasons;
+  - a row opens the full result and comes back;
+  - the answer is checked against what was sent;
+  - an answer that cannot be read counts as recorded and is never sent again.
+- **Inputs:**
+  - split by spaces, commas, new lines and tabs;
+  - Bangla digits read;
+  - serials that differ only by leading zeros are one (the first typed is sent);
+  - `0` and padded serials up to 40 characters are accepted;
+  - the 50 is counted after repeats;
+  - a bad serial is named by its place;
+  - the digit limit comes from `GET formats`.
+- **Permissions:** the screen needs `item:bulk_lookup`, and "View this session's checks" needs `history:own`. A 403 reloads the profile and leaves.
+- **Answers:**
+  - a 503 is sent again once, after a second, by itself;
+  - a 429 waits its `Retry-After`;
+  - "Nothing was sent" when the request never left;
+  - a lost answer is never sent again by itself;
+  - second taps are ignored.
+- **Flow:** "Start another stack" starts fresh, and the results stay after opening a row.
