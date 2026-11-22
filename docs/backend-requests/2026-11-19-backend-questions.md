@@ -1,5 +1,7 @@
 # Backend Questions and Requests (2026-11-19)
 
+> **2026-11-22: superseded for sending by [the backend fix list](2026-11-22-backend-fix-list.md)**, which gathers every open point below (B1, B2, B3, B5, Q4B, Q19B) with the test server's evidence and how to fix each in the backend's system. This file stays as the record.
+>
 > **Status 2026-11-19: ready to send.** Each item says what the app does now; an answer changes only that item.
 
 **From:** the mobile app team. **To:** the ProtectB backend team. **Contract checked:** `docs/protectb-api/` (app API guide, build guide, Postman collection of 2026-11-17).

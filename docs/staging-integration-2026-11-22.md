@@ -47,6 +47,8 @@ Steps 2, 4, 5, 7 and 10 needed no app change. Step 5 added tests for gaps the ap
 - A search and a sign-up name count characters in UTF-16 units (an emoji as two); a note and a password count code points.
 - A new password may be the same as the current one (B3 item 5).
 
+**Everything still open on the backend's side** is in one list to send: [2026-11-22-backend-fix-list.md](backend-requests/2026-11-22-backend-fix-list.md) (test data, letter counting, "Not now", the date filter, guide text, the same password, empty JSON bodies).
+
 **What the server lacks for the remaining checks** (asked in B1):
 - QR values of test items, so a scanner session can meet a found item.
 - An item with a picture.

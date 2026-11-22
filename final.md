@@ -318,6 +318,8 @@ Mock builds use the updated Postman snapshot and require its current mock server
 
 The backend's test server (2026-11-22) is the staging environment: `https://testapp.protecb.com`, client `ziska-test`. The app was checked against it in 11 steps (`docs/staging-integration-2026-11-22.md`); the server's answers are fixtures replayed in `test/staging/`. Do not test recorded checks against a live client.
 
+What is still open on the backend's side is in `docs/backend-requests/2026-11-22-backend-fix-list.md`.
+
 What the test server showed, beyond the guide (backend question B5; rechecked against `ProtectB-DOCS` at 5d96a91 on 2026-11-22):
 - **Serials are read without their leading zeros** (backend DEC-371): `001` and `1` are one item, and a serial may be padded with zeros up to 40 characters. The app sends the first typed of such serials once, and counts `serial.max_digits` without the leading zeros. `0` is looked up like any serial (`not_found`).
 - **Characters are counted two ways:**
@@ -362,7 +364,7 @@ The plan at commit 4ec8318 changed two things the app meets, and neither needs a
 
 Four points are with the backend team in `docs/backend-requests/data-flow-questions.md`; the app works as written there until they answer:
 
-- `from`/`to` of `GET checks` and `GET lookups/sessions`: the app sends the picked Dhaka calendar date.
+- `from`/`to` of `GET checks` and `GET lookups/sessions`: the app sends the picked Dhaka calendar date. **Risk (2026-11-22):** the backend's other lists filter whole UTC days (`frontend-guide/api-guide.md:2303`); if these do too, from 00:00 to 06:00 Dhaka a day filter shows the wrong checks. Asked as item 4 of the backend fix list.
 - QR case: the app sends the value as read and checks it against the formats' characters.
 - `auth/refresh` during a forced change: a 200 with `must_change_password: true` opens the change screen; a 403 keeps the login and fails only the request that needed the renewal.
 - An empty logout body: the app sends no body and no `Content-Type`.
