@@ -847,6 +847,15 @@ Expected: `1` is genuine at its first check, and "Genuine, needs attention · Ch
 
 - [x] Pass - [ ] Fail - [ ] Blocked — Notes: 2026-11-22, emulator (staging release build). `1` was check 3 (the checker had checked it twice): checked before, last check 12:30 PM; all product fields from the server. `1000001` not in a batch; `1234567890` not found with hints for up to 19 digits.
 
+#### TC-STG-030 · History on a phone · P1
+1. Open History.
+2. Tap **Valid**.
+3. Tap **Sessions**.
+
+Expected: the server's checks newest first, with the counts on the chips, the time in Bangladesh time and "Checked by …"; Valid shows only the genuine checks; Sessions shows the sessions of the last 7 days ("No sessions found." before any).
+
+- [x] Pass - [ ] Fail - [ ] Blocked — Notes: 2026-11-22, emulator (staging release build): All 13, Valid 1, Warning 2; the newest "Today · 12:36 PM"; Valid showed the one genuine check (serial 1, 12:30 PM); no sessions yet.
+
 #### TC-STG-007 · The staging app reaches the server · P1
 1. Open the staging app: Login shows.
 2. Tap **Sign up**, open the role list.

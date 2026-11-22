@@ -17,8 +17,8 @@ Cases: [17-test-server.md](test-cases/17-test-server.md).
 | 2 | Login and staying logged in | **Done** 2026-11-22 |
 | 3 | Profile and permissions | **Done** 2026-11-22 |
 | 4 | One check | **Done** 2026-11-22 |
-| 5 | History and the sessions list | Next |
-| 6 | Serial stacks | |
+| 5 | History and the sessions list | **Done** 2026-11-22 |
+| 6 | Serial stacks | Next |
 | 7 | Scanner sessions | |
 | 8 | Reports, photos, retail users | |
 | 9 | Sign up | |
@@ -156,3 +156,39 @@ None of the test items has a picture, so the product picture is still unseen fro
 - **`1234567890`:** "Not found", with the server's reference and hints for up to 19 digits.
 
 The loader ("Checking the item…") showed while the slow emulator network waited.
+
+## Step 5. History and the sessions list (2026-11-22)
+
+**Cases first.** History was covered:
+- filters, searches, Bangladesh dates, paging races and rate limits;
+- totals on the first page only, missing totals, rows without serial, product or batch.
+
+The Sessions view had only its main flow. Four cases were added: History's empty last page after a cursor (TC-HIST-050), and for Sessions, none in the period, paging by cursor, and a failed first page (TC-MIG-057 … -059). All passed at once: no app change.
+
+**Against the server** (the checker's `history` step, read only, through the app's query builder, parser and mapper):
+
+| Check | Result |
+|---|---|
+| First page | 13 checks, newest first, all the official's own; totals 13 = 1 valid + 2 warning + 5 not found + 5 not in a batch |
+| Paging by 5 | 3 pages, cursors `9`, `4`, then none; every check once; totals on the first page only |
+| `result` filters | valid 1, warning 2, not found 5, not in a batch 5; each row of the filtered result |
+| `way` filters | serial 11, qr 2 |
+| `from` = `to` = today (Dhaka) | all 13 |
+| `search=1`, `search=0000000000000000001` | the same 3 checks of item 1 (the server compares serials as numbers: B5) |
+| `search=<a reference>` | that one check |
+| `GET lookups/sessions` | none yet |
+
+Not-found rows carry `serial`, `product` and `batch` as `null`, as the guide says. **Differences from the contract:** none.
+
+The checker's first run stopped at the date filter because the checker had not loaded the timezone data the app loads at start. That was the checker's fault, not the app's or the server's; it now loads it.
+
+**Real-answer tests** (`test/staging/step5_history_test.dart`, TC-STG-026 … -029):
+- the real first page: counts, rows, "Checked by", Bangladesh time;
+- the real pages of 5 with their cursors;
+- the real serial search as a tracking log;
+- the real empty sessions list.
+
+**On the emulator** (TC-STG-030): passed.
+- **History:** All 13, Valid 1, Warning 2, newest "Today · 12:36 PM", "Checked by Trendsbird".
+- **Valid:** only the genuine check.
+- **Sessions:** "No sessions found."
