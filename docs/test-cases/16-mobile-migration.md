@@ -63,6 +63,8 @@ Authority: final.md v2.0 and the current app API guide/Postman snapshot. These c
 | TC-MIG-057 | No sessions in the period | EDGE | P2 | AUTO | ✅ `flow/sessions_edge_flow_test` | Fake backend: no sessions | History → Sessions | "No sessions found." under "Showing the last 7 days"; no error | Guide §4.5 |
 | TC-MIG-058 | Sessions page by their cursor | STATE | P2 | AUTO | ✅ `flow/sessions_edge_flow_test` | Fake backend: two pages of one session, then an empty page | History → Sessions; scroll | Cursors sent in order; both sessions; the empty page ends the list; nothing more asked | Guide §4.5 |
 | TC-MIG-059 | The sessions' first page fails | NET | P2 | AUTO | ✅ `flow/sessions_edge_flow_test` | Fake backend: 500, then a session | History → Sessions; Try again | The general message with the reference; then the session | Guide §1 |
+| TC-MIG-060 | A stack's rows that do not match what was sent | WORST | P1 | AUTO | ✅ `features/verification/data/many_items_contract_test` | Fake backend: `001` answered as `1`; `001` and `1` merged into one row | Send the stack | Zeros kept when the serials differ; a 200 whose rows do not match is "recorded, cannot be shown", never sent again | Guide §4.7 |
+| TC-MIG-061 | Serials that differ only by leading zeros are one serial | EDGE | P1 | AUTO | ✅ `many_items_cubits_test`, `many_items_contract_test` | Typed `001, 1, 0001, 2, 02, 0`; the server's real answer to `001` | Compose and send | `001`, `2`, `0` kept, the first typed of each; the count says "1 repeated, sent once" for `001, 1`; `001` sent once and its row shown | Test server 2026-11-22; B5 |
 
 ## Device and staging run sheet
 

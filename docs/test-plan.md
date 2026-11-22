@@ -9,7 +9,7 @@
 | Spec | `final.md` (v1.6 and later), Sections 6–18 |
 | Backend contract | `docs/protectb-api/app-api-guide.md`, `app-build-guide.md`, Postman collection |
 | Version | 2.0 — 2026-11-14: 543 cases in `docs/test-cases/` (positive, negative, boundary, edge, worst case, network, security, device, journeys, charters) |
-| Status | `flutter analyze` clean; 1263 automated tests passing; 728 of 851 cases automated (Section 12) |
+| Status | `flutter analyze` clean; 1273 automated tests passing; 734 of 858 cases automated (Section 12) |
 
 ---
 
@@ -149,9 +149,9 @@ The cases live in one file per area in [`docs/test-cases/`](test-cases/README.md
 | E2E | [13-e2e-journeys.md](test-cases/13-e2e-journeys.md) | 16 | 7 | 9 | 0 | 10 | 0 | 6 | 0 |
 | Exploratory | [14-exploratory-charters.md](test-cases/14-exploratory-charters.md) | 9 | 0 | 6 | 3 | 0 | 0 | 9 | 0 |
 | UI | [15-ui.md](test-cases/15-ui.md) | 184 | 30 | 100 | 54 | 170 | 0 | 14 | 0 |
-| MIG | [16-mobile-migration.md](test-cases/16-mobile-migration.md) | 59 | 39 | 19 | 1 | 58 | 0 | 1 | 0 |
-| STG | [17-test-server.md](test-cases/17-test-server.md) | 30 | 26 | 3 | 1 | 25 | 0 | 5 | 0 |
-| **Total** | | **851** | 279 | 402 | 170 | 728 | 0 | 122 | 1 |
+| MIG | [16-mobile-migration.md](test-cases/16-mobile-migration.md) | 61 | 41 | 19 | 1 | 60 | 0 | 1 | 0 |
+| STG | [17-test-server.md](test-cases/17-test-server.md) | 35 | 29 | 5 | 1 | 29 | 0 | 6 | 0 |
+| **Total** | | **858** | 284 | 404 | 170 | 734 | 0 | 123 | 1 |
 
 ---
 
@@ -237,16 +237,16 @@ One line per run:
 - No open crash or wrong-data bug.
 - Every row of Section 10 has a passed test case.
 
-## 12. Status (2026-11-17)
+## 12. Status (2026-11-22)
 
 | Check | Result |
 |---|---|
 | `flutter analyze` | No issues found |
-| `flutter test` | 1263 passed, 0 failed (136 of them goldens; CI runs the other 1127) |
-| Covered by automated tests (✅) | 728 of 851 (842 test cases and 9 exploratory charters) |
+| `flutter test` | 1273 passed, 0 failed (136 of them goldens; CI runs the other 1137) |
+| Covered by automated tests (✅) | 734 of 858 (849 test cases and 9 exploratory charters) |
 | To be automated (⏳) | 0 |
 | Dependency scan (CI, TC-SEC-024) | OSV-Scanner v2.7.0 on `pubspec.lock`: 195 packages, no known vulnerability (2026-11-14) |
-| Manual only (✋) | 122: 113 cases (12 of them Figma comparisons) and 9 charters, all in `manual-test-checklist.md` (sessions A–D) |
+| Manual only (✋) | 123: 114 cases (12 of them Figma comparisons) and 9 charters, all in `manual-test-checklist.md` (sessions A–D) |
 | Blocked (⛔) | 1: TC-AUTH-095 (Not now on the test server, waiting for the backend route). The offline banner and the language switch are built (2026-11-19); their cases are automated or in the checklist. Certificates are withdrawn by the backend (SRS v1.2), not blocked |
 
 Remaining work (the dependency scan, the blocked features, the open questions, the manual runs): [`remaining-work-test-plan.md`](remaining-work-test-plan.md).

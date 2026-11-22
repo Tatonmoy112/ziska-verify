@@ -64,3 +64,13 @@ The integration runs one step at a time. For each step, the cases come first (no
 | TC-STG-028 | A serial search: the tracking log | POS | P1 | AUTO | ✅ `staging/step5_history_test` | The real answer to `search=1` (3 checks) | Search `1` | The tracking log of serial 1, "Your checks of serial 1" read by TalkBack, the product | Guide §5; final.md §13.4 |
 | TC-STG-029 | No sessions yet | EDGE | P2 | AUTO | ✅ `staging/step5_history_test` | The real empty sessions list | History → Sessions | "No sessions found."; one request | Guide §4.5 |
 | TC-STG-030 | History on a phone | E2E | P1 | DEVICE | ✋ | Staging build, logged in, with checks made | History; Valid; Sessions | The server's checks newest first with counts, time and "Checked by"; Valid shows only the genuine ones; Sessions empty until a session exists | Guide §5, §4.5 |
+
+## Step 6. Serial stacks
+
+| ID | Title | Type | Pri | Run on | Auto | Pre-conditions / Data | Steps | Expected | Source |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-STG-031 | The real stack of three | POS | P1 | AUTO | ✅ `staging/step6_stack_test` | The real answer for `1, 1000001, 1234567890` | Send the stack | Sent as typed; a row for each serial as sent; "Scanned: 3" | Guide §4.7 |
+| TC-STG-032 | `001` and `1` on the real server | EDGE | P1 | AUTO | ✅ `staging/step6_stack_test` | The real answer: one row, `001` (the server takes them for one serial) | Type `001, 1`; send | "1 of 50 serials · 1 repeated, sent once"; `001` sent once; its row shown, never "cannot be shown" | Test server; B5 |
+| TC-STG-033 | 51 serials | NEG | P2 | AUTO | ✅ `staging/step6_stack_test` | The real 400 for 51 serials | Read it | A validation error (the app refuses 51 before sending) | Guide §4.7 |
+| TC-STG-034 | The stack in History | POS | P2 | AUTO | ✅ `staging/step6_stack_test` | The real stack and its session's checks | Send; View this session's checks | The checks by `session_id`; "Session checks" with the stack's serials | Guide §4.5, §4.7 |
+| TC-STG-035 | A stack on a phone | E2E | P1 | DEVICE | ✋ | Staging build, logged in | Serial stack: `1, 1000001, 1234567890`; then `001, 1` | Each row's result; "Scanned: 3"; `001, 1` counted as one and its row shown | Guide §4.7 |

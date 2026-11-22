@@ -43,7 +43,7 @@ Also still open (decision sheet, Part 1): are emails matched without regard to c
 
 ## B5. Two serial rules seen on the test server (2026-11-22)
 
-1. **Leading zeros.** A lookup of the serial `0000000000000000001` found item `1`, and the answer's `item.serial` is `"1"`, not what was sent. Are serials compared as numbers, so that leading zeros never count? The app sends a serial as typed, zeros included. This matters for a stack of serials (§4.7): the app checks that each row of the answer has the serial it sent, in order. If `001` comes back as `1`, the app would treat a recorded stack as unreadable.
+1. **Leading zeros.** A lookup of the serial `0000000000000000001` found item `1`, and the answer's `item.serial` is `"1"`. A stack of `001` and `1` was answered with **one** row (`001`, `scanned: 1`): the server takes them for one serial, a repeat. Are serials compared as numbers, so that leading zeros never count? The app now does the same (since 2026-11-22): it sends the first typed of such serials once, and the row matches. If the rule ever changes to comparing text, the app must change back. The guide (§4.7) should say which.
 2. **Letters in a serial.** A lookup with `way: "serial"` and `value: "12AB"` answered **200 `not_found` and was recorded** (a check with a reference). The guide says a serial is "digits only". Should it answer 400? The app never sends letters (it checks against `GET formats` first), so this only affects other clients.
 
 **Also wanted for the tests:** one item with a `picture_url`. The test items have none, so the product picture has not been seen from the real server.

@@ -18,8 +18,8 @@ Cases: [17-test-server.md](test-cases/17-test-server.md).
 | 3 | Profile and permissions | **Done** 2026-11-22 |
 | 4 | One check | **Done** 2026-11-22 |
 | 5 | History and the sessions list | **Done** 2026-11-22 |
-| 6 | Serial stacks | Next |
-| 7 | Scanner sessions | |
+| 6 | Serial stacks | **Done** 2026-11-22 |
+| 7 | Scanner sessions | Next |
 | 8 | Reports, photos, retail users | |
 | 9 | Sign up | |
 | 10 | Password reset and change | |
@@ -192,3 +192,43 @@ The checker's first run stopped at the date filter because the checker had not l
 - **History:** All 13, Valid 1, Warning 2, newest "Today · 12:36 PM", "Checked by Trendsbird".
 - **Valid:** only the genuine check.
 - **Sessions:** "No sessions found."
+
+## Step 6. Serial stacks (2026-11-22)
+
+**Cases first.** Already covered:
+- 1 to 50 serials, more refused, never split; repeats removed; order kept;
+- a `503` sent again once; a lost answer never sent again; a backgrounded resend cancelled;
+- a 200 that cannot be read, or whose rows do not match, counts as recorded.
+
+Added before asking the server: what happens if the server answers `001` as `1`, or merges `001` with `1` (TC-MIG-060). The app fails safe: "recorded, cannot be shown", never sent twice.
+
+**Against the server** (the checker's `stack` step):
+
+| Sent | Result |
+|---|---|
+| `1, 1000001, 1234567890` | A session of kind `serial`, scanned 3; rows in order with the serials as sent: checked before, not in a batch, not found |
+| `001, 1` (as the app used to send it) | **One row, `001`, scanned 1**: the server takes them for one serial. The app expected two rows, so it would have shown "recorded, cannot be shown" |
+| `1000002, 1000002` (raw) | One row: a repeat is checked once |
+| 51 serials (raw) | 400 `validation_failed` |
+| `12AB` (raw) | **200**, one row: the guide says 400 for a value §4.2 refuses, but §4.2 does not refuse it either (B5) |
+| The stack's session, then its checks | Kind serial, ended, scanned 3; `GET checks?session_id=…` gives its 3 checks |
+
+**Fixed, test first (TC-MIG-061).**
+- **What:** serials that differ only by leading zeros are now one serial in the app, as on the server. The first one typed is kept as typed and sent once (`sameSerial`, `distinctSerials`, used by the stack parser and the repository).
+- **Before:** the tests failed, as the app sent `001` and `1`.
+- **After:** the checker's second run gives `001, 1` → one row `001`, shown.
+- **Count:** for `001, 1` it reads "1 of 50 serials · 1 repeated, sent once".
+
+The rule is asked of the backend (B5); if it ever compares text, the app changes back.
+
+**Real-answer tests** (`test/staging/step6_stack_test.dart`, TC-STG-031 … -034):
+- the real stack of three;
+- `001, 1` sent once, with the real one-row answer shown;
+- the real 400 for 51 serials;
+- the stack's checks in History by session.
+
+**On the emulator** (TC-STG-035): passed.
+- **`001 1`:** the count read "1 of 50 serials · 1 repeated, sent once"; one row `001`, "Genuine, needs attention", checked before; Scanned 1.
+- **`1, 1000001, 1234567890`:** checked before, not in a batch, not found, in that order; Scanned 3, Warning 1, Not found 1, Not in a batch 1.
+- **Build:** the first rebuild had failed unnoticed (run beside the checker) and the old app showed "2 of 50 serials"; the rebuilt app shows the fix.
+- The emulator itself crashed (exit 139) before "View this session's checks" was tapped; that link is covered by TC-STG-034.

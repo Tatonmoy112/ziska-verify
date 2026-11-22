@@ -856,6 +856,14 @@ Expected: the server's checks newest first, with the counts on the chips, the ti
 
 - [x] Pass - [ ] Fail - [ ] Blocked — Notes: 2026-11-22, emulator (staging release build): All 13, Valid 1, Warning 2; the newest "Today · 12:36 PM"; Valid showed the one genuine check (serial 1, 12:30 PM); no sessions yet.
 
+#### TC-STG-035 · A stack of serials · P1
+1. Check → **Serial stack**; type `1, 1000001, 1234567890`; send.
+2. **New stack**; type `001, 1`; look at the count; send.
+
+Expected: a row for each serial with its result (checked before, not in a batch, not found) and "Scanned: 3"; for `001, 1`: "1 of 50 serials · 1 repeated, sent once", one row `001`, never "cannot be shown".
+
+- [x] Pass - [ ] Fail - [ ] Blocked — Notes: 2026-11-22, emulator (staging release build): `001 1` counted "1 of 50 serials · 1 repeated, sent once"; one row `001`, checked before, Scanned 1. `1, 1000001, 1234567890`: checked before, not in a batch, not found; Scanned 3.
+
 #### TC-STG-007 · The staging app reaches the server · P1
 1. Open the staging app: Login shows.
 2. Tap **Sign up**, open the role list.
