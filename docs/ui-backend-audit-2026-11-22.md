@@ -29,8 +29,8 @@ Nothing in the app is changed during the audit. The user picks what to fix.
 | 4 | One check | **Done** 2026-11-22 |
 | 5 | Scanner mode | **Done** 2026-11-22 |
 | 6 | Serial stack | **Done** 2026-11-22 |
-| 7 | History | Next |
-| 8 | Reports | |
+| 7 | History | **Done** 2026-11-22 |
+| 8 | Reports | Next |
 | 9 | Profile and across the app | |
 
 ---
@@ -603,3 +603,93 @@ Nothing in the app is changed during the audit. The user picks what to fix.
   - a lost answer is never sent again by itself;
   - second taps are ignored.
 - **Flow:** "Start another stack" starts fresh, and the results stay after opening a row.
+
+---
+
+## Step 7. History
+
+**Screens and pieces:**
+- the Checks list: rows, result chips with counts, search, the serial's tracking log, filters and dates, paging, pull to refresh;
+- the Sessions view: Open and Ended, the last 7 days, Choose dates;
+- a session's checks.
+
+### Findings
+
+| # | Finding | Class | Severity or impact / effort |
+|---|---|---|---|
+| 7.1 | A filter tapped during a 429 wait on a later page loads the **new** filter's rows with the **old** list's cursor, mixing two lists | **Mismatch** (bug) | Medium |
+| 7.2 | In Sessions, "Try again" after a failed later page starts over at page 1 and drops the rows already loaded | **Mismatch** (bug) | Low-medium |
+| 7.3 | A serial searched in Bangla digits is not read as 0–9 (as Check does), so nothing is found and the tracking log does not show; the same in the check picker | **Mismatch** (decision N5) | Medium |
+| 7.4 | A serial searched with leading zeros lists the right checks, but the item card is hidden (`0001000001` is not `1000001` as text) | **Mismatch** | Low |
+| 7.5 | Coming back to History (another tab, or a session's checks) reloads the list: pages after the first are dropped and the place is lost | **Mismatch** (`final.md:199` asks for a refresh, not a loss of place) | Medium |
+| 7.6 | A pull to refresh that fails replaces a full list with an error screen | **Mismatch** | Low |
+| 7.7 | The dates are sent as Bangladesh days and the screen says nothing about time; if the server reads UTC days, checks made between 00:00 and 06:00 fall on the wrong day | **Unclear** (backend fix list item 4) | Medium |
+| 7.8 | A search the server refuses (400) shows "Something went wrong. Try again." and Try again fails again | **Unclear** | Low |
+| 7.9 | The tracking log shows "TRACKING LOG" and "N checks"; "Your checks of serial X" is only read to screen readers, so sighted users may think it is every official's log | **Wording** (decision N2) | Medium |
+| 7.10 | The tracking count stays the total while the list follows the chosen result chip ("12 checks" above 3 rows) | **Wording** | Low |
+| 7.11 | Rows say "Session 7F3C2A10", but no session card shows its ID and the text cannot be tapped | **Wording** + **Improvement** | Low |
+| 7.12 | A stack shows one time in the sessions list but "Started" and "Last scan" on its own card | **Wording** | Low |
+
+### The details
+
+**7.1 Two lists mixed (Mismatch, medium).**
+- **The guide** (§5): the cursor belongs to the list that gave it ("pass it back as it is").
+- **The app:**
+  - during a 429 wait, a new filter is only stored (`history_bloc.dart:143-147`);
+  - when the wait ends, "retry the next page" runs (`:111-112`), which sends the new filter with the old cursor (`:197-199`).
+- **The fix:** load the new filter's first page instead.
+
+**7.2 Sessions' "Try again" (Mismatch).** `sessions_view.dart:68` reloads the first page (`cubit.load`). History's own retry loads only the failed page, as the list's contract says (`app_paginated_list.dart:37`).
+
+**7.3 Bangla digits in the search (Mismatch, medium).**
+- **The decision** (`final.md`, N5): "Bangla digits in a serial are read as 0–9", and the backend counts only 0–9 (fix list item 5).
+- **The app:** the search is sent as typed (`history_bloc.dart:96`), and the tracking log checks `^\d+$`, which matches 0–9 only (`history_screen.dart:231`).
+- **The fix:** read Bangla digits as 0–9 before searching, as the Check tab does.
+
+**7.4 Leading zeros (Mismatch, low).** The server finds the same checks for `0001000001` and `1000001`, but the item card shows only when the text is equal (`history_screen.dart:360`). Compare without the leading zeros.
+
+**7.5 Coming back loses the place (Mismatch, medium).**
+- **The app:** every return to History refreshes it (`history_screen.dart:68-72`), including the Back from a session's checks. The refresh keeps only the first page, and Sessions shows its loading skeleton again.
+- **The idea:** refresh quietly and keep the loaded rows and the scroll.
+
+**7.7 Dates (Unclear, medium).** This waits for the backend's answer (fix list item 4). Then: if Bangladesh days, add "Times in Bangladesh time" under the dates; if UTC days, the app sends the right range.
+
+**7.9 "Your checks" (Wording, medium).**
+- **The decision** (`final.md`, N2): a searched serial shows "Your checks of serial X", "never suggesting other officials' checks".
+- **The app:** that sentence is only the screen reader's label (`history_screen.dart:369`), and the screen shows "TRACKING LOG".
+- **The fix:** show "Your checks of serial X" on screen.
+
+### More ideas to improve History
+
+| Idea | Impact | Effort |
+|---|---|---|
+| Date shortcuts: Today, Yesterday, Last 7 days, This month | High | Small |
+| A row opens its details, with "Report a problem" (the check linked) | High | Medium |
+| Day headings: Today, Yesterday, then the date | Medium | Small |
+| A "Needs attention" chip (warnings, not found, not in a batch together); the API takes one result, so it needs several requests or a filter on the phone | Medium | Small-medium |
+| The session's short ID on its card, and the row's "Session …" opens it | Medium | Small |
+| Share or export the loaded list or a session's checks as text (own checks only) | Medium | Medium |
+| "Times in Bangladesh time" under the dates, once item 4 is answered | Medium | Small |
+| The empty Sessions view says "in the last 7 days" and offers "Choose dates" | Low | Small |
+
+### Checked and right
+- **Rows:**
+  - every field of a row is shown, as the SRS asks (FR-HIS-04);
+  - not-found rows without a product are handled;
+  - reasons show only on warnings;
+  - an unknown result or way is safe;
+  - older rows checked by hidden code still show.
+- **Filters and requests:**
+  - counts come from the first page only;
+  - no `scope` is sent, and empty filters are left out;
+  - 50 a page;
+  - the search waits for typing to stop (400 ms);
+  - Sessions leaves its 7-day default to the server.
+- **Paging:** goes on until `next_cursor` is empty. An empty last page ends cleanly. A failed later page keeps the loaded rows in Checks, and an old answer is dropped.
+- **Permissions:** the History tab and a session's checks are hidden without `history:own`, and the stack's "View this session's checks" too.
+- **Answers:**
+  - a 429 counts down, and Retry and pull wait;
+  - network, busy and server errors say so with the reference;
+  - a 403 reloads the profile;
+  - empty lists say "no checks yet" or "no match".
+- **Display:** "Checked by …" is always the official's own name, and times are in Bangladesh time. Checks and Sessions keep the filters.
