@@ -1,7 +1,7 @@
 {
   "FLAVOR": "staging",
-  "API_BASE_URL": "https://replace-with-test-server-address.example",
-  "CLIENT_SLUG": "demo-pharma",
+  "API_BASE_URL": "https://testapp.protecb.com",
+  "CLIENT_SLUG": "ziska-test",
   "OFFICE_EMAIL": "office@example.com",
   "OFFICE_PHONE": "+8800000000000"
 }

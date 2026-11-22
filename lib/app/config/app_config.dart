@@ -52,9 +52,6 @@ class AppConfig {
         'Run with --dart-define-from-file=config/<flavor>.json',
       );
     }
-    if (clientSlug.isEmpty) {
-      throw StateError('CLIENT_SLUG is missing.');
-    }
     // The demo plays answers the backend does not send yet: never outside
     // the mock build.
     if (demoPasswordLater && flavor.single != AppFlavor.mock) {
@@ -66,7 +63,7 @@ class AppConfig {
     return AppConfig(
       flavor: flavor.single,
       baseUrl: validateBaseUrl(baseUrl),
-      clientSlug: clientSlug,
+      clientSlug: validateClientSlug(clientSlug),
       officeEmail: officeEmail,
       officePhone: officePhone,
       demoPasswordLater: demoPasswordLater,
@@ -99,13 +96,49 @@ class AppConfig {
   /// The base of every app route: `{base}/v1/clients/{slug}/`.
   String get apiRoot => '$baseUrl/v1/clients/$clientSlug/';
 
-  /// Returns [url] without a trailing `/`; throws unless it is HTTPS
-  /// (final.md Section 12.1).
+  /// Returns the host part of [url] (`https://host[:port]`, lower case, no
+  /// trailing `/`); throws unless it is an HTTPS host alone (final.md
+  /// Section 12.1). A whole API address (`…/v1/clients/<slug>`) is refused
+  /// with the host to use, as every request would otherwise miss.
   static String validateBaseUrl(String url) {
-    final uri = Uri.tryParse(url);
+    final uri = Uri.tryParse(url.trim());
     if (uri == null || uri.scheme != 'https' || uri.host.isEmpty) {
       throw StateError('API_BASE_URL must be an https:// address.');
     }
-    return url.endsWith('/') ? url.substring(0, url.length - 1) : url;
+    final host = 'https://${uri.host}${uri.hasPort ? ':${uri.port}' : ''}';
+    if (uri.path.replaceAll('/', '').isNotEmpty ||
+        uri.hasQuery ||
+        uri.hasFragment ||
+        uri.userInfo.isNotEmpty) {
+      throw StateError(
+        'API_BASE_URL is the host alone, for example $host; the client '
+        'name goes in CLIENT_SLUG.',
+      );
+    }
+    if (_isPlaceholder(uri.host)) {
+      throw StateError('API_BASE_URL is still a placeholder.');
+    }
+    return host;
   }
+
+  /// Returns [slug] without surrounding spaces; throws unless it is lower
+  /// case letters, digits and `-`, starting with a letter or a digit (the
+  /// server answers 404 for any other client name).
+  static String validateClientSlug(String slug) {
+    final value = slug.trim();
+    if (!_slug.hasMatch(value)) {
+      throw StateError(
+        'CLIENT_SLUG must be lower case letters, digits and "-": '
+        '"$value" is not.',
+      );
+    }
+    if (_isPlaceholder(value)) {
+      throw StateError('CLIENT_SLUG is still a placeholder.');
+    }
+    return value;
+  }
+
+  static final _slug = RegExp(r'^[a-z0-9][a-z0-9-]*$');
+
+  static bool _isPlaceholder(String value) => value.contains('replace-with');
 }
