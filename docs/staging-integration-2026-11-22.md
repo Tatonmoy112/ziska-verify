@@ -14,8 +14,8 @@ Cases: [17-test-server.md](test-cases/17-test-server.md).
 | Step | Area | State |
 |---|---|---|
 | 1 | Connection and errors | **Done** 2026-11-22 |
-| 2 | Login and staying logged in | Next |
-| 3 | Profile and permissions | |
+| 2 | Login and staying logged in | **Done** 2026-11-22 |
+| 3 | Profile and permissions | Next |
 | 4 | One check | |
 | 5 | History and the sessions list | |
 | 6 | Serial stacks | |
@@ -48,3 +48,39 @@ All three follow the guide's envelope, over HTTPS, with the security headers (`n
 **On the emulator** (staging release build, Pixel 7, 2026-11-22): **TC-STG-007 passed.** Login shows, and Sign up's role list shows Distributor and Retail seller, loaded from the server.
 
 **Note:** the emulator window now crashes at start on this PC (its software OpenGL library fails to load), so it runs without a window (`-no-window`); screenshots come through `adb`.
+
+## Step 2. Login and staying logged in (2026-11-22)
+
+**Cases first:** already covered offline by about 110 tests:
+- login `logged_in` and `code_sent`; wrong, expired and used codes; five wrong codes;
+- resend's wait and its 3-in-all limit; `429` with `Retry-After`;
+- one renewal at a time; a refused renewal; a forced change; logout's worst cases.
+
+No new offline case was needed. Step 2's new tests replay the server's real answers.
+
+**Against the server** (the checker: `login`, the code pasted by the owner, `verify`, then `session`):
+
+| Check | Result |
+|---|---|
+| `POST auth/login` (a new phone) | 200 `code_sent` with a `challenge_id`; the code emailed |
+| `POST auth/verify-phone` | 200 `logged_in`: both passes (access 15 minutes, refresh 30 days), `must_change_password: false` (no forced change) |
+| `GET me` | Supervisor, permissions `history:own`, `incident:report`, `item:bulk_lookup`, `item:lookup`; organisation "Ziska-test"; support email and phone `null` |
+| `GET formats` with the pass | 200 |
+| `POST auth/refresh` | 200: two new passes; the next request works with the new one |
+| `POST auth/logout` | **200 when sent bare** (no body, no type, as the app sends it). **The first run sent an empty JSON body and got `400 validation_failed`**: this answers data-flow question Q4. |
+| `GET me` after logout | 401 `unauthenticated` |
+| `POST auth/refresh` with an already used pass | 401 `unauthenticated` |
+| `POST auth/login` again on the same phone | 200 `logged_in` at once: the phone is trusted |
+
+**Differences from the contract:** none. The only failure was the checker's own: its first version did not strip the type of a bodiless request as the app does (`BodilessRequestInterceptor`). It now does.
+
+**Real-answer tests** (`test/staging/step2_login_session_test.dart`, TC-STG-008 … -013): the ten saved answers (passes, challenge, email, name and IDs replaced) replayed through the whole app: login with the code; the trusted phone; renewal; logout; a used refresh pass; a pass ended elsewhere.
+
+**On the emulator** (TC-STG-014): passed.
+- **Login with the emailed code:** "Welcome back, Trendsbird", "Ziska-test".
+- **Restart:** still logged in.
+- **Profile:** the four permissions and "Not set by your office".
+- **Logout:** back to Login.
+- **The next login:** no code.
+
+The first attempt said "No connection" while the emulator's network was dropping packets (the ping to the server varied from 22 to 508 ms); the retry worked. The app reported it correctly.

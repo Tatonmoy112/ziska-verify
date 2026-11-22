@@ -8,6 +8,8 @@ The app is built against the contract and runs against the Postman mock. These p
 
 ## B1. A test server
 
+> **Answered 2026-11-22:** `https://testapp.protecb.com`, client `ziska-test`, with a test login. The app is being checked against it step by step (`docs/staging-integration-2026-11-22.md`). Still wanted: items for every result and the mail page or office access.
+
 **Request:** a test server for the mobile app, separate from any live client:
 
 - its HTTPS address and the client slug (the app calls `<address>/v1/clients/<slug>/`);
@@ -31,7 +33,7 @@ Four were sent on 2026-11-17 (`data-flow-questions.md`); none is answered yet:
 1. Are `from` and `to` of `GET checks` and `GET lookups/sessions` UTC days or Bangladesh days? The app sends the Bangladesh date the official picked.
 2. Is a QR value matched without regard to case? The app sends it as read and refuses one outside the `characters` of `GET formats`.
 3. During a forced change, does `auth/refresh` answer 200 with `must_change_password: true`, or `403 password_change_required`? The app handles both.
-4. Is an empty logout body fine? The app sends no body and no `Content-Type`.
+4. Is an empty logout body fine? The app sends no body and no `Content-Type`. **Answered by the test server, 2026-11-22:** a bare request is accepted (200); an empty body sent as `application/json` is refused (`400 validation_failed`). The app's way is right.
 
 One more:
 

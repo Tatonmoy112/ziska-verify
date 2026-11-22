@@ -822,6 +822,16 @@ flutter build apk --release --flavor staging --dart-define-from-file=config/stag
 ```
 The staging app installs next to the mock app (its own name, "Track & Trace Staging"). Progress, step by step: [staging-integration-2026-11-22.md](staging-integration-2026-11-22.md).
 
+#### TC-STG-014 · Login, restart, logout, login again · P1
+1. Log in with the test login; enter the code from its email.
+2. Close the app fully and open it again.
+3. Profile → **Log out** → **Log out**.
+4. Log in again.
+
+Expected: in after the code (the account's name and organisation shown); still in after the restart; Login after logging out; the second login needs no code.
+
+- [x] Pass - [ ] Fail - [ ] Blocked — Notes: 2026-11-22, emulator (staging release build). The first login attempt showed "No connection" while the emulator's network was dropping packets; the retry worked. Name "Trendsbird", organisation "Ziska-test", Supervisor with all four permissions, support "Not set by your office".
+
 #### TC-STG-007 · The staging app reaches the server · P1
 1. Open the staging app: Login shows.
 2. Tap **Sign up**, open the role list.

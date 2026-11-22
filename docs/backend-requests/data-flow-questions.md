@@ -32,6 +32,8 @@ The app's data flow was checked route by route against the contract: every reque
 
 ## Q4. An empty body on `auth/logout`
 
+> **Answered by the test server (2026-11-22):** `POST auth/logout` with no body and no `Content-Type` → 200; with `Content-Type: application/json` and no body → `400 validation_failed` ("Invalid request."). The app sends it bare, so it is right (TC-STG-011).
+
 **Routes:** `POST auth/logout` and `POST me/password/later`.
 
 **Question:** Is a request with no body and `Content-Type: application/json` accepted, or refused as an empty JSON body?
