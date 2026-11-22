@@ -19,8 +19,8 @@ Cases: [17-test-server.md](test-cases/17-test-server.md).
 | 4 | One check | **Done** 2026-11-22 |
 | 5 | History and the sessions list | **Done** 2026-11-22 |
 | 6 | Serial stacks | **Done** 2026-11-22 |
-| 7 | Scanner sessions | Next |
-| 8 | Reports, photos, retail users | |
+| 7 | Scanner sessions | **Done** 2026-11-22 |
+| 8 | Reports, photos, retail users | Next |
 | 9 | Sign up | |
 | 10 | Password reset and change | |
 | 11 | Records | |
@@ -232,3 +232,53 @@ The rule is asked of the backend (B5); if it ever compares text, the app changes
 - **`1, 1000001, 1234567890`:** checked before, not in a batch, not found, in that order; Scanned 3, Warning 1, Not found 1, Not in a batch 1.
 - **Build:** the first rebuild had failed unnoticed (run beside the checker) and the old app showed "2 of 50 serials"; the rebuilt app shows the fix.
 - The emulator itself crashed (exit 139) before "View this session's checks" was tapped; that link is covered by TC-STG-034.
+
+## Step 7. Scanner sessions (2026-11-22)
+
+**Cases first.** Already covered (TC-MIG-012 … -054):
+- one UUID per session, saved per official; repeats and camera frames counted once;
+- `session_full` and `session_ended` roll over and send the scan again; `session_not_yours` starts anew;
+- a 429 waits; two scans a second at most; Back ends without waiting; crash recovery; Finish.
+
+**Gaps found and closed with tests** (the app already behaved; now it is pinned):
+- **TC-MIG-062:** a saved session that has ended, is a stack, or answers 404 starts a new session, and the old one's checks are never read. With no connection, the ID is kept for the next try.
+- **TC-MIG-063:** a `503` on a scan: "Scan again", nothing kept, nothing sent again by itself.
+- **TC-MIG-064:** an end answered 404 or lost still leaves, and the ID is forgotten.
+
+**Against the server** (the checker's `scan` step: a new UUID, QR values of the right format):
+
+| Sent | Result |
+|---|---|
+| QR A (the first scan starts the session) | 200 `not_found`, ref MA-2026-000030, `repeat: false`; scanned 1, not found 1, `left: 4999` |
+| QR B | 200 `not_found`; scanned 2, `left: 4998` |
+| QR A again | `repeat: true`, **the first scan's ref**; scanned still 2 |
+| `GET lookups/sessions/{id}` | kind `qr`, open, scanned 2 |
+| `GET checks?session_id={id}` | 2 checks (the repeat added none), both `qr` |
+| `POST …/end`, twice | 200 both times |
+| `GET lookups/sessions/{id}` after the end | ended, scanned 2 |
+| A scan in the ended session | 409 `session_ended` |
+| The same QR in a new session | `repeat: false`, scanned 1: counted again |
+| A serial in a session; a session ID that is not a UUID (sent raw) | 400 `validation_failed` |
+| `GET` and `end` of an unknown session | 404 `not_found` |
+
+All 18 checks passed: the server answers exactly as the guide says. Every answer went through the app's own parsers, and each answer's session matched the one sent.
+
+**Not checked against the server:**
+- **A found item in a session:** no QR value of a test item is known, so every scan was `not_found`. The QR values were requested in B1.
+- **`session_not_yours`:** needs a second official.
+- **`session_full`:** needs 5,000 items.
+- **`429`:** needs more than 120 scans a minute; not sent to a shared server.
+
+These are covered offline.
+
+**Real-answer tests** (`test/staging/step7_scan_test.dart`, TC-STG-036 … -039):
+- the real scans, the repeat and Finish in Scanner mode;
+- a real answer for another session refused;
+- the real `session_ended` rolled over without asking, and the real 404;
+- recovery after a crash from the real summaries and checks.
+
+**On the emulator** (TC-STG-040): passed.
+- **Scanner mode:** the camera, the frame, five counters at 0, Finish off. The emulator's camera cannot read a QR, so no scan was made on the phone; QR posters in its virtual scene were out of the camera's view.
+- **Sessions:** the checker's two scanner sessions, ended, with 1 and 2 scanned, under the stack of step 6.
+- **Session checks:** MA-2026-000031 and -000030, "QR code · Session 4A7A81BB".
+- **The emulator crashed twice** (exit 139) while opening Session checks. A third run, with the phone's log recording, opened it cleanly. The log showed the camera closed when the Check tab was left and not opened again, so the app was not at fault; the log showed heavy memory pressure.

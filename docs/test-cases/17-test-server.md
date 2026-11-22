@@ -74,3 +74,13 @@ The integration runs one step at a time. For each step, the cases come first (no
 | TC-STG-033 | 51 serials | NEG | P2 | AUTO | ✅ `staging/step6_stack_test` | The real 400 for 51 serials | Read it | A validation error (the app refuses 51 before sending) | Guide §4.7 |
 | TC-STG-034 | The stack in History | POS | P2 | AUTO | ✅ `staging/step6_stack_test` | The real stack and its session's checks | Send; View this session's checks | The checks by `session_id`; "Session checks" with the stack's serials | Guide §4.5, §4.7 |
 | TC-STG-035 | A stack on a phone | E2E | P1 | DEVICE | ✋ | Staging build, logged in | Serial stack: `1, 1000001, 1234567890`; then `001, 1` | Each row's result; "Scanned: 3"; `001, 1` counted as one and its row shown | Guide §4.7 |
+
+## Step 7. Scanner sessions
+
+| ID | Title | Type | Pri | Run on | Auto | Pre-conditions / Data | Steps | Expected | Source |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-STG-036 | Real scans in a session | POS | P1 | AUTO | ✅ `staging/step7_scan_test` | The real answers to QR A, QR B, then QR A again | Scan them; Finish | One session for all three; the repeat says "Already scanned" with the first scan's reference; Scanned 2, Not found 2, Remaining 4998; "2 products scanned"; the end sent once | Guide §4.3, §4.4 |
+| TC-STG-037 | A real answer for another session | WORST | P1 | AUTO | ✅ `staging/step7_scan_test` | The real scan answer, with the checker's session | Scan in another session | Refused (`session_mismatch`), never counted | Guide §4.3 |
+| TC-STG-038 | The real `session_ended` | NET | P1 | AUTO | ✅ `staging/step7_scan_test` | The real 409, the real answer in a new session | Scan in an ended session | A new session, the scan sent again in it, nothing asked; the real 404 and both real summaries read | Guide §4.3, §4.5 |
+| TC-STG-039 | After a crash, the real saved session | WORST | P1 | AUTO | ✅ `staging/step7_scan_test` | The real summary (open, ended) or 404, and the real checks | Open Scanner mode with the session saved | Open: its totals and its two scans back, the next scan in it. Ended or 404: a new session | Guide §4.6 |
+| TC-STG-040 | Scanner mode on a phone | E2E | P1 | DEVICE | ✋ | Staging build, logged in; the checker's sessions on the server | Open Scanner mode; Back; History → Sessions; open a session | The camera, the frame, counters at 0, Finish off; the sessions with their counts; a session's checks | Guide §4.3, §4.5 |

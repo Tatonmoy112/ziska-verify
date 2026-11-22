@@ -864,6 +864,14 @@ Expected: a row for each serial with its result (checked before, not in a batch,
 
 - [x] Pass - [ ] Fail - [ ] Blocked — Notes: 2026-11-22, emulator (staging release build): `001 1` counted "1 of 50 serials · 1 repeated, sent once"; one row `001`, checked before, Scanned 1. `1, 1000001, 1234567890`: checked before, not in a batch, not found; Scanned 3.
 
+#### TC-STG-040 · Scanner mode on a phone · P1
+1. Check → **Scanner mode**; look; then Back.
+2. History → **Sessions**; open a scanner session.
+
+Expected: the camera and the frame, counters at 0, **Finish** off; the server's sessions with their counts; a session's checks with "QR code · Session …".
+
+- [x] Pass - [ ] Fail - [ ] Blocked — Notes: 2026-11-22, emulator (staging release build): Scanner mode opened (camera, frame, five counters at 0, Finish off); Back. Sessions: the checker's two scanner sessions, ended, 1 and 2 scanned (not found), and the stack of step 6. The 2-scan session's checks: MA-2026-000031 and -000030, "QR code · Session 4A7A81BB". The emulator's camera cannot read a QR, so no scan was made on the phone.
+
 #### TC-STG-007 · The staging app reaches the server · P1
 1. Open the staging app: Login shows.
 2. Tap **Sign up**, open the role list.
