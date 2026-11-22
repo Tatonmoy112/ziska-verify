@@ -316,7 +316,15 @@ English and Bangla ARBs with generated accessors. Every English text has a Bangl
 
 Mock builds use the updated Postman snapshot and require its current mock server. Staging/live retain HTTPS and fixed client identity. The mock build sets `DEMO_PASSWORD_LATER: true`, which plays `me/password/later` and its fields until the backend ships them; staging and live builds refuse the flag.
 
-No test server is promised by the current backend guide. Do not test recorded checks against a live client. Real-mail approval, device cameras, and backend transaction behavior require staging/device acceptance when access is supplied.
+The backend's test server (2026-11-22) is the staging environment: `https://testapp.protecb.com`, client `ziska-test`. The app was checked against it in 11 steps (`docs/staging-integration-2026-11-22.md`); the server's answers are fixtures replayed in `test/staging/`. Do not test recorded checks against a live client.
+
+What the test server showed, beyond the guide (backend question B5):
+- **Serials are compared as numbers:** `001` and `1` are one item. The app sends the first typed of such serials once.
+- **Characters are counted two ways:**
+  - a retail-user search and a sign-up name count UTF-16 units (an emoji counts two). The app keeps both within 100 units, cut at a whole character (`TextLimits.fitUtf16`);
+  - a note and a password count code points, as the app does.
+- **A note is trimmed before it is counted:** the spaces around it do not count toward its 1,000 characters.
+- **A new password may equal the current one.**
 
 ## 18. Verification
 
@@ -344,7 +352,7 @@ Approved for this migration: full Flutter contract migration; serial entry limit
 
 ## 20. Remaining dependencies
 
-See `docs/release-backlog.md` for the test server, backend day boundary, the client's review of the Bangla texts, release signing, Firebase/Crashlytics and iOS schemes. The architecture is not evidence that manual/staging acceptance has run. Record actual tool results in the migration report.
+See `docs/release-backlog.md` for the test server's remaining data (QR values, a retail user, an item with a picture), backend day boundary, the client's review of the Bangla texts, release signing, Firebase/Crashlytics and iOS schemes. The architecture is not evidence that manual/staging acceptance has run. Record actual tool results in the migration report.
 
 ### 20.0 The backend plan of 2026-11-18
 

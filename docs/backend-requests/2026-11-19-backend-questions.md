@@ -8,7 +8,7 @@ The app is built against the contract and runs against the Postman mock. These p
 
 ## B1. A test server
 
-> **Answered 2026-11-22:** `https://testapp.protecb.com`, client `ziska-test`, with a test login. The app is being checked against it step by step (`docs/staging-integration-2026-11-22.md`). Still wanted: items for every result, **the QR values of some test items** (none is known, so a scanner session on the server has only seen `not_found`, 2026-11-22), at least one retail user (the server has none, 2026-11-22; a sign-up request as a Retail seller, "Test Signup mobile app check", waits for the office: approving it gives one), and the mail page or office access.
+> **Answered 2026-11-22:** `https://testapp.protecb.com`, client `ziska-test`, with a test login. The app was checked against it in 11 steps the same day (`docs/staging-integration-2026-11-22.md`). Still wanted: items for every result, **the QR values of some test items** (none is known, so a scanner session on the server has only seen `not_found`, 2026-11-22), at least one retail user (the server has none, 2026-11-22; a sign-up request as a Retail seller, "Test Signup mobile app check", waits for the office: approving it gives one), and the mail page or office access.
 
 **Request:** a test server for the mobile app, separate from any live client:
 

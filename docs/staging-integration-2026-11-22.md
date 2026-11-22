@@ -23,7 +23,54 @@ Cases: [17-test-server.md](test-cases/17-test-server.md).
 | 8 | Reports, photos, retail users | **Done** 2026-11-22 |
 | 9 | Sign up | **Done** 2026-11-22 |
 | 10 | Password reset and change | **Done** 2026-11-22 |
-| 11 | Records | Next |
+| 11 | Records | **Done** 2026-11-22 |
+
+## Summary (2026-11-22)
+
+All 11 steps are done. Every area of the app ran against the real server through the app's own services and parsers; the server's answers are kept as fixtures and replayed offline in `test/staging/` (TC-STG-001 … -054).
+
+**What the server changed in the app** (each fixed test first):
+
+| Step | Fix | Commit |
+|---|---|---|
+| 1 | The address: `API_BASE_URL` takes the host alone; a path, query, login or placeholder is refused with the host to use; the slug is checked | f29ec20 |
+| 3 | Text the server sends empty or as spaces (organisation, support, name) counts as not set | 1e88cdb |
+| 6 | Serials that differ only by leading zeros are one serial, as the server counts them; the first typed is sent once | 5aacf99 |
+| 8 | The spaces around a report's note do not count toward its 1,000; the retail-user search is cut at a whole character | 8915a54 |
+| 9 | A sign-up name is kept within the server's 100 UTF-16 units; one helper (`TextLimits.fitUtf16`) for the name and the search | aaade9d |
+
+Steps 2, 4, 5, 7 and 10 needed no app change. Step 5 added tests for gaps the app already handled (cb01e2b), and step 7 did the same (TC-MIG-062 … -064).
+
+**Server rules not in the guide** (asked of the backend in B5):
+- Serials are compared as numbers: `001` and `1` are one item.
+- A serial with letters is accepted as `not_found`, alone or in a stack.
+- A search and a sign-up name count characters in UTF-16 units (an emoji as two); a note and a password count code points.
+- A new password may be the same as the current one (B3 item 5).
+
+**What the server lacks for the remaining checks** (asked in B1):
+- QR values of test items, so a scanner session can meet a found item.
+- An item with a picture.
+- A retail user. The sign-up request of step 9 ("Test Signup mobile app check", Retail seller) waits for the office; approving it gives one.
+
+**Left for a second phone, or not sent on purpose:**
+- **A second phone:** another phone logged out by a change or a reset; `session_not_yours`.
+- **Limits not hit on a shared server:** `session_full` (5,000 items); 120 scans a minute; 50 reports an hour; 10 sign-ups an hour.
+- **Lockouts of the test login:** 10 wrong reset codes an hour; more than 5 codes in 15 minutes.
+
+All of these are covered offline.
+
+**Left on the test server by these checks:**
+- **Checks and sessions:** checks MA-2026-000001 … -000032, the sessions of steps 6 and 7, and the stacks.
+- **Reports:** #1 … #4, three with photos.
+- **Sign-up:** one sign-up request, pending.
+- **The test login:** still logged in on the emulator; its password unchanged.
+
+**Numbers:**
+- 1312 automated tests pass (136 goldens).
+- 757 of 885 cases are automated.
+- 11 phone checks passed (TC-STG-007, -014, -018, -025, -030, -035, -040, -046, -050, -054, and TC-AUTH-063).
+
+How to build, run and check against the server: `docs/run.md`, "The test server".
 
 ## Step 1. Connection and errors (2026-11-22)
 

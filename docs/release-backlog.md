@@ -4,7 +4,7 @@ Updated 2026-11-19. These items are intentionally separate from the implemented 
 
 | Item | Dependency / acceptance |
 |---|---|
-| Staging acceptance | Backend HTTPS test host, client slug, fixture accounts/items, mail page, and office portal access; never use a live client |
+| Staging acceptance | **Run 2026-11-22** against `https://testapp.protecb.com` (`ziska-test`): all 11 steps done (`docs/staging-integration-2026-11-22.md`). Still needed from the backend: QR values of test items, an item with a picture, a retail user (a sign-up request waits for approval), a second login for the two-phone cases, and office portal access; never use a live client |
 | Date filter day boundary | Backend confirmation whether inclusive dates denote UTC or Bangladesh calendar days; preserve current date strings until answered |
 | Crashlytics | Registered Firebase projects/platform configs and release-symbol setup; existing no-op service stays until provisioned |
 | iOS flavors and device run | Mac/Xcode, signing and mock/staging/live schemes |
