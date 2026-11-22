@@ -25,8 +25,8 @@ Nothing in the app is changed during the audit. The user picks what to fix.
 |---|---|---|
 | 1 | Login and staying logged in | **Done** 2026-11-22 |
 | 2 | Passwords (forgot, reset, change, Not now) | **Done** 2026-11-22 |
-| 3 | Sign up | Next |
-| 4 | One check | |
+| 3 | Sign up | **Done** 2026-11-22 |
+| 4 | One check | Next |
 | 5 | Scanner mode | |
 | 6 | Serial stack | |
 | 7 | History | |
@@ -236,3 +236,99 @@ Nothing in the app is changed during the audit. The user picks what to fix.
   - 403 hides it with its message and keeps Log out;
   - Profile's reminder follows `password_change_pending`.
 - **Second taps** are ignored. Every error shows its reference.
+
+---
+
+## Step 3. Sign up
+
+**Screens and pieces:**
+- the roles from the server ("Ask the office for an account" when there are none);
+- the form: name, role, password with its ticks, email;
+- "Send code", the code, then "Sign up";
+- the "Thanks for signing up" screen.
+
+### Findings
+
+| # | Finding | Class | Severity or impact / effort |
+|---|---|---|---|
+| 3.1 | After "Try again" loads the roles, the old error ("No connection…") stays above a form that works | **Mismatch** | Medium |
+| 3.2 | A roles reload drops a running 429 countdown on "Send code" or "Sign up", so the next tap is refused again | **Mismatch** | Low |
+| 3.3 | The office contact is still a placeholder in the live settings ("replace-with-office-email"), and staging and mock use example addresses. "Contact the office" would open mail to a non-address, and the app does not refuse a placeholder at start | **Mismatch** + **Unclear** (the client supplies the real contact) | Medium (must be set before release) |
+| 3.4 | "Role not found" is recognised by reading the message's words, not its code | **Unclear** (ask the backend for its own code) | Low |
+| 3.5 | "A code was sent to the address." is not true for an address that already has an account: no code comes, and the person may loop | **Wording** | Medium |
+| 3.6 | "Create your account…" and the button "Sign up" suggest the account exists at once; it exists only after the office approves | **Wording** | High (the user met this) |
+| 3.7 | The "Thanks for signing up" screen does not say what happens next (approval email, then the first login asks for an emailed code) | **Improvement** | High / small |
+| 3.8 | The Login screen gives no hint for someone who just signed up (same as 1.5) | **Improvement** | Medium / small |
+| 3.9 | When the answer to "Sign up" is lost, the retry says "wrong or expired code", though the request may have arrived | **Improvement** | Low / small |
+| 3.10 | "Send a new code" can be tapped again at once; past 5 emails in 15 minutes the server sends none and says nothing | **Improvement** | Low / small |
+| 3.11 | A long 429 wait on "Sign up" outlasts the code's 5 minutes, so the next try is sure to fail | **Improvement** | Low / small |
+| 3.12 | Small things: no spinner while the roles reload; retyping the same email drops the code step; leaving mid-way discards the form without asking | **Improvement** | Low / small |
+| — | The name "Sign up" (the backend says "Request access") | **Decided** | The user's decision of 2026-11-18 (`final.md:253`); 3.6 proposes only a clearer subtitle |
+
+### The details
+
+**3.1 The old error stays (Mismatch, medium).**
+- **The app** (`request_access_cubit.dart:69-80`): when the roles load, the new state copies the old `failure` and `retryAt`. The copy is meant to keep the "role no longer available" text after a reload, but it keeps every old error.
+- **Example:** offline at first, then "Try again" works, and "No connection. Check the internet and try again." still shows over the form.
+- **The fix:** keep only the role text.
+
+**3.2 A reload drops the waits (Mismatch, low).**
+- **The guide** (§1): over a limit, "429 with Retry-After. Go by that header".
+- **The app:** the same success branch does not copy `codeRetryAt` and `submitRetryAt`, though the failure branch does (lines 90-91). After a "role not found", which reloads the roles, a running countdown disappears.
+
+**3.3 The office contact (Mismatch, Unclear).**
+- **The settings:** `config/live.json` still has `"OFFICE_EMAIL": "replace-with-office-email"` and `"OFFICE_PHONE": "replace-with-office-phone"`. Staging and mock have `office@example.com` and `+8800000000000`.
+- **The app:** it refuses placeholders only in the server address and the client name (`app_config.dart:143`), and shows "Contact the office" whenever the value is not empty (`app_router.dart:229`).
+- **The fix:**
+  - the client gives the real office email and phone;
+  - the app refuses "replace-with" in these two values at start, as it does for the server address.
+
+**3.4 "Role not found" by its words (Unclear, low).**
+- **The guide** (§1): "Decide what the app does from `error.code`, never from the message". But §3.9 gives the role's refusal only as `404 not_found "Role not found."`.
+- **The app** (`request_access_screen.dart:141-144`): it looks for "role" in the message. If the backend rewords it, the person sees "Not available." instead; the roles still reload.
+- **Ask the backend** for its own code, such as `role_not_found`.
+
+**3.5 "A code was sent to the address." (Wording, medium).**
+- **The guide** (§3.9): it prescribes this text, but an address with an account gets "a mail saying so … and no code". The user saw that email today.
+- **What happens:** the person sees a code field, no code comes, and a guess gets "wrong or expired".
+- **A neutral text, true for every address:** "We sent an email to this address. It has your code, or tells you what to do next."
+
+**3.6 "Create your account" (Wording, high).**
+- **The texts** (`app_en.arb`): the subtitle is "Create your account. Your office checks it and emails you its answer.", and the button is "Sign up".
+- **The guide** (§3.9): the account exists only after the office approves. Until then, login answers "Email or password is incorrect.".
+- **Keep the name "Sign up"** (the user's decision), but make the subtitle clear: "Ask for an account. Your office checks the request and emails you the answer."
+
+**3.7 What happens next (Improvement, high / small).**
+- **The guide** (§3.9) says:
+  - the approval email says the person can log in;
+  - the first login on a phone needs an emailed code;
+  - the office may change the details;
+  - an unanswered request is deleted after 20 days.
+- **The idea:** under "Thanks for signing up", add: "You can log in after the office approves your request. The approval email tells you how. Your first login on this phone asks for a code we email you."
+
+**3.9 A lost answer (Improvement, low).** If the network drops after "Sign up" was sent, the request may have arrived; a retry then gets "wrong or expired code". A note could say: "If you got a confirmation email, your request arrived." Sending again only replaces the request.
+
+**3.10 and 3.11 Waits (Improvement, low).**
+- **"Send a new code":** a 60-second wait, or the hint "Check spam; asking too often stops the emails for a while."
+- **A 429 on "Sign up" longer than 5 minutes:** say that a new code will be needed.
+
+### Checked and right
+- **Roles:** in the server's order, name and ID only. An empty list shows "Ask the office for an account."; a failed load shows Try again, never "Ask the office"; the first load shows a spinner.
+- **Field order** as the guide asks: name, role, password (with live ticks), email; then "Send code"; then the code and "Sign up".
+- **Inputs:**
+  - "Send code" is on only when the form is valid;
+  - the code is 6 digits (Bangla digits read);
+  - the email and the name are trimmed, and the name is kept within 100 as the server counts;
+  - exactly the five documented fields are sent.
+- **Every answer:**
+  - 200: the "Thanks" screen; the password and code cleared;
+  - 401: "wrong or expired", the code step kept;
+  - 403: the rules shown, everything kept;
+  - 404: the role text, the roles reloaded, a gone role cleared;
+  - 409: "Try again later", a new code needed;
+  - 400: the general text.
+
+  Which refusals keep the code matches the guide.
+- **Limits:** separate countdowns for codes and requests, from `Retry-After`; no number built in.
+- **Taps and email edits:** second taps are ignored, and leaving mid-way is safe. Editing the email after a code asks for a new code.
+- **Routing:** "Back to login" and Back return to Login, and Sign up starts fresh each time. It works without a login.
