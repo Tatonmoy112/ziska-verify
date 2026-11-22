@@ -20,8 +20,8 @@ Cases: [17-test-server.md](test-cases/17-test-server.md).
 | 5 | History and the sessions list | **Done** 2026-11-22 |
 | 6 | Serial stacks | **Done** 2026-11-22 |
 | 7 | Scanner sessions | **Done** 2026-11-22 |
-| 8 | Reports, photos, retail users | Next |
-| 9 | Sign up | |
+| 8 | Reports, photos, retail users | **Done** 2026-11-22 |
+| 9 | Sign up | Next |
 | 10 | Password reset and change | |
 | 11 | Records | |
 
@@ -282,3 +282,79 @@ These are covered offline.
 - **Sessions:** the checker's two scanner sessions, ended, with 1 and 2 scanned, under the stack of step 6.
 - **Session checks:** MA-2026-000031 and -000030, "QR code · Session 4A7A81BB".
 - **The emulator crashed twice** (exit 139) while opening Session checks. A third run, with the phone's log recording, opened it cleanly. The log showed the camera closed when the Check tab was left and not opened again, so the app was not at fault; the log showed heavy memory pressure.
+
+## Step 8. Reports, photos and retail users (2026-11-22)
+
+**Cases first.** Already covered (TC-REP-001 … -060, the picker, My reports):
+- the note's length, in code points; filing once, a lost answer never filed again;
+- photos one at a time, three at most, the hour, 2,048 px and 1 MB, the same photo twice;
+- every refusal while filing or adding a photo; My reports and its pages; the picker's search, pages and waits.
+
+**Gaps found, tests first:**
+- **TC-REP-061:** no test said the note goes trimmed. It did; now it is pinned.
+- **TC-REP-062 (fixed):** the guide removes the spaces around a note *before* counting its 1,000 characters. The field counted them, so a 1,000-character note pasted with a space before it lost its last character. The tests failed; the field now leaves the spaces around the note out of the limit and the counter (`CodePointLimit(outerSpaceFree: true)`).
+- **TC-REP-063 (fixed):** the retail-user search was cut at 100 UTF-16 units with `substring`, which could cut an emoji in half. The domain service had no test at all; it now has one, and the search is cut at whole characters.
+
+**Against the server** (the checker's `report` step):
+
+| Sent | Result |
+|---|---|
+| A note of spaces only; a note of 1,001 characters | 400 `validation_failed`; nothing filed |
+| An unknown check; an unknown retail user | 404 "Check not found."; 404 "Retail user not found."; nothing filed |
+| A note of exactly 1,000 characters, sent with spaces and a line break around it, about one of this official's checks | **201**: the server removes the spaces before counting (the rule of TC-REP-062) |
+| Photo 1: a JPEG of 2048 × 1536 at quality 85 (210 KB) | 201, `n: 1` |
+| The same photo again | 201, `n: 1`: not counted twice |
+| Text sent as a JPEG; an empty photo; 1 MB + 1 byte; a WebP type | 400 "The file is not a JPEG or PNG photo."; 400 "The photo is empty."; 400 "The photo must be at most 1 MB."; 415 |
+| A photo for an unknown report | 404 "Report not found." |
+| Photo 2 (a PNG), photo 3 (a JPEG) | 201, `n: 2`, `n: 3` |
+| A 4th photo | 409 "The report has 3 photos already." |
+| `GET incidents` | the new report first: the note trimmed (1,000 characters), 3 photos, the check, no retail user |
+| `GET incidents?limit=1`, then its cursor | `next_cursor` given; the next page holds the others |
+| `GET incidents?sort=old` | 400 |
+| `GET retail-users` (none, `a`, 100 characters, `"  rahim  "`) | 200, **no retail users on the server** |
+| A search of 101 characters (raw) | 400 |
+
+All 28 checks passed.
+
+The first run had 2 failures:
+- **The 4th photo:** the checker sent photo 3's file again, and the server rightly answered its `n` once more. The checker now sends a new photo.
+- **A search of 99 letters and an emoji was refused (400).**
+
+**How the server counts characters** (the checker's `lengths` step):
+
+| Search sent | Code points | UTF-16 units | UTF-8 bytes | Answer |
+|---|---|---|---|---|
+| 100 letters | 100 | 100 | 100 | 200 |
+| 98 letters and an emoji | 99 | 100 | 102 | 200 |
+| 99 letters and an emoji | 100 | 101 | 103 | **400** |
+| 100 "é" | 100 | 100 | 200 | 200 |
+| 50 emoji | 50 | 100 | 200 | 200 |
+
+The search counts **UTF-16 units**. A note of an emoji and 999 letters (1,000 code points, 1,001 units) was **filed** (report 2): the note counts code points, as the app does. The app now keeps a search within 100 units, cut at a whole character, so it passes whichever way the server counts (TC-REP-063). The difference is asked of the backend (B5, item 3).
+
+**Reports on the test server** (all by the test login, 2026-11-22):
+- **#1:** the checker's first run, with 3 photos.
+- **#2:** the emoji note of the length check, no photos.
+- **#3:** the checker's second run, with 3 photos.
+- **#4:** filed from the phone, with 1 photo.
+
+**Not checked against the server:**
+- **The picker with retail users in it:** the server has none (asked in B1).
+- **Photos after the hour; 50 reports an hour:** these need an hour or 50 reports.
+
+These are covered offline.
+
+**Real-answer tests** (`test/staging/step8_report_test.dart`, TC-STG-041 … -045):
+- a report and its photo;
+- the real 404s while filing, each naming what is gone;
+- the real 409 for a 4th photo with its reference, and every real refusal mapped to its kind;
+- My reports from the real list;
+- the picker with the real empty list.
+
+**On the emulator** (TC-STG-046): passed.
+- **The note:** "Test from the phone: seal cut.", typed with two spaces before and after, counted 30/1000.
+- **The picker:** "No retail user found".
+- **The check:** MA-2026-000031 linked.
+- **The photo:** taken with the emulator's camera.
+- **Filing:** "Report 4 filed.", "Photo 1".
+- **My reports:** #4 first, with "1 photo" and its check, then #3, #2 and #1.

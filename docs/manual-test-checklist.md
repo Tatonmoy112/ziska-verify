@@ -872,6 +872,17 @@ Expected: the camera and the frame, counters at 0, **Finish** off; the server's 
 
 - [x] Pass - [ ] Fail - [ ] Blocked — Notes: 2026-11-22, emulator (staging release build): Scanner mode opened (camera, frame, five counters at 0, Finish off); Back. Sessions: the checker's two scanner sessions, ended, 1 and 2 scanned (not found), and the stack of step 6. The 2-scan session's checks: MA-2026-000031 and -000030, "QR code · Session 4A7A81BB". The emulator's camera cannot read a QR, so no scan was made on the phone.
 
+#### TC-STG-046 · A report on a phone · P1
+1. Check → **Report incident**; type a note with two spaces before and after it.
+2. **Choose a retail user**; look; close it.
+3. **Link one of your checks**; pick one.
+4. **Add photo** → **Take a photo**; take and keep it.
+5. **File report**; then **Done** → **My reports**.
+
+Expected: the counter leaves out the spaces; the picker says "No retail user found" (the server has none); "Report N filed." and "Photo 1"; My reports shows the report first, with "1 photo" and the check.
+
+- [x] Pass - [ ] Fail - [ ] Blocked — Notes: 2026-11-22, emulator (staging release build): "Test from the phone: seal cut." with two spaces before and after counted 30/1000; "No retail user found"; check MA-2026-000031 linked; a photo from the emulator's camera; "Report 4 filed.", "Photo 1"; My reports: #4 "1 photo", MA-2026-000031, then #3, #2 and #1 filed by the checker.
+
 #### TC-STG-007 · The staging app reaches the server · P1
 1. Open the staging app: Login shows.
 2. Tap **Sign up**, open the role list.

@@ -84,3 +84,14 @@ The integration runs one step at a time. For each step, the cases come first (no
 | TC-STG-038 | The real `session_ended` | NET | P1 | AUTO | ✅ `staging/step7_scan_test` | The real 409, the real answer in a new session | Scan in an ended session | A new session, the scan sent again in it, nothing asked; the real 404 and both real summaries read | Guide §4.3, §4.5 |
 | TC-STG-039 | After a crash, the real saved session | WORST | P1 | AUTO | ✅ `staging/step7_scan_test` | The real summary (open, ended) or 404, and the real checks | Open Scanner mode with the session saved | Open: its totals and its two scans back, the next scan in it. Ended or 404: a new session | Guide §4.6 |
 | TC-STG-040 | Scanner mode on a phone | E2E | P1 | DEVICE | ✋ | Staging build, logged in; the checker's sessions on the server | Open Scanner mode; Back; History → Sessions; open a session | The camera, the frame, counters at 0, Finish off; the sessions with their counts; a session's checks | Guide §4.3, §4.5 |
+
+## Step 8. Reports, photos and retail users
+
+| ID | Title | Type | Pri | Run on | Auto | Pre-conditions / Data | Steps | Expected | Source |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-STG-041 | A report and its photo on the real answers | POS | P1 | AUTO | ✅ `staging/step8_report_test` | The real 201s for a report and its first photo | File a note with spaces around it and a photo | The note sent trimmed; "Report 3 filed."; "Photo 1"; the photo sent as `image/jpeg` | Guide §6.1, §6.2 |
+| TC-STG-042 | The real 404s on filing | NEG | P1 | AUTO | ✅ `staging/step8_report_test` | The real "Check not found." and "Retail user not found." | File | Each names what is gone | Guide §6.1 |
+| TC-STG-043 | The real refusals of a photo | NEG | P1 | AUTO | ✅ `staging/step8_report_test` | The real 409 for a 4th photo; the real 400s, 415 and 404 | Add the photo; read each answer | "The report has 3 photos already." with its reference, the report not filed again; every refusal of its kind | Guide §6.2 |
+| TC-STG-044 | My reports from the real list | POS | P1 | AUTO | ✅ `staging/step8_report_test` | The real list of three reports | Open My reports; open the newest | Newest first; "3 photos", the check, the whole note of 1,000 characters | Guide §6.3 |
+| TC-STG-045 | The picker with the real empty list | EDGE | P2 | AUTO | ✅ `staging/step8_report_test` | The server has no retail users | Open the picker; search | "No retail user found", before and after a search | Guide §7.1 |
+| TC-STG-046 | A report on a phone | E2E | P1 | DEVICE | ✋ | Staging build, logged in | Note with spaces around it; link a check; the picker; a camera photo; file; My reports | The counter leaves out the spaces; the picker empty; filed with its photo; My reports shows it with "1 photo" and its check | Guide §6, §7 |

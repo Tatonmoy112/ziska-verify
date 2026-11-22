@@ -24,7 +24,7 @@ Current migration acceptance: [16-mobile-migration.md](16-mobile-migration.md). 
 | LOOK | [04-lookup.md](04-lookup.md) | 97 | 39 | 42 | 16 | 84 | 0 | 13 | 0 |
 | BULK | [05-bulk.md](05-bulk.md) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 | HIST | [06-history.md](06-history.md) | 50 | 15 | 25 | 10 | 47 | 0 | 3 | 0 |
-| REP | [07-reports.md](07-reports.md) | 60 | 17 | 33 | 10 | 48 | 0 | 12 | 0 |
+| REP | [07-reports.md](07-reports.md) | 63 | 17 | 36 | 10 | 51 | 0 | 12 | 0 |
 | RTL | [08-retail-users.md](08-retail-users.md) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 | PROF | [09-profile.md](09-profile.md) | 45 | 3 | 25 | 17 | 38 | 0 | 7 | 0 |
 | ERR | [10-errors-network.md](10-errors-network.md) | 50 | 10 | 26 | 14 | 45 | 0 | 5 | 0 |
@@ -34,8 +34,8 @@ Current migration acceptance: [16-mobile-migration.md](16-mobile-migration.md). 
 | Exploratory | [14-exploratory-charters.md](14-exploratory-charters.md) | 9 | 0 | 6 | 3 | 0 | 0 | 9 | 0 |
 | UI | [15-ui.md](15-ui.md) | 184 | 30 | 100 | 54 | 170 | 0 | 14 | 0 |
 | MIG | [16-mobile-migration.md](16-mobile-migration.md) | 64 | 43 | 20 | 1 | 63 | 0 | 1 | 0 |
-| STG | [17-test-server.md](17-test-server.md) | 40 | 34 | 5 | 1 | 33 | 0 | 7 | 0 |
-| **Total** | | **866** | 291 | 405 | 170 | 741 | 0 | 124 | 1 |
+| STG | [17-test-server.md](17-test-server.md) | 46 | 39 | 6 | 1 | 38 | 0 | 8 | 0 |
+| **Total** | | **875** | 296 | 409 | 170 | 749 | 0 | 125 | 1 |
 
 ## 3. Case Format
 
