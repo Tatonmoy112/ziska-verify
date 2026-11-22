@@ -43,6 +43,60 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  // Test-server integration, step 3 (2026-11-22): text the server sends
+  // empty or as spaces counts as not set, never as a blank row.
+  for (final blank in ['', '   ']) {
+    testWidgets('TC-PROF-042 an organisation of "$blank" is none', (
+      tester,
+    ) async {
+      final app = await openProfile(tester, {
+        ...Roles.fieldInspector,
+        'organisation': blank,
+      });
+      // The organisation's value is the only dash on Profile.
+      expect(find.text('Organization'), findsOneWidget);
+      expect(find.text('—'), findsOneWidget);
+      await app.tap(tab('Check'));
+      expect(find.text('Track & Trace'), findsOneWidget);
+    });
+
+    testWidgets('TC-PROF-043 support of "$blank" is not set', (tester) async {
+      final app = await openProfile(tester, {
+        ...Roles.fieldInspector,
+        'support': {'email': blank, 'phone': blank},
+      });
+      expect(find.text('Not set by your office'), findsOneWidget);
+      expect(find.byKey(const Key('profile.supportEmail')), findsNothing);
+      expect(find.byKey(const Key('profile.supportPhone')), findsNothing);
+      await app.tapText('Support contact');
+      expect(app.launcher.emails, isEmpty);
+      expect(app.launcher.calls, isEmpty);
+    });
+
+    testWidgets('TC-PROF-044 a name of "$blank": the email stands in', (
+      tester,
+    ) async {
+      final app = await openProfile(tester, {
+        ...Roles.fieldInspector,
+        'name': blank,
+        'email': 'official@example.com',
+      });
+      expect(tester.takeException(), isNull);
+      expect(find.text('official@example.com'), findsWidgets);
+      expect(find.text('O'), findsOneWidget, reason: 'the initial');
+      await app.tap(tab('Check'));
+      expect(find.text('official@example.com'), findsWidgets);
+    });
+  }
+
+  testWidgets('TC-PROF-045 no support object at all is not set', (
+    tester,
+  ) async {
+    final profile = {...Roles.fieldInspector}..remove('support');
+    await openProfile(tester, profile);
+    expect(find.text('Not set by your office'), findsOneWidget);
+  });
+
   testWidgets('TC-PROF-011 no organisation', (tester) async {
     final app = await openProfile(tester, {
       ...Roles.fieldInspector,
