@@ -21,8 +21,8 @@ Cases: [17-test-server.md](test-cases/17-test-server.md).
 | 6 | Serial stacks | **Done** 2026-11-22 |
 | 7 | Scanner sessions | **Done** 2026-11-22 |
 | 8 | Reports, photos, retail users | **Done** 2026-11-22 |
-| 9 | Sign up | Next |
-| 10 | Password reset and change | |
+| 9 | Sign up | **Done** 2026-11-22 |
+| 10 | Password reset and change | Next |
 | 11 | Records | |
 
 ## Step 1. Connection and errors (2026-11-22)
@@ -358,3 +358,49 @@ These are covered offline.
 - **The photo:** taken with the emulator's camera.
 - **Filing:** "Report 4 filed.", "Photo 1".
 - **My reports:** #4 first, with "1 photo" and its check, then #3, #2 and #1.
+
+## Step 9. Sign up (2026-11-22)
+
+**Cases first.** Already covered (TC-MIG-005 … -011, -033, -042, -044, the access-request tests):
+- the form before the code; no login sent; no roles means "Ask the office";
+- an email edit needs a new code; a 401 keeps the code step; a 409 uses the code up;
+- one request at a time; the code and the request wait apart after a 429; a 404 for the role.
+
+**Against the server, first: how it checks a request.** These used an `example.com` address that was sent no code, and a wrong code. The server checks the form before the code, so a form it takes answers 401 and nothing is filed or mailed.
+
+| Sent | Answer | Meaning |
+|---|---|---|
+| A name of 101 letters | 400 | The form is checked before the code |
+| A name of 99 letters and an emoji (100 code points, 101 units) | **400** | The name counts **UTF-16 units**, like the search (step 8) |
+| A password of 128 code points ending in an emoji (129 units) | 401 | The password counts code points, as the app does |
+| A password of Bangla letters and Bangla digits only | 401 | Any script's letters and digits count, as the app does |
+| A role not offered | 404 "Role not found." | Checked before the code |
+
+**Fixed, test first.** The app counted the name in code points; the field (Flutter's `maxLength`) counted what shows on screen. A name with an emoji at its end, 100 characters on screen, went to the server and was refused.
+- **TC-MIG-065:** the app's own check now counts UTF-16 units, so such a name is refused before sending.
+- **TC-MIG-066:** the field stops at 100 units, at a whole character.
+- **One rule in one place:** `TextLimits.fitUtf16` now serves the name and the retail-user search of step 8.
+
+**The real request, from the app** (on the emulator):
+- **The form:** "Test Signup mobile app check", role Retail seller, a random password (never written down), a `+signup` address of the test inbox.
+- **Send code:** "A code was sent to the address."; the code came by email.
+- **Sign up:** "Thanks for signing up. Your request was sent. You will get an email when it is answered."
+
+The request is **pending with the office**. Approving it would give the server the retail user step 8 lacked (B1).
+
+**The code is used up:** the same code sent again by the checker answered 401 "Authentication required.", twice. A 200 uses the code up, as the guide says.
+
+**Not checked against the server:**
+- **409** (too many requests waiting) needs many requests.
+- **429** needs more than 10 requests an hour.
+
+Both are covered offline. This step used 8 of the 10 requests an hour allowed from one network address.
+
+**Real-answer tests** (`test/staging/step9_signup_test.dart`, TC-STG-047 … -049):
+- the real 401 for a used code keeps the code step;
+- the real 404 asks for another role;
+- the real 400s for a name are validation errors.
+
+**On the emulator** (TC-STG-050): passed, as above. All three password hints were met before Send code was enabled.
+
+The emulator's build showed a "28/100" counter under the name, added by mistake with the fix; the golden tests caught it (the Sign up design has none) and it was removed before committing.

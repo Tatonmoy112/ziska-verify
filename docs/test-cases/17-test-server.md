@@ -95,3 +95,12 @@ The integration runs one step at a time. For each step, the cases come first (no
 | TC-STG-044 | My reports from the real list | POS | P1 | AUTO | ✅ `staging/step8_report_test` | The real list of three reports | Open My reports; open the newest | Newest first; "3 photos", the check, the whole note of 1,000 characters | Guide §6.3 |
 | TC-STG-045 | The picker with the real empty list | EDGE | P2 | AUTO | ✅ `staging/step8_report_test` | The server has no retail users | Open the picker; search | "No retail user found", before and after a search | Guide §7.1 |
 | TC-STG-046 | A report on a phone | E2E | P1 | DEVICE | ✋ | Staging build, logged in | Note with spaces around it; link a check; the picker; a camera photo; file; My reports | The counter leaves out the spaces; the picker empty; filed with its photo; My reports shows it with "1 photo" and its check | Guide §6, §7 |
+
+## Step 9. Sign up
+
+| ID | Title | Type | Pri | Run on | Auto | Pre-conditions / Data | Steps | Expected | Source |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-STG-047 | The real 401 for a used code | NEG | P1 | AUTO | ✅ `staging/step9_signup_test` | The server's real answer to a code already used | Send the request | "The code is wrong or expired…"; the code step stays, with "Send a new code"; not "Thanks for signing up" | Guide §3.9 |
+| TC-STG-048 | The real 404 "Role not found." | NEG | P2 | AUTO | ✅ `staging/step9_signup_test` | The real 404 | Send the request | "This role is no longer available. Choose another role." | Guide §3.9 |
+| TC-STG-049 | The real 400s for a name | NEG | P2 | AUTO | ✅ `staging/step9_signup_test` | The real 400s for 101 letters, and for 99 letters and an emoji | Read them | Validation errors (the app refuses both before sending: TC-MIG-065) | Guide §3.9; B5 |
+| TC-STG-050 | Sign up on a phone | E2E | P1 | DEVICE | ✋ | Staging build, logged out; a new address; its emailed code | Fill the form; Send code; type the code; Sign up | "A code was sent to the address."; then "Thanks for signing up. Your request was sent…" | Guide §3.9 |

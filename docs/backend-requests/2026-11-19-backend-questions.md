@@ -8,7 +8,7 @@ The app is built against the contract and runs against the Postman mock. These p
 
 ## B1. A test server
 
-> **Answered 2026-11-22:** `https://testapp.protecb.com`, client `ziska-test`, with a test login. The app is being checked against it step by step (`docs/staging-integration-2026-11-22.md`). Still wanted: items for every result, **the QR values of some test items** (none is known, so a scanner session on the server has only seen `not_found`, 2026-11-22), at least one retail user (the server has none, 2026-11-22), and the mail page or office access.
+> **Answered 2026-11-22:** `https://testapp.protecb.com`, client `ziska-test`, with a test login. The app is being checked against it step by step (`docs/staging-integration-2026-11-22.md`). Still wanted: items for every result, **the QR values of some test items** (none is known, so a scanner session on the server has only seen `not_found`, 2026-11-22), at least one retail user (the server has none, 2026-11-22; a sign-up request as a Retail seller, "Test Signup mobile app check", waits for the office: approving it gives one), and the mail page or office access.
 
 **Request:** a test server for the mobile app, separate from any live client:
 
@@ -46,7 +46,7 @@ Also still open (decision sheet, Part 1): are emails matched without regard to c
 1. **Leading zeros.** A lookup of the serial `0000000000000000001` found item `1`, and the answer's `item.serial` is `"1"`. A stack of `001` and `1` was answered with **one** row (`001`, `scanned: 1`): the server takes them for one serial, a repeat. Are serials compared as numbers, so that leading zeros never count? The app now does the same (since 2026-11-22): it sends the first typed of such serials once, and the row matches. If the rule ever changes to comparing text, the app must change back. The guide (§4.7) should say which.
 2. **Letters in a serial.** A lookup with `way: "serial"` and `value: "12AB"` answered **200 `not_found` and was recorded** (a check with a reference). The guide says a serial is "digits only". Should it answer 400? The app never sends letters (it checks against `GET formats` first), so this only affects other clients.
 
-3. **How characters are counted.** `GET retail-users?search=` counts its 100 characters in **UTF-16 units**: 98 letters and an emoji (100 units) are taken, 99 letters and an emoji (100 code points, 101 units) answer 400. A report's `note` counts **code points**: an emoji and 999 letters (1,001 units) were filed. Which is meant? The guide says "Count characters, not bytes" (§3.6). The app counts a note and a password in code points, and keeps a search within 100 units so it passes either way.
+3. **How characters are counted.** `GET retail-users?search=` and an access request's `name` (§3.9) count their 100 characters in **UTF-16 units**: 98 letters and an emoji (100 units) are taken, 99 letters and an emoji (100 code points, 101 units) answer 400. The same for a name: 99 letters and an emoji answer 400. A report's `note` counts **code points**: an emoji and 999 letters (1,001 units) were filed. So does a password: 128 code points that are 129 units pass the rule. Which is meant? The guide says "Count characters, not bytes" (§3.6). The app counts a note and a password in code points, and keeps a search and a name within 100 units so they pass either way.
 
 **Also wanted for the tests:** one item with a `picture_url`. The test items have none, so the product picture has not been seen from the real server.
 
