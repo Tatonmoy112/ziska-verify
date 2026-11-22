@@ -104,3 +104,12 @@ The integration runs one step at a time. For each step, the cases come first (no
 | TC-STG-048 | The real 404 "Role not found." | NEG | P2 | AUTO | ✅ `staging/step9_signup_test` | The real 404 | Send the request | "This role is no longer available. Choose another role." | Guide §3.9 |
 | TC-STG-049 | The real 400s for a name | NEG | P2 | AUTO | ✅ `staging/step9_signup_test` | The real 400s for 101 letters, and for 99 letters and an emoji | Read them | Validation errors (the app refuses both before sending: TC-MIG-065) | Guide §3.9; B5 |
 | TC-STG-050 | Sign up on a phone | E2E | P1 | DEVICE | ✋ | Staging build, logged out; a new address; its emailed code | Fill the form; Send code; type the code; Sign up | "A code was sent to the address."; then "Thanks for signing up. Your request was sent…" | Guide §3.9 |
+
+## Step 10. Password reset and change
+
+| ID | Title | Type | Pri | Run on | Auto | Pre-conditions / Data | Steps | Expected | Source |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-STG-051 | The real 401 for a wrong current password | NEG | P1 | AUTO | ✅ `staging/step10_password_test` | The server's real answer | Change the password with a wrong current one | "The current password is incorrect." with its reference; still logged in | Guide §3.6 |
+| TC-STG-052 | The real forgot and the real wrong reset code | NEG | P1 | AUTO | ✅ `staging/step10_password_test` | The real 200 of forgot; the real 401 of reset | Forgot; reset with a wrong code | The code screen; "The code is wrong or has expired…"; the code step stays | Guide §3.7 |
+| TC-STG-053 | The real 403 for a reset password | NEG | P2 | AUTO | ✅ `staging/step10_password_test` | The real 403 | Reset with a password the server refuses | "The password does not meet the rules below."; sent once | Guide §3.6, §3.7 |
+| TC-STG-054 | Reset and change on a phone | E2E | P1 | DEVICE | ✋ | Staging build; the test login; its emailed codes | Forgot; reset to the same password; log in; change the password, first with a wrong current one | Back to Login; the next login asks for a code; the wrong current password said so; the change keeps this phone logged in | Guide §3.6, §3.7 |

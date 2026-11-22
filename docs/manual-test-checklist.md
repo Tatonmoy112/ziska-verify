@@ -892,6 +892,16 @@ Expected: the server's roles; the password hints met; "A code was sent to the ad
 
 - [x] Pass - [ ] Fail - [ ] Blocked — Notes: 2026-11-22, emulator (staging release build): "Test Signup mobile app check", Retail seller, a random password, a `+signup` address of the test inbox; the code came by email; the request is pending with the office.
 
+#### TC-STG-054 · Reset and change on a phone · P1
+1. Logged out: **Forgot password?**; the email; **Send code**.
+2. Type the emailed code and a new password twice; **Reset password**.
+3. Log in with it; type the next emailed code.
+4. Profile → **Change password**: a wrong current password first; then the right one.
+
+Expected: back to Login after the reset; the login asks for a code (this phone is no longer trusted); "The current password is incorrect." with its reference, still logged in; the change saved, this phone still logged in, its data loading.
+
+- [x] Pass - [ ] Fail - [ ] Blocked — Notes: 2026-11-22, emulator (staging release build), the test login. Reset and change to the same password, as the owner chose, so the login is unchanged. The login after the reset asked for a code; the wrong current password said so with a reference; after the change, Profile and History loaded from the server.
+
 #### TC-STG-007 · The staging app reaches the server · P1
 1. Open the staging app: Login shows.
 2. Tap **Sign up**, open the role list.
@@ -1001,7 +1011,7 @@ On Set a new password, type the current password as the new one.
 
 Expected: Spec gap 6.
 
-- [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
+- [x] Pass - [ ] Fail - [ ] Blocked — Notes: 2026-11-22, emulator (staging release build), test server: a reset and a change to the current password were both accepted (200); the app sent them and went on as after any change. Backend question B3 item 5 asks whether this is meant.
 
 #### TC-AUTH-080 · A reset ends every login · P1
 *Needs:* Staging; phones A and B, one login.
@@ -1010,7 +1020,7 @@ Logged in on B; reset the password on A; use B; then log in on B.
 
 Expected: B goes to Login at its next request; B's next login asks for an emailed code (trusted phones forgotten).
 
-- [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
+- [ ] Pass - [ ] Fail - [ ] Blocked — Notes: 2026-11-22, half run with one phone: after a reset on the emulator (a trusted phone, logged out), its next login asked for an emailed code: trusted phones are forgotten. A second phone logged in at the time of the reset was not run.
 
 #### TC-AUTH-082 · More than 5 codes in 15 minutes · P3
 *Needs:* Staging build, backend test sheet.

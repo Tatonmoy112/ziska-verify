@@ -37,7 +37,7 @@ Four were sent on 2026-11-17 (`data-flow-questions.md`); none is answered yet:
 
 One more:
 
-5. **May a new password be the same as the current one?** `POST me/password` and `auth/password/reset` do not say. The app sends it and shows the server's refusal if there is one; it does not refuse it itself.
+5. **May a new password be the same as the current one?** `POST me/password` and `auth/password/reset` do not say. The app sends it and shows the server's refusal if there is one; it does not refuse it itself. **Seen on the test server (2026-11-22): yes.** A reset and a change to the current password both answered 200. Please confirm this is meant.
 
 Also still open (decision sheet, Part 1): are emails matched without regard to case at login (Q4B), and does the server accept only the digits 0–9 in a serial or hidden code (Q19B)? The app sends emails as typed, and turns Bangla digits (০–৯) typed by an official into 0–9 before sending.
 

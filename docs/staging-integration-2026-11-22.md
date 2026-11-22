@@ -22,8 +22,8 @@ Cases: [17-test-server.md](test-cases/17-test-server.md).
 | 7 | Scanner sessions | **Done** 2026-11-22 |
 | 8 | Reports, photos, retail users | **Done** 2026-11-22 |
 | 9 | Sign up | **Done** 2026-11-22 |
-| 10 | Password reset and change | Next |
-| 11 | Records | |
+| 10 | Password reset and change | **Done** 2026-11-22 |
+| 11 | Records | Next |
 
 ## Step 1. Connection and errors (2026-11-22)
 
@@ -404,3 +404,45 @@ Both are covered offline. This step used 8 of the 10 requests an hour allowed fr
 **On the emulator** (TC-STG-050): passed, as above. All three password hints were met before Send code was enabled.
 
 The emulator's build showed a "28/100" counter under the name, added by mistake with the fix; the golden tests caught it (the Sign up design has none) and it was removed before committing.
+
+## Step 10. Password reset and change (2026-11-22)
+
+**Cases first.** Already covered (TC-AUTH-013 … -021, -055 … -102):
+- the rule, ticked live, in characters, any alphabet, no control characters, 8 to 128;
+- a wrong current password keeps the login; the new access pass is used, the refresh pass kept; one press, one change; offline;
+- forgot always confirms; a wrong, expired or used reset code; the server refusing the new password; back to Login after a reset.
+
+No gap was found. The manual cases this step could close on the server:
+- **TC-AUTH-063:** may a new password be the same as the current one?
+- **TC-AUTH-080:** a reset ends every login.
+
+**Against the server, first what changes nothing** (the checker's `password-probe` step):
+
+| Sent | Answer | Meaning |
+|---|---|---|
+| A change with a wrong current password | 401; `GET me` still 200 | Still logged in, as the guide says |
+| A change with a wrong current password and a weak new one | 401 | The current password is checked before the rule |
+| Forgot, for an address with no account | 200 | The same answer as for an account |
+| A reset with a wrong code (that address) | 401 | |
+| A reset with a wrong code and a weak password | 403 | The rule is checked before the code |
+
+**Then on the phone.** The owner chose to keep the test login's password: each change went to the same password, so the login is as before.
+1. **Forgot password:** "Reset password", "If … has an account, a code was sent to it." The emailed code and the same password; **back to Login**: the server took the current password as the new one (TC-AUTH-063; backend B3 item 5 noted).
+2. **Login:** the password worked, and the app asked for an emailed code. The phone had been trusted since step 2, so **the reset forgot it**, as the guide says (half of TC-AUTH-080; the other half needs a second phone logged in at the time).
+3. **The code:** logged in.
+4. **Change password, a wrong current password:** "The current password is incorrect." with the server's reference; still logged in (TC-AUTH-019).
+5. **Change password, the right one** (to the same password): saved; back on Profile, still logged in; History loaded with the new access pass (TC-AUTH-066).
+
+**Not checked against the server:**
+- **Another phone logged out by a change or a reset:** needs a second phone logged in.
+- **10 wrong reset codes in an hour (TC-AUTH-052):** would close the test login's reset for 15 minutes.
+- **More than 5 codes in 15 minutes (TC-AUTH-082):** would stop the test login's codes for a while.
+
+The app side of each is covered offline.
+
+**Real-answer tests** (`test/staging/step10_password_test.dart`, TC-STG-051 … -053):
+- the real 401 for a wrong current password: said so, still logged in;
+- the real forgot, then the real 401 of a wrong reset code: the code step stays;
+- the real 403 of a reset password: the rules shown.
+
+**On the emulator** (TC-STG-054): passed, as above. Two emailed codes were pasted by the owner: the reset's and the login's.
