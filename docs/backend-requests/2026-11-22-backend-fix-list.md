@@ -66,7 +66,7 @@ Because of this, these checks could not be run against the server:
 | A damaged item | `POST /v1/tenants/{id}/serials/mark-damaged` (`:1137`) |
 | An expired item | The portal's `PATCH batches/{id}` with an `expiry_date` in the past (`:2192`; expired from the next Bangladesh day, `:2246`) |
 | One product with a picture | `POST product-pictures`, then the product's `picture` (`:2119-2149`) |
-| Retail users, at least 3, with different names | Approve the pending sign-up request "Test Signup mobile app check" (Retail seller): `POST mobile-app/requests/{id}/approve` (`:2586-2589`). Add two more with `POST mobile-app/officials` in a retail role (`:2393`, `:2400`) |
+| Retail users, at least 3, with different names | Approve the two pending sign-up requests: "Test Signup mobile app check" (Retail seller), and a second one sent from the app on 2026-11-22 from another address of our test inbox (we will tell you which). `GET mobile-app/requests`, then `POST mobile-app/requests/{id}/approve` (`:2586-2589`). Until a request is approved its address has no account, and login answers 401 ("Email or password is incorrect"), as guide §3.1 says. Add more with `POST mobile-app/officials` in a retail role (`:2393`, `:2400`) |
 | Extra test logins: a second supervisor; an account with a first password (`must_change_password: true`); a blocked account; a role with `item:lookup` only | `POST mobile-app/officials` and `POST mobile-app/roles` (`:2393`, `:2400`) |
 | A way for us to read the emailed codes of the extra logins | Send them to addresses of our test inbox; we will send you the addresses separately, never in a document. Or give us a mail page |
 
@@ -242,6 +242,6 @@ Each of these was seen on the test server or is in your other docs. Please copy 
 **Left on the test server by our checks:**
 - checks MA-2026-000001 … -000043, with their sessions and stacks;
 - reports #1 to #4;
-- one sign-up request, pending (see item 1).
+- two sign-up requests, pending (see item 1).
 
 The test login's password is unchanged.
