@@ -62,7 +62,7 @@ import 'package:ziska_verify/features/verification/domain/usecases/verification_
 const _steps =
     'connect, login, verify <code>, session, profile, lookup, history, '
     'stack, scan, report, lengths, signup-probe, signup-code, '
-    'signup <code>';
+    'signup <code>, password-probe';
 
 Future<void> main(List<String> args) async {
   String? option(String name) {
@@ -113,6 +113,8 @@ Future<void> main(List<String> args) async {
       await check.signupCode();
     case 'signup' when args.length > 1 && !args[1].startsWith('--'):
       await check.signup(args[1]);
+    case 'password-probe':
+      await check.passwordProbe();
     default:
       stderr.writeln('Unknown step "${args.first}". Steps: $_steps.');
       exitCode = 64;
@@ -1606,6 +1608,68 @@ class StagingCheck {
         (what == 'the same code again' && e is UnauthenticatedException
             ? _pass
             : _fail)(what, '${e.statusCode} ${e.code}: "${e.message}"');
+      }
+    }
+  }
+
+  /// Step 10, before any change: what the server refuses without changing
+  /// a password. A wrong old password (with a valid and with a weak new
+  /// one), and a reset for an address with no account (`example.com`,
+  /// which is mailed nothing).
+  Future<void> passwordProbe() async {
+    if (!await _logInTrusted()) return;
+    final auth = DioAuthApiService(api);
+    for (final (what, newPassword) in [
+      ('a wrong old password', 'Probe1234new'),
+      ('a wrong old password and a weak new one', 'abcdefgh'),
+    ]) {
+      try {
+        await auth.changePassword(
+          oldPassword: 'not-the-password-1',
+          newPassword: newPassword,
+        );
+        _fail('POST me/password: $what', '200: the password changed');
+      } on AppException catch (e) {
+        stdout.writeln(
+          'INFO  POST me/password: $what  ${e.statusCode} ${e.code}',
+        );
+        (e is UnauthenticatedException || e is PolicyDeniedException
+            ? _pass
+            : _fail)('POST me/password: $what', '${e.statusCode} ${e.code}');
+      }
+    }
+    // Still logged in after a wrong old password (guide section 3.6).
+    try {
+      await api.get('me');
+      _pass('GET me after the wrong old password', '200: still logged in');
+    } on AppException catch (e) {
+      _fail('GET me after the wrong old password', '${e.statusCode}');
+    }
+    await _logOut();
+
+    final email = 'probe-${Random.secure().nextInt(1 << 30)}@example.com';
+    try {
+      await auth.forgotPassword(email);
+      _pass('POST auth/password/forgot (no account)', '200');
+    } on AppException catch (e) {
+      _fail('POST auth/password/forgot (no account)', '${e.statusCode}');
+    }
+    for (final (what, newPassword) in [
+      ('a wrong code', 'Probe1234new'),
+      ('a wrong code and a weak password', 'abcdefgh'),
+    ]) {
+      try {
+        await auth.resetPassword(
+          email: email,
+          code: '000000',
+          newPassword: newPassword,
+        );
+        _fail('POST auth/password/reset: $what', '200');
+      } on AppException catch (e) {
+        stdout.writeln(
+          'INFO  POST auth/password/reset: $what  ${e.statusCode} ${e.code}',
+        );
+        _pass('POST auth/password/reset: $what', '${e.statusCode} ${e.code}');
       }
     }
   }
