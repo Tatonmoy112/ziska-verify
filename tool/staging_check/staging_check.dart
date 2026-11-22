@@ -62,7 +62,7 @@ import 'package:ziska_verify/features/verification/domain/usecases/verification_
 const _steps =
     'connect, login, verify <code>, session, profile, lookup, history, '
     'stack, scan, report, lengths, signup-probe, signup-code, '
-    'signup <code>, password-probe';
+    'signup <code>, password-probe, serial-probe';
 
 Future<void> main(List<String> args) async {
   String? option(String name) {
@@ -115,6 +115,8 @@ Future<void> main(List<String> args) async {
       await check.signup(args[1]);
     case 'password-probe':
       await check.passwordProbe();
+    case 'serial-probe':
+      await check.serialProbe();
     default:
       stderr.writeln('Unknown step "${args.first}". Steps: $_steps.');
       exitCode = 64;
@@ -1672,6 +1674,60 @@ class StagingCheck {
         _pass('POST auth/password/reset: $what', '${e.statusCode} ${e.code}');
       }
     }
+  }
+
+  /// The recheck against ProtectB-DOCS (DEC-371): every serial "accepts
+  /// leading zeros and is read without them", at most 40 characters, and
+  /// `0` is refused. What does a lookup and a stack answer? Sent raw, as
+  /// the app would not send all of them. A 200 records a check.
+  Future<void> serialProbe() async {
+    if (!await _logInTrusted()) return;
+    final service = DioVerificationApiService(api);
+    String counts(String v) => '${v.length} characters';
+    for (final (what, value) in [
+      ('0', '0'),
+      ('000', '000'),
+      ('20 characters for serial 1', '${'0' * 19}1'),
+      ('40 characters for serial 1', '${'0' * 39}1'),
+      ('41 characters for serial 1', '${'0' * 40}1'),
+    ]) {
+      try {
+        final result = (await service.lookup(
+          way: 'serial',
+          value: value,
+        )).toEntity();
+        stdout.writeln(
+          'INFO  POST lookups serial $what (${counts(value)})  200 '
+          '${result.outcome.name}, item ${result.item?.serial ?? '-'}, '
+          'ref ${result.ref}',
+        );
+      } on AppException catch (e) {
+        stdout.writeln(
+          'INFO  POST lookups serial $what (${counts(value)})  '
+          '${e.statusCode} ${e.code}: "${e.message}"',
+        );
+      }
+    }
+    for (final (what, serials) in [
+      ('1000001 and 0', ['1000001', '0']),
+      ('serial 1 in 20 characters', ['${'0' * 19}1']),
+    ]) {
+      try {
+        final data = await service.serials(serials);
+        final rows = [
+          for (final item
+              in (data['items'] as List).cast<Map<String, dynamic>>())
+            '${item['serial']}: ${item['result']}',
+        ].join(', ');
+        stdout.writeln('INFO  POST lookups/serials $what  200 $rows');
+      } on AppException catch (e) {
+        stdout.writeln(
+          'INFO  POST lookups/serials $what  ${e.statusCode} ${e.code}: '
+          '"${e.message}"',
+        );
+      }
+    }
+    await _logOut();
   }
 
   /// `auth/refresh` as the app's session service sends it: no pass in the

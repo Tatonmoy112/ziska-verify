@@ -617,6 +617,21 @@ void main() {
     // A serial of zeros only is the serial 0.
     expect(const ParseStack()('0, 000', formats).serials, ['0']);
   });
+  // TC-MIG-068 (recheck against ProtectB-DOCS, DEC-371): a serial padded
+  // with zeros past 19 characters is still the serial; up to 40.
+  test('TC-MIG-068 a stack takes serials padded with zeros, up to 40 '
+      'characters', () {
+    final padded20 = '${'0' * 19}1';
+    final padded40 = '${'0' * 38}12';
+    final parsed = const ParseStack()(
+      '$padded20, 1, $padded40, 1000001, 0',
+      formats,
+    );
+    expect(parsed.serials, [padded20, padded40, '1000001', '0']);
+    expect(parsed.repeats, 1, reason: '1 is serial 1 again');
+    final over = const ParseStack()('${'0' * 40}1, 1000001', formats);
+    expect(over.serials, isNot(contains('${'0' * 40}1')));
+  });
   test('503 retries once with the identical stack', () async {
     final sent = <List<String>>[];
     when(() => repo.serials(any())).thenAnswer((i) async {

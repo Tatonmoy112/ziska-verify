@@ -1,0 +1,38 @@
+{
+  "method": "POST",
+  "path": "lookups",
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8"
+  },
+  "body": {
+    "success": true,
+    "message": "Lookup done.",
+    "data": {
+      "ref": "MA-2026-000035",
+      "item": {
+        "code": "*****BQQ",
+        "batch": {
+          "number": "ZT-2509-001",
+          "made": "2025-09-18",
+          "expires": "2027-09-18"
+        },
+        "serial": "1",
+        "product": {
+          "name": "Napa Extra 500",
+          "generic_name": "Paracetamol + Caffeine",
+          "short_name": "Napa Extra",
+          "picture_url": null
+        }
+      },
+      "count": {
+        "last_at": "2026-11-22T07:18:25.674639+00:00",
+        "this_check": 10
+      },
+      "result": "warning",
+      "reasons": [
+        "checked_before"
+      ]
+    }
+  }
+}

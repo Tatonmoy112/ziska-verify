@@ -64,6 +64,26 @@ void main() {
         expect(validator.validate(way, value, formats), expected);
       });
     }
+
+    // TC-MIG-067 (recheck against ProtectB-DOCS, DEC-371): a serial
+    // "accepts leading zeros and is read without them", up to 40
+    // characters. On the test server, serial 1 padded to 20 and to 40
+    // characters found item 1; padded to 41 it was not found; `0` and `000`
+    // answered not_found, never 400.
+    final padded = <(String, String, InputProblem?)>[
+      ('serial 1 in 20 characters', '${'0' * 19}1', null),
+      ('serial 1 in 40 characters', '${'0' * 39}1', null),
+      ('19 digits after 21 zeros', '${'0' * 21}${'9' * 19}', null),
+      ('serial 1 in 41 characters', '${'0' * 40}1', InputProblem.wrongFormat),
+      ('20 digits after zeros', '00${'1' * 20}', InputProblem.wrongFormat),
+      ('0', '0', null),
+      ('000', '000', null),
+    ];
+    for (final (what, value, expected) in padded) {
+      test('TC-MIG-067 $what → $expected', () {
+        expect(validator.validate(LookupWay.serial, value, formats), expected);
+      });
+    }
   });
 
   group('PrepareInput', () {

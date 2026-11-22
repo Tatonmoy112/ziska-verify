@@ -1,0 +1,35 @@
+{
+  "method": "POST",
+  "path": "lookups/serials",
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8"
+  },
+  "body": {
+    "success": true,
+    "message": "Lookup done.",
+    "data": {
+      "session": {
+        "id": "63e71eab-8ef5-4b67-8e74-ea4f052aa048",
+        "kind": "serial",
+        "valid": 0,
+        "scanned": 2,
+        "warning": 0,
+        "not_found": 1,
+        "unassigned": 1
+      },
+      "items": [
+        {
+          "ref": "MA-2026-000038",
+          "result": "unassigned",
+          "serial": "1000001"
+        },
+        {
+          "ref": "MA-2026-000039",
+          "result": "not_found",
+          "serial": "0"
+        }
+      ]
+    }
+  }
+}

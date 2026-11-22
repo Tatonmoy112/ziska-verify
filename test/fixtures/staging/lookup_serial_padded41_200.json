@@ -1,0 +1,16 @@
+{
+  "method": "POST",
+  "path": "lookups",
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8"
+  },
+  "body": {
+    "success": true,
+    "message": "Lookup done.",
+    "data": {
+      "ref": "MA-2026-000037",
+      "result": "not_found"
+    }
+  }
+}
