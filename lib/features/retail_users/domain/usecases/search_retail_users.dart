@@ -1,6 +1,7 @@
 import 'package:ziska_verify/core/errors/result.dart';
 import 'package:ziska_verify/core/pagination/cursor_page.dart';
 import 'package:ziska_verify/core/pagination/page_request.dart';
+import 'package:ziska_verify/core/utils/text_limits.dart';
 import 'package:ziska_verify/features/retail_users/domain/entities/retail_user.dart';
 import 'package:ziska_verify/features/retail_users/domain/repositories/retail_user_repository.dart';
 
@@ -19,23 +20,10 @@ class SearchRetailUsers {
   ) {
     final text = search?.trim();
     return _repository.search(
-      text == null || text.isEmpty ? null : _within(text, maxSearchLength),
+      text == null || text.isEmpty
+          ? null
+          : TextLimits.fitUtf16(text, maxSearchLength),
       page,
     );
-  }
-
-  /// [text]'s whole characters, as many as fit in [units] UTF-16 units:
-  /// never half of an emoji, and within the limit whichever way the
-  /// server counts (code points are never more than units).
-  static String _within(String text, int units) {
-    final out = StringBuffer();
-    var used = 0;
-    for (final rune in text.runes) {
-      final size = rune > 0xFFFF ? 2 : 1;
-      if (used + size > units) break;
-      out.writeCharCode(rune);
-      used += size;
-    }
-    return out.toString();
   }
 }

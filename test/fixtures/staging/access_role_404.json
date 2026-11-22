@@ -1,0 +1,17 @@
+{
+  "method": "POST",
+  "path": "auth/access",
+  "status": 404,
+  "headers": {
+    "content-type": "application/json; charset=utf-8"
+  },
+  "body": {
+    "success": false,
+    "message": "Role not found.",
+    "error": {
+      "code": "not_found",
+      "message": "Role not found.",
+      "request_id": "req-staging"
+    }
+  }
+}

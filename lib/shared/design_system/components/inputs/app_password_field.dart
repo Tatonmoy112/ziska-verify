@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:ziska_verify/core/utils/text_limits.dart';
 import 'package:ziska_verify/shared/design_system/components/inputs/app_text_field.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_typography.dart';
 
@@ -113,6 +114,27 @@ class CodePointLimit extends TextInputFormatter {
     final before = outerSpaceFree ? all.length - all.trimLeft().length : 0;
     final text =
         all.substring(0, before) + String.fromCharCodes(runes.take(max));
+    return TextEditingValue(
+      text: text,
+      selection: TextSelection.collapsed(offset: text.length),
+    );
+  }
+}
+
+/// At most [max] UTF-16 units, as the server counts a name or a search
+/// (an emoji counts two). A longer edit is cut at a whole character.
+class Utf16Limit extends TextInputFormatter {
+  const Utf16Limit(this.max);
+
+  final int max;
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    if (newValue.text.length <= max) return newValue;
+    final text = TextLimits.fitUtf16(newValue.text, max);
     return TextEditingValue(
       text: text,
       selection: TextSelection.collapsed(offset: text.length),

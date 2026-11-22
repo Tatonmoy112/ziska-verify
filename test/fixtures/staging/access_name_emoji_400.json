@@ -1,0 +1,17 @@
+{
+  "method": "POST",
+  "path": "auth/access",
+  "status": 400,
+  "headers": {
+    "content-type": "application/json; charset=utf-8"
+  },
+  "body": {
+    "success": false,
+    "message": "Invalid request.",
+    "error": {
+      "code": "validation_failed",
+      "message": "Invalid request.",
+      "request_id": "req-staging"
+    }
+  }
+}

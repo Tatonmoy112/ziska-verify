@@ -34,9 +34,13 @@ import 'package:ziska_verify/core/pagination/page_request.dart';
 import 'package:ziska_verify/core/services/device/phone_id_service.dart';
 import 'package:ziska_verify/core/services/scanner/active_scan_store.dart';
 import 'package:ziska_verify/core/utils/display_time.dart';
+import 'package:ziska_verify/features/authentication/data/models/access_request_dtos.dart';
 import 'package:ziska_verify/features/authentication/data/models/auth_dtos.dart';
 import 'package:ziska_verify/features/authentication/data/services/access_request_api_service.dart';
 import 'package:ziska_verify/features/authentication/data/services/auth_api_service.dart';
+import 'package:ziska_verify/features/authentication/domain/entities/access_request.dart';
+import 'package:ziska_verify/features/authentication/domain/repositories/access_request_repository.dart';
+import 'package:ziska_verify/features/authentication/domain/usecases/access_request_usecases.dart';
 import 'package:ziska_verify/features/history/data/mappers/check_mappers.dart';
 import 'package:ziska_verify/features/history/data/services/history_api_service.dart';
 import 'package:ziska_verify/features/history/domain/entities/check.dart';
@@ -57,7 +61,8 @@ import 'package:ziska_verify/features/verification/domain/usecases/verification_
 
 const _steps =
     'connect, login, verify <code>, session, profile, lookup, history, '
-    'stack, scan, report, lengths';
+    'stack, scan, report, lengths, signup-probe, signup-code, '
+    'signup <code>';
 
 Future<void> main(List<String> args) async {
   String? option(String name) {
@@ -102,6 +107,12 @@ Future<void> main(List<String> args) async {
       await check.report();
     case 'lengths':
       await check.lengths();
+    case 'signup-probe':
+      await check.signupProbe();
+    case 'signup-code':
+      await check.signupCode();
+    case 'signup' when args.length > 1 && !args[1].startsWith('--'):
+      await check.signup(args[1]);
     default:
       stderr.writeln('Unknown step "${args.first}". Steps: $_steps.');
       exitCode = 64;
@@ -1462,6 +1473,143 @@ class StagingCheck {
     await _logOut();
   }
 
+  /// Step 9, before any code: how the server checks a request's name and
+  /// password, with an address that was sent no code (`example.com`) and a
+  /// wrong code. A form it takes answers 401 (the code); one it refuses
+  /// answers 400 or 403 first. Nothing is filed and no mail is sent. At
+  /// most 10 requests an hour are allowed from one address: 5 are used.
+  Future<void> signupProbe() async {
+    final service = AccessRequestApiService(api);
+    final List<RequestableRoleDto> roles;
+    try {
+      roles = await service.roles();
+      _pass(
+        'GET roles/requestable',
+        roles.map((r) => '${r.id} ${r.name}').join(', '),
+      );
+    } on Object catch (e) {
+      _fail('GET roles/requestable', e);
+      return;
+    }
+    final role = roles.first.id;
+    final email = 'probe-${Random.secure().nextInt(1 << 30)}@example.com';
+    const password = 'Test1234abcd';
+
+    Future<String> send(String name, String pass, [int? roleId]) async {
+      try {
+        await service.submit(
+          AccessRequest(
+            email: email,
+            code: '000000',
+            name: name,
+            roleId: roleId ?? role,
+            password: pass,
+          ),
+        );
+        return '200';
+      } on AppException catch (e) {
+        return '${e.statusCode} ${e.code}';
+      }
+    }
+
+    String counts(String text) =>
+        '${text.runes.length} code points, ${text.length} UTF-16 units';
+
+    // A name over 100 must be refused before the code is read, or the
+    // probes below say nothing.
+    final over = 'a' * 101;
+    final first = await send(over, password);
+    stdout.writeln('INFO  name of 101 letters  $first');
+    if (!first.startsWith('400')) {
+      _fail(
+        'the form is checked before the code',
+        '$first: the probes cannot tell the rules apart',
+      );
+      return;
+    }
+    _pass('the form is checked before the code', first);
+    for (final (what, name, pass) in [
+      ('name: 99 letters and an emoji', '${'a' * 99}🙂', password),
+      (
+        'password: 128 with an emoji at the end',
+        'Test',
+        'a1${'a' * 125}🙂',
+      ),
+      ('password: Bangla letters and digits only', 'Test', 'কখগঘ১২৩৪'),
+    ]) {
+      final text = what.startsWith('name') ? name : pass;
+      stdout.writeln(
+        'INFO  $what (${counts(text)})  ${await send(name, pass)}',
+      );
+    }
+    stdout.writeln(
+      'INFO  a role not offered  ${await send('Test', password, 999999)}',
+    );
+  }
+
+  /// Step 9: asks for a code for the sign-up address (`STAGING_SIGNUP_EMAIL`).
+  Future<void> signupCode() async {
+    final email = Platform.environment['STAGING_SIGNUP_EMAIL'];
+    if (email == null || email.isEmpty) {
+      _fail('the sign-up address', 'set STAGING_SIGNUP_EMAIL');
+      return;
+    }
+    try {
+      await AccessRequestApiService(api).sendCode(email);
+      _pass('POST auth/access/code', '200: a code was sent');
+    } on AppException catch (e) {
+      _fail('POST auth/access/code', '${e.statusCode} ${e.code}');
+    }
+  }
+
+  /// Step 9: the request with the emailed [code], as the app sends it; then
+  /// the same code again, which a 200 used up. The password is made here
+  /// and kept nowhere.
+  Future<void> signup(String code) async {
+    final email = Platform.environment['STAGING_SIGNUP_EMAIL'];
+    if (email == null || email.isEmpty) {
+      _fail('the sign-up address', 'set STAGING_SIGNUP_EMAIL');
+      return;
+    }
+    final service = AccessRequestApiService(api);
+    final roles = await service.roles();
+    final retail = roles.where((r) => r.name == 'Retail seller').firstOrNull;
+    final role = retail ?? roles.first;
+    final random = Random.secure();
+    const chars = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    final tail = [
+      for (var i = 0; i < 16; i++) chars[random.nextInt(chars.length)],
+    ].join();
+    final password = 'T3st$tail';
+    final request = AccessRequest(
+      email: email,
+      code: code,
+      name: 'Test Signup (mobile app check)',
+      roleId: role.id,
+      password: password,
+    );
+    final checked = await SubmitAccessRequest(_NoRepository()).call(request);
+    if (checked case Err(
+      :final failure,
+    ) when failure.exception is ValidationException) {
+      _fail("the app's own check of the form", failure.exception);
+      return;
+    }
+    for (final what in ['POST auth/access', 'the same code again']) {
+      try {
+        await service.submit(request);
+        (what == 'POST auth/access' ? _pass : _fail)(
+          what,
+          '200 pending, role ${role.name}',
+        );
+      } on AppException catch (e) {
+        (what == 'the same code again' && e is UnauthenticatedException
+            ? _pass
+            : _fail)(what, '${e.statusCode} ${e.code}: "${e.message}"');
+      }
+    }
+  }
+
   /// `auth/refresh` as the app's session service sends it: no pass in the
   /// header, the envelope read by the app's own rules.
   Future<Map<String, dynamic>> _refresh(String refresh) async {
@@ -1523,4 +1671,11 @@ class _Recorder extends Interceptor {
     if (response != null) _save(response);
     handler.next(err);
   }
+}
+
+/// Answers nothing: lets the app's own form check run without sending.
+class _NoRepository implements AccessRequestRepository {
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      Future.value(const Success<void>(null));
 }

@@ -41,6 +41,21 @@ void main() {
     await app.tapText('Back to login');
     expect(find.text('Login to Track & Trace'), findsOneWidget);
   });
+  // TC-MIG-066 (test-server integration, step 9): the name field keeps
+  // the name within the server's 100 UTF-16 units, at whole characters.
+  testWidgets('TC-MIG-066 the name field stops at 100 UTF-16 units', (
+    tester,
+  ) async {
+    final app = await startApp(tester, loggedIn: false);
+    await app.tapText('Sign up');
+    await app.enter(const Key('access.name'), '${'a' * 99}🙂');
+    expect(app.fieldText(const Key('access.name')), 'a' * 99);
+    await app.enter(const Key('access.name'), '🙂' * 60);
+    expect(app.fieldText(const Key('access.name')), '🙂' * 50);
+    await app.enter(const Key('access.name'), 'ক' * 120);
+    expect(app.fieldText(const Key('access.name')), 'ক' * 100);
+  });
+
   testWidgets('an email edit requires a fresh access code', (tester) async {
     final app = await startApp(tester, loggedIn: false);
     await app.tapText('Sign up');

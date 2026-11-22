@@ -54,7 +54,7 @@ class _RequestAccessScreenState extends State<RequestAccessScreen> {
 
   bool get _valid =>
       _name.text.trim().isNotEmpty &&
-      _name.text.trim().runes.length <= 100 &&
+      _name.text.trim().length <= AccessRequest.nameMaxLength &&
       looksLikeEmail(_email.text) &&
       const PasswordPolicy().check(_password.text).isValid &&
       _role != null;
@@ -197,7 +197,10 @@ class _RequestAccessScreenState extends State<RequestAccessScreen> {
                           fieldKey: const Key('access.name'),
                           controller: _name,
                           enabled: !state.busy,
-                          maxLength: 100,
+                          // UTF-16 units, as the server counts a name (B5).
+                          inputFormatters: const [
+                            Utf16Limit(AccessRequest.nameMaxLength),
+                          ],
                           onChanged: (_) => setState(() {}),
                         ),
                         const SizedBox(height: AppSpacing.md),
