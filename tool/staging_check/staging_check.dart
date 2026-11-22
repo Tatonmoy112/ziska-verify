@@ -5,7 +5,7 @@
 //   dart run tool/staging_check/staging_check.dart <step> [<code>]
 //       --out <dir> [--state <file>]
 //
-// Steps: connect; login; verify <code>; session; profile.
+// Steps: connect; login; verify <code>; session; profile; lookup.
 //
 // The address comes from config/staging.json. Every answer is saved in
 // <dir> (the scratchpad, outside the repo) so it can be cleaned of passes
@@ -31,8 +31,12 @@ import 'package:ziska_verify/features/authentication/data/services/access_reques
 import 'package:ziska_verify/features/authentication/data/services/auth_api_service.dart';
 import 'package:ziska_verify/features/profile/data/mappers/profile_mapper.dart';
 import 'package:ziska_verify/features/profile/data/services/profile_api_service.dart';
+import 'package:ziska_verify/features/verification/data/mappers/verification_mappers.dart';
+import 'package:ziska_verify/features/verification/data/services/verification_api_service.dart';
+import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
+import 'package:ziska_verify/features/verification/domain/usecases/verification_usecases.dart';
 
-const _steps = 'connect, login, verify <code>, session, profile';
+const _steps = 'connect, login, verify <code>, session, profile, lookup';
 
 Future<void> main(List<String> args) async {
   String? option(String name) {
@@ -63,6 +67,8 @@ Future<void> main(List<String> args) async {
       await check.session();
     case 'profile':
       await check.profile();
+    case 'lookup':
+      await check.lookup();
     default:
       stderr.writeln('Unknown step "${args.first}". Steps: $_steps.');
       exitCode = 64;
@@ -496,6 +502,123 @@ class StagingCheck {
       }
     }
     await _logOut();
+  }
+
+  /// Step 4: single checks. Each input is prepared by the app's own rules
+  /// (the server's formats), sent, and read by the app's own parser and
+  /// mapper. Every check sent is recorded in the account's history. Two
+  /// requests the app never sends show the server's 400.
+  Future<void> lookup() async {
+    if (!await _logInTrusted()) return;
+    final service = DioVerificationApiService(api);
+    final InputFormats formats;
+    try {
+      formats = (await service.getFormats()).toEntity();
+      _pass(
+        'GET formats',
+        'serial up to ${formats.serialMaxDigits} digits; QR '
+            '${formats.qr.length} of "${formats.qr.characters}"',
+      );
+    } on Object catch (e) {
+      _fail('GET formats', e);
+      await _logOut();
+      return;
+    }
+
+    final tries = <(LookupWay, String)>[
+      for (final serial in [
+        '1000001',
+        '1000002',
+        '1000003',
+        '1000004',
+        '1',
+        '1234567890',
+        '0000000000000000001',
+      ])
+        (LookupWay.serial, serial),
+      (LookupWay.qr, 'https://www.ziskaverify.com/q/Q8F2KD91XA7M'),
+      (LookupWay.qr, 'https://www.ziskaverify.com/q/K7M2PX4Q9AB1'),
+    ];
+    final found = <String, List<String>>{};
+    for (final (way, raw) in tries) {
+      final prepared = const PrepareInput()(way, raw, formats);
+      if (prepared is! ReadyInput) {
+        _fail('prepare ${way.wire} $raw', 'refused by the app');
+        continue;
+      }
+      final what = 'POST lookups ${way.wire} ${prepared.value}';
+      try {
+        final result = (await service.lookup(
+          way: way.wire,
+          value: prepared.value,
+        )).toEntity();
+        final item = result.item;
+        final count = result.count;
+        final picture = item?.product.pictureUrl;
+        final detail = [
+          result.outcome.name,
+          if (result.reasons.isNotEmpty)
+            'reasons ${result.reasons.map((r) => r.name).join('+')}',
+          'ref ${result.ref}',
+          if (count != null)
+            'check ${count.thisCheck}, last ${count.lastAt ?? '-'}',
+          if (item != null) 'item ${item.serial} "${item.product.name}"',
+          if (item != null) 'batch ${item.batch.number}',
+          if (item != null)
+            'picture ${picture == null ? 'none' : Uri.parse(picture).host}',
+        ].join('; ');
+        if (result.outcome == LookupOutcome.unknown) {
+          _fail(what, 'a result the app does not know: $detail');
+        } else {
+          _pass(what, detail);
+          (found[result.outcome.name] ??= []).add(prepared.value);
+        }
+        if (picture != null) await _picture(picture);
+      } on AppException catch (e) {
+        _fail(what, '${e.statusCode} ${e.code} ${e.requestId}');
+      } on Object catch (e) {
+        _fail(what, e);
+      }
+    }
+
+    // What the app never sends: the server's own refusal.
+    for (final (way, value, why) in [
+      ('serial', '12AB', 'letters in a serial'),
+      ('hidden_code', 'ABC123', 'the removed hidden-code way'),
+    ]) {
+      try {
+        await service.lookup(way: way, value: value);
+        _fail('POST lookups $why', 'answered 200');
+      } on ValidationException catch (e) {
+        _pass('POST lookups $why', '400 ${e.code}');
+      } on Object catch (e) {
+        _fail('POST lookups $why', e);
+      }
+    }
+    stdout.writeln('\nFound by result: $found');
+    await _logOut();
+  }
+
+  /// A product picture as the app loads it: HTTPS, no pass.
+  Future<void> _picture(String url) async {
+    final uri = Uri.parse(url);
+    if (uri.scheme != 'https') {
+      _fail('the picture', 'not https: $url');
+      return;
+    }
+    try {
+      final response = await Dio().get<List<int>>(
+        url,
+        options: Options(responseType: ResponseType.bytes),
+      );
+      _pass(
+        'the picture ${uri.host}',
+        '${response.statusCode} ${response.headers.value('content-type')} '
+            '${response.data?.length ?? 0} bytes',
+      );
+    } on Object catch (e) {
+      _fail('the picture ${uri.host}', e);
+    }
   }
 
   /// `auth/refresh` as the app's session service sends it: no pass in the
