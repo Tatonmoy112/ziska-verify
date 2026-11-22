@@ -814,12 +814,21 @@ Expected: No pass, password, or key; only the base URL and the client slug.
 
 ---
 
-## Session C — Test Server (when available)
+## Session C — Test Server
 
+The backend's test server is ready (2026-11-22): `https://testapp.protecb.com`, client `ziska-test` (already in `config/staging.json`). The test login is given by the project owner, never written down in the repo. The emailed codes reach that login's inbox.
 ```
-flutter run --flavor staging --dart-define-from-file=config/staging.json
+flutter build apk --release --flavor staging --dart-define-from-file=config/staging.json --split-per-abi
 ```
-Use the logins and items of the backend's test sheet; read emailed codes on its mail page.
+The staging app installs next to the mock app (its own name, "Track & Trace Staging"). Progress, step by step: [staging-integration-2026-11-22.md](staging-integration-2026-11-22.md).
+
+#### TC-STG-007 · The staging app reaches the server · P1
+1. Open the staging app: Login shows.
+2. Tap **Sign up**, open the role list.
+
+Expected: the roles come from the server: Distributor, Retail seller.
+
+- [x] Pass - [ ] Fail - [ ] Blocked — Notes: 2026-11-22, emulator (Pixel 7, staging release build): Login shows; the role list shows Distributor and Retail seller.
 
 #### TC-AUTH-012 · A trusted phone logs in without a code · P1
 Log in once with a code; log out; log in again.

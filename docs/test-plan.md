@@ -9,7 +9,7 @@
 | Spec | `final.md` (v1.6 and later), Sections 6–18 |
 | Backend contract | `docs/protectb-api/app-api-guide.md`, `app-build-guide.md`, Postman collection |
 | Version | 2.0 — 2026-11-14: 543 cases in `docs/test-cases/` (positive, negative, boundary, edge, worst case, network, security, device, journeys, charters) |
-| Status | `flutter analyze` clean; 1201 automated tests passing; 695 of 813 cases automated (Section 12) |
+| Status | `flutter analyze` clean; 1231 automated tests passing; 701 of 820 cases automated (Section 12) |
 
 ---
 
@@ -150,7 +150,8 @@ The cases live in one file per area in [`docs/test-cases/`](test-cases/README.md
 | Exploratory | [14-exploratory-charters.md](test-cases/14-exploratory-charters.md) | 9 | 0 | 6 | 3 | 0 | 0 | 9 | 0 |
 | UI | [15-ui.md](test-cases/15-ui.md) | 184 | 30 | 100 | 54 | 170 | 0 | 14 | 0 |
 | MIG | [16-mobile-migration.md](test-cases/16-mobile-migration.md) | 56 | 39 | 16 | 1 | 55 | 0 | 1 | 0 |
-| **Total** | | **813** | 253 | 393 | 167 | 695 | 0 | 117 | 1 |
+| STG | [17-test-server.md](test-cases/17-test-server.md) | 7 | 6 | 1 | 0 | 6 | 0 | 1 | 0 |
+| **Total** | | **820** | 259 | 394 | 167 | 701 | 0 | 118 | 1 |
 
 ---
 
@@ -241,11 +242,11 @@ One line per run:
 | Check | Result |
 |---|---|
 | `flutter analyze` | No issues found |
-| `flutter test` | 1201 passed, 0 failed (136 of them goldens; CI runs the other 1065) |
-| Covered by automated tests (✅) | 695 of 813 (804 test cases and 9 exploratory charters) |
+| `flutter test` | 1231 passed, 0 failed (136 of them goldens; CI runs the other 1095) |
+| Covered by automated tests (✅) | 701 of 820 (811 test cases and 9 exploratory charters) |
 | To be automated (⏳) | 0 |
 | Dependency scan (CI, TC-SEC-024) | OSV-Scanner v2.7.0 on `pubspec.lock`: 195 packages, no known vulnerability (2026-11-14) |
-| Manual only (✋) | 117: 108 cases (12 of them Figma comparisons) and 9 charters, all in `manual-test-checklist.md` (sessions A–D) |
+| Manual only (✋) | 118: 109 cases (12 of them Figma comparisons) and 9 charters, all in `manual-test-checklist.md` (sessions A–D) |
 | Blocked (⛔) | 1: TC-AUTH-095 (Not now on the test server, waiting for the backend route). The offline banner and the language switch are built (2026-11-19); their cases are automated or in the checklist. Certificates are withdrawn by the backend (SRS v1.2), not blocked |
 
 Remaining work (the dependency scan, the blocked features, the open questions, the manual runs): [`remaining-work-test-plan.md`](remaining-work-test-plan.md).
