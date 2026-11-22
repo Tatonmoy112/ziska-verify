@@ -50,6 +50,7 @@ app.*.map.json
 # Backend team's document repository (its own git repo). The files the app
 # needs are copied into docs/protectb-api/ (backend build guide).
 /ProtectB-DOCS-initial/
+/ProtectB-DOCS/
 
 # Golden test diffs written on a failure (test/ui/).
 **/failures/

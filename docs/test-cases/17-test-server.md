@@ -113,3 +113,12 @@ The integration runs one step at a time. For each step, the cases come first (no
 | TC-STG-052 | The real forgot and the real wrong reset code | NEG | P1 | AUTO | ✅ `staging/step10_password_test` | The real 200 of forgot; the real 401 of reset | Forgot; reset with a wrong code | The code screen; "The code is wrong or has expired…"; the code step stays | Guide §3.7 |
 | TC-STG-053 | The real 403 for a reset password | NEG | P2 | AUTO | ✅ `staging/step10_password_test` | The real 403 | Reset with a password the server refuses | "The password does not meet the rules below."; sent once | Guide §3.6, §3.7 |
 | TC-STG-054 | Reset and change on a phone | E2E | P1 | DEVICE | ✋ | Staging build; the test login; its emailed codes | Forgot; reset to the same password; log in; change the password, first with a wrong current one | Back to Login; the next login asks for a code; the wrong current password said so; the change keeps this phone logged in | Guide §3.6, §3.7 |
+
+## Recheck against ProtectB-DOCS (5d96a91)
+
+| ID | Title | Type | Pri | Run on | Auto | Pre-conditions / Data | Steps | Expected | Source |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-STG-055 | Serial 1 typed with 19 zeros | EDGE | P2 | AUTO | ✅ `staging/recheck_dec371_test` | The server's real answer: item 1 | Type it on Check; check | Sent as typed; the result of item 1 | DEC-371 |
+| TC-STG-056 | Serial `0`, and serial 1 in 41 characters | EDGE | P3 | AUTO | ✅ `staging/recheck_dec371_test` | The real answers | Look them up | `not_found`, never refused | Guide §4.2; DEC-371 |
+| TC-STG-057 | A stack with `0`, and one with a padded serial | EDGE | P3 | AUTO | ✅ `staging/recheck_dec371_test` | The real answers | Send the stacks | Every row shown, each with its serial as sent | Guide §4.7; DEC-371 |
+| TC-STG-058 | A padded serial on a phone | E2E | P2 | DEVICE | ✋ | Staging build, logged in | Type serial 1 with 19 zeros on Check | Check is on; the result of item 1 | DEC-371 |

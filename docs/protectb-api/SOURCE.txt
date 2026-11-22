@@ -1,1 +1,1 @@
-copied from ProtectB-DOCS-initial at commit 4ec8318 (2026-11-18)
+copied from ProtectB-DOCS-initial at commit 4ec8318 (2026-11-18); rechecked 2026-11-22 against ProtectB-DOCS at commit 5d96a91: mobileApp/ unchanged, every file here byte-identical

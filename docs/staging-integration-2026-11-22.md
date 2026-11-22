@@ -42,8 +42,8 @@ All 11 steps are done. Every area of the app ran against the real server through
 Steps 2, 4, 5, 7 and 10 needed no app change. Step 5 added tests for gaps the app already handled (cb01e2b), and step 7 did the same (TC-MIG-062 … -064).
 
 **Server rules not in the guide** (asked of the backend in B5):
-- Serials are compared as numbers: `001` and `1` are one item.
-- A serial with letters is accepted as `not_found`, alone or in a stack.
+- Serials are compared as numbers: `001` and `1` are one item. *Answered by DEC-371 at the recheck (below).*
+- A serial with letters is accepted as `not_found`, alone or in a stack. *Answered by guide §4.2 at the recheck.*
 - A search and a sign-up name count characters in UTF-16 units (an emoji as two); a note and a password count code points.
 - A new password may be the same as the current one (B3 item 5).
 
@@ -493,3 +493,44 @@ The app side of each is covered offline.
 - the real 403 of a reset password: the rules shown.
 
 **On the emulator** (TC-STG-054): passed, as above. Two emailed codes were pasted by the owner: the reset's and the login's.
+
+## Recheck against ProtectB-DOCS (5d96a91), 2026-11-22
+
+The backend's plan moved to `D:\Project\ziska-verify\ProtectB-DOCS`, three commits after 4ec8318. The integration was rechecked against it.
+
+**The contract is unchanged.**
+- Every file of `docs/protectb-api/` is byte-identical to `mobileApp/` there.
+- The new commits add the portal's report section (DEC-428), "decided, not built", which the app does not call.
+
+**What the plan says about the integration's findings:**
+
+| Finding | `ProtectB-DOCS` | Now |
+|---|---|---|
+| B5.1: `001` = `1` | DEC-371: every serial "accepts leading zeros and is read without them", up to 40 characters; serials are numbers in the database | Answered: by design |
+| B5.2: `12AB` is `not_found` | Guide §4.2 (a value that matches no format answers `not_found`); phase 9 sends "a text" in a stack | Answered: by design |
+| B5.3: characters counted two ways | "Count characters, not bytes" only | Still asked |
+| B3.5: a new password equal to the current one | Not addressed | Still asked |
+| B2: "Not now" | Not in the plan yet | **Confirmed by the client**; the backend team will add it; the app keeps it as built |
+| B1: QR values, a picture, a retail user | Phase 6: a test client with made-up data "once a test server exists" | Still asked |
+
+**DEC-371 on the server** (the checker's `serial-probe` step; each 200 recorded a check: MA-2026-000033 … -000040, and -000041 from the phone):
+
+| Sent | Answer |
+|---|---|
+| `0`, `000` | 200 `not_found`, never 400 |
+| Serial 1 padded to 20 characters, and to 40 | 200, **item 1** (checked before) |
+| Serial 1 padded to 41 characters | 200 `not_found` |
+| A stack of `1000001` and `0` | Both rows: unassigned, not found |
+| A stack of serial 1 padded to 20 characters | Its row, as sent: checked before |
+
+**Fixed, test first.**
+- **What was wrong:** the app counted the leading zeros toward the serial's 19 digits, so it refused a padded serial the server finds.
+- **The fix:** `InputFormatValidator` counts `serial.max_digits` without the leading zeros, and keeps a serial within 40 characters.
+- **Where it applies:** a single check (TC-MIG-067) and a stack (TC-MIG-068).
+- **`0`:** no change; the app sends it, and the server answers `not_found`.
+
+**Real-answer tests** (`test/staging/recheck_dec371_test.dart`, TC-STG-055 … -057).
+
+**On the emulator** (TC-STG-058): passed. Serial 1 typed with 19 zeros gave item 1, Napa Extra 500, checked before.
+
+**One process slip:** the checker's first emailed code expired (it was used 6 minutes after it was sent). The probe's login then sent a second code without saving its challenge, so the next verify failed too. The challenge was taken from the saved answer; the third try passed.

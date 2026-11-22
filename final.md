@@ -7,7 +7,7 @@
 | Platforms | Flutter Android and iOS |
 | Backend | ProtectB mobile-app-api, `/v1/clients/{slug}/` |
 | Contract baseline | ProtectB mobile guide dated 2026-11-16; mobile decisions D1-D63, including D56 and D58-D63 |
-| Evidence | `docs/protectb-api/` is the app-owned contract snapshot, copied from `ProtectB-DOCS-initial` at commit 4ec8318 (2026-11-18); its Postman examples drive contract and flow tests |
+| Evidence | `docs/protectb-api/` is the app-owned contract snapshot, copied from `ProtectB-DOCS-initial` at commit 4ec8318 (2026-11-18) and rechecked against `ProtectB-DOCS` at 5d96a91 (2026-11-22: `mobileApp/` unchanged); its Postman examples drive contract and flow tests |
 
 The previous architecture is preserved in `docs/archive/app-architecture-1.6.md` for traceability. Its hidden-code submission, bulk endpoint, everyone scope, retail administration, and certificate requirements are superseded.
 
@@ -318,8 +318,8 @@ Mock builds use the updated Postman snapshot and require its current mock server
 
 The backend's test server (2026-11-22) is the staging environment: `https://testapp.protecb.com`, client `ziska-test`. The app was checked against it in 11 steps (`docs/staging-integration-2026-11-22.md`); the server's answers are fixtures replayed in `test/staging/`. Do not test recorded checks against a live client.
 
-What the test server showed, beyond the guide (backend question B5):
-- **Serials are compared as numbers:** `001` and `1` are one item. The app sends the first typed of such serials once.
+What the test server showed, beyond the guide (backend question B5; rechecked against `ProtectB-DOCS` at 5d96a91 on 2026-11-22):
+- **Serials are read without their leading zeros** (backend DEC-371): `001` and `1` are one item, and a serial may be padded with zeros up to 40 characters. The app sends the first typed of such serials once, and counts `serial.max_digits` without the leading zeros. `0` is looked up like any serial (`not_found`).
 - **Characters are counted two ways:**
   - a retail-user search and a sign-up name count UTF-16 units (an emoji counts two). The app keeps both within 100 units, cut at a whole character (`TextLimits.fitUtf16`);
   - a note and a password count code points, as the app does.
@@ -338,7 +338,7 @@ Approved for this migration: full Flutter contract migration; serial entry limit
 
 | # | Decision (2026-11-16) | Source |
 |---|---|---|
-| M1 | **Not now stays.** The backend team will add `me/password/later` and `password_change_skippable` (`docs/backend-requests/password-change-later.md`); D59 also lets the office skip the forced change per account. Until the route exists, the mock build plays it (`DEMO_PASSWORD_LATER: true` in `config/mock.json`); staging and live refuse the flag. | User decision 2026-11-17 |
+| M1 | **Not now stays** (confirmed by the client, 2026-11-22). The backend team will add `me/password/later` and `password_change_skippable` (`docs/backend-requests/password-change-later.md`); D59 also lets the office skip the forced change per account. Until the route exists, the mock build plays it (`DEMO_PASSWORD_LATER: true` in `config/mock.json`); staging and live refuse the flag. | User decision 2026-11-17 |
 | M2 | **Sessions live in the History tab**, behind a Checks / Sessions switch; one session's checks open above it. | User decision; SRS UC-06, FR-SCN-16 |
 | M3 | **Two Check tiles**, Scanner mode and Serial stack, both with `item:bulk_lookup`. | User decision; SRS FR-SCN-01, FR-STK-01 |
 | M4 | **Profile lists the permissions** by their SRS names. | SRS FR-ACC-15 |

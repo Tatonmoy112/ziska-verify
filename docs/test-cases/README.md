@@ -7,7 +7,7 @@ This folder holds every test case of the app, one file per area. [`docs/test-pla
 
 ## 1. Rules
 
-- Expected results come only from `final.md` and the backend documents (`docs/protectb-api/`, `ProtectB-DOCS-initial`). Figma is for look and feel only.
+- Expected results come only from `final.md` and the backend documents (`docs/protectb-api/`, `ProtectB-DOCS`). Figma is for look and feel only.
 - A behaviour the spec does not define is marked **Spec gap** and listed in Section 7. No expected result is invented.
 - IDs never change. A new case takes the next number of its area.
 - One behaviour per case. The expected result is checkable: an exact text, a screen, or a request.
@@ -33,9 +33,9 @@ Current migration acceptance: [16-mobile-migration.md](16-mobile-migration.md). 
 | E2E | [13-e2e-journeys.md](13-e2e-journeys.md) | 16 | 7 | 9 | 0 | 10 | 0 | 6 | 0 |
 | Exploratory | [14-exploratory-charters.md](14-exploratory-charters.md) | 9 | 0 | 6 | 3 | 0 | 0 | 9 | 0 |
 | UI | [15-ui.md](15-ui.md) | 184 | 30 | 100 | 54 | 170 | 0 | 14 | 0 |
-| MIG | [16-mobile-migration.md](16-mobile-migration.md) | 66 | 44 | 21 | 1 | 65 | 0 | 1 | 0 |
-| STG | [17-test-server.md](17-test-server.md) | 54 | 44 | 9 | 1 | 44 | 0 | 10 | 0 |
-| **Total** | | **885** | 302 | 413 | 170 | 757 | 0 | 127 | 1 |
+| MIG | [16-mobile-migration.md](16-mobile-migration.md) | 68 | 44 | 23 | 1 | 67 | 0 | 1 | 0 |
+| STG | [17-test-server.md](17-test-server.md) | 58 | 44 | 11 | 3 | 47 | 0 | 11 | 0 |
+| **Total** | | **891** | 302 | 417 | 172 | 762 | 0 | 128 | 1 |
 
 ## 3. Case Format
 

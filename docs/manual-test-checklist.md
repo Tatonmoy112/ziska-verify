@@ -902,6 +902,14 @@ Expected: back to Login after the reset; the login asks for a code (this phone i
 
 - [x] Pass - [ ] Fail - [ ] Blocked — Notes: 2026-11-22, emulator (staging release build), the test login. Reset and change to the same password, as the owner chose, so the login is unchanged. The login after the reset asked for a code; the wrong current password said so with a reference; after the change, Profile and History loaded from the server.
 
+#### TC-STG-058 · A padded serial on a phone · P2
+1. Check → type `00000000000000000001` (serial 1 with 19 zeros).
+2. **Check**.
+
+Expected: Check is on; the result of item 1 (serial 1).
+
+- [x] Pass - [ ] Fail - [ ] Blocked — Notes: 2026-11-22, emulator (staging release build): "Genuine, needs attention", checked before, Napa Extra 500, serial 1. Before the recheck's fix the app refused it as a wrong format.
+
 #### TC-STG-007 · The staging app reaches the server · P1
 1. Open the staging app: Login shows.
 2. Tap **Sign up**, open the role list.
@@ -1045,7 +1053,7 @@ Expected: step 1 and the 5 wrong tries: "Email or password is incorrect."; the r
 - [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
 
 #### TC-AUTH-095 · Not now on the test server · P1
-**Blocked: needs `POST me/password/later` on the test server** (`docs/backend-requests/password-change-later.md`).
+**Blocked: needs `POST me/password/later` on the test server** (`docs/backend-requests/password-change-later.md`). Confirmed by the client on 2026-11-22; the backend team will add it.
 *Needs:* Staging; an account with a first password; real phone.
 
 1. Log in with the first password (and the emailed code on a new phone).
