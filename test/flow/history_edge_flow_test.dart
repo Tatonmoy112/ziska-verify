@@ -242,6 +242,39 @@ void main() {
     expect(find.textContaining(' checks · '), findsNothing);
   });
 
+  // Guide section 5: "A full page always gives a cursor, so the page
+  // after it may be empty" (test-server integration, step 5).
+  testWidgets('TC-HIST-050 a cursor, then an empty last page: the list '
+      'ends, no error', (tester) async {
+    final app = await openHistory(
+      tester,
+      overrides: {
+        'GET checks': (r) => r.queryParameters['cursor'] == null
+            ? page(
+                [
+                  check('MA-2026-000401'),
+                  check('MA-2026-000402', serial: '1000002'),
+                ],
+                totals: totals,
+                next: 'c-2',
+              )
+            : page([]),
+      },
+    );
+    await tester.pumpAndSettle();
+    final sent = app.backend.sent('GET', 'checks');
+    expect(sent, hasLength(2));
+    expect(sent.last.queryParameters['cursor'], 'c-2');
+    expect(find.text('1000001'), findsOneWidget);
+    expect(find.text('1000002'), findsOneWidget);
+    expect(find.text(general), findsNothing);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+    // Nothing more is asked for.
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, -600));
+    await tester.pumpAndSettle();
+    expect(app.backend.sent('GET', 'checks'), hasLength(2));
+  });
+
   testWidgets('TC-HIST-037 a first-page error, then Try again', (
     tester,
   ) async {
