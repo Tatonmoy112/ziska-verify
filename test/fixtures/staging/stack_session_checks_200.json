@@ -1,0 +1,63 @@
+{
+  "method": "GET",
+  "path": "checks",
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8"
+  },
+  "body": {
+    "success": true,
+    "message": "Checks fetched successfully.",
+    "data": {
+      "checks": [
+        {
+          "ref": "MA-2026-000016",
+          "at": "2026-11-22T06:58:29.430639+00:00",
+          "way": "serial",
+          "result": "not_found",
+          "reasons": [],
+          "serial": null,
+          "product": null,
+          "batch": null,
+          "official": "Test Official",
+          "session_id": "56366cff-baf1-4b18-b467-994faa85eca7"
+        },
+        {
+          "ref": "MA-2026-000015",
+          "at": "2026-11-22T06:58:29.429499+00:00",
+          "way": "serial",
+          "result": "unassigned",
+          "reasons": [],
+          "serial": "1000001",
+          "product": null,
+          "batch": null,
+          "official": "Test Official",
+          "session_id": "56366cff-baf1-4b18-b467-994faa85eca7"
+        },
+        {
+          "ref": "MA-2026-000014",
+          "at": "2026-11-22T06:58:29.422785+00:00",
+          "way": "serial",
+          "result": "warning",
+          "reasons": [
+            "checked_before"
+          ],
+          "serial": "1",
+          "product": "Napa Extra 500",
+          "batch": "ZT-2509-001",
+          "official": "Test Official",
+          "session_id": "56366cff-baf1-4b18-b467-994faa85eca7"
+        }
+      ],
+      "totals": {
+        "total": 3,
+        "valid": 0,
+        "warning": 1,
+        "not_found": 1,
+        "unassigned": 1
+      },
+      "next_cursor": null
+    }
+  },
+  "source": "testapp.protecb.com ziska-test, 2026-11-22 (Step 6)"
+}

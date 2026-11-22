@@ -1,0 +1,26 @@
+{
+  "method": "GET",
+  "path": "lookups/sessions/56366cff-baf1-4b18-b467-994faa85eca7",
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8"
+  },
+  "body": {
+    "success": true,
+    "message": "Session fetched successfully.",
+    "data": {
+      "id": "56366cff-baf1-4b18-b467-994faa85eca7",
+      "kind": "serial",
+      "status": "ended",
+      "started_at": "2026-11-22T06:58:29.400127+00:00",
+      "last_scan_at": "2026-11-22T06:58:29.43755+00:00",
+      "scanned": 3,
+      "valid": 0,
+      "warning": 1,
+      "not_found": 1,
+      "unassigned": 1,
+      "official": "Test Official"
+    }
+  },
+  "source": "testapp.protecb.com ziska-test, 2026-11-22 (Step 6)"
+}

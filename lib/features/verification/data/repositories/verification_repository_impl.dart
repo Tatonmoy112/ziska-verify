@@ -13,6 +13,7 @@ import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
 import 'package:ziska_verify/features/verification/domain/entities/scan_session.dart';
 import 'package:ziska_verify/features/verification/domain/entities/serial_stack.dart';
 import 'package:ziska_verify/features/verification/domain/repositories/verification_repository.dart';
+import 'package:ziska_verify/features/verification/domain/usecases/verification_usecases.dart';
 
 class VerificationRepositoryImpl implements VerificationRepository {
   VerificationRepositoryImpl(this._api, SessionService session) {
@@ -56,7 +57,8 @@ class VerificationRepositoryImpl implements VerificationRepository {
   @override
   Future<Result<SerialStackResult>> serials(List<String> values) =>
       guard(() async {
-        final expected = values.toSet().toList();
+        // Each item once, as the server counts them (B5).
+        final expected = distinctSerials(values);
         if (expected.isEmpty || expected.length > serialStackLimit) {
           throw const ValidationException(message: 'serial_stack_size');
         }

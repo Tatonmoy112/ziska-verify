@@ -1,0 +1,53 @@
+{
+  "method": "POST",
+  "path": "lookups/serials",
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8"
+  },
+  "body": {
+    "success": true,
+    "message": "Lookup done.",
+    "data": {
+      "session": {
+        "id": "0e534b80-46b2-41b8-85b6-28f49f974926",
+        "kind": "serial",
+        "valid": 0,
+        "scanned": 1,
+        "warning": 1,
+        "not_found": 0,
+        "unassigned": 0
+      },
+      "items": [
+        {
+          "ref": "MA-2026-000017",
+          "item": {
+            "code": "*****BQQ",
+            "batch": {
+              "number": "ZT-2509-001",
+              "made": "2025-09-18",
+              "expires": "2027-09-18"
+            },
+            "serial": "1",
+            "product": {
+              "name": "Napa Extra 500",
+              "generic_name": "Paracetamol + Caffeine",
+              "short_name": "Napa Extra",
+              "picture_url": null
+            }
+          },
+          "count": {
+            "last_at": "2026-11-22T06:58:29.422785+00:00",
+            "this_check": 5
+          },
+          "result": "warning",
+          "serial": "001",
+          "reasons": [
+            "checked_before"
+          ]
+        }
+      ]
+    }
+  },
+  "source": "testapp.protecb.com ziska-test, 2026-11-22 (Step 6)"
+}

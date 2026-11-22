@@ -5,7 +5,8 @@
 //   dart run tool/staging_check/staging_check.dart <step> [<code>]
 //       --out <dir> [--state <file>]
 //
-// Steps: connect; login; verify <code>; session; profile; lookup; history.
+// Steps: connect; login; verify <code>; session; profile; lookup; history;
+// stack.
 //
 // The address comes from config/staging.json. Every answer is saved in
 // <dir> (the scratchpad, outside the repo) so it can be cleaned of passes
@@ -38,13 +39,15 @@ import 'package:ziska_verify/features/history/domain/entities/check.dart';
 import 'package:ziska_verify/features/profile/data/mappers/profile_mapper.dart';
 import 'package:ziska_verify/features/profile/data/services/profile_api_service.dart';
 import 'package:ziska_verify/features/verification/data/mappers/verification_mappers.dart';
+import 'package:ziska_verify/features/verification/data/models/verification_dtos.dart';
 import 'package:ziska_verify/features/verification/data/services/verification_api_service.dart';
 import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
 import 'package:ziska_verify/features/verification/domain/entities/scan_session.dart';
 import 'package:ziska_verify/features/verification/domain/usecases/verification_usecases.dart';
 
 const _steps =
-    'connect, login, verify <code>, session, profile, lookup, history';
+    'connect, login, verify <code>, session, profile, lookup, history, '
+    'stack';
 
 Future<void> main(List<String> args) async {
   String? option(String name) {
@@ -81,6 +84,8 @@ Future<void> main(List<String> args) async {
       await check.lookup();
     case 'history':
       await check.history();
+    case 'stack':
+      await check.stack();
     default:
       stderr.writeln('Unknown step "${args.first}". Steps: $_steps.');
       exitCode = 64;
@@ -801,6 +806,135 @@ class StagingCheck {
         'GET lookups/sessions',
         '${sessions.sessions.length} sessions; next '
             '${sessions.nextCursor ?? 'none'}',
+      );
+    } on Object catch (e) {
+      _fail('GET lookups/sessions', e);
+    }
+    await _logOut();
+  }
+
+  /// Step 6: serial stacks. Each stack goes as the app sends it and is
+  /// read as its repository reads it: rows in the order sent, each with the
+  /// serial as sent. Every serial is a recorded check.
+  Future<void> stack() async {
+    if (!await _logInTrusted()) return;
+    final service = DioVerificationApiService(api);
+
+    /// Sends [serials]; checks the rows against what was sent, as the
+    /// app's repository does; returns the stack's session ID.
+    Future<String?> send(String what, List<String> serials) async {
+      try {
+        // As the app's repository sends them: each item once (B5).
+        final expected = distinctSerials(serials);
+        final data = await service.serials(expected);
+        final dto = SerialStackDto.fromJson(data);
+        final sent = dto.items.map((i) => i.serial).toList();
+        final raw = (data['items'] as List).cast<Map<String, dynamic>>();
+        String outcome(int i) =>
+            LookupResultDto.fromJson(raw[i]).toEntity().outcome.name;
+        final rows = [
+          for (final (i, item) in dto.items.indexed)
+            '${item.serial}: ${outcome(i)}',
+        ].join(', ');
+        final matches =
+            sent.length == expected.length &&
+            dto.session.scanned == expected.length &&
+            [
+              for (var i = 0; i < sent.length; i++) sent[i] == expected[i],
+            ].every((x) => x);
+        (matches ? _pass : _fail)(
+          what,
+          'session ${dto.session.id.substring(0, 8)}… kind '
+          '${data['session'] is Map ? (data['session'] as Map)['kind'] : '?'}, '
+          'scanned ${dto.session.scanned}; $rows'
+          '${matches ? '' : ' (the rows do not match what was sent: '
+                    'the app would show "recorded, cannot be shown")'}',
+        );
+        return dto.session.id;
+      } on AppException catch (e) {
+        _fail(what, '${e.statusCode} ${e.code} ${e.requestId}');
+      } on Object catch (e) {
+        _fail(what, e);
+      }
+      return null;
+    }
+
+    final id = await send('POST lookups/serials [1, 1000001, 1234567890]', [
+      '1',
+      '1000001',
+      '1234567890',
+    ]);
+    await send(
+      'POST lookups/serials [001, 1] (leading zeros; the app sends 001 once)',
+      ['001', '1'],
+    );
+
+    // What the app never sends: a repeat, 51 serials, letters.
+    try {
+      final data = await service.serials(['1000002', '1000002']);
+      final items = data['items'] as List;
+      (items.length == 1 ? _pass : _fail)(
+        'POST lookups/serials a repeat (sent raw)',
+        '${items.length} row(s): a repeat is checked once',
+      );
+    } on Object catch (e) {
+      _fail('POST lookups/serials a repeat (sent raw)', e);
+    }
+    for (final (what, serials) in [
+      ('51 serials', [for (var i = 1; i <= 51; i++) '${2000000 + i}']),
+      ('a serial with letters', ['12AB']),
+    ]) {
+      try {
+        final data = await service.serials(serials);
+        _fail(
+          'POST lookups/serials $what (sent raw)',
+          '200 (${(data['items'] as List).length} rows): the guide says 400',
+        );
+      } on ValidationException catch (e) {
+        _pass('POST lookups/serials $what (sent raw)', '400 ${e.code}');
+      } on Object catch (e) {
+        _fail('POST lookups/serials $what (sent raw)', e);
+      }
+    }
+
+    // The stack as the app reads it back: a session, and its checks.
+    if (id != null) {
+      try {
+        final summary = (await service.session(id)).toEntity();
+        _pass(
+          'GET lookups/sessions/{stack}',
+          'kind ${summary.kind.name}, ${summary.status.name}, scanned '
+              '${summary.totals.scanned}',
+        );
+      } on Object catch (e) {
+        _fail('GET lookups/sessions/{stack}', e);
+      }
+      try {
+        final checks = (await DioHistoryApiService(api).getChecks(
+          CheckQuery(sessionId: id),
+          const PageRequest(),
+        )).toEntity();
+        final inSession = checks.page.items.every((c) => c.sessionId == id);
+        (checks.page.items.length == 3 && inSession ? _pass : _fail)(
+          'GET checks?session_id={stack}',
+          '${checks.page.items.length} checks'
+              '${inSession ? ', all of this stack' : ', some of another'}',
+        );
+      } on Object catch (e) {
+        _fail('GET checks?session_id={stack}', e);
+      }
+    }
+    try {
+      final sessions = await service.sessions(
+        const SessionQuery(),
+        const PageRequest(),
+      );
+      final list = sessions.sessions
+          .map((x) => '${x.kind}/${x.status}/${x.scanned}')
+          .join(', ');
+      _pass(
+        'GET lookups/sessions',
+        '${sessions.sessions.length} sessions: $list',
       );
     } on Object catch (e) {
       _fail('GET lookups/sessions', e);

@@ -6,11 +6,13 @@ import 'package:ziska_verify/core/network/api_client.dart';
 import 'package:ziska_verify/core/pagination/page_request.dart';
 import 'package:ziska_verify/features/verification/data/repositories/verification_repository_impl.dart';
 import 'package:ziska_verify/features/verification/data/services/verification_api_service.dart';
+import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
 import 'package:ziska_verify/features/verification/domain/entities/scan_session.dart';
 import 'package:ziska_verify/features/verification/domain/entities/serial_stack.dart';
 import '../../../fakes/fake_session_service.dart';
 import '../../../fakes/postman_examples.dart';
 import '../../../fakes/scripted_adapter.dart';
+import '../../../fakes/staging_fixtures.dart';
 
 void main() {
   late ScriptedAdapter adapter;
@@ -97,6 +99,77 @@ void main() {
     );
     expect(adapter.requests, isEmpty);
   });
+  // TC-MIG-060 (test-server integration, step 6): the guide answers each
+  // row with "the serial as sent". The test server compares serials as
+  // numbers (backend question B5). Should it answer 001 as 1, or merge 001
+  // and 1 into one row, the rows no longer match what was sent: the stack
+  // was recorded (a 200), so it counts as recorded and is never sent again.
+  group('TC-MIG-060 leading zeros in a stack', () {
+    Map<String, Object?> row(String serial, String ref) => {
+      'serial': serial,
+      'ref': ref,
+      'result': 'not_found',
+    };
+    ScriptedAnswer answer(List<Map<String, Object?>> items) => ScriptedAnswer(
+      200,
+      okBody({
+        'session': {
+          'id': id,
+          'kind': 'serial',
+          'scanned': items.length,
+          'valid': 0,
+          'warning': 0,
+          'not_found': items.length,
+          'unassigned': 0,
+        },
+        'items': items,
+      }),
+    );
+
+    Future<void> expectRecorded(List<String> sent) async {
+      final result = await repository.serials(sent) as Err<SerialStackResult>;
+      expect(
+        result.failure.exception,
+        isA<InternalErrorException>().having(
+          (e) => e.message,
+          'message',
+          'serial_stack_mismatch',
+        ),
+      );
+    }
+
+    test('the serials go as typed, zeros kept', () async {
+      next = answer([row('001', 'R1'), row('2', 'R2')]);
+      final result = await repository.serials(['001', '2']);
+      expect(adapter.requests.single.data, {
+        'serials': ['001', '2'],
+      });
+      expect(result, isA<Success<SerialStackResult>>());
+    });
+
+    test('001 answered as 1: recorded, not shown', () async {
+      next = answer([row('1', 'R1'), row('2', 'R2')]);
+      await expectRecorded(['001', '2']);
+    });
+
+    test('001 and 1 merged into one row: recorded, not shown', () async {
+      next = answer([row('1', 'R1')]);
+      await expectRecorded(['001', '1']);
+    });
+  });
+
+  test("TC-MIG-061 001 and 1 go as one serial; the server's real answer "
+      '(one row, 001) is shown', () async {
+    next = stagingScripted('stack_leading_zeros_200.json');
+    final result = await repository.serials(['001', '1']);
+    expect(adapter.requests.single.data, {
+      'serials': ['001'],
+    });
+    final stack = (result as Success<SerialStackResult>).value;
+    expect(stack.items.single.serial, '001');
+    expect(stack.items.single.result.outcome, LookupOutcome.warning);
+  });
+
   test('reordered or missing stack results are rejected', () async {
     next = example('A stack of serials', '200 Three serials, one sent twice');
     expect(

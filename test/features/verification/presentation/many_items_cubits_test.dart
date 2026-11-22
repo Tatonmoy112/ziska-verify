@@ -11,6 +11,7 @@ import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
 import 'package:ziska_verify/features/verification/domain/entities/scan_session.dart';
 import 'package:ziska_verify/features/verification/domain/entities/serial_stack.dart';
 import 'package:ziska_verify/features/verification/domain/repositories/verification_repository.dart';
+import 'package:ziska_verify/features/verification/domain/usecases/verification_usecases.dart';
 import 'package:ziska_verify/features/verification/presentation/bloc/scan_session_cubit.dart';
 import 'package:ziska_verify/features/verification/presentation/bloc/serial_stack_cubit.dart';
 
@@ -452,6 +453,22 @@ void main() {
       expect(cubit.compose(List.generate(50, (i) => '$i').join(',')), isTrue);
     },
   );
+  // TC-MIG-061 (test-server integration, step 6): the server takes 001
+  // and 1 for one serial (one row, "001" as sent first). The app does the
+  // same, so the stack's answer matches and is shown.
+  test('TC-MIG-061 serials that differ only by leading zeros are one serial, '
+      'kept as typed first', () async {
+    final cubit = stack();
+    await cubit.load();
+    expect(cubit.compose('001, 1, 0001\n2, 02 0'), isTrue);
+    expect(cubit.state.serials, ['001', '2', '0']);
+    final parsed = const ParseStack()('001, 1, 2', formats);
+    expect(parsed.serials, ['001', '2']);
+    expect(parsed.typed, 3);
+    expect(parsed.repeats, 1);
+    // A serial of zeros only is the serial 0.
+    expect(const ParseStack()('0, 000', formats).serials, ['0']);
+  });
   test('503 retries once with the identical stack', () async {
     final sent = <List<String>>[];
     when(() => repo.serials(any())).thenAnswer((i) async {

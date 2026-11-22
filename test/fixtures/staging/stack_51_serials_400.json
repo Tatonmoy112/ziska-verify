@@ -1,0 +1,18 @@
+{
+  "method": "POST",
+  "path": "lookups/serials",
+  "status": 400,
+  "headers": {
+    "content-type": "application/json; charset=utf-8"
+  },
+  "body": {
+    "success": false,
+    "message": "Invalid request.",
+    "error": {
+      "code": "validation_failed",
+      "message": "Invalid request.",
+      "request_id": "req-staging"
+    }
+  },
+  "source": "testapp.protecb.com ziska-test, 2026-11-22 (Step 6)"
+}
