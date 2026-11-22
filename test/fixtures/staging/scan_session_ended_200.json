@@ -1,0 +1,25 @@
+{
+  "method": "GET",
+  "path": "lookups/sessions/4a7a81bb-4a34-4fde-ac36-22f72f2787fd",
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8"
+  },
+  "body": {
+    "success": true,
+    "message": "Session fetched successfully.",
+    "data": {
+      "id": "4a7a81bb-4a34-4fde-ac36-22f72f2787fd",
+      "kind": "qr",
+      "status": "ended",
+      "started_at": "2026-11-22T07:30:44.831722+00:00",
+      "last_scan_at": "2026-11-22T07:30:45.0635+00:00",
+      "scanned": 2,
+      "valid": 0,
+      "warning": 0,
+      "not_found": 2,
+      "unassigned": 0,
+      "official": "Test Official"
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "method": "POST",
+  "path": "lookups/sessions/4a7a81bb-4a34-4fde-ac36-22f72f2787fd/end",
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8"
+  },
+  "body": {
+    "success": true,
+    "message": "Session ended.",
+    "data": null
+  }
+}

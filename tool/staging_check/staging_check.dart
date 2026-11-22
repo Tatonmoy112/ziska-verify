@@ -6,7 +6,7 @@
 //       --out <dir> [--state <file>]
 //
 // Steps: connect; login; verify <code>; session; profile; lookup; history;
-// stack.
+// stack; scan.
 //
 // The address comes from config/staging.json. Every answer is saved in
 // <dir> (the scratchpad, outside the repo) so it can be cleaned of passes
@@ -29,6 +29,7 @@ import 'package:ziska_verify/core/network/bodiless_request_interceptor.dart';
 import 'package:ziska_verify/core/network/error_mapper.dart';
 import 'package:ziska_verify/core/pagination/page_request.dart';
 import 'package:ziska_verify/core/services/device/phone_id_service.dart';
+import 'package:ziska_verify/core/services/scanner/active_scan_store.dart';
 import 'package:ziska_verify/core/utils/display_time.dart';
 import 'package:ziska_verify/features/authentication/data/models/auth_dtos.dart';
 import 'package:ziska_verify/features/authentication/data/services/access_request_api_service.dart';
@@ -47,7 +48,7 @@ import 'package:ziska_verify/features/verification/domain/usecases/verification_
 
 const _steps =
     'connect, login, verify <code>, session, profile, lookup, history, '
-    'stack';
+    'stack, scan';
 
 Future<void> main(List<String> args) async {
   String? option(String name) {
@@ -86,6 +87,8 @@ Future<void> main(List<String> args) async {
       await check.history();
     case 'stack':
       await check.stack();
+    case 'scan':
+      await check.scan();
     default:
       stderr.writeln('Unknown step "${args.first}". Steps: $_steps.');
       exitCode = 64;
@@ -938,6 +941,216 @@ class StagingCheck {
       );
     } on Object catch (e) {
       _fail('GET lookups/sessions', e);
+    }
+    await _logOut();
+  }
+
+  /// Step 7: a scanner session. Each scan goes as the app's scanner sends
+  /// it (`way: qr` with the session's UUID) and is read as its repository
+  /// reads it: the answer's session must be the one sent.
+  Future<void> scan() async {
+    if (!await _logInTrusted()) return;
+    final service = DioVerificationApiService(api);
+    final InputFormats formats;
+    try {
+      formats = (await service.getFormats()).toEntity();
+    } on Object catch (e) {
+      _fail('GET formats', e);
+      await _logOut();
+      return;
+    }
+
+    /// A scan as the repository reads it; `null` when it failed.
+    Future<(LookupResult, bool, SessionTotals)?> send(
+      String what,
+      String raw,
+      String id,
+    ) async {
+      final prepared = const PrepareInput()(LookupWay.qr, raw, formats);
+      if (prepared is! ReadyInput) {
+        _fail(what, 'refused by the app');
+        return null;
+      }
+      try {
+        final data = await service.scan(prepared.value, id);
+        final dto = ScanResultDto.fromJson(data);
+        final result = LookupResultDto.fromJson(data).toEntity();
+        final totals = dto.session.toEntity();
+        final detail =
+            '${result.outcome.name}, ref ${result.ref}, repeat ${dto.repeat}; '
+            'session scanned ${totals.scanned} (valid ${totals.valid}, '
+            'warning ${totals.warning}, not found ${totals.notFound}, '
+            'unassigned ${totals.unassigned}), left ${totals.left}';
+        if (dto.session.id != id) {
+          _fail(what, 'another session in the answer: $detail');
+          return null;
+        }
+        if (result.outcome == LookupOutcome.unknown) {
+          _fail(what, 'a result the app does not know: $detail');
+          return null;
+        }
+        _pass(what, detail);
+        return (result, dto.repeat, totals);
+      } on AppException catch (e) {
+        _fail(what, '${e.statusCode} ${e.code} ${e.requestId}');
+      } on Object catch (e) {
+        _fail(what, e);
+      }
+      return null;
+    }
+
+    // A pass or a fail by [ok], as the checks below read best.
+    // ignore: avoid_positional_boolean_parameters
+    void expect(String what, bool ok, String detail) =>
+        (ok ? _pass : _fail)(what, detail);
+
+    const a = 'https://www.ziskaverify.com/q/Q8F2KD91XA7M';
+    const b = 'https://www.ziskaverify.com/q/K7M2PX4Q9AB1';
+    final id = ActiveScanStore.newId();
+    stdout.writeln('Session ${id.substring(0, 8)}…');
+
+    // The first scan starts the session; a second item; the first again.
+    final first = await send('scan 1: QR A starts the session', a, id);
+    final second = await send('scan 2: QR B', b, id);
+    final again = await send('scan 3: QR A again (a repeat)', a, id);
+    if (first != null && second != null && again != null) {
+      expect(
+        'the counter',
+        first.$3.scanned == 1 && second.$3.scanned == 2,
+        'scanned ${first.$3.scanned}, then ${second.$3.scanned}',
+      );
+      expect(
+        'left',
+        first.$3.left != null && second.$3.left == first.$3.left! - 1,
+        '${first.$3.left}, then ${second.$3.left} (5,000 in all)',
+      );
+      expect(
+        'the repeat',
+        again.$2 &&
+            !first.$2 &&
+            again.$1.ref == first.$1.ref &&
+            again.$1.outcome == first.$1.outcome &&
+            again.$3.scanned == 2,
+        'repeat ${again.$2}, ref ${again.$1.ref == first.$1.ref ? 'the '
+                  "first scan's" : 'a new one'}, scanned ${again.$3.scanned}',
+      );
+    }
+
+    // The session read back, as after a crash (guide section 4.6).
+    try {
+      final summary = (await service.session(id)).toEntity();
+      expect(
+        'GET lookups/sessions/{id} (open)',
+        summary.kind == SessionKind.qr &&
+            summary.status == ScanStatus.open &&
+            summary.totals.scanned == 2,
+        'kind ${summary.kind.name}, ${summary.status.name}, scanned '
+            '${summary.totals.scanned}',
+      );
+    } on Object catch (e) {
+      _fail('GET lookups/sessions/{id} (open)', e);
+    }
+    try {
+      final checks = (await DioHistoryApiService(api).getChecks(
+        CheckQuery(sessionId: id),
+        const PageRequest(limit: 100),
+      )).toEntity();
+      final rows = checks.page.items;
+      expect(
+        'GET checks?session_id={id}',
+        rows.length == 2 && rows.every((c) => c.sessionId == id),
+        '${rows.length} checks: '
+            '${rows.map((c) => '${c.way?.wire}/${c.result.name}').join(', ')}',
+      );
+    } on Object catch (e) {
+      _fail('GET checks?session_id={id}', e);
+    }
+
+    // End, twice: the same answer.
+    for (final what in ['POST lookups/sessions/{id}/end', '... again']) {
+      try {
+        await service.endSession(id);
+        _pass(what, '200');
+      } on AppException catch (e) {
+        _fail(what, '${e.statusCode} ${e.code} ${e.requestId}');
+      }
+    }
+    try {
+      final summary = (await service.session(id)).toEntity();
+      expect(
+        'GET lookups/sessions/{id} (ended)',
+        summary.status == ScanStatus.ended && summary.totals.scanned == 2,
+        '${summary.status.name}, scanned ${summary.totals.scanned}',
+      );
+    } on Object catch (e) {
+      _fail('GET lookups/sessions/{id} (ended)', e);
+    }
+
+    // A scan in the ended session: the app starts a new one and sends the
+    // scan again in it.
+    try {
+      await service.scan('Q8F2KD91XA7M', id);
+      _fail('scan in the ended session', '200: the guide says 409');
+    } on ScanSessionException catch (e) {
+      expect(
+        'scan in the ended session',
+        e.statusCode == 409 && e.code == 'session_ended',
+        '${e.statusCode} ${e.code}',
+      );
+    } on Object catch (e) {
+      _fail('scan in the ended session', e);
+    }
+    final next = ActiveScanStore.newId();
+    final rolled = await send('the same scan in a new session', a, next);
+    if (rolled != null) {
+      expect(
+        'counted again in the new session',
+        !rolled.$2 && rolled.$3.scanned == 1,
+        'repeat ${rolled.$2}, scanned ${rolled.$3.scanned}',
+      );
+    }
+    try {
+      await service.endSession(next);
+    } on Object catch (e) {
+      _fail('end the new session', e);
+    }
+
+    // What the app never sends, and sessions that are not there.
+    final unknown = ActiveScanStore.newId();
+    for (final (what, body) in [
+      (
+        'a serial in a session (sent raw)',
+        {'way': 'serial', 'value': '1', 'session_id': next},
+      ),
+      (
+        'a session ID that is not a UUID (sent raw)',
+        {'way': 'qr', 'value': 'Q8F2KD91XA7M', 'session_id': 'not-a-uuid'},
+      ),
+    ]) {
+      try {
+        await api.post('lookups', body: body);
+        _fail('POST lookups $what', '200: the guide says 400');
+      } on ValidationException catch (e) {
+        _pass('POST lookups $what', '400 ${e.code}');
+      } on Object catch (e) {
+        _fail('POST lookups $what', e);
+      }
+    }
+    for (final (what, call) in [
+      ('GET lookups/sessions/{unknown}', () => service.session(unknown)),
+      (
+        'POST lookups/sessions/{unknown}/end',
+        () => service.endSession(unknown),
+      ),
+    ]) {
+      try {
+        await call();
+        _fail(what, '200: the guide says 404');
+      } on NotFoundException catch (e) {
+        _pass(what, '404 ${e.code}');
+      } on Object catch (e) {
+        _fail(what, e);
+      }
     }
     await _logOut();
   }

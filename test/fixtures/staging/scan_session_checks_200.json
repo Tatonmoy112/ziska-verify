@@ -1,0 +1,48 @@
+{
+  "method": "GET",
+  "path": "checks",
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8"
+  },
+  "body": {
+    "success": true,
+    "message": "Checks fetched successfully.",
+    "data": {
+      "checks": [
+        {
+          "ref": "MA-2026-000031",
+          "at": "2026-11-22T07:30:44.958386+00:00",
+          "way": "qr",
+          "result": "not_found",
+          "reasons": [],
+          "serial": null,
+          "product": null,
+          "batch": null,
+          "official": "Test Official",
+          "session_id": "4a7a81bb-4a34-4fde-ac36-22f72f2787fd"
+        },
+        {
+          "ref": "MA-2026-000030",
+          "at": "2026-11-22T07:30:44.843014+00:00",
+          "way": "qr",
+          "result": "not_found",
+          "reasons": [],
+          "serial": null,
+          "product": null,
+          "batch": null,
+          "official": "Test Official",
+          "session_id": "4a7a81bb-4a34-4fde-ac36-22f72f2787fd"
+        }
+      ],
+      "totals": {
+        "total": 2,
+        "valid": 0,
+        "warning": 0,
+        "not_found": 2,
+        "unassigned": 0
+      },
+      "next_cursor": null
+    }
+  }
+}

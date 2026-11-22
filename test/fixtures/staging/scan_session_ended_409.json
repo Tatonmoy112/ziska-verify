@@ -1,0 +1,17 @@
+{
+  "method": "POST",
+  "path": "lookups",
+  "status": 409,
+  "headers": {
+    "content-type": "application/json; charset=utf-8"
+  },
+  "body": {
+    "success": false,
+    "message": "The session has ended. Start a new session.",
+    "error": {
+      "code": "session_ended",
+      "message": "The session has ended. Start a new session.",
+      "request_id": "req-staging"
+    }
+  }
+}

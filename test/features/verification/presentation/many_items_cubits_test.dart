@@ -294,6 +294,154 @@ void main() {
     await cubit.scan(raw);
     expect(cubit.state.totals, isNotNull);
   });
+  // TC-MIG-062 (test-server integration, step 7): after a crash the app
+  // reads the saved session (guide section 4.6). Only an open scanner
+  // session goes on; anything else starts a new one, and a failure to read
+  // it keeps the ID for the next try.
+  group('TC-MIG-062 a saved session that cannot go on', () {
+    ScanSessionSummary summary(ScanStatus status, SessionKind kind) =>
+        ScanSessionSummary(
+          totals: totals(savedId, 3),
+          kind: kind,
+          status: status,
+          startedAt: DateTime.utc(2026),
+          lastScanAt: DateTime.utc(2026),
+        );
+
+    Future<void> expectNewSession(
+      Result<ScanSessionSummary> saved,
+    ) async {
+      await store.save(savedId);
+      when(() => repo.session(savedId)).thenAnswer((_) async => saved);
+      var reads = 0;
+      final cubit = scanner(
+        checks: (_, _) async {
+          reads++;
+          return const Success(CursorPage<RecoveredScan>(items: []));
+        },
+      );
+      await cubit.start();
+      expect(cubit.state.id, isNotNull);
+      expect(cubit.state.id, isNot(savedId));
+      expect(cubit.state.resumed, isFalse);
+      expect(cubit.state.totals, isNull);
+      expect(cubit.state.rows, isEmpty);
+      expect(reads, 0, reason: "the old session's checks are not read");
+      expect(await store.read(), cubit.state.id);
+      await cubit.scan(raw);
+      verify(() => repo.scan('Q8F2KD91XA7M', cubit.state.id!)).called(1);
+    }
+
+    test('an ended session', () async {
+      await expectNewSession(
+        Success(summary(ScanStatus.ended, SessionKind.qr)),
+      );
+    });
+
+    test('a stack of serials, not a scanner session', () async {
+      await expectNewSession(
+        Success(summary(ScanStatus.open, SessionKind.serial)),
+      );
+    });
+
+    test("404: no such session, or another official's", () async {
+      await expectNewSession(
+        const Err(
+          Failure(NotFoundException(statusCode: 404, code: 'not_found')),
+        ),
+      );
+    });
+
+    test(
+      'no connection: the ID is kept, and the next try goes on in it',
+      () async {
+        await store.save(savedId);
+        when(
+          () => repo.session(savedId),
+        ).thenAnswer((_) async => const Err(Failure(NetworkException())));
+        final cubit = scanner(
+          checks: (_, _) async =>
+              const Success(CursorPage<RecoveredScan>(items: [])),
+        );
+        await cubit.start();
+        expect(cubit.state.failure?.exception, isA<NetworkException>());
+        expect(cubit.state.id, isNull);
+        await cubit.scan(raw);
+        verifyNever(() => repo.scan(any(), any()));
+        expect(await store.read(), savedId);
+
+        when(() => repo.session(savedId)).thenAnswer(
+          (_) async => Success(summary(ScanStatus.open, SessionKind.qr)),
+        );
+        await cubit.start();
+        expect(cubit.state.id, savedId);
+        expect(cubit.state.resumed, isTrue);
+        expect(cubit.state.totals!.scanned, 3);
+      },
+    );
+  });
+
+  test('TC-MIG-063 a 503 on a scan: "scan again"; nothing kept, nothing '
+      'sent again by itself', () async {
+    final cubit = scanner();
+    await cubit.start();
+    await cubit.scan(raw);
+    expect(cubit.state.rows, hasLength(1));
+    when(() => repo.scan(any(), any())).thenAnswer(
+      (_) async => const Err(
+        Failure(
+          ServiceUnavailableException(
+            statusCode: 503,
+            code: 'service_unavailable',
+          ),
+        ),
+      ),
+    );
+    const next = 'https://example.test/q/Q8F2KD91XA7N';
+    await cubit.scan(next);
+    expect(
+      cubit.state.failure?.exception,
+      isA<ServiceUnavailableException>(),
+    );
+    expect(cubit.state.latest, isNull, reason: "the last product's card goes");
+    expect(cubit.state.retryAt, isNull);
+    expect(cubit.state.rows, hasLength(1));
+    expect(cubit.state.totals!.scanned, 1);
+    verify(() => repo.scan(any(), any())).called(2);
+
+    when(() => repo.scan(any(), any())).thenAnswer(
+      (i) async => Success(
+        scanResult(i.positionalArguments[1] as String, ref: 'R2'),
+      ),
+    );
+    await cubit.scan(next);
+    verify(() => repo.scan('Q8F2KD91XA7N', cubit.state.id!)).called(1);
+    expect(cubit.state.rows.map((r) => r.ref), ['R2', 'R1']);
+  });
+
+  group('TC-MIG-064 an end that fails still leaves', () {
+    for (final (what, failure) in [
+      (
+        '404',
+        const Failure(NotFoundException(statusCode: 404, code: 'not_found')),
+      ),
+      ('no connection', const Failure(NetworkException())),
+    ]) {
+      test(what, () async {
+        when(
+          () => repo.endSession(any()),
+        ).thenAnswer((_) async => Err(failure));
+        final cubit = scanner();
+        await cubit.start();
+        await cubit.scan(raw);
+        final id = cubit.state.id!;
+        await cubit.finish();
+        verify(() => repo.endSession(id)).called(1);
+        expect(await store.read(), isNull, reason: 'the ID is forgotten');
+        expect(cubit.state.rows, isEmpty);
+      });
+    }
+  });
   test('invalid stored UUID is discarded before any API request', () async {
     await store.save('corrupt-id');
     final cubit = scanner();

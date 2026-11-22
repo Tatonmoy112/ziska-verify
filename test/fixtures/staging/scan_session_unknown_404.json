@@ -1,0 +1,17 @@
+{
+  "method": "GET",
+  "path": "lookups/sessions/a209a7c1-9eac-4790-871c-e0ea4f278f01",
+  "status": 404,
+  "headers": {
+    "content-type": "application/json; charset=utf-8"
+  },
+  "body": {
+    "success": false,
+    "message": "Session not found.",
+    "error": {
+      "code": "not_found",
+      "message": "Session not found.",
+      "request_id": "req-staging"
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "method": "POST",
+  "path": "lookups",
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8"
+  },
+  "body": {
+    "success": true,
+    "message": "Lookup done.",
+    "data": {
+      "ref": "MA-2026-000030",
+      "result": "not_found",
+      "repeat": true,
+      "session": {
+        "id": "4a7a81bb-4a34-4fde-ac36-22f72f2787fd",
+        "left": 4998,
+        "valid": 0,
+        "scanned": 2,
+        "warning": 0,
+        "not_found": 2,
+        "unassigned": 0
+      }
+    }
+  }
+}
