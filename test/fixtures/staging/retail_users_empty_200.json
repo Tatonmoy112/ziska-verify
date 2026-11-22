@@ -1,0 +1,17 @@
+{
+  "method": "GET",
+  "path": "retail-users",
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8"
+  },
+  "body": {
+    "success": true,
+    "message": "Retail users fetched successfully.",
+    "data": {
+      "retail_users": [],
+      "next_cursor": null
+    }
+  },
+  "source": "testapp.protecb.com ziska-test, 2026-11-22 (Step 3: a new account)"
+}

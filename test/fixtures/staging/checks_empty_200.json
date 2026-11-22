@@ -1,0 +1,24 @@
+{
+  "method": "GET",
+  "path": "checks",
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8"
+  },
+  "body": {
+    "success": true,
+    "message": "Checks fetched successfully.",
+    "data": {
+      "checks": [],
+      "totals": {
+        "total": 0,
+        "valid": 0,
+        "warning": 0,
+        "not_found": 0,
+        "unassigned": 0
+      },
+      "next_cursor": null
+    }
+  },
+  "source": "testapp.protecb.com ziska-test, 2026-11-22 (Step 3: a new account)"
+}

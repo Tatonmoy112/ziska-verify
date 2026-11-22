@@ -1,0 +1,17 @@
+{
+  "method": "GET",
+  "path": "lookups/sessions",
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8"
+  },
+  "body": {
+    "success": true,
+    "message": "Sessions fetched successfully.",
+    "data": {
+      "sessions": [],
+      "next_cursor": null
+    }
+  },
+  "source": "testapp.protecb.com ziska-test, 2026-11-22 (Step 3: a new account)"
+}

@@ -1,0 +1,17 @@
+{
+  "method": "GET",
+  "path": "incidents",
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8"
+  },
+  "body": {
+    "success": true,
+    "message": "Reports fetched successfully.",
+    "data": {
+      "reports": [],
+      "next_cursor": null
+    }
+  },
+  "source": "testapp.protecb.com ziska-test, 2026-11-22 (Step 3: a new account)"
+}

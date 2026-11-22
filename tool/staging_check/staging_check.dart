@@ -5,7 +5,7 @@
 //   dart run tool/staging_check/staging_check.dart <step> [<code>]
 //       --out <dir> [--state <file>]
 //
-// Steps: connect; login; verify <code>; session.
+// Steps: connect; login; verify <code>; session; profile.
 //
 // The address comes from config/staging.json. Every answer is saved in
 // <dir> (the scratchpad, outside the repo) so it can be cleaned of passes
@@ -29,9 +29,10 @@ import 'package:ziska_verify/core/services/device/phone_id_service.dart';
 import 'package:ziska_verify/features/authentication/data/models/auth_dtos.dart';
 import 'package:ziska_verify/features/authentication/data/services/access_request_api_service.dart';
 import 'package:ziska_verify/features/authentication/data/services/auth_api_service.dart';
+import 'package:ziska_verify/features/profile/data/mappers/profile_mapper.dart';
 import 'package:ziska_verify/features/profile/data/services/profile_api_service.dart';
 
-const _steps = 'connect, login, verify <code>, session';
+const _steps = 'connect, login, verify <code>, session, profile';
 
 Future<void> main(List<String> args) async {
   String? option(String name) {
@@ -60,6 +61,8 @@ Future<void> main(List<String> args) async {
       await check.verify(args[1]);
     case 'session':
       await check.session();
+    case 'profile':
+      await check.profile();
     default:
       stderr.writeln('Unknown step "${args.first}". Steps: $_steps.');
       exitCode = 64;
@@ -403,6 +406,96 @@ class StagingCheck {
       ..remove('refresh')
       ..remove('challenge');
     _state.write(values);
+  }
+
+  /// Logs in on the trusted phone (no code) for a read-only step; `null`
+  /// when that is not possible.
+  Future<bool> _logInTrusted() async {
+    final login = _login();
+    if (login == null) return false;
+    try {
+      final answer = await DioAuthApiService(api).login(
+        email: login.email,
+        password: login.password,
+        phoneId: _state.phoneId(),
+      );
+      if (answer.status != 'logged_in' || answer.accessToken == null) {
+        _fail('login on the trusted phone', 'status ${answer.status}');
+        return false;
+      }
+      dio.options.headers['Authorization'] = 'Bearer ${answer.accessToken}';
+      return true;
+    } on Object catch (e) {
+      _fail('login on the trusted phone', e);
+      return false;
+    }
+  }
+
+  Future<void> _logOut() async {
+    try {
+      await DioAuthApiService(api).logout();
+    } on Object catch (e) {
+      _fail('POST auth/logout', e);
+    }
+    dio.options.headers.remove('Authorization');
+  }
+
+  /// Step 3: the profile, read by the app's own parser and mapper, and one
+  /// route for each permission it lists (read only).
+  Future<void> profile() async {
+    if (!await _logInTrusted()) return;
+    var permissions = const <String>{};
+    try {
+      final me = (await DioProfileApiService(api).getMe()).toEntity();
+      permissions = me.permissions;
+      final organisation = me.organisation ?? 'none';
+      _pass(
+        'GET me',
+        'role "${me.role}"; organisation "$organisation"; '
+            'support ${me.supportEmail ?? '-'} / ${me.supportPhone ?? '-'}; '
+            'pending change: ${me.passwordChangePending}',
+      );
+      _pass('the permissions', me.permissions.join(', '));
+    } on Object catch (e) {
+      _fail('GET me', e);
+    }
+
+    // What each permission opens in the app, and a read-only route of it.
+    final routes = <String, (String, Map<String, Object?>)>{
+      'item:lookup': ('formats', {}),
+      'history:own': ('checks', {'limit': 1}),
+      'item:bulk_lookup': ('lookups/sessions', {'limit': 1}),
+      'incident:report': ('incidents', {'limit': 1}),
+    };
+    for (final MapEntry(key: permission, value: (path, query))
+        in routes.entries) {
+      final granted = permissions.contains(permission);
+      try {
+        await api.get(path, query: query);
+        if (granted) {
+          _pass('GET $path ($permission)', '200');
+        } else {
+          _fail('GET $path ($permission)', '200 without the permission');
+        }
+      } on ForbiddenException catch (e) {
+        if (granted) {
+          _fail('GET $path ($permission)', '403 ${e.code} with it');
+        } else {
+          _pass('GET $path ($permission)', '403 without it');
+        }
+      } on Object catch (e) {
+        _fail('GET $path ($permission)', e);
+      }
+    }
+    if (permissions.contains('incident:report')) {
+      try {
+        await api.get('retail-users', query: {'search': 'a', 'limit': 1});
+        _pass('GET retail-users (incident:report)', '200');
+      } on Object catch (e) {
+        _fail('GET retail-users (incident:report)', e);
+      }
+    }
+    await _logOut();
   }
 
   /// `auth/refresh` as the app's session service sends it: no pass in the
