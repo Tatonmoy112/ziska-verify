@@ -27,8 +27,8 @@ Nothing in the app is changed during the audit. The user picks what to fix.
 | 2 | Passwords (forgot, reset, change, Not now) | **Done** 2026-11-22 |
 | 3 | Sign up | **Done** 2026-11-22 |
 | 4 | One check | **Done** 2026-11-22 |
-| 5 | Scanner mode | Next |
-| 6 | Serial stack | |
+| 5 | Scanner mode | **Done** 2026-11-22 |
+| 6 | Serial stack | Next |
 | 7 | History | |
 | 8 | Reports | |
 | 9 | Profile and across the app | |
@@ -429,3 +429,95 @@ Nothing in the app is changed during the audit. The user picks what to fix.
   - the loader shows after 300 ms;
   - the offline banner shows;
   - a refused camera permission offers "Open settings", and no camera says to type the serial.
+
+---
+
+## Step 5. Scanner mode
+
+**Screens and pieces:**
+- opening: a new session, or resuming a saved one after a crash;
+- the camera, each scan's result, and "Already scanned";
+- the counters, and the line of reads waiting;
+- the waits;
+- a session that is full, ended or another official's;
+- Finish and its summary, Scan more, Done, and Back.
+
+### Findings
+
+| # | Finding | Class | Severity or impact / effort |
+|---|---|---|---|
+| 5.1 | **Finish can hang for good** on "Checking the last scans…" if the official opens a scan's result while reads are still waiting | **Mismatch** (bug) | **High** (only Back gets out, and the summary is lost) |
+| 5.2 | When a session fills up or closes itself (15 minutes idle), the app moves to a new one and the list and counters drop to 1 with no notice; Finish then shows only the new session | **Unclear** + **Improvement** | Medium |
+| 5.3 | After resuming a session of more than 100 products, the summary says "350 products scanned" but lists only the first 100 | **Mismatch** | Medium |
+| 5.4 | When the session was another official's, the product in hand is not checked, and nothing says "scan it again" | **Wording** | Medium |
+| 5.5 | "N more scans were not checked. Scan them again." goes away at the next scan, does not say which products, and reads "1 more scans" | **Wording** + **Improvement** | Medium / small |
+| 5.6 | When loading a resumed session's old scans fails, the banner says "No connection, scan again." with a Scan again button, though no scan was made | **Wording** | Low |
+| 5.7 | A timeout says "No connection, scan again.", though the scan may have been counted; scanning again then says "Already scanned" for a product whose result was never seen | **Wording** | Low |
+| 5.8 | During a 429 wait the banner says "Try again in N s", but the app sends the scan again by itself; the supervisor may scan twice | **Wording** | Low |
+| 5.9 | Without History permission, a saved session from days ago still says "Resumed session"; the first scan then starts a new one | **Wording** | Low |
+| 5.10 | "Remaining" reads like products left in the pile; it is how many more the session can take (5,000 in all) | **Wording** | Low |
+| 5.11 | On a phone that cannot scan, Scanner mode says "Type the serial instead", but it has no serial field | **Wording** | Low |
+| 5.12 | If reading a saved session fails (offline, busy), the only way forward is Retry | **Improvement** | Low / small |
+| 5.13 | Without History permission, a product scanned before a crash comes back as "Already scanned" and appears nowhere, so Finish stays off | **Unclear** | Low |
+
+### The details
+
+**5.1 Finish can hang (Mismatch, high).**
+- **The spec** (`final.md:186`): after Finish, "the reads already taken are still sent and answered … Then `…/end` is sent".
+- **The app:** during Finish, a scan's card can still be opened.
+  - Opening it pauses the line (`scan_session_screen.dart:105`).
+  - On return the line is resumed only when not finishing (`:113`).
+  - The paused line never sends the waiting reads (`scan_session_cubit.dart:273`), so Finish waits for them forever (`:453`).
+- **The fix:** resume the line on return during Finish too, or make the cards not tappable while finishing. Test first.
+
+**5.2 A new session starts silently (Unclear, Improvement).**
+- **The guide** (§4.3): on `session_full` or `session_ended`, "start a new session and send the scan again in it, without asking". The spec (`final.md:175`) clears the old list.
+- **What happens:** the list and the counters drop to 1, and no notice is shown (`scan_session_cubit.dart:334-344`). Only `session_not_yours` shows "A new session started.".
+- **The ideas:**
+  - say "A new session started (the last one was full or closed after 15 minutes)";
+  - better, keep the earlier rows on screen, marked, so Finish shows everything scanned on this visit.
+
+**5.3 The summary after a resume (Mismatch, medium).**
+- **The spec** (`final.md:186`): the summary shows "every product with its result".
+- **The app:** it lists only the rows already loaded (`scan_session_screen.dart:868`), and "load more" is off once finished (`scan_session_cubit.dart:540`). The count comes from the server.
+- **The fix:** load the rest before the summary, or show "Showing 100 of 350" with "Load more".
+
+**5.4 Another official's session (Wording, medium).** The scan is let go (`scan_session_cubit.dart:346-352`) and the text is only "A new session started.". Better: "A new session started. Scan the last product again."
+
+**5.5 Scans not checked (Wording, Improvement).** The count resets at the next scan (`scan_session_cubit.dart:307`), and the text has no singular form. Keep it until a scan succeeds, and say "1 more scan was not checked" or "3 more scans were not checked".
+
+**5.10 "Remaining" (Wording, low).** The guide (§4.3) says `left` is "how many more different items the session can take (5,000 in all)". Better: "Can take" or "Room left".
+
+**5.11 "Type the serial instead" (Wording, low).** Scanner mode reads QR codes only. Better: "This phone cannot scan QR codes. Use Serial stack to type serials."
+
+### More ideas to improve Scanner mode
+
+| Idea | Impact | Effort |
+|---|---|---|
+| A different sound or vibration for genuine, needs attention and not found (today all vibrate the same) | High | Small |
+| A "Needs attention" filter in the list and the summary (warnings, not found, not in a batch) | High | Medium |
+| Keep the previous session's rows after a new session starts (see 5.2) | High | Medium |
+| On a not-found row, "Report this product" with its reference filled in | Medium | Medium |
+| Show the reference on each found product's row (today the row shows the serial) | Medium | Small |
+| When the same QR is shown again, a short "already sent" tick instead of nothing | Medium | Small |
+| The torch shows when it is on, and is hidden on the summary | Low | Small |
+| "Start a new session" next to Retry when a saved session cannot be read (5.12) | Low | Small |
+
+### Checked and right
+- **Permissions:** hidden without `item:bulk_lookup`; a 403 reloads the profile and leaves.
+- **Starting:** a new UUID is saved before the first scan. Each scan is sent at once with `way: qr` and the session ID, and the answer's session is checked to be the one sent.
+- **Shown data:** the six counters come from the server's answer. A repeat shows the first answer, adds no row and changes no count.
+- **The pace:**
+  - one scan at a time, at most 2 a second;
+  - the same QR held still is not sent again;
+  - the QR is the part after the last `/q/`.
+- **Answers:**
+  - a full or ended session moves to a new one and sends the scan again once;
+  - 503: "nothing was recorded; scan again";
+  - a 429 waits its `Retry-After` and sends the scan again;
+  - a 403 says so and leaves.
+- **Resume:** a saved session that answers 404, is ended, or is a stack, starts fresh. With History permission, the summary and the scans are read; without it, History is never asked.
+- **Leaving:** Back ends the session without waiting, and forgets the list and the ID; the end is sent with no body.
+- **After Finish:** Scan more starts a new session, and Done goes back to Check.
+- **Pausing:** the line and the camera stop in the background.
+- **The camera:** a refused permission offers "Open settings".
