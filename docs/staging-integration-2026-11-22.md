@@ -16,8 +16,8 @@ Cases: [17-test-server.md](test-cases/17-test-server.md).
 | 1 | Connection and errors | **Done** 2026-11-22 |
 | 2 | Login and staying logged in | **Done** 2026-11-22 |
 | 3 | Profile and permissions | **Done** 2026-11-22 |
-| 4 | One check | Next |
-| 5 | History and the sessions list | |
+| 4 | One check | **Done** 2026-11-22 |
+| 5 | History and the sessions list | Next |
 | 6 | Serial stacks | |
 | 7 | Scanner sessions | |
 | 8 | Reports, photos, retail users | |
@@ -117,3 +117,42 @@ The first attempt said "No connection" while the emulator's network was dropping
 **On the emulator** (TC-STG-018): passed.
 - **Profile:** "Trendsbird", Supervisor, "Ziska-test", the email, counts 0 / 0 / 0, the four permissions, "Not set by your office".
 - **Check:** the serial field, Scanner mode, Serial stack, Report incident and My reports.
+
+## Step 4. One check (2026-11-22)
+
+**Cases first.** Already covered by about 48 flow tests and the contract tests:
+- every result and reason, and several reasons together;
+- unknown results or reasons, never shown as genuine;
+- `null` optional fields, and extra fields ignored;
+- the serial length and the QR from `GET formats`;
+- QR links (only the value after the last `/q/`);
+- `429` countdowns, `500` and `503`.
+
+No new offline case was needed.
+
+**Against the server** (the checker's `lookup` step; each input prepared by the app's own rules, every answer read by the app's parser):
+
+| Sent | Result |
+|---|---|
+| `GET formats` | serial up to 19 digits; QR 12 characters, capitals and digits |
+| serial `1` | **valid**: Napa Extra 500 (Paracetamol + Caffeine, "Napa Extra"), batch ZT-2509-001, made 2025-09-18, expires 2027-09-18, masked code `*****BQQ`, **no picture** |
+| serial `0000000000000000001` | **warning, checked_before**: the same item `1` (check 2; `last_at` written with `+00:00`) |
+| serials `1000001` … `1000004` | **unassigned** (only `ref` and `result`) |
+| serial `1234567890`, QRs `Q8F2KD91XA7M`, `K7M2PX4Q9AB1` | **not_found** |
+| the hidden-code way | 400 `validation_failed` |
+| serial `12AB` (the app never sends it) | **200 `not_found`, recorded** |
+
+All four results exist on the test server, and the app reads each one. **Differences from the contract:** none in what the app sends. Two server rules are not in the guide, so they went to the backend (B5):
+- **Leading zeros:** serials are compared as numbers, so `000…1` is item `1`. This matters for stacks; it will be checked in step 6.
+- **Letters:** a serial with letters is recorded as not found, not refused.
+
+None of the test items has a picture, so the product picture is still unseen from the real server.
+
+**Real-answer tests** (`test/staging/step4_lookup_test.dart`, TC-STG-019 … -024): genuine, with every field; checked before, in Bangladesh time; not in a batch; not found; a QR through the Check tab's camera; and the two answers to requests the app never sends.
+
+**On the emulator** (TC-STG-025): passed.
+- **`1`:** check 3, so "Genuine, needs attention · Checked before", last check 12:30 PM, with every product field.
+- **`1000001`:** "Not in a batch".
+- **`1234567890`:** "Not found", with the server's reference and hints for up to 19 digits.
+
+The loader ("Checking the item…") showed while the slow emulator network waited.

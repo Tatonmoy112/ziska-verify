@@ -42,3 +42,15 @@ The integration runs one step at a time. For each step, the cases come first (no
 | TC-STG-016 | A new account's counts | EDGE | P2 | AUTO | ✅ `staging/step3_profile_test` | The real empty `GET checks` (totals all 0) | Open Profile | 0, 0, 0: never blank, never the error | Guide §5 |
 | TC-STG-017 | The tabs and tools the permissions open | ROLE | P1 | AUTO | ✅ `staging/step3_profile_test` | The real profile and empty lists | Look at Check; open History | Check, History and Profile tabs; the serial field, Scanner mode, Serial stack, Report incident and My reports; History opens without an error | Guide §4 |
 | TC-STG-018 | Profile and tools on a phone | E2E | P1 | DEVICE | ✋ | Staging build, logged in with the test login | Open Profile; open Check and scroll | The server's name, role, organisation, email; counts 0; the four permissions; support not set; every tool on Check | Guide §3.8, §4 |
+
+## Step 4. One check
+
+| ID | Title | Type | Pri | Run on | Auto | Pre-conditions / Data | Steps | Expected | Source |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-STG-019 | Genuine: every field as sent | POS | P1 | AUTO | ✅ `staging/step4_lookup_test` | The real `valid` answer for serial `1` (Napa Extra 500, batch ZT-2509-001, no picture) | Type `1`, Check | `{way: serial, value: 1}` sent; "Genuine product"; the reference; product, generic and short name, batch, made and expiry dates, masked code; "No picture for this product" | Guide §4.2 |
+| TC-STG-020 | Checked before, in Bangladesh time | POS | P1 | AUTO | ✅ `staging/step4_lookup_test` | The real `warning` / `checked_before` answer, `last_at` written `…06:30:49.67778+00:00` | Type the serial, Check | "Genuine, needs attention"; check number 2; the last check on Nov 22, 2026 at 12:30 (Dhaka) | Guide §4.2; DEC-205 |
+| TC-STG-021 | Not in a batch: no item | EDGE | P1 | AUTO | ✅ `staging/step4_lookup_test` | The real `unassigned` answer (only `ref` and `result`) | Type `1000001`, Check | "Not in a batch"; the reference; no error | Guide §4.2 |
+| TC-STG-022 | Not found | NEG | P1 | AUTO | ✅ `staging/step4_lookup_test` | The real `not_found` answer | Type `1234567890`, Check | "Not found"; the reference; what was entered | Guide §4.2 |
+| TC-STG-023 | A QR from the camera | POS | P1 | AUTO | ✅ `staging/step4_lookup_test` | The real `not_found` answer for a QR | Show the link `https://www.ziskaverify.com/q/Q8F2KD91XA7M` to the camera | `{way: qr, value: Q8F2KD91XA7M}` sent; "Not found" | Guide §4 |
+| TC-STG-024 | What the app never sends | NEG | P3 | AUTO | ✅ `staging/step4_lookup_test` | The real answers: the hidden-code way → 400; letters in a serial → 200 `not_found` | Read them | The 400 is a validation error with its reference; the 200 is read as not found (the app refuses letters before sending) | Guide §4; B5 |
+| TC-STG-025 | One check of each result on a phone | E2E | P1 | DEVICE | ✋ | Staging build, logged in; serials `1`, `1000001`, `1234567890` | Check each | Genuine (or checked before, once checked), not in a batch, not found: each with the server's reference and fields; the loader while it waits | Guide §4.2 |

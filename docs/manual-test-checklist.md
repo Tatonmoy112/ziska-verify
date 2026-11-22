@@ -840,6 +840,13 @@ Expected: the server's name, role (Supervisor), organisation and email; the coun
 
 - [x] Pass - [ ] Fail - [ ] Blocked — Notes: 2026-11-22, emulator (staging release build): all shown as listed; counts 0, 0, 0.
 
+#### TC-STG-025 · One check of each result · P1
+On the Check tab, check each serial in turn: `1`, `1000001`, `1234567890`.
+
+Expected: `1` is genuine at its first check, and "Genuine, needs attention · Checked before" after that, with the check number and the last time in Bangladesh time; `1000001` is "Not in a batch"; `1234567890` is "Not found" with hints. Each shows the server's reference, and "Checking the item…" while it waits.
+
+- [x] Pass - [ ] Fail - [ ] Blocked — Notes: 2026-11-22, emulator (staging release build). `1` was check 3 (the checker had checked it twice): checked before, last check 12:30 PM; all product fields from the server. `1000001` not in a batch; `1234567890` not found with hints for up to 19 digits.
+
 #### TC-STG-007 · The staging app reaches the server · P1
 1. Open the staging app: Login shows.
 2. Tap **Sign up**, open the role list.
