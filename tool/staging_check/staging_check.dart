@@ -62,7 +62,7 @@ import 'package:ziska_verify/features/verification/domain/usecases/verification_
 const _steps =
     'connect, login, verify <code>, session, profile, lookup, history, '
     'stack, scan, report, lengths, signup-probe, signup-code, '
-    'signup <code>, password-probe, serial-probe';
+    'signup <code>, password-probe, serial-probe, backend-probe';
 
 Future<void> main(List<String> args) async {
   String? option(String name) {
@@ -117,6 +117,8 @@ Future<void> main(List<String> args) async {
       await check.passwordProbe();
     case 'serial-probe':
       await check.serialProbe();
+    case 'backend-probe':
+      await check.backendProbe();
     default:
       stderr.writeln('Unknown step "${args.first}". Steps: $_steps.');
       exitCode = 64;
@@ -1727,6 +1729,102 @@ class StagingCheck {
         );
       }
     }
+    await _logOut();
+  }
+
+  /// Proof for the backend fix list (docs/backend-requests/2026-11-22-
+  /// backend-fix-list.md): the email in capitals at login, the "Not now"
+  /// route, a serial in Bangla digits, and an empty JSON body on the
+  /// bodiless routes. Records at most 2 checks.
+  Future<void> backendProbe() async {
+    final login = _login();
+    if (login == null) return;
+    final auth = DioAuthApiService(api);
+
+    // 1. The email in capitals, on the trusted phone (one attempt).
+    final upper = login.email.toUpperCase();
+    try {
+      final answer = await auth.login(
+        email: upper,
+        password: login.password,
+        phoneId: _state.phoneId(),
+      );
+      stdout.writeln(
+        'INFO  POST auth/login, the email in capitals  200 ${answer.status}',
+      );
+      if (answer.status != 'logged_in' || answer.accessToken == null) {
+        if (!await _logInTrusted()) return;
+      } else {
+        dio.options.headers['Authorization'] = 'Bearer ${answer.accessToken}';
+      }
+    } on AppException catch (e) {
+      stdout.writeln(
+        'INFO  POST auth/login, the email in capitals  '
+        '${e.statusCode} ${e.code}: "${e.message}"',
+      );
+      if (!await _logInTrusted()) return;
+    }
+
+    Future<void> info(String what, Future<Object?> Function() call) async {
+      try {
+        final data = await call();
+        stdout.writeln('INFO  $what  200 ${jsonEncode(data)}');
+      } on AppException catch (e) {
+        stdout.writeln(
+          'INFO  $what  ${e.statusCode} ${e.code}: "${e.message}"',
+        );
+      }
+    }
+
+    // 2. The "Not now" route.
+    await info('POST me/password/later', () => api.post('me/password/later'));
+
+    // 3. A serial in Bangla digits (serial 1), sent raw: the app turns them
+    // into 0-9 before sending.
+    await info(
+      'POST lookups serial "১" (Bangla one, sent raw)',
+      () => api.post('lookups', body: {'way': 'serial', 'value': '১'}),
+    );
+
+    // 4. An empty JSON body on the bodiless routes: a session with one scan,
+    // ended with `Content-Type: application/json` and no body; then the
+    // same for logout. The app sends both bare.
+    final id = ActiveScanStore.newId();
+    await info(
+      'POST lookups (one scan, to open a session)',
+      () => api.post(
+        'lookups',
+        body: {'way': 'qr', 'value': 'Q8F2KD91XA7M', 'session_id': id},
+      ),
+    );
+    Future<String> emptyJson(String path) async {
+      try {
+        final r = await dio.post<Object?>(
+          path,
+          data: '',
+          options: Options(contentType: Headers.jsonContentType),
+        );
+        return '${r.statusCode}';
+      } on DioException catch (e) {
+        final body = e.response?.data;
+        final error = body is Map ? body['error'] : null;
+        final code = error is Map ? error['code'] : null;
+        return '${e.response?.statusCode} $code';
+      }
+    }
+
+    stdout.writeln(
+      'INFO  POST lookups/sessions/{id}/end, empty JSON body  '
+      '${await emptyJson('lookups/sessions/$id/end')}',
+    );
+    await info(
+      'POST lookups/sessions/{id}/end, bare',
+      () => api.post('lookups/sessions/$id/end'),
+    );
+    stdout.writeln(
+      'INFO  POST auth/logout, empty JSON body  '
+      '${await emptyJson('auth/logout')}',
+    );
     await _logOut();
   }
 
