@@ -1,0 +1,18 @@
+{
+  "method": "GET",
+  "path": "no-such-route",
+  "status": 404,
+  "headers": {
+    "content-type": "application/json; charset=utf-8"
+  },
+  "body": {
+    "success": false,
+    "message": "Not found.",
+    "error": {
+      "code": "not_found",
+      "message": "Not found.",
+      "request_id": "req-staging"
+    }
+  },
+  "source": "testapp.protecb.com ziska-test, 2026-11-22 (Step 1)"
+}
