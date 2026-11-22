@@ -1,0 +1,17 @@
+{
+  "method": "POST",
+  "path": "incidents",
+  "status": 404,
+  "headers": {
+    "content-type": "application/json; charset=utf-8"
+  },
+  "body": {
+    "success": false,
+    "message": "Check not found.",
+    "error": {
+      "code": "not_found",
+      "message": "Check not found.",
+      "request_id": "req-staging"
+    }
+  }
+}

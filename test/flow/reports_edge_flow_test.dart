@@ -105,6 +105,35 @@ void main() {
       expect(find.text('1000/1000'), findsOneWidget);
     });
 
+    // TC-REP-061, -062 (test-server integration, step 8): "Spaces around
+    // it are removed" before the 1 to 1,000 characters are counted (guide
+    // section 6.1).
+    testWidgets('TC-REP-061 the note goes without the spaces and lines '
+        'around it', (tester) async {
+      final app = await openReport(tester);
+      await file(app, '  \n Seal cut.\nLabel blurred. \n ');
+      expect(filed(app)['note'], 'Seal cut.\nLabel blurred.');
+    });
+
+    testWidgets('TC-REP-062 spaces around a note of 1 000 do not count: '
+        'nothing of it is cut', (tester) async {
+      final app = await openReport(tester);
+      final note = '${'n' * 999}e';
+      await app.enter(const Key('report.note'), '  $note\n');
+      expect(app.fieldText(const Key('report.note')), '  $note\n');
+      expect(find.text('1000/1000'), findsOneWidget);
+      await file(app, '  $note\n');
+      expect(filed(app)['note'], note);
+    });
+
+    testWidgets('TC-REP-062 over 1 000 without the spaces is still cut to '
+        '1 000', (tester) async {
+      final app = await openReport(tester);
+      await app.enter(const Key('report.note'), ' ${'n' * 1001}');
+      expect(app.fieldText(const Key('report.note')), ' ${'n' * 1000}');
+      expect(find.text('1000/1000'), findsOneWidget);
+    });
+
     testWidgets('TC-REP-021 a note of spaces only cannot be filed', (
       tester,
     ) async {

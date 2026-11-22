@@ -45,6 +45,10 @@ class ReportIncidentScreen extends StatefulWidget {
 class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
   final _note = TextEditingController();
 
+  /// The note's characters as the server counts them (guide section 6.1).
+  int get _noteLength =>
+      CodePointLimit.counted(_note.text, outerSpaceFree: true);
+
   /// The last [ReportIncidentState.samePhotoCount] already shown.
   int _shownSame = 0;
 
@@ -212,12 +216,15 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
                 minLines: 4,
                 maxLines: 8,
                 // The server counts characters as code points (guide
-                // sections 3.6, 6.1), so an emoji of two counts as two.
+                // sections 3.6, 6.1), so an emoji of two counts as two,
+                // after removing the spaces around the note.
                 inputFormatters: const [
-                  CodePointLimit(ReportRules.noteMaxLength),
+                  CodePointLimit(
+                    ReportRules.noteMaxLength,
+                    outerSpaceFree: true,
+                  ),
                 ],
-                counter:
-                    '${_note.text.runes.length}/${ReportRules.noteMaxLength}',
+                counter: '$_noteLength/${ReportRules.noteMaxLength}',
                 textCapitalization: TextCapitalization.sentences,
                 onChanged: (_) => setState(() {}),
               ),

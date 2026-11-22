@@ -1,0 +1,15 @@
+{
+  "method": "POST",
+  "path": "incidents",
+  "status": 201,
+  "headers": {
+    "content-type": "application/json; charset=utf-8"
+  },
+  "body": {
+    "success": true,
+    "message": "Report filed successfully.",
+    "data": {
+      "id": 3
+    }
+  }
+}

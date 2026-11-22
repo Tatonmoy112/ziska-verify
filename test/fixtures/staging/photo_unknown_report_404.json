@@ -1,0 +1,17 @@
+{
+  "method": "POST",
+  "path": "incidents/999999999/photos",
+  "status": 404,
+  "headers": {
+    "content-type": "application/json; charset=utf-8"
+  },
+  "body": {
+    "success": false,
+    "message": "Report not found.",
+    "error": {
+      "code": "not_found",
+      "message": "Report not found.",
+      "request_id": "req-staging"
+    }
+  }
+}

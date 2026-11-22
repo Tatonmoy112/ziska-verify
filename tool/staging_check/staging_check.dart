@@ -6,7 +6,7 @@
 //       --out <dir> [--state <file>]
 //
 // Steps: connect; login; verify <code>; session; profile; lookup; history;
-// stack; scan.
+// stack; scan; report.
 //
 // The address comes from config/staging.json. Every answer is saved in
 // <dir> (the scratchpad, outside the repo) so it can be cleaned of passes
@@ -18,11 +18,14 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
+import 'package:image/image.dart' as img;
 import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:ziska_verify/app/config/app_config.dart';
 import 'package:ziska_verify/core/errors/app_exception.dart';
+import 'package:ziska_verify/core/errors/result.dart';
 import 'package:ziska_verify/core/network/api_client.dart';
 import 'package:ziska_verify/core/network/api_envelope.dart';
 import 'package:ziska_verify/core/network/bodiless_request_interceptor.dart';
@@ -37,8 +40,14 @@ import 'package:ziska_verify/features/authentication/data/services/auth_api_serv
 import 'package:ziska_verify/features/history/data/mappers/check_mappers.dart';
 import 'package:ziska_verify/features/history/data/services/history_api_service.dart';
 import 'package:ziska_verify/features/history/domain/entities/check.dart';
+import 'package:ziska_verify/features/incidents/data/repositories/incident_repository_impl.dart';
+import 'package:ziska_verify/features/incidents/data/services/incident_api_service.dart';
+import 'package:ziska_verify/features/incidents/domain/entities/report.dart';
 import 'package:ziska_verify/features/profile/data/mappers/profile_mapper.dart';
 import 'package:ziska_verify/features/profile/data/services/profile_api_service.dart';
+import 'package:ziska_verify/features/retail_users/data/repositories/retail_user_repository_impl.dart';
+import 'package:ziska_verify/features/retail_users/data/services/retail_user_api_service.dart';
+import 'package:ziska_verify/features/retail_users/domain/usecases/search_retail_users.dart';
 import 'package:ziska_verify/features/verification/data/mappers/verification_mappers.dart';
 import 'package:ziska_verify/features/verification/data/models/verification_dtos.dart';
 import 'package:ziska_verify/features/verification/data/services/verification_api_service.dart';
@@ -48,7 +57,7 @@ import 'package:ziska_verify/features/verification/domain/usecases/verification_
 
 const _steps =
     'connect, login, verify <code>, session, profile, lookup, history, '
-    'stack, scan';
+    'stack, scan, report, lengths';
 
 Future<void> main(List<String> args) async {
   String? option(String name) {
@@ -89,6 +98,10 @@ Future<void> main(List<String> args) async {
       await check.stack();
     case 'scan':
       await check.scan();
+    case 'report':
+      await check.report();
+    case 'lengths':
+      await check.lengths();
     default:
       stderr.writeln('Unknown step "${args.first}". Steps: $_steps.');
       exitCode = 64;
@@ -1151,6 +1164,300 @@ class StagingCheck {
       } on Object catch (e) {
         _fail(what, e);
       }
+    }
+    await _logOut();
+  }
+
+  /// Step 8: reports, photos and retail users. One report is filed, about
+  /// one of this official's checks, with three photos; everything else the
+  /// server refuses without filing.
+  Future<void> report() async {
+    if (!await _logInTrusted()) return;
+    final service = DioIncidentApiService(api);
+    final reports = IncidentRepositoryImpl(service);
+
+    // A pass or a fail by [ok].
+    // ignore: avoid_positional_boolean_parameters
+    void expect(String what, bool ok, String detail) =>
+        (ok ? _pass : _fail)(what, detail);
+
+    /// Expects [call] to be refused with [T]; says how.
+    Future<void> refused<T extends AppException>(
+      String what,
+      Future<Object?> Function() call,
+    ) async {
+      try {
+        await call();
+        _fail(what, 'accepted: the guide says it is refused');
+      } on AppException catch (e) {
+        expect(
+          what,
+          e is T,
+          '${e.statusCode} ${e.code}: "${e.message}"',
+        );
+      } on Object catch (e) {
+        _fail(what, e);
+      }
+    }
+
+    Future<List<Report>?> mine(String what, [String? cursor]) async {
+      final page = await reports.myReports(PageRequest(cursor: cursor));
+      switch (page) {
+        case Success(:final value):
+          return value.items;
+        case Err(:final failure):
+          _fail(what, failure.exception);
+          return null;
+      }
+    }
+
+    final before = await mine('GET incidents (before)');
+    if (before == null) return _logOut();
+    _pass('GET incidents (before)', '${before.length} reports');
+
+    // One of this official's own checks, for the report to point to.
+    String? ref;
+    try {
+      final checks = (await DioHistoryApiService(
+        api,
+      ).getChecks(const CheckQuery(), const PageRequest(limit: 1))).toEntity();
+      ref = checks.page.items.firstOrNull?.ref;
+      _pass('an own check to link', ref ?? 'none');
+    } on Object catch (e) {
+      _fail('an own check to link', e);
+    }
+
+    // What the server refuses, filing nothing.
+    final tooLong = 'x' * (ReportRules.noteMaxLength + 1);
+    for (final (what, body) in <(String, Map<String, Object?>)>[
+      ('a note of spaces only', {'note': '   '}),
+      ('a note of 1,001 characters', {'note': tooLong}),
+    ]) {
+      await refused<ValidationException>(
+        'POST incidents $what',
+        () => service.fileReport(body),
+      );
+    }
+    await refused<NotFoundException>(
+      'POST incidents with an unknown check',
+      () => service.fileReport({
+        'note': 'Test: unknown check',
+        'check_ref': 'MA-2000-999999',
+      }),
+    );
+    await refused<NotFoundException>(
+      'POST incidents with an unknown retail user',
+      () => service.fileReport({
+        'note': 'Test: unknown retail user',
+        'retail_user_id': ActiveScanStore.newId(),
+      }),
+    );
+
+    // The report: a note of exactly 1,000 characters, sent with spaces and
+    // a line break around it; the server removes them before counting.
+    const line =
+        'Test report from the mobile app integration check (step 8): '
+        'label print blurred, seal cut. ';
+    final note = (line * 20).substring(0, ReportRules.noteMaxLength - 1);
+    final full = '$note.';
+    final int id;
+    try {
+      id = await service.fileReport({
+        'note': '  $full\n',
+        'check_ref': ?ref,
+      });
+      _pass(
+        'POST incidents (1,000 characters, spaces around)',
+        '201, report $id',
+      );
+    } on AppException catch (e) {
+      _fail(
+        'POST incidents (1,000 characters, spaces around)',
+        '${e.statusCode} ${e.code}: "${e.message}"',
+      );
+      return _logOut();
+    }
+
+    // Photos as the app prepares them: JPEG at quality 85, at most 2048 px.
+    final big = img.Image(width: 2048, height: 1536);
+    for (final p in big) {
+      p
+        ..r = (p.x * 255 ~/ 2047)
+        ..g = (p.y * 255 ~/ 1535)
+        ..b = ((p.x ^ p.y) & 0xff);
+    }
+    final jpeg = img.encodeJpg(big, quality: 85);
+    final png = img.encodePng(img.Image(width: 64, height: 64));
+    final small = img.encodeJpg(
+      img.Image(width: 640, height: 480),
+      quality: 85,
+    );
+    stdout.writeln(
+      'Photos: JPEG 2048×1536 ${jpeg.length} bytes; PNG ${png.length}; '
+      'JPEG 640×480 ${small.length}',
+    );
+
+    Future<int?> photo(
+      String what,
+      List<int> bytes, [
+      String type = 'image/jpeg',
+    ]) async {
+      try {
+        final n = await service.addPhoto(id, Uint8List.fromList(bytes), type);
+        _pass(what, '201, n $n');
+        return n;
+      } on AppException catch (e) {
+        _fail(what, '${e.statusCode} ${e.code}: "${e.message}"');
+      } on Object catch (e) {
+        _fail(what, e);
+      }
+      return null;
+    }
+
+    final first = await photo('photo 1: JPEG 2048 px', jpeg);
+    final again = await photo('photo 1 sent again', jpeg);
+    expect(
+      'the same photo again',
+      first != null && again == first,
+      'n $first, then $again: not counted twice',
+    );
+
+    // What the server refuses before or after reading the photo.
+    for (final (what, bytes, type) in [
+      ('text sent as a JPEG', utf8.encode('not a photo'), 'image/jpeg'),
+      ('an empty photo', <int>[], 'image/jpeg'),
+      ('over 1 MB', List<int>.filled(1024 * 1024 + 1, 0xff), 'image/jpeg'),
+      ('a WebP type', jpeg, 'image/webp'),
+    ]) {
+      await refused<ValidationException>(
+        'POST photos: $what',
+        () => service.addPhoto(id, Uint8List.fromList(bytes), type),
+      );
+    }
+    await refused<NotFoundException>(
+      'POST photos to an unknown report',
+      () =>
+          service.addPhoto(999999999, Uint8List.fromList(small), 'image/jpeg'),
+    );
+
+    await photo('photo 2: PNG', png, 'image/png');
+    await photo('photo 3: JPEG 640 px', small);
+    // A new photo: the same file again would answer its n once more.
+    final fourth = img.encodeJpg(img.Image(width: 320, height: 240));
+    await refused<ConflictException>(
+      'POST photos: a 4th',
+      () => service.addPhoto(id, Uint8List.fromList(fourth), 'image/jpeg'),
+    );
+
+    // The report as My reports reads it.
+    final after = await mine('GET incidents (after)');
+    if (after != null) {
+      final filed = after.firstOrNull;
+      expect(
+        'GET incidents: one report more',
+        after.length == before.length + 1 || after.length == 50,
+        '${before.length}, then ${after.length}',
+      );
+      expect(
+        'GET incidents: the new report first',
+        filed != null &&
+            filed.id == id &&
+            filed.note == full &&
+            filed.photos == 3 &&
+            filed.checkRef == ref &&
+            filed.retailUserName == null,
+        filed == null
+            ? 'none'
+            : 'id ${filed.id}, note ${filed.note.runes.length} characters'
+                  '${filed.note == full ? ' (trimmed)' : ' (not as sent)'}, '
+                  'photos ${filed.photos}, check ${filed.checkRef}, '
+                  'retail user ${filed.retailUserName}, at ${filed.at}',
+      );
+    }
+    final one = await reports.myReports(const PageRequest(limit: 1));
+    if (one case Success(:final value)) {
+      final cursor = value.nextCursor;
+      _pass('GET incidents?limit=1', 'next_cursor ${cursor ?? 'none'}');
+      if (cursor != null) {
+        final next = await mine('GET incidents?cursor=…', cursor);
+        if (next != null) {
+          expect(
+            'GET incidents, the next page',
+            next.every((r) => r.id != value.items.single.id),
+            '${next.length} reports, none of page 1',
+          );
+        }
+      }
+    }
+    await refused<ValidationException>(
+      'GET incidents with another parameter',
+      () => api.get('incidents', query: {'sort': 'old'}),
+    );
+
+    // The retail-user picker, as the app searches.
+    final search = SearchRetailUsers(
+      RetailUserRepositoryImpl(DioRetailUserApiService(api)),
+    );
+    for (final typed in [null, 'a', 'a' * 99 + '🙂', '  rahim  ']) {
+      final shown = typed == null
+          ? 'none'
+          : typed.runes.length > 20
+          ? '${typed.substring(0, 8)}… (${typed.runes.length} characters)'
+          : '"$typed"';
+      final what = 'GET retail-users search $shown';
+      final found = await search(typed, const PageRequest());
+      switch (found) {
+        case Success(:final value):
+          final names = value.items.map((u) => u.name).join(', ');
+          _pass(
+            what,
+            '${value.items.length} retail users'
+            '${value.items.isEmpty ? '' : ': $names'}',
+          );
+        case Err(:final failure):
+          _fail(what, failure.exception);
+      }
+    }
+    await refused<ValidationException>(
+      'GET retail-users search of 101 characters (sent raw)',
+      () => api.get('retail-users', query: {'search': 'a' * 101}),
+    );
+    await _logOut();
+  }
+
+  /// How the server counts "characters" in a limit: a search of 100 that
+  /// differs in code points, UTF-16 units and UTF-8 bytes. Files nothing.
+  Future<void> lengths() async {
+    if (!await _logInTrusted()) return;
+    for (final (what, text) in [
+      ('100 letters', 'a' * 100),
+      ('98 letters and an emoji', '${'a' * 98}🙂'),
+      ('99 letters and an emoji', '${'a' * 99}🙂'),
+      ('100 é', 'é' * 100),
+      ('50 emoji', '🙂' * 50),
+    ]) {
+      final counts =
+          '${text.runes.length} code points, ${text.length} UTF-16 units, '
+          '${utf8.encode(text).length} bytes';
+      try {
+        await api.get('retail-users', query: {'search': text});
+        stdout.writeln('INFO  search: $what ($counts)  200');
+      } on AppException catch (e) {
+        stdout.writeln('INFO  search: $what ($counts)  ${e.statusCode}');
+      }
+    }
+    // A note of 1,000 code points that is 1,001 UTF-16 units. Refused if
+    // the server counts units; filed (a report) if it counts code points.
+    final note = '🙂${'n' * 999}';
+    try {
+      final id = await DioIncidentApiService(api).fileReport({'note': note});
+      stdout.writeln(
+        'INFO  note: 1,000 code points, 1,001 UTF-16 units  201 (report $id)',
+      );
+    } on AppException catch (e) {
+      stdout.writeln(
+        'INFO  note: 1,000 code points, 1,001 UTF-16 units  ${e.statusCode}',
+      );
     }
     await _logOut();
   }

@@ -1,0 +1,17 @@
+{
+  "method": "POST",
+  "path": "incidents/3/photos",
+  "status": 409,
+  "headers": {
+    "content-type": "application/json; charset=utf-8"
+  },
+  "body": {
+    "success": false,
+    "message": "The report has 3 photos already.",
+    "error": {
+      "code": "conflict",
+      "message": "The report has 3 photos already.",
+      "request_id": "req-staging"
+    }
+  }
+}

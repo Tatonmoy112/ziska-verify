@@ -1,0 +1,15 @@
+{
+  "method": "POST",
+  "path": "incidents/3/photos",
+  "status": 201,
+  "headers": {
+    "content-type": "application/json; charset=utf-8"
+  },
+  "body": {
+    "success": true,
+    "message": "Photo uploaded successfully.",
+    "data": {
+      "n": 1
+    }
+  }
+}

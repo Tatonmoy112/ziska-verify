@@ -1,0 +1,17 @@
+{
+  "method": "POST",
+  "path": "incidents",
+  "status": 404,
+  "headers": {
+    "content-type": "application/json; charset=utf-8"
+  },
+  "body": {
+    "success": false,
+    "message": "Retail user not found.",
+    "error": {
+      "code": "not_found",
+      "message": "Retail user not found.",
+      "request_id": "req-staging"
+    }
+  }
+}

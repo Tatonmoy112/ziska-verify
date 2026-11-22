@@ -85,21 +85,34 @@ class _AppPasswordFieldState extends State<AppPasswordField> {
 }
 
 /// At most [max] characters counted as code points, as the backend counts
-/// a password (app API guide §3.6). A longer edit is cut at a whole
-/// character.
+/// a password (app API guide §3.6) or a report's note (§6.1). A longer edit
+/// is cut at a whole character.
+///
+/// With [outerSpaceFree], the spaces and line breaks around the text do not
+/// count: the backend removes them before counting (a report's note, §6.1).
 class CodePointLimit extends TextInputFormatter {
-  const CodePointLimit(this.max);
+  const CodePointLimit(this.max, {this.outerSpaceFree = false});
 
   final int max;
+  final bool outerSpaceFree;
+
+  /// The characters of [text] that count.
+  static int counted(String text, {bool outerSpaceFree = false}) =>
+      (outerSpaceFree ? text.trim() : text).runes.length;
 
   @override
   TextEditingValue formatEditUpdate(
     TextEditingValue oldValue,
     TextEditingValue newValue,
   ) {
-    final runes = newValue.text.runes;
+    final all = newValue.text;
+    final body = outerSpaceFree ? all.trim() : all;
+    final runes = body.runes;
     if (runes.length <= max) return newValue;
-    final text = String.fromCharCodes(runes.take(max));
+    // The spaces before the text stay; it is cut after [max] of its own.
+    final before = outerSpaceFree ? all.length - all.trimLeft().length : 0;
+    final text =
+        all.substring(0, before) + String.fromCharCodes(runes.take(max));
     return TextEditingValue(
       text: text,
       selection: TextSelection.collapsed(offset: text.length),
