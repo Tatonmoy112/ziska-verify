@@ -26,8 +26,8 @@ Nothing in the app is changed during the audit. The user picks what to fix.
 | 1 | Login and staying logged in | **Done** 2026-11-22 |
 | 2 | Passwords (forgot, reset, change, Not now) | **Done** 2026-11-22 |
 | 3 | Sign up | **Done** 2026-11-22 |
-| 4 | One check | Next |
-| 5 | Scanner mode | |
+| 4 | One check | **Done** 2026-11-22 |
+| 5 | Scanner mode | Next |
 | 6 | Serial stack | |
 | 7 | History | |
 | 8 | Reports | |
@@ -332,3 +332,100 @@ Nothing in the app is changed during the audit. The user picks what to fix.
 - **Limits:** separate countdowns for codes and requests, from `Retry-After`; no number built in.
 - **Taps and email edits:** second taps are ignored, and leaving mid-way is safe. Editing the email after a code asks for a new code.
 - **Routing:** "Back to login" and Back return to Login, and Sign up starts fresh each time. It works without a login.
+
+---
+
+## Step 4. One check
+
+**Screens and pieces:**
+- the Check tab: the camera, the serial field, Check and Clear, and the tools under them;
+- the "checking" loader;
+- the result screen: every result and reason, the product details, the check count, the reference, the picture, and "Report incident".
+
+### Findings
+
+| # | Finding | Class | Severity or impact / effort |
+|---|---|---|---|
+| 4.1 | **Back from a QR result sends the same QR again** if the pack is still in front of the camera. A second check is recorded, and the official sees "Checked before, check number 2" for their own check | **Mismatch** | **High** (wrong counts the office sees) |
+| 4.2 | A lost answer (timeout) shows the same text as "no connection", though the check may already be recorded; checking again then shows a "checked before" the official caused | **Mismatch** (`final.md:224`) | Medium |
+| 4.3 | A QR value in lower case is refused as "not a product code", though the backend reads a QR value in capitals | **Mismatch** (minor) | Low |
+| 4.4 | A future, unknown result is titled "Unable to check" and offers "Try again", though the check was made and has a reference; trying again records another check | **Wording** | Medium |
+| 4.5 | A QR that matched nothing gets only a hint about typing digits ("A serial has digits only…") | **Wording** | Low |
+| 4.6 | The 40-character limit for a padded serial is built into the app, not taken from `GET formats`; a 41-character serial is refused with "up to 19 digits", which is confusing | **Unclear** (ask the backend to add it to `formats` or the guide; fix list item 5) | Low |
+| 4.7 | While the formats load, the camera says "Looking for a QR code · hold steady" but reads are ignored; a pack held still is never read | **Improvement** | Low / small |
+| 4.8 | The result screen offers "Report incident" for a warning the lookup already sent to the office (recalled, expired, damaged, switched off), so officials may file reports nobody needs | **Improvement** | Medium / small |
+
+### The details
+
+**4.1 The same QR sent again after Back (Mismatch, high).**
+- **The app** (`verify_screen.dart:203-206`): after the result closes, it forgets the last QR (`_lastRaw = null`) and restarts the camera. The camera's own repeat filter (`DetectionSpeed.noDuplicates`, `scanner_service.dart:38`) also starts over when it restarts.
+- **What happens:** if the pack is still in the frame, it is read and sent again.
+- **The spec** (`final.md:226`): "nothing is sent again by itself". The guide (§4.2) says `count.this_check` is "this check's number for the item", so an accidental second check changes what the office sees.
+- **The fix:** after coming back from a result, ignore the same QR for a few seconds, or until it has left the frame. Test first.
+
+**4.2 A lost answer (Mismatch, medium).**
+- **The spec** (`final.md:224`): "a lost answer may have been recorded".
+- **The app:** a timeout after sending (`error_mapper.dart:21-24`) and a request that never left both show "Unable to check. Check the connection and try again." (`lookup_messages.dart:25`).
+- **The fix:** for a lost answer, say "The answer was lost. The check may have been recorded; checking again counts as another check." The serial stack already warns like this.
+
+**4.3 A QR in lower case (Mismatch, minor).**
+- **The backend:** it reads a QR value in capitals (`ProtectB-DOCS/mobileApp/phase-4-lookups.md:59`).
+- **The app** (`verification_usecases.dart:56-58`): it sends the QR value as read, then refuses it when it is not in A–Z0–9. So a QR printed in lower case is called "not a product code".
+- **The fix:** change the QR value to capitals before checking it. QR values are made in capitals (D32), so this is rare.
+
+**4.4 An unknown result (Wording, medium).**
+- **The guide** (§4.2): every answer has a reference.
+- **The app** (`app_en.arb` `resultUnknownTitle`): "Unable to check", with "Try again". The body is right: "This result is not known to this app version. Update the app or contact your office."
+- **Better:** the title "Unknown result", and no "Try again", since the check was recorded. The same "Try again" on "not in a batch" suggests a retry helps when it does not.
+
+**4.5 A QR that matched nothing (Wording, low).** The not-found card adds "A serial has digits only, up to 19 digits." even when the official scanned a QR (`result_entry_cards.dart:90-91`). For a QR, "Type the serial printed on the label to compare." would help.
+
+**4.8 Reports for warnings (Improvement, medium / small).**
+- **The guide** (§6): a lookup with `recalled`, `expired`, `damaged` or `switched_off` "already tells the office by itself".
+- **The app:** the result screen shows "Report incident" the same for every result, and the advice "No report is needed for a warning…" appears only on the report screen.
+- **The idea:** on such a result, say "Your office was already told by this check." and make Report the quieter button.
+
+### More ideas to improve the Check tab
+
+| Idea | Impact | Effort |
+|---|---|---|
+| One line saying what to do next for each result. A warning: "Set the item aside; your office was already told." Not found: "This may not be genuine. Set it aside and report it" (Report as the main button). Not in a batch: "Ask your office." | High | Small |
+| A short meaning under each reason, e.g. "The batch's expiry date has passed" (the reason chip has a slot for it that is never filled) | Medium | Small |
+| A vibration when a QR is read, and a different one for a warning or not found, as Scanner mode already does | Medium | Small |
+| The last 3 checks of this run on the Check tab (kept in memory only, as the guide allows) | Medium | Medium |
+| The Expires row in amber when the reason is "expired" | Low | Small |
+| A Share button next to Copy for the reference number | Low | Small |
+| "(Bangladesh time)" after the last-check time | Low | Small |
+| On a no-item result, one way back instead of "Try again" and "Back to Check" going to the same place | Low | Small |
+
+### Checked and right
+- **Shown data:**
+  - every value comes from the documented fields, and an empty name, date or batch shows "—";
+  - no picture shows "No picture for this product"; a picture has its loading, error with "Try again", and full-screen view;
+  - the serial and the masked code are shown as the server sends them;
+  - the reference, with Copy, is on every result;
+  - the check count, the last check time (Bangladesh time) and the previous check are shown;
+  - an unknown result or reason is never shown as genuine;
+  - "not found" and "not in a batch" with only a reference and a result read fine.
+- **Inputs:**
+  - the serial's length and the QR's length and characters come from `GET formats`, loaded once, with Retry and the 429 wait;
+  - spaces and dashes are removed, Bangla digits read, leading zeros allowed;
+  - a QR link gives the part after its last `/q/` from any host;
+  - a wrong-length QR or a link that is not a product is refused on the phone, and the link is never opened;
+  - the field stops at 64 characters, the API's limit.
+- **Permissions:**
+  - one-item checks for `item:lookup`;
+  - Scanner mode and Serial stack for `item:bulk_lookup`;
+  - Report and My reports, and the result's Report link, for `incident:report`;
+  - an empty state with none;
+  - a 403 reloads the profile.
+- **Answers:**
+  - a 429 counts down and turns Check and Scan again off;
+  - "The app is being prepared" for 503 `app_preparing`; "Try again shortly" for a busy server; "Not available" for 404; others show the general text and the reference;
+  - a failed scan holds the camera until "Scan again", and nothing is sent by itself.
+- **Flow and states:**
+  - second taps are ignored, and Back waits while a check runs;
+  - the camera stops in the background, on another tab, under a result and under a tool;
+  - the loader shows after 300 ms;
+  - the offline banner shows;
+  - a refused camera permission offers "Open settings", and no camera says to type the serial.
