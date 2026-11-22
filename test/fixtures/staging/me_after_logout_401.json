@@ -1,0 +1,18 @@
+{
+  "method": "GET",
+  "path": "me",
+  "status": 401,
+  "headers": {
+    "content-type": "application/json; charset=utf-8"
+  },
+  "body": {
+    "success": false,
+    "message": "Authentication required.",
+    "error": {
+      "code": "unauthenticated",
+      "message": "Authentication required.",
+      "request_id": "req-staging"
+    }
+  },
+  "source": "testapp.protecb.com ziska-test, 2026-11-22 (Step 2)"
+}

@@ -2,37 +2,66 @@
 // (docs/staging-integration-2026-11-22.md), one step at a time. Run by
 // hand, never in CI (automated tests stay offline):
 //
-//   dart run tool/staging_check/staging_check.dart <step> --out <dir>
+//   dart run tool/staging_check/staging_check.dart <step> [<code>]
+//       --out <dir> [--state <file>]
+//
+// Steps: connect; login; verify <code>; session.
 //
 // The address comes from config/staging.json. Every answer is saved in
-// <dir> (the scratchpad, outside the repo) so it can be cleaned of
-// passes and emails and kept as a test fixture. Later steps read the test
-// login from STAGING_EMAIL and STAGING_PASSWORD; nothing secret is ever
-// written to the repo or printed.
+// <dir> (the scratchpad, outside the repo) so it can be cleaned of passes
+// and emails and kept as a test fixture. The test login comes from
+// STAGING_EMAIL and STAGING_PASSWORD. The checker's phone ID, the code's
+// challenge and the passes live in the --state file (the scratchpad too);
+// `session` deletes the passes when it ends. Nothing secret is printed or
+// written to the repo.
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:dio/dio.dart';
 import 'package:ziska_verify/app/config/app_config.dart';
 import 'package:ziska_verify/core/errors/app_exception.dart';
 import 'package:ziska_verify/core/network/api_client.dart';
+import 'package:ziska_verify/core/network/api_envelope.dart';
+import 'package:ziska_verify/core/network/bodiless_request_interceptor.dart';
+import 'package:ziska_verify/core/network/error_mapper.dart';
+import 'package:ziska_verify/core/services/device/phone_id_service.dart';
+import 'package:ziska_verify/features/authentication/data/models/auth_dtos.dart';
 import 'package:ziska_verify/features/authentication/data/services/access_request_api_service.dart';
+import 'package:ziska_verify/features/authentication/data/services/auth_api_service.dart';
+import 'package:ziska_verify/features/profile/data/services/profile_api_service.dart';
+
+const _steps = 'connect, login, verify <code>, session';
 
 Future<void> main(List<String> args) async {
-  if (args.isEmpty || !args.contains('--out')) {
-    stderr.writeln('Usage: staging_check <step> --out <dir>');
+  String? option(String name) {
+    final i = args.indexOf(name);
+    return i < 0 || i + 1 >= args.length ? null : args[i + 1];
+  }
+
+  final outPath = option('--out');
+  if (args.isEmpty || outPath == null) {
+    stderr.writeln(
+      'Usage: staging_check <step> --out <dir> [--state <file>]'
+      '\nSteps: $_steps.',
+    );
     exitCode = 64;
     return;
   }
-  final step = args.first;
-  final out = Directory(args[args.indexOf('--out') + 1])
-    ..createSync(recursive: true);
-  final check = StagingCheck(_config(), out);
-  switch (step) {
+  final out = Directory(outPath)..createSync(recursive: true);
+  final statePath = option('--state') ?? '${out.parent.path}/state.json';
+  final check = StagingCheck(_config(), out, CheckState(File(statePath)));
+  switch (args.first) {
     case 'connect':
       await check.connect();
+    case 'login':
+      await check.login();
+    case 'verify' when args.length > 1 && !args[1].startsWith('--'):
+      await check.verify(args[1]);
+    case 'session':
+      await check.session();
     default:
-      stderr.writeln('Unknown step "$step". Steps: connect.');
+      stderr.writeln('Unknown step "${args.first}". Steps: $_steps.');
       exitCode = 64;
       return;
   }
@@ -56,15 +85,46 @@ AppConfig _config() {
   );
 }
 
+/// The checker's phone ID, the code's challenge and the passes, between
+/// runs. Kept outside the repo; the passes are removed when a session ends.
+class CheckState {
+  CheckState(this.file);
+
+  final File file;
+
+  Map<String, dynamic> read() => file.existsSync()
+      ? jsonDecode(file.readAsStringSync()) as Map<String, dynamic>
+      : <String, dynamic>{};
+
+  void write(Map<String, dynamic> values) {
+    file.parent.createSync(recursive: true);
+    file.writeAsStringSync(jsonEncode(values));
+  }
+
+  String phoneId() {
+    final values = read();
+    final id =
+        values['phone_id'] as String? ??
+        SecurePhoneIdService.generate(Random.secure());
+    write({...values, 'phone_id': id});
+    return id;
+  }
+}
+
 class StagingCheck {
-  StagingCheck(this.config, this.out)
+  StagingCheck(this.config, this.out, this._state)
     : dio = Dio(DioFactory.options(config.apiRoot)) {
-    dio.interceptors.add(_Recorder(out));
+    // As the app sends them: a request without a body has no type.
+    dio.interceptors.addAll([
+      const BodilessRequestInterceptor(),
+      _Recorder(out),
+    ]);
     api = ApiClient(dio);
   }
 
   final AppConfig config;
   final Directory out;
+  final CheckState _state;
   final Dio dio;
   late final ApiClient api;
   int passed = 0;
@@ -78,6 +138,46 @@ class StagingCheck {
   void _fail(String what, Object detail) {
     failed++;
     stdout.writeln('FAIL  $what  $detail');
+  }
+
+  ({String email, String password})? _login() {
+    final email = Platform.environment['STAGING_EMAIL'];
+    final password = Platform.environment['STAGING_PASSWORD'];
+    if (email == null || email.isEmpty || password == null) {
+      _fail('the test login', 'set STAGING_EMAIL and STAGING_PASSWORD');
+      return null;
+    }
+    return (email: email, password: password);
+  }
+
+  /// Keeps a logged-in answer's passes; says whether it is one.
+  bool _keepPasses(String what, LoginResponseDto answer) {
+    if (answer.status != 'logged_in' ||
+        answer.accessToken == null ||
+        answer.refreshToken == null) {
+      _fail(what, 'status ${answer.status} without both passes');
+      return false;
+    }
+    _state.write(
+      {
+        ..._state.read(),
+        'access': answer.accessToken,
+        'refresh': answer.refreshToken,
+      }..remove('challenge'),
+    );
+    final change = answer.mustChangePassword ?? false;
+    _pass(
+      what,
+      'logged_in, both passes, must_change_password: $change'
+      '${answer.passwordChangeSkippable == null ? '' : ', skippable: '
+                '${answer.passwordChangeSkippable}'}',
+    );
+    if (change) {
+      stdout.writeln(
+        '\nSTOP  The server asks for a new password. Ask the owner first.',
+      );
+    }
+    return true;
   }
 
   /// Step 1: the address, the envelope, and an error answer.
@@ -123,6 +223,204 @@ class StagingCheck {
         'GET an unknown route',
         '${e.statusCode} ${e.runtimeType} ${e.code ?? '-'}',
       );
+    }
+  }
+
+  /// Step 2a: the login, read by the app's own login parser. A new phone
+  /// gets a code by email (then `verify <code>`); a trusted one logs in.
+  Future<void> login() async {
+    final login = _login();
+    if (login == null) return;
+    final phoneId = _state.phoneId();
+    try {
+      final answer = await DioAuthApiService(api).login(
+        email: login.email,
+        password: login.password,
+        phoneId: phoneId,
+      );
+      switch (answer.status) {
+        case 'code_sent' when answer.challengeId != null:
+          _state.write({..._state.read(), 'challenge': answer.challengeId});
+          _pass('POST auth/login', 'code_sent with a challenge_id');
+          stdout.writeln(
+            '\nA 6-digit code was emailed (valid 5 minutes): '
+            'run `verify <code>`.',
+          );
+        case 'logged_in':
+          _keepPasses('POST auth/login (trusted phone)', answer);
+        default:
+          _fail('POST auth/login', 'status ${answer.status}');
+      }
+    } on AppException catch (e) {
+      _fail('POST auth/login', '${e.statusCode} ${e.code} ${e.requestId}');
+    } on Object catch (e) {
+      _fail('POST auth/login', e);
+    }
+  }
+
+  /// Step 2b: the emailed code, read by the app's own login parser.
+  Future<void> verify(String code) async {
+    final challenge = _state.read()['challenge'] as String?;
+    if (challenge == null) {
+      _fail('POST auth/verify-phone', 'no challenge: run `login` first');
+      return;
+    }
+    try {
+      final answer = await DioAuthApiService(api).verifyPhone(
+        challengeId: challenge,
+        code: code,
+        phoneId: _state.phoneId(),
+      );
+      _keepPasses('POST auth/verify-phone', answer);
+    } on AppException catch (e) {
+      _fail(
+        'POST auth/verify-phone',
+        '${e.statusCode} ${e.code} ${e.requestId}',
+      );
+    } on Object catch (e) {
+      _fail('POST auth/verify-phone', e);
+    }
+  }
+
+  /// Step 2c: the logged-in session. The profile and a route that needs
+  /// the pass; a renewal (two new passes); the used refresh pass sent again
+  /// (the guide: that ends the login); a log-out; and a new login on the
+  /// now trusted phone, with no code. The passes are deleted at the end.
+  Future<void> session() async {
+    var values = _state.read();
+    var access = values['access'] as String?;
+    var refresh = values['refresh'] as String?;
+    if (access == null || refresh == null) {
+      _fail('the session', 'no passes: run `login` (and `verify`) first');
+      return;
+    }
+    void useAccess(String pass) =>
+        dio.options.headers['Authorization'] = 'Bearer $pass';
+    useAccess(access);
+
+    try {
+      final me = await DioProfileApiService(api).getMe();
+      _pass(
+        'GET me',
+        'role "${me.role}", ${me.permissions.length} permissions '
+            '(${me.permissions.join(', ')}), must_change_password: '
+            '${me.mustChangePassword}',
+      );
+    } on Object catch (e) {
+      _fail('GET me', e);
+    }
+
+    try {
+      await api.get('formats');
+      _pass('GET formats with the pass', '200');
+    } on Object catch (e) {
+      _fail('GET formats with the pass', e);
+    }
+
+    // Renewal, as the app's session service does it.
+    final used = refresh;
+    try {
+      final data = await _refresh(refresh);
+      final nextAccess = data['access_token'];
+      final nextRefresh = data['refresh_token'];
+      if (nextAccess is! String || nextRefresh is! String) {
+        _fail('POST auth/refresh', 'without both passes');
+      } else if (nextRefresh == used || nextAccess == access) {
+        _fail('POST auth/refresh', 'a pass was not replaced');
+      } else {
+        access = nextAccess;
+        refresh = nextRefresh;
+        _state.write({..._state.read(), 'access': access, 'refresh': refresh});
+        useAccess(access);
+        _pass('POST auth/refresh', 'two new passes');
+      }
+    } on Object catch (e) {
+      _fail('POST auth/refresh', e);
+    }
+
+    try {
+      await api.get('me');
+      _pass('GET me with the new pass', '200');
+    } on Object catch (e) {
+      _fail('GET me with the new pass', e);
+    }
+
+    try {
+      await DioAuthApiService(api).logout();
+      _pass('POST auth/logout', '200');
+    } on Object catch (e) {
+      _fail('POST auth/logout', e);
+    }
+
+    try {
+      await api.get('me');
+      _fail('GET me after logout', 'answered 200');
+    } on UnauthenticatedException catch (e) {
+      _pass('GET me after logout', '401 ${e.code}');
+    } on Object catch (e) {
+      _fail('GET me after logout', e);
+    }
+
+    // The refresh pass used before the renewal, sent again: refused.
+    try {
+      await _refresh(used);
+      _fail('POST auth/refresh with a used pass', 'answered 200');
+    } on UnauthenticatedException catch (e) {
+      _pass('POST auth/refresh with a used pass', '401 ${e.code}');
+    } on Object catch (e) {
+      _fail('POST auth/refresh with a used pass', e);
+    }
+    dio.options.headers.remove('Authorization');
+
+    // The phone is trusted now: a new login needs no code.
+    final login = _login();
+    if (login != null) {
+      try {
+        final answer = await DioAuthApiService(api).login(
+          email: login.email,
+          password: login.password,
+          phoneId: _state.phoneId(),
+        );
+        if (answer.status == 'logged_in' &&
+            _keepPasses('POST auth/login on the trusted phone', answer)) {
+          useAccess(answer.accessToken!);
+          await DioAuthApiService(api).logout();
+          _pass('POST auth/logout (again)', '200');
+        } else if (answer.status != 'logged_in') {
+          _fail(
+            'POST auth/login on the trusted phone',
+            'status ${answer.status}: a code again',
+          );
+        }
+      } on Object catch (e) {
+        _fail('POST auth/login on the trusted phone', e);
+      }
+    }
+
+    // Only the phone ID stays.
+    values = _state.read()
+      ..remove('access')
+      ..remove('refresh')
+      ..remove('challenge');
+    _state.write(values);
+  }
+
+  /// `auth/refresh` as the app's session service sends it: no pass in the
+  /// header, the envelope read by the app's own rules.
+  Future<Map<String, dynamic>> _refresh(String refresh) async {
+    try {
+      final response = await dio.post<Object?>(
+        'auth/refresh',
+        data: {'refresh_token': refresh},
+        options: Options(headers: {'Authorization': null}),
+      );
+      final data = ApiEnvelope.unwrap(response.data);
+      if (data is! Map<String, dynamic>) {
+        throw const InternalErrorException(message: 'renewal_shape');
+      }
+      return data;
+    } on DioException catch (e) {
+      throw ErrorMapper.fromDio(e);
     }
   }
 }

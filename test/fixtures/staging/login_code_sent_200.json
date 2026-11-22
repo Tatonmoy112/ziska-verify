@@ -1,0 +1,17 @@
+{
+  "method": "POST",
+  "path": "auth/login",
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8"
+  },
+  "body": {
+    "success": true,
+    "message": "Login accepted.",
+    "data": {
+      "status": "code_sent",
+      "challenge_id": "challenge-staging"
+    }
+  },
+  "source": "testapp.protecb.com ziska-test, 2026-11-22 (Step 2)"
+}

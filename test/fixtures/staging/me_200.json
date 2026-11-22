@@ -1,0 +1,31 @@
+{
+  "method": "GET",
+  "path": "me",
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8"
+  },
+  "body": {
+    "success": true,
+    "message": "Profile fetched successfully.",
+    "data": {
+      "id": "00000000-0000-4000-8000-000000000001",
+      "name": "Test Official",
+      "email": "official@example.com",
+      "role": "Supervisor",
+      "permissions": [
+        "history:own",
+        "incident:report",
+        "item:bulk_lookup",
+        "item:lookup"
+      ],
+      "organisation": "Ziska-test",
+      "support": {
+        "email": null,
+        "phone": null
+      },
+      "must_change_password": false
+    }
+  },
+  "source": "testapp.protecb.com ziska-test, 2026-11-22 (Step 2)"
+}

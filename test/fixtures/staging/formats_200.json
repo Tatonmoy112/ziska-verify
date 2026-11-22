@@ -1,0 +1,22 @@
+{
+  "method": "GET",
+  "path": "formats",
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8"
+  },
+  "body": {
+    "success": true,
+    "message": "Formats fetched successfully.",
+    "data": {
+      "serial": {
+        "max_digits": 19
+      },
+      "qr": {
+        "length": 12,
+        "characters": "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+      }
+    }
+  },
+  "source": "testapp.protecb.com ziska-test, 2026-11-22 (Step 2)"
+}

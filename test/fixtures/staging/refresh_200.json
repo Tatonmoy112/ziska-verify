@@ -1,0 +1,21 @@
+{
+  "method": "POST",
+  "path": "auth/refresh",
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8"
+  },
+  "body": {
+    "success": true,
+    "message": "Session refreshed successfully.",
+    "data": {
+      "status": "logged_in",
+      "access_token": "access-staging",
+      "access_expires_in": 900,
+      "refresh_token": "refresh-staging",
+      "refresh_expires_in": 2591999,
+      "must_change_password": false
+    }
+  },
+  "source": "testapp.protecb.com ziska-test, 2026-11-22 (Step 2)"
+}
