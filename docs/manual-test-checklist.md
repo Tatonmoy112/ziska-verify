@@ -832,6 +832,14 @@ Expected: in after the code (the account's name and organisation shown); still i
 
 - [x] Pass - [ ] Fail - [ ] Blocked — Notes: 2026-11-22, emulator (staging release build). The first login attempt showed "No connection" while the emulator's network was dropping packets; the retry worked. Name "Trendsbird", organisation "Ziska-test", Supervisor with all four permissions, support "Not set by your office".
 
+#### TC-STG-018 · Profile and tools on a phone · P1
+1. Logged in with the test login, open Profile.
+2. Open Check and scroll to the tools.
+
+Expected: the server's name, role (Supervisor), organisation and email; the counts (0 for a new account); the four permissions; support "Not set by your office". Check offers the serial field, Scanner mode, Serial stack, Report incident and My reports.
+
+- [x] Pass - [ ] Fail - [ ] Blocked — Notes: 2026-11-22, emulator (staging release build): all shown as listed; counts 0, 0, 0.
+
 #### TC-STG-007 · The staging app reaches the server · P1
 1. Open the staging app: Login shows.
 2. Tap **Sign up**, open the role list.

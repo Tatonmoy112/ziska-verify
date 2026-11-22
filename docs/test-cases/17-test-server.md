@@ -33,3 +33,12 @@ The integration runs one step at a time. For each step, the cases come first (no
 | TC-STG-012 | A used refresh pass is refused | WORST | P1 | AUTO | ✅ `staging/step2_login_session_test` | The real `401` for a refresh pass already used | A request expires | Login; passes deleted; the phone ID kept | Guide §3.4 |
 | TC-STG-013 | A pass ended elsewhere | WORST | P1 | AUTO | ✅ `staging/step2_login_session_test` | The real `401` after a logout | Open History | Login | Guide §3.3 |
 | TC-STG-014 | Login, restart, logout and login again on a phone | E2E | P1 | DEVICE | ✋ | Staging build on the emulator or a phone; the test login; its inbox | Log in (code from the email); close and reopen the app; log out; log in again | In with the code; still in after the restart (the server's name and organisation shown); Login after logout; the next login needs no code | Guide §3 |
+
+## Step 3. Profile and permissions
+
+| ID | Title | Type | Pri | Run on | Auto | Pre-conditions / Data | Steps | Expected | Source |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-STG-015 | Profile shows the server's profile | POS | P1 | AUTO | ✅ `staging/step3_profile_test` | The real `GET me` (name and email replaced): Supervisor, four permissions, organisation, support with both values `null`, no `password_change_pending` | Open Profile | Name, role, organisation, email; the four permissions by name; "Not set by your office"; no password reminder | Guide §3.8 |
+| TC-STG-016 | A new account's counts | EDGE | P2 | AUTO | ✅ `staging/step3_profile_test` | The real empty `GET checks` (totals all 0) | Open Profile | 0, 0, 0: never blank, never the error | Guide §5 |
+| TC-STG-017 | The tabs and tools the permissions open | ROLE | P1 | AUTO | ✅ `staging/step3_profile_test` | The real profile and empty lists | Look at Check; open History | Check, History and Profile tabs; the serial field, Scanner mode, Serial stack, Report incident and My reports; History opens without an error | Guide §4 |
+| TC-STG-018 | Profile and tools on a phone | E2E | P1 | DEVICE | ✋ | Staging build, logged in with the test login | Open Profile; open Check and scroll | The server's name, role, organisation, email; counts 0; the four permissions; support not set; every tool on Check | Guide §3.8, §4 |

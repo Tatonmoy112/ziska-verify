@@ -15,8 +15,8 @@ Cases: [17-test-server.md](test-cases/17-test-server.md).
 |---|---|---|
 | 1 | Connection and errors | **Done** 2026-11-22 |
 | 2 | Login and staying logged in | **Done** 2026-11-22 |
-| 3 | Profile and permissions | Next |
-| 4 | One check | |
+| 3 | Profile and permissions | **Done** 2026-11-22 |
+| 4 | One check | Next |
 | 5 | History and the sessions list | |
 | 6 | Serial stacks | |
 | 7 | Scanner sessions | |
@@ -84,3 +84,36 @@ No new offline case was needed. Step 2's new tests replay the server's real answ
 - **The next login:** no code.
 
 The first attempt said "No connection" while the emulator's network was dropping packets (the ping to the server varied from 22 to 508 ms); the retry worked. The app reported it correctly.
+
+## Step 3. Profile and permissions (2026-11-22)
+
+**Cases first.** Covered already: every role; unknown, duplicated and capitalised permissions; a missing permissions list; a `403` reloading the profile; no organisation; support with an email or a phone only.
+
+**Gap found and closed:** the app took the server's text as it came. Tests first (TC-PROF-042 … -045), then the fix in `profile_mapper.dart`: text the server sends empty or as spaces now counts as not set.
+- **Support:** an empty email (`""`) used to give a blank "Support contact" row that opened the mail app with no address. It now shows "Not set by your office".
+- **Organisation:** an empty one now shows "—" on Profile and the app's name on Check.
+- **Name:** a blank one gives way to the email, so the screens never greet nobody.
+
+**Against the server** (the checker's `profile` step, logged in on its trusted phone without a code):
+
+| Check | Result |
+|---|---|
+| `GET me` | Supervisor; organisation "Ziska-test"; support email and phone `null`; no `password_change_pending` field |
+| Permissions | `history:own`, `incident:report`, `item:bulk_lookup`, `item:lookup` |
+| `GET formats` (item:lookup) | 200: serials up to 19 digits; QR 12 characters, capitals and digits |
+| `GET checks?limit=1` (history:own) | 200: no checks, totals all 0, `next_cursor: null` |
+| `GET lookups/sessions?limit=1` (item:bulk_lookup) | 200: no sessions |
+| `GET incidents?limit=1` (incident:report) | 200: no reports |
+| `GET retail-users?search=a` (incident:report) | 200: **no retail users on the server** |
+| `POST auth/logout` | 200 |
+
+**Differences from the contract:** none. **The account is new:** nothing is recorded yet, and the server has no retail users. The retail-user picker of step 8 can be checked only once the office adds one (added to backend request B1).
+
+**Real-answer tests** (`test/staging/step3_profile_test.dart`, TC-STG-015 … -017):
+- Profile from the real `me`;
+- a new account's counts are 0;
+- every tab and tool the four permissions open.
+
+**On the emulator** (TC-STG-018): passed.
+- **Profile:** "Trendsbird", Supervisor, "Ziska-test", the email, counts 0 / 0 / 0, the four permissions, "Not set by your office".
+- **Check:** the serial field, Scanner mode, Serial stack, Report incident and My reports.

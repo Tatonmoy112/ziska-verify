@@ -8,7 +8,7 @@ The app is built against the contract and runs against the Postman mock. These p
 
 ## B1. A test server
 
-> **Answered 2026-11-22:** `https://testapp.protecb.com`, client `ziska-test`, with a test login. The app is being checked against it step by step (`docs/staging-integration-2026-11-22.md`). Still wanted: items for every result and the mail page or office access.
+> **Answered 2026-11-22:** `https://testapp.protecb.com`, client `ziska-test`, with a test login. The app is being checked against it step by step (`docs/staging-integration-2026-11-22.md`). Still wanted: items for every result, at least one retail user (the server has none, 2026-11-22), and the mail page or office access.
 
 **Request:** a test server for the mobile app, separate from any live client:
 

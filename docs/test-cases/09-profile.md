@@ -57,6 +57,10 @@
 | TC-PROF-039 | Counts again when the tab comes back | STATE | P3 | AUTO | ✅ `ui/screens_reports_profile_test` | Fake backend | Open Profile; go to Check; back to Profile | A second `GET checks` with `limit=1` | §13.8 |
 | TC-PROF-040 | The counts on the phone | UI | P3 | DEVICE | ✋ | Real phone, staging build, an official with checks | Open Profile; check an item; open Profile again; pull down | The counts match History's **All** chip; after the check, **Checks** is one more | §13.8 |
 | TC-PROF-041 | What the role allows | POS | P2 | AUTO | ✅ `flow/profile_edge_flow_test` | Fake backend; R1 (all four), a role with `item:bulk_lookup` and an unknown key, a role with none | Open Profile | **What you can do** lists Check one item, Check many items, Own history, Report incidents for what the role has; unknown keys are not shown; none: "None. Ask your office." | SRS FR-ACC-15 |
+| TC-PROF-042 | An empty organisation is none | EDGE | P3 | AUTO | ✅ `flow/profile_edge_flow_test` | Fake backend; `organisation: ""`, then `"   "` | Open Profile, then Check | "—" on Profile; the app's name on Check; never a blank | Test server, step 3 |
+| TC-PROF-043 | Empty support values are not set | EDGE | P2 | AUTO | ✅ `flow/profile_edge_flow_test` | Fake backend; support email and phone `""`, then `"   "` | Open Profile; tap Support contact | "Not set by your office"; no blank email or phone row; nothing opens | Test server, step 3 |
+| TC-PROF-044 | A blank name: the email stands in | WORST | P2 | AUTO | ✅ `flow/profile_edge_flow_test` | Fake backend; `name: ""`, then `"   "` | Open Profile, then Check | No error; the email shown as the name; its first letter as the initial; Check greets the email | Test server, step 3 |
+| TC-PROF-045 | No support object at all | EDGE | P3 | AUTO | ✅ `flow/profile_edge_flow_test` | Fake backend; `support` missing from `GET me` | Open Profile | "Not set by your office" | Guide §3.8 |
 
 ## Spec gaps in this file
 
