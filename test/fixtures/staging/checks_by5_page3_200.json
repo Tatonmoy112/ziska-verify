@@ -1,0 +1,55 @@
+{
+  "method": "GET",
+  "path": "checks",
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8"
+  },
+  "body": {
+    "success": true,
+    "message": "Checks fetched successfully.",
+    "data": {
+      "checks": [
+        {
+          "ref": "MA-2026-000003",
+          "at": "2026-11-22T06:30:49.425425+00:00",
+          "way": "serial",
+          "result": "unassigned",
+          "reasons": [],
+          "serial": "1000003",
+          "product": null,
+          "batch": null,
+          "official": "Test Official",
+          "session_id": null
+        },
+        {
+          "ref": "MA-2026-000002",
+          "at": "2026-11-22T06:30:49.307176+00:00",
+          "way": "serial",
+          "result": "unassigned",
+          "reasons": [],
+          "serial": "1000002",
+          "product": null,
+          "batch": null,
+          "official": "Test Official",
+          "session_id": null
+        },
+        {
+          "ref": "MA-2026-000001",
+          "at": "2026-11-22T06:30:49.19105+00:00",
+          "way": "serial",
+          "result": "unassigned",
+          "reasons": [],
+          "serial": "1000001",
+          "product": null,
+          "batch": null,
+          "official": "Test Official",
+          "session_id": null
+        }
+      ],
+      "totals": null,
+      "next_cursor": null
+    }
+  },
+  "source": "testapp.protecb.com ziska-test, 2026-11-22 (Step 5)"
+}

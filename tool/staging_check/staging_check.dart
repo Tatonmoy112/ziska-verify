@@ -5,7 +5,7 @@
 //   dart run tool/staging_check/staging_check.dart <step> [<code>]
 //       --out <dir> [--state <file>]
 //
-// Steps: connect; login; verify <code>; session; profile; lookup.
+// Steps: connect; login; verify <code>; session; profile; lookup; history.
 //
 // The address comes from config/staging.json. Every answer is saved in
 // <dir> (the scratchpad, outside the repo) so it can be cleaned of passes
@@ -19,24 +19,32 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:dio/dio.dart';
+import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:ziska_verify/app/config/app_config.dart';
 import 'package:ziska_verify/core/errors/app_exception.dart';
 import 'package:ziska_verify/core/network/api_client.dart';
 import 'package:ziska_verify/core/network/api_envelope.dart';
 import 'package:ziska_verify/core/network/bodiless_request_interceptor.dart';
 import 'package:ziska_verify/core/network/error_mapper.dart';
+import 'package:ziska_verify/core/pagination/page_request.dart';
 import 'package:ziska_verify/core/services/device/phone_id_service.dart';
+import 'package:ziska_verify/core/utils/display_time.dart';
 import 'package:ziska_verify/features/authentication/data/models/auth_dtos.dart';
 import 'package:ziska_verify/features/authentication/data/services/access_request_api_service.dart';
 import 'package:ziska_verify/features/authentication/data/services/auth_api_service.dart';
+import 'package:ziska_verify/features/history/data/mappers/check_mappers.dart';
+import 'package:ziska_verify/features/history/data/services/history_api_service.dart';
+import 'package:ziska_verify/features/history/domain/entities/check.dart';
 import 'package:ziska_verify/features/profile/data/mappers/profile_mapper.dart';
 import 'package:ziska_verify/features/profile/data/services/profile_api_service.dart';
 import 'package:ziska_verify/features/verification/data/mappers/verification_mappers.dart';
 import 'package:ziska_verify/features/verification/data/services/verification_api_service.dart';
 import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
+import 'package:ziska_verify/features/verification/domain/entities/scan_session.dart';
 import 'package:ziska_verify/features/verification/domain/usecases/verification_usecases.dart';
 
-const _steps = 'connect, login, verify <code>, session, profile, lookup';
+const _steps =
+    'connect, login, verify <code>, session, profile, lookup, history';
 
 Future<void> main(List<String> args) async {
   String? option(String name) {
@@ -53,6 +61,8 @@ Future<void> main(List<String> args) async {
     exitCode = 64;
     return;
   }
+  // Bangladesh time, as the app's bootstrap loads it.
+  tz_data.initializeTimeZones();
   final out = Directory(outPath)..createSync(recursive: true);
   final statePath = option('--state') ?? '${out.parent.path}/state.json';
   final check = StagingCheck(_config(), out, CheckState(File(statePath)));
@@ -69,6 +79,8 @@ Future<void> main(List<String> args) async {
       await check.profile();
     case 'lookup':
       await check.lookup();
+    case 'history':
+      await check.history();
     default:
       stderr.writeln('Unknown step "${args.first}". Steps: $_steps.');
       exitCode = 64;
@@ -619,6 +631,181 @@ class StagingCheck {
     } on Object catch (e) {
       _fail('the picture ${uri.host}', e);
     }
+  }
+
+  /// Step 5: History and the sessions list (read only), through the app's
+  /// own query builder, parser and mapper.
+  Future<void> history() async {
+    if (!await _logInTrusted()) return;
+    final service = DioHistoryApiService(api);
+    final verification = DioVerificationApiService(api);
+    String? name;
+    try {
+      name = (await DioProfileApiService(api).getMe()).toEntity().name;
+    } on Object catch (e) {
+      _fail('GET me', e);
+    }
+
+    Future<CheckPage?> page(
+      String what,
+      CheckQuery query, {
+      int limit = PageRequest.defaultLimit,
+      String? cursor,
+    }) async {
+      try {
+        return (await service.getChecks(
+          query,
+          PageRequest(limit: limit, cursor: cursor),
+        )).toEntity();
+      } on AppException catch (e) {
+        _fail(what, '${e.statusCode} ${e.code} ${e.requestId}');
+      } on Object catch (e) {
+        _fail(what, e);
+      }
+      return null;
+    }
+
+    // The first page, as the app asks for it.
+    final first = await page('GET checks', const CheckQuery());
+    if (first == null) return _logOut();
+    final totals = first.totals;
+    final items = first.page.items;
+    if (totals == null) {
+      _fail('GET checks', 'no totals on the first page');
+    } else {
+      final sum =
+          totals.valid + totals.warning + totals.notFound + totals.unassigned;
+      final ok = sum == totals.total;
+      (ok ? _pass : _fail)(
+        'GET checks: totals',
+        'total ${totals.total} = valid ${totals.valid} + warning '
+            '${totals.warning} + not found ${totals.notFound} + not in a '
+            'batch ${totals.unassigned}${ok ? '' : ' (they do not add up)'}',
+      );
+    }
+    final newest = items.isEmpty ? null : items.first;
+    _pass(
+      'GET checks: rows',
+      '${items.length} on the first page; newest ${newest?.ref} '
+          '${newest?.result.name} at ${newest?.at.toUtc()}; next '
+          '${first.page.nextCursor ?? 'none'}',
+    );
+    final sorted = [
+      for (var i = 1; i < items.length; i++)
+        !items[i].at.isAfter(items[i - 1].at),
+    ].every((x) => x);
+    (sorted ? _pass : _fail)('GET checks: order', 'newest first');
+    final others = items.where((c) => c.official != name).length;
+    (others == 0 ? _pass : _fail)(
+      'GET checks: own only',
+      others == 0 ? "every row is the official's" : '$others rows of others',
+    );
+
+    // Paging, 5 at a time: every row once, in order, until no cursor.
+    final seen = <String>[];
+    String? cursor;
+    var pages = 0;
+    do {
+      final next = await page(
+        'GET checks (page ${pages + 1} of 5)',
+        const CheckQuery(),
+        limit: 5,
+        cursor: cursor,
+      );
+      if (next == null) break;
+      pages++;
+      if (pages > 1 && next.totals != null) {
+        _fail('GET checks: page $pages', 'totals on a later page');
+      }
+      seen.addAll(next.page.items.map((c) => c.ref));
+      cursor = next.page.nextCursor;
+    } while (cursor != null && pages < 20);
+    final unique = seen.toSet().length == seen.length;
+    final all = totals == null || seen.length == totals.total;
+    (unique && all ? _pass : _fail)(
+      'GET checks: paging by 5',
+      '$pages pages, ${seen.length} rows, '
+          '${unique ? 'none twice' : 'some twice'}; '
+          '${all ? 'all of them' : 'total ${totals.total}'}',
+    );
+
+    // Each filter: its rows match it, and the totals agree.
+    for (final result in CheckResult.values.where(
+      (r) => r != CheckResult.unknown,
+    )) {
+      final filtered = await page(
+        'GET checks result=${result.wire}',
+        CheckQuery(result: result),
+      );
+      if (filtered == null) continue;
+      final wrong = filtered.page.items.where((c) => c.result != result);
+      (wrong.isEmpty ? _pass : _fail)(
+        'GET checks result=${result.wire}',
+        '${filtered.page.items.length} rows'
+            '${wrong.isEmpty ? '' : ', ${wrong.length} of another result'}',
+      );
+    }
+    for (final way in [CheckWay.serial, CheckWay.qr]) {
+      final filtered = await page(
+        'GET checks way=${way.wire}',
+        CheckQuery(way: way),
+      );
+      if (filtered == null) continue;
+      final wrong = filtered.page.items.where((c) => c.way != way);
+      (wrong.isEmpty ? _pass : _fail)(
+        'GET checks way=${way.wire}',
+        '${filtered.page.items.length} rows'
+            '${wrong.isEmpty ? '' : ', ${wrong.length} of another way'}',
+      );
+    }
+
+    // Today in Bangladesh, as the app's date picker gives it.
+    final dhaka = DisplayTime.inZone(DateTime.now());
+    final today = DateTime(dhaka.year, dhaka.month, dhaka.day);
+    final todays = await page(
+      'GET checks from=to=today',
+      CheckQuery(from: today, to: today),
+    );
+    if (todays != null) {
+      _pass(
+        'GET checks from=to=${today.toIso8601String().substring(0, 10)}',
+        "${todays.page.items.length} rows (all of today's)",
+      );
+    }
+
+    // Searches: a serial, a reference, the serial with leading zeros.
+    for (final search in ['1', ?newest?.ref, '0000000000000000001']) {
+      final found = await page(
+        'GET checks search=$search',
+        CheckQuery(search: search),
+      );
+      if (found != null) {
+        final rows = found.page.items
+            .take(6)
+            .map((c) => '${c.serial ?? '-'}/${c.ref}')
+            .join(', ');
+        _pass(
+          'GET checks search=$search',
+          '${found.page.items.length} rows: $rows',
+        );
+      }
+    }
+
+    // The sessions list, as the app's Sessions view asks for it.
+    try {
+      final sessions = await verification.sessions(
+        const SessionQuery(),
+        const PageRequest(),
+      );
+      _pass(
+        'GET lookups/sessions',
+        '${sessions.sessions.length} sessions; next '
+            '${sessions.nextCursor ?? 'none'}',
+      );
+    } on Object catch (e) {
+      _fail('GET lookups/sessions', e);
+    }
+    await _logOut();
   }
 
   /// `auth/refresh` as the app's session service sends it: no pass in the

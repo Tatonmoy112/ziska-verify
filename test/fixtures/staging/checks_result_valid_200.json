@@ -1,0 +1,37 @@
+{
+  "method": "GET",
+  "path": "checks",
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8"
+  },
+  "body": {
+    "success": true,
+    "message": "Checks fetched successfully.",
+    "data": {
+      "checks": [
+        {
+          "ref": "MA-2026-000005",
+          "at": "2026-11-22T06:30:49.67778+00:00",
+          "way": "serial",
+          "result": "valid",
+          "reasons": [],
+          "serial": "1",
+          "product": "Napa Extra 500",
+          "batch": "ZT-2509-001",
+          "official": "Test Official",
+          "session_id": null
+        }
+      ],
+      "totals": {
+        "total": 1,
+        "valid": 1,
+        "warning": 0,
+        "not_found": 0,
+        "unassigned": 0
+      },
+      "next_cursor": null
+    }
+  },
+  "source": "testapp.protecb.com ziska-test, 2026-11-22 (Step 5)"
+}

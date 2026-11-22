@@ -1,0 +1,81 @@
+{
+  "method": "GET",
+  "path": "checks",
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8"
+  },
+  "body": {
+    "success": true,
+    "message": "Checks fetched successfully.",
+    "data": {
+      "checks": [
+        {
+          "ref": "MA-2026-000008",
+          "at": "2026-11-22T06:30:50.039462+00:00",
+          "way": "qr",
+          "result": "not_found",
+          "reasons": [],
+          "serial": null,
+          "product": null,
+          "batch": null,
+          "official": "Test Official",
+          "session_id": null
+        },
+        {
+          "ref": "MA-2026-000007",
+          "at": "2026-11-22T06:30:49.911244+00:00",
+          "way": "serial",
+          "result": "warning",
+          "reasons": [
+            "checked_before"
+          ],
+          "serial": "1",
+          "product": "Napa Extra 500",
+          "batch": "ZT-2509-001",
+          "official": "Test Official",
+          "session_id": null
+        },
+        {
+          "ref": "MA-2026-000006",
+          "at": "2026-11-22T06:30:49.811827+00:00",
+          "way": "serial",
+          "result": "not_found",
+          "reasons": [],
+          "serial": null,
+          "product": null,
+          "batch": null,
+          "official": "Test Official",
+          "session_id": null
+        },
+        {
+          "ref": "MA-2026-000005",
+          "at": "2026-11-22T06:30:49.67778+00:00",
+          "way": "serial",
+          "result": "valid",
+          "reasons": [],
+          "serial": "1",
+          "product": "Napa Extra 500",
+          "batch": "ZT-2509-001",
+          "official": "Test Official",
+          "session_id": null
+        },
+        {
+          "ref": "MA-2026-000004",
+          "at": "2026-11-22T06:30:49.548994+00:00",
+          "way": "serial",
+          "result": "unassigned",
+          "reasons": [],
+          "serial": "1000004",
+          "product": null,
+          "batch": null,
+          "official": "Test Official",
+          "session_id": null
+        }
+      ],
+      "totals": null,
+      "next_cursor": "4"
+    }
+  },
+  "source": "testapp.protecb.com ziska-test, 2026-11-22 (Step 5)"
+}

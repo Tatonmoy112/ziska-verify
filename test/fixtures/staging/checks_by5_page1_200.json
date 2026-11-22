@@ -1,0 +1,87 @@
+{
+  "method": "GET",
+  "path": "checks",
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8"
+  },
+  "body": {
+    "success": true,
+    "message": "Checks fetched successfully.",
+    "data": {
+      "checks": [
+        {
+          "ref": "MA-2026-000013",
+          "at": "2026-11-22T06:36:39.691798+00:00",
+          "way": "serial",
+          "result": "not_found",
+          "reasons": [],
+          "serial": null,
+          "product": null,
+          "batch": null,
+          "official": "Test Official",
+          "session_id": null
+        },
+        {
+          "ref": "MA-2026-000012",
+          "at": "2026-11-22T06:34:13.531867+00:00",
+          "way": "serial",
+          "result": "unassigned",
+          "reasons": [],
+          "serial": "1000001",
+          "product": null,
+          "batch": null,
+          "official": "Test Official",
+          "session_id": null
+        },
+        {
+          "ref": "MA-2026-000011",
+          "at": "2026-11-22T06:33:26.691383+00:00",
+          "way": "serial",
+          "result": "warning",
+          "reasons": [
+            "checked_before"
+          ],
+          "serial": "1",
+          "product": "Napa Extra 500",
+          "batch": "ZT-2509-001",
+          "official": "Test Official",
+          "session_id": null
+        },
+        {
+          "ref": "MA-2026-000010",
+          "at": "2026-11-22T06:30:50.244139+00:00",
+          "way": "serial",
+          "result": "not_found",
+          "reasons": [],
+          "serial": null,
+          "product": null,
+          "batch": null,
+          "official": "Test Official",
+          "session_id": null
+        },
+        {
+          "ref": "MA-2026-000009",
+          "at": "2026-11-22T06:30:50.134612+00:00",
+          "way": "qr",
+          "result": "not_found",
+          "reasons": [],
+          "serial": null,
+          "product": null,
+          "batch": null,
+          "official": "Test Official",
+          "session_id": null
+        }
+      ],
+      "totals": {
+        "total": 13,
+        "valid": 1,
+        "warning": 2,
+        "not_found": 5,
+        "unassigned": 5
+      },
+      "next_cursor": "9"
+    }
+  },
+  "source": "testapp.protecb.com ziska-test, 2026-11-22 (Step 5)"
+}
