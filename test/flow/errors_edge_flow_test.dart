@@ -77,11 +77,14 @@ void main() {
     );
   });
 
-  testWidgets('TC-ERR-012 409 where the route has no 409 case', (
-    tester,
-  ) async {
-    await history(tester, always(apiError(409, 'conflict')));
-    expect(find.text(general), findsOneWidget);
+  // The guide's error table (§1): a 409 `conflict` "conflicts with the
+  // current state … Show the message".
+  testWidgets('TC-ERR-012 409 where the route has no 409 case: the server '
+      'message', (tester) async {
+    const said = 'The request conflicts with the current state.';
+    await history(tester, always(apiError(409, 'conflict', message: said)));
+    expect(find.text(said), findsOneWidget);
+    expect(find.text(general), findsNothing);
     expect(find.textContaining('req-1'), findsOneWidget);
 
     await startApp(

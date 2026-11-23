@@ -79,7 +79,7 @@ void main() {
         ),
       },
     );
-    await app.tapText('Sign up');
+    await app.tapText('Request access');
     final picker = find.byType(DropdownButtonFormField<int>);
     expect(picker, findsOneWidget);
     await app.tap(picker);

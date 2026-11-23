@@ -191,7 +191,7 @@ abstract class AppLocalizations {
   /// No description provided for @requestAccessButton.
   ///
   /// In en, this message translates to:
-  /// **'Sign up'**
+  /// **'Request access'**
   String get requestAccessButton;
 
   /// No description provided for @authorizedOnly.
@@ -437,13 +437,13 @@ abstract class AppLocalizations {
   /// No description provided for @requestAccessTitle.
   ///
   /// In en, this message translates to:
-  /// **'Sign up'**
+  /// **'Request access'**
   String get requestAccessTitle;
 
   /// No description provided for @requestAccessSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Create your account. Your office checks it and emails you its answer.'**
+  /// **'Ask for an account. Your office checks the request and emails you its answer.'**
   String get requestAccessSubtitle;
 
   /// No description provided for @noPhoneApp.
@@ -1583,7 +1583,7 @@ abstract class AppLocalizations {
   /// No description provided for @accessPending.
   ///
   /// In en, this message translates to:
-  /// **'Thanks for signing up. Your request was sent. You will get an email when it is answered.'**
+  /// **'Your request was sent. You will get an email when it is answered.'**
   String get accessPending;
 
   /// No description provided for @accessWrongCode.
@@ -1595,7 +1595,7 @@ abstract class AppLocalizations {
   /// No description provided for @accessTryLater.
   ///
   /// In en, this message translates to:
-  /// **'Try again later. Get a new code before you sign up again.'**
+  /// **'Try again later. Get a new code before you send the request again.'**
   String get accessTryLater;
 
   /// No description provided for @accessRoleUnavailable.
@@ -1685,7 +1685,7 @@ abstract class AppLocalizations {
   /// No description provided for @accessSubmit.
   ///
   /// In en, this message translates to:
-  /// **'Sign up'**
+  /// **'Send request'**
   String get accessSubmit;
 
   /// No description provided for @scannerModeTitle.

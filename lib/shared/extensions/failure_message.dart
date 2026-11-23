@@ -5,7 +5,8 @@ import 'package:ziska_verify/l10n/generated/app_localizations.dart';
 /// The general message for a failure (final.md Section 16). Screens handle
 /// their own cases first (for example `401` on Login) and fall back to this.
 /// An `error.code` this app does not know shows the server's message,
-/// whatever the status (a new busy or wait reason included).
+/// whatever the status (a new busy or wait reason included), and so does a
+/// `409 conflict` (guide §1: "Show the message").
 extension FailureMessage on Failure {
   String message(AppLocalizations l10n) => _serverFallback ?? _appText(l10n);
 
@@ -21,13 +22,16 @@ extension FailureMessage on Failure {
     _ => l10n.errorGeneral,
   };
 
-  /// The server's message is used only for an `error.code` this app does
-  /// not know (final.md Section 16); known codes always show the app's text.
+  /// The server's message is used for a `409 conflict` (it says what
+  /// conflicts, guide §1) and for an `error.code` this app does not know
+  /// (final.md Section 16); other known codes show the app's text.
   String? get _serverFallback {
     final code = exception.code;
     final text = exception.message?.trim();
+    if (text == null || text.isEmpty) return null;
+    if (exception is ConflictException) return text;
     if (code == null || _knownCodes.contains(code)) return null;
-    return (text == null || text.isEmpty) ? null : text;
+    return text;
   }
 }
 

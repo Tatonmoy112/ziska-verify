@@ -54,7 +54,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get noAccountQuestion => 'আপনার কি অ্যাকাউন্ট নেই?';
 
   @override
-  String get requestAccessButton => 'সাইন আপ';
+  String get requestAccessButton => 'অ্যাকাউন্টের আবেদন';
 
   @override
   String get authorizedOnly =>
@@ -190,11 +190,11 @@ class AppLocalizationsBn extends AppLocalizations {
       'পাসওয়ার্ড বদলানো হয়েছে। নতুন পাসওয়ার্ড দিয়ে লগইন করুন; পরের লগইনে প্রতিটি ফোনে ইমেইলের কোড লাগবে।';
 
   @override
-  String get requestAccessTitle => 'সাইন আপ';
+  String get requestAccessTitle => 'অ্যাকাউন্টের আবেদন';
 
   @override
   String get requestAccessSubtitle =>
-      'আপনার অ্যাকাউন্ট তৈরি করুন। অফিস যাচাই করে ইমেইলে উত্তর জানাবে।';
+      'একটি অ্যাকাউন্ট চান। অফিস আবেদনটি যাচাই করে ইমেইলে উত্তর জানাবে।';
 
   @override
   String noPhoneApp(String phone) {
@@ -836,7 +836,7 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get accessPending =>
-      'সাইন আপের জন্য ধন্যবাদ। আপনার আবেদন পাঠানো হয়েছে। উত্তর দেওয়া হলে আপনি একটি ইমেইল পাবেন।';
+      'আপনার আবেদন পাঠানো হয়েছে। উত্তর দেওয়া হলে আপনি একটি ইমেইল পাবেন।';
 
   @override
   String get accessWrongCode =>
@@ -844,7 +844,7 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get accessTryLater =>
-      'পরে আবার চেষ্টা করুন। আবার সাইন আপের আগে নতুন কোড নিন।';
+      'পরে আবার চেষ্টা করুন। আবার আবেদন পাঠানোর আগে নতুন কোড নিন।';
 
   @override
   String get accessRoleUnavailable =>
@@ -890,7 +890,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get accessCodeSent => 'ঠিকানায় একটি কোড পাঠানো হয়েছে।';
 
   @override
-  String get accessSubmit => 'সাইন আপ';
+  String get accessSubmit => 'আবেদন পাঠান';
 
   @override
   String get scannerModeTitle => 'স্ক্যানার মোড';

@@ -22,7 +22,7 @@ void main() {
         'POST auth/access': real(answer),
       },
     );
-    await app.tapText('Sign up');
+    await app.tapText('Request access');
     await fillAccessForm(app);
     await app.tap(find.byKey(const Key('access.sendCode')));
     await app.enter(const Key('access.code'), '123456');
@@ -39,7 +39,7 @@ void main() {
     );
     expect(find.byKey(const Key('access.code')), findsOneWidget);
     expect(find.text('Send a new code'), findsOneWidget);
-    expect(find.textContaining('Thanks for signing up.'), findsNothing);
+    expect(find.textContaining('Your request was sent.'), findsNothing);
     expect(app.backend.sent('POST', 'auth/access'), hasLength(1));
   });
 
@@ -50,7 +50,7 @@ void main() {
       find.text('This role is no longer available. Choose another role.'),
       findsOneWidget,
     );
-    expect(find.textContaining('Thanks for signing up.'), findsNothing);
+    expect(find.textContaining('Your request was sent.'), findsNothing);
   });
 
   test('TC-STG-049 the real 400s for a name the server refuses', () {

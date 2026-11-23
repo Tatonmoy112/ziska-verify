@@ -55,7 +55,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noAccountQuestion => 'Don\'t have an account?';
 
   @override
-  String get requestAccessButton => 'Sign up';
+  String get requestAccessButton => 'Request access';
 
   @override
   String get authorizedOnly => 'Only authorized users can access this system';
@@ -191,11 +191,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Password changed. Log in with your new password; every phone needs the emailed code at its next login.';
 
   @override
-  String get requestAccessTitle => 'Sign up';
+  String get requestAccessTitle => 'Request access';
 
   @override
   String get requestAccessSubtitle =>
-      'Create your account. Your office checks it and emails you its answer.';
+      'Ask for an account. Your office checks the request and emails you its answer.';
 
   @override
   String noPhoneApp(String phone) {
@@ -838,7 +838,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get accessPending =>
-      'Thanks for signing up. Your request was sent. You will get an email when it is answered.';
+      'Your request was sent. You will get an email when it is answered.';
 
   @override
   String get accessWrongCode =>
@@ -846,7 +846,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get accessTryLater =>
-      'Try again later. Get a new code before you sign up again.';
+      'Try again later. Get a new code before you send the request again.';
 
   @override
   String get accessRoleUnavailable =>
@@ -892,7 +892,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accessCodeSent => 'A code was sent to the address.';
 
   @override
-  String get accessSubmit => 'Sign up';
+  String get accessSubmit => 'Send request';
 
   @override
   String get scannerModeTitle => 'Scanner mode';

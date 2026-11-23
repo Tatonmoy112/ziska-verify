@@ -94,7 +94,7 @@ void main() {
   uiTest('MIG access request code stage', (tester, shot) async {
     final app = await startApp(tester, loggedIn: false);
     await atOneX(tester);
-    await app.tapText('Sign up');
+    await app.tapText('Request access');
     await fillAccessForm(app);
     await app.tap(find.byKey(const Key('access.sendCode')));
     await tester.ensureVisible(find.byKey(const Key('access.code')));
@@ -105,12 +105,12 @@ void main() {
   uiTest('MIG access request pending', (tester, shot) async {
     final app = await startApp(tester, loggedIn: false);
     await atOneX(tester);
-    await app.tapText('Sign up');
+    await app.tapText('Request access');
     await fillAccessForm(app);
     await app.tap(find.byKey(const Key('access.sendCode')));
     await app.enter(const Key('access.code'), '123456');
     await app.tap(find.byKey(const Key('access.submit')));
-    expect(find.textContaining('Thanks for signing up.'), findsOneWidget);
+    expect(find.textContaining('Your request was sent.'), findsOneWidget);
     await shot('screen_access_pending');
   });
 

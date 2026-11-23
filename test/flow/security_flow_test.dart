@@ -22,7 +22,7 @@ void main() {
       profile: Roles.supervisor,
       loggedIn: false,
     );
-    await app.tapText('Sign up');
+    await app.tapText('Request access');
     await fillAccessForm(app);
     await app.tap(find.byKey(const Key('access.sendCode')));
     await app.enter(const Key('access.code'), '123456');
@@ -160,7 +160,7 @@ void main() {
     }
 
     app = await startApp(tester, loggedIn: false);
-    await app.tapText('Sign up');
+    await app.tapText('Request access');
     expect(hidden(const Key('access.password')), isTrue);
   });
 

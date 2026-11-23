@@ -291,7 +291,7 @@ void main() {
         'access.name',
         'access.password',
         'access.email',
-      ], 'Sign up');
+      ], 'Request access');
     });
 
     test('TC-UI-138 one error banner look', () {

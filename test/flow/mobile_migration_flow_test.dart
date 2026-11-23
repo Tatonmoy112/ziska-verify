@@ -16,14 +16,14 @@ void main() {
     tester,
   ) async {
     final app = await startApp(tester, loggedIn: false);
-    await app.tapText('Sign up');
+    await app.tapText('Request access');
     await fillAccessForm(app);
     expect(app.backend.sent('POST', 'auth/access/code'), isEmpty);
     await app.tap(find.byKey(const Key('access.sendCode')));
     expect(find.text('A code was sent to the address.'), findsOneWidget);
     await app.enter(const Key('access.code'), '123456');
     await app.tap(find.byKey(const Key('access.submit')));
-    expect(find.textContaining('Thanks for signing up.'), findsOneWidget);
+    expect(find.textContaining('Your request was sent.'), findsOneWidget);
     expect(app.backend.sent('POST', 'auth/access').single.data, {
       'email': 'person@example.com',
       'code': '123456',
@@ -47,7 +47,7 @@ void main() {
     tester,
   ) async {
     final app = await startApp(tester, loggedIn: false);
-    await app.tapText('Sign up');
+    await app.tapText('Request access');
     await app.enter(const Key('access.name'), '${'a' * 99}🙂');
     expect(app.fieldText(const Key('access.name')), 'a' * 99);
     await app.enter(const Key('access.name'), '🙂' * 60);
@@ -58,7 +58,7 @@ void main() {
 
   testWidgets('an email edit requires a fresh access code', (tester) async {
     final app = await startApp(tester, loggedIn: false);
-    await app.tapText('Sign up');
+    await app.tapText('Request access');
     await fillAccessForm(app);
     await app.tap(find.byKey(const Key('access.sendCode')));
     await app.enter(const Key('access.code'), '123456');
@@ -74,7 +74,7 @@ void main() {
       loggedIn: false,
       overrides: {'GET roles/requestable': always(ok(<Object?>[]))},
     );
-    await app.tapText('Sign up');
+    await app.tapText('Request access');
     expect(find.text('Ask the office for an account.'), findsOneWidget);
     expect(find.byKey(const Key('access.password')), findsNothing);
     await app.tapText('Contact the office');
@@ -239,7 +239,7 @@ void main() {
     tester.platformDispatcher.textScaleFactorTestValue = 3;
     addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
     final app = await startApp(tester, loggedIn: false);
-    await app.tapText('Sign up');
+    await app.tapText('Request access');
     await fillAccessForm(app);
     expect(tester.takeException(), isNull);
     await app.tap(find.byKey(const Key('access.sendCode')));
@@ -316,7 +316,7 @@ void main() {
               ),
       },
     );
-    await app.tapText('Sign up');
+    await app.tapText('Request access');
     expect(find.text('Ask the office for an account.'), findsNothing);
     expect(find.text('Contact the office'), findsNothing);
     expect(
@@ -413,7 +413,7 @@ void main() {
           ),
         },
       );
-      await app.tapText('Sign up');
+      await app.tapText('Request access');
       await fillAccessForm(app);
       await app.tap(find.byKey(const Key('access.sendCode')));
       await app.enter(const Key('access.code'), '123456');

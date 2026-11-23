@@ -67,8 +67,8 @@ void main() {
     await app.tapText('Forgot password?');
     expect(banner, findsOneWidget, reason: 'Forgot password');
     await back(tester);
-    await app.tapText('Sign up');
-    expect(banner, findsOneWidget, reason: 'Sign up');
+    await app.tapText('Request access');
+    expect(banner, findsOneWidget, reason: 'Request access');
   });
 
   testWidgets('TC-ERR-040 the banner never blocks: a check is still tried', (
