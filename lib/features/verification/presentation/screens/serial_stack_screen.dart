@@ -210,13 +210,16 @@ class _SerialStackScreenState extends State<SerialStackScreen>
                     onChanged: (_) => setState(() {}),
                   ),
                   // How many go, before sending (SRS FR-STK-01: 1 to 50).
-                  Builder(
-                    builder: (context) {
+                  // It follows the box itself, so Clear takes it away too
+                  // (finding F-3).
+                  ValueListenableBuilder<TextEditingValue>(
+                    valueListenable: _input,
+                    builder: (context, typed, _) {
                       // Counted as the stack is sent: each value prepared,
                       // so "1000-001" and "1000001" are one serial.
                       final formats = state.formats;
                       if (formats == null) return const SizedBox.shrink();
-                      final parsed = const ParseStack()(_input.text, formats);
+                      final parsed = const ParseStack()(typed.text, formats);
                       if (parsed.typed == 0) return const SizedBox.shrink();
                       final distinct = parsed.bad == null
                           ? parsed.serials.length

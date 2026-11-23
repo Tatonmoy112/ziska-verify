@@ -438,6 +438,42 @@ void main() {
     expect(find.text('1 of 50 serials'), findsOneWidget);
   });
 
+  // TC-MIG-073 (emulator run, finding F-3): Clear takes the count away
+  // with the serials, whether or not an error was showing.
+  group('TC-MIG-073 Clear empties the stack and its count', () {
+    String box() => find
+        .byKey(const Key('serials.input'))
+        .evaluate()
+        .map((e) => (e.widget as TextField).controller!.text)
+        .single;
+
+    testWidgets('with no error showing', (tester) async {
+      final app = await startApp(tester, profile: Roles.supervisor);
+      await app.tap(find.byKey(const Key('verify.tool.serials')));
+      await app.enter(const Key('serials.input'), '1000001 1000002 1000003');
+      expect(find.text('3 of 50 serials'), findsOneWidget);
+
+      await app.tapText('Clear');
+      expect(box(), isEmpty);
+      expect(find.byKey(const Key('serials.count')), findsNothing);
+      expect(app.backend.sent('POST', 'lookups/serials'), isEmpty);
+    });
+
+    testWidgets('after an error', (tester) async {
+      final app = await startApp(tester, profile: Roles.supervisor);
+      await app.tap(find.byKey(const Key('verify.tool.serials')));
+      await app.enter(const Key('serials.input'), '1000001 12AB 1000003');
+      await app.tap(find.byKey(const Key('serials.submit')));
+      expect(find.textContaining('(12AB) is not a serial'), findsOneWidget);
+
+      await app.tapText('Clear');
+      expect(box(), isEmpty);
+      expect(find.byKey(const Key('serials.count')), findsNothing);
+      expect(find.textContaining('is not a serial'), findsNothing);
+      expect(app.backend.sent('POST', 'lookups/serials'), isEmpty);
+    });
+  });
+
   // TC-MIG-040 (SRS 7.1): scanner mode has the scanner's camera layout,
   // zero counters before the first scan, and Scan again only after a
   // failure.
