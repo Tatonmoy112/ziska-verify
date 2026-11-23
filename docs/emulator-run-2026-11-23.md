@@ -15,6 +15,15 @@
 
 **Recorded on the server by mistake during this run:** one check, MA-2026-000046 (EMU-12). Nothing else.
 
+## Summary (2026-11-23, all 60 cases run)
+
+- **Passed:** 55 ✅, two of them after a fix and a rerun (EMU-17: F-2; EMU-24: F-3).
+- **With a finding:** 3 ⚠️. EMU-28 (F-4) and EMU-38 (F-6), both fixed since and rerun; EMU-60 (F-8, open).
+- **Blocked:** 2 ⛔, by the tooling, not the app: EMU-13 and EMU-34 (adb cannot type Bangla digits or an emoji). One part of EMU-26 is blocked too: the UTC-day shift (no check on the server between 00:00 and 06:00 Dhaka). The automated tests cover all three.
+- **Findings:** 8. F-1 to F-7 were fixed one at a time on the user's go-ahead, tests first, each rerun on the emulator. F-8 (the Check tab in landscape) is open.
+- **Sent to the server:** reads, logins and logouts only, and one check by mistake (MA-2026-000046, EMU-12). No report, stack, scan, access request, reset or password change.
+- **The emulator** crashed by itself (exit 139) at random screen changes, five times; the app's log showed normal requests each time (software graphics, see Observations).
+
 The source column points to the backend's guide (`docs/protectb-api/app-api-guide.md`, the copy of ProtectB-DOCS e163a52) or to `final.md`.
 
 ---
@@ -105,24 +114,24 @@ The source column points to the backend's guide (`docs/protectb-api/app-api-guid
 
 | ID | Type | Steps | Expected | Source | Result |
 |---|---|---|---|---|---|
-| EMU-48 | N | Log out; tap **Request access** | "Request access", "Ask for an account. Your office checks the request and emails you its answer."; Name, Role, Choose a password, Email, **Send code** | guide §3.9 | — |
-| EMU-49 | N | Open the role list | The server's requestable roles (for example Distributor, Retail seller), from `GET roles/requestable` | guide §3.9 | — |
-| EMU-50 | E | Fill the name with 100 letters, then type one more | The field stops at 100 | guide §3.9 | — |
-| EMU-51 | E | A password of 7 characters | The rule ticks show what is missing; **Send code** off | guide §3.6, §3.9 | — |
-| EMU-52 | W | Press Back after filling the form | Back to Login; **nothing sent** | — | — |
-| EMU-53 | N | **Forgot password?** | The forgot screen with the email field; **not sent** | guide §3.7 | — |
+| EMU-48 | N | Log out; tap **Request access** | "Request access", "Ask for an account. Your office checks the request and emails you its answer."; Name, Role, Choose a password, Email, **Send code** | guide §3.9 | ✅ `POST auth/logout → 200`; Request access: the title and "Ask for an account. Your office checks the request and emails you its answer."; Name, Role, Choose a password (with the rules), Email; **Send code** off; `GET roles/requestable → 200` |
+| EMU-49 | N | Open the role list | The server's requestable roles (for example Distributor, Retail seller), from `GET roles/requestable` | guide §3.9 | ✅ Distributor, Retail seller (the server's list) |
+| EMU-50 | E | Fill the name with 100 letters, then type one more | The field stops at 100 | guide §3.9 | ✅ 101 letters typed in pieces: the field holds exactly 100 (the 101st not added) |
+| EMU-51 | E | A password of 7 characters | The rule ticks show what is missing; **Send code** off | guide §3.6, §3.9 | ✅ `abc1234` with a made-up `example.com` email: "a letter" and "a number" ticked, "8 characters or more" not; **Send code** off; no `auth/access` request |
+| EMU-52 | W | Press Back after filling the form | Back to Login; **nothing sent** | — | ✅ Back on the filled form: Login, at once; nothing sent (no question either, unlike Report incident since F-5: a choice for the user) |
+| EMU-53 | N | **Forgot password?** | The forgot screen with the email field; **not sent** | guide §3.7 | ✅ "Forgot password" / "Enter your email. If it has an account, we will send a 6-digit code."; **Send code** off; nothing sent. Then logged in again: straight in, no code; the emulator's own log cleared of the typed login |
 
 ## 9. Worst cases: offline, Back, large text, restart
 
 | ID | Type | Steps | Expected | Source | Result |
 |---|---|---|---|---|---|
-| EMU-54 | W | Airplane mode on | "No internet connection. Checks need a connection." at the top of every screen | final.md §14.2 | — |
-| EMU-55 | W | Offline: open History, pull to refresh | An error with **Try again**; no crash; nothing queued | guide §1 | — |
-| EMU-56 | W | Airplane mode off; wait 20 s; **Try again** | The banner goes; History loads | final.md §14.2 | — |
-| EMU-57 | W | Offline: type a serial and tap **Check** | "Unable to check. Check the connection and try again." (never sent: not the "may already be recorded" text) | final.md §13.10; audit 4.2 | — |
-| EMU-58 | W | Android Back on every tab and pushed screen | Pushed screens close; on a tab Back leaves the app, never to a logged-out screen | final.md §9 | — |
-| EMU-59 | W | Font size 1.3, then 2.0 (`settings put system font_scale`): Login, Check, History, Profile, Request access | No text cut off or overlapping; everything reachable by scrolling | final.md §14 | — |
-| EMU-60 | W | Rotate to landscape on the Check tab and History | The app stays usable; no crash | final.md §14 | — |
+| EMU-54 | W | Airplane mode on | "No internet connection. Checks need a connection." at the top of every screen | final.md §14.2 | ✅ Airplane mode, Wi-Fi and data off; a ping to the internet and to the server fails; "No internet connection. Checks need a connection." at the top, the status bar's icons dark on it |
+| EMU-55 | W | Offline: open History, pull to refresh | An error with **Try again**; no crash; nothing queued | guide §1 | ✅ History offline (fresh after the login): "No connection. Check the internet and try again." with **Try again**; the open and a pull both `connectionError`; no crash |
+| EMU-56 | W | Airplane mode off; wait 20 s; **Try again** | The banner goes; History loads | final.md §14.2 | ✅ Network back, 20 s: the banner gone; **Try again**: `GET checks → 200`, the 46 checks; the offline check of EMU-57 was never sent later (no `POST lookups` after going offline) |
+| EMU-57 | W | Offline: type a serial and tap **Check** | "Unable to check. Check the connection and try again." (never sent: not the "may already be recorded" text) | final.md §13.10; audit 4.2 | ✅ `1000001` read back, then offline confirmed again in its own command (airplane on, ping fails, the server unreachable, no active network) before **Check**: `POST lookups → connectionError`; "Unable to check. Check the connection and try again." (not "may already be recorded"); the field cleared after |
+| EMU-58 | W | Android Back on every tab and pushed screen | Pushed screens close; on a tab Back leaves the app, never to a logged-out screen | final.md §9 | ✅ Back on Check, History and Profile leaves the app; opened again: logged in, on the Check tab. Back on the pushed screens was run in the areas before (Scanner mode, Serial stack, Report incident, My reports, Change password, Request access, Forgot password): each closes |
+| EMU-59 | W | Font size 1.3, then 2.0 (`settings put system font_scale`): Login, Check, History, Profile, Request access | No text cut off or overlapping; everything reachable by scrolling | final.md §14 | ✅ Font 1.3 and 2.0: Check, History, Profile (rows stacked, counts as a list), Login, Request access: nothing cut off or overlapping, everything reachable by scrolling. At 2.0 an email and a reference number wrap mid-word ("gmail.co / m", "MA-2026-000 / 046"): readable, cosmetic |
+| EMU-60 | W | Rotate to landscape on the Check tab and History | The app stays usable; no crash | final.md §14 | ⚠️ Landscape, no crash (same process): History fits and scrolls. **The Check tab's header stays fixed and takes about half the height**: the camera and the serial field share a strip about 250 points high (finding F-8). Back to portrait after |
 
 ---
 
@@ -137,6 +146,7 @@ The source column points to the backend's guide (`docs/protectb-api/app-api-guid
 | F-5 | EMU-36 | **Report incident**: Back with a note typed (or photos added) leaves at once and drops them, without asking. The Back guard (audit 8.1) covers only a report being filed and its photos uploading. No document asks for a question here, so this is a suggestion: ask "Discard this report?" when something was typed or added | Minor (suggestion; an accidental Back loses a long note). **Fixed** (user's choice): on a report not filed yet, with a note, photos, a check or a retail user entered, Back and the back arrow ask "Leave this report?" (Stay / Leave); nothing entered, or a filed report with nothing waiting, still leaves at once; a filed report with photos waiting keeps its "Photos not sent" question. Test TC-REP-069. Rerun on the emulator (18:17): "Seal cut" typed: Back asks, Stay keeps it, the back arrow asks, Leave leaves; an empty form leaves at once; `POST incidents`: none |
 | F-6 | EMU-38 | **My reports**: a report with a short note opens in a sheet only as wide as its text (centred, narrow); a long note fills the width. The sheet's column takes its widest line's width (`my_reports_screen.dart`, `_showReport`) | Minor (visual). **Fixed:** the sheet's column takes the full width; test TC-REP-068; rerun on the emulator (18:07): #4 opens across the screen |
 | F-7 | EMU-39, -42, -44 | **The status bar**: on Profile, scrolled, the cards and counts run under the clock and icons (no app bar, so the content scrolls under the transparent status bar); on the full-screen date picker the clock and icons are white on white; on Change password the clock is dark on the navy header. The status bar's colours are not set per screen | Minor (visual; the clock is hard to read or covered). **Fixed:** dark icons by default and on every light app bar (the date pickers among them); light on the navy app bar and the picture viewer; the screens with a navy top and no app bar (Check tab, Profile, Change password, Forgot password, Request access, Reset password, Verify code) set light icons and, once scrolled, show a navy strip behind the status bar. Test TC-UI-185 (4 of 5 cases failed before). Its date-picker case runs on a wider test screen: the test font draws every letter as a square, so the picker's header overflowed in the test only, not on the phone (EMU-26b). Rerun on the emulator (18:45): Profile scrolled shows the navy strip with a white clock; Change password a white clock on navy; the date picker a dark clock on white |
+| F-8 | EMU-60 | **The Check tab in landscape**: its navy header stays fixed (it scrolls only at a large font) and takes about half the screen's height, so the camera and the serial field share a strip about 250 points high; usable by scrolling, but cramped | Minor (landscape only) |
 
 ## Observations (not app bugs)
 
@@ -155,3 +165,4 @@ For the user's check by hand, on a phone or once the backend adds the test data:
 - a reset email;
 - a forced password change (needs an account with "must change password" ticked);
 - a 429 wait.
+- **added by this run:** Session checks opened and closed on a real phone (the emulator crashed there); Bangla digits typed with a Bangla keyboard in the serial field, the stack and History's search; an emoji in a report's note (counts 1); History's dates for a check made between 00:00 and 06:00 Dhaka; the camera back on the Check tab after Scanner mode with a real QR (F-2); the status bar on each screen (F-7); landscape on the Check tab (F-8); the 11 new Bangla texts in `docs/bangla-drafts-for-review.md`.
