@@ -47,10 +47,10 @@ The source column points to the backend's guide (`docs/protectb-api/app-api-guid
 
 | ID | Type | Steps | Expected | Source | Result |
 |---|---|---|---|---|---|
-| EMU-15 | N | Tap **Scanner mode** | The camera with its frame, counters at 0, **Finish** off until a scan is answered | guide §4.3; final.md §13.2 | — |
-| EMU-16 | E | Tap **Finish** while it is off | Nothing happens | final.md §13.2 | — |
-| EMU-17 | N | Press Android Back | Back on the Check tab at once. The app sends one `…/end` for the unused session, which records nothing | guide §4.4 | — |
-| EMU-18 | W | Open Scanner mode, put the app in the background for 5 s, then bring it back | The camera starts again; nothing is sent; no error | final.md §13.2 | — |
+| EMU-15 | N | Tap **Scanner mode** | The camera with its frame, counters at 0, **Finish** off until a scan is answered | guide §4.3; final.md §13.2 | ✅ Camera on (1 active client), the frame, all five counters at 0, **Finish** greyed out; no request on opening |
+| EMU-16 | E | Tap **Finish** while it is off | Nothing happens | final.md §13.2 | ✅ Screen unchanged; no request |
+| EMU-17 | N | Press Android Back | Back on the Check tab at once. The app sends one `…/end` for the unused session, which records nothing | guide §4.4 | ⚠️ Back on the Check tab at once; one `POST lookups/sessions/{id}/end` → **404**, shown to nobody (as documented: phase-8 doc, "404 unknown", since no scan ever named the session). **But the Check tab's camera does not come back: "The camera could not start."** (finding F-2). Same with the app's own Back arrow |
+| EMU-18 | W | Open Scanner mode, put the app in the background for 5 s, then bring it back | The camera starts again; nothing is sent; no error | final.md §13.2 | ✅ Camera clients: 1 open, 0 in the background, 1 on return; counters still 0; no request |
 
 ## 4. Serial stack, nothing sent
 
@@ -131,6 +131,7 @@ The source column points to the backend's guide (`docs/protectb-api/app-api-guid
 | # | Seen in | Finding | Severity |
 |---|---|---|---|
 | F-1 | EMU-13 | After a serial is refused ("A serial has digits only, up to 19 digits."), the error stays under the field when the field is emptied with the delete key; it goes at the next **Check** | Minor (the text is stale, not wrong) |
+| F-2 | EMU-17 | After leaving Scanner mode (Android Back or the app's Back arrow), the Check tab shows **"The camera could not start."** It happens every time (seen twice). Switching to another tab and back brings the camera back. Cause: the Check tab starts its camera as soon as Scanner mode's route pops, while Scanner mode's camera still holds the one native camera, so the start is refused (`AlreadyStarted`); Scanner mode then disposes the native camera about 3 s later and nothing starts it again (mobile_scanner 7.5.0, one native camera per activity) | Major (QR checking on the main tab is gone until the user switches tabs) |
 
 ## Not covered here (read only, or the test server lacks the data)
 
