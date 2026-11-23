@@ -994,6 +994,14 @@ class AppLocalizationsBn extends AppLocalizations {
   String get sessionRestarted => 'একটি নতুন সেশন শুরু হয়েছে।';
 
   @override
+  String get sessionRenewed =>
+      'নতুন সেশন শুরু হয়েছে: আগেরটি পূর্ণ ছিল, অথবা ১৫ মিনিট কোনো স্ক্যান না হওয়ায় বন্ধ হয়েছে।';
+
+  @override
+  String get sessionRenewedHistory =>
+      'নতুন সেশন শুরু হয়েছে: আগেরটি পূর্ণ ছিল, অথবা ১৫ মিনিট কোনো স্ক্যান না হওয়ায় বন্ধ হয়েছে। এর পণ্যগুলো ইতিহাস, তারপর সেশনে আছে।';
+
+  @override
   String get sessionsTitle => 'সেশন';
 
   @override

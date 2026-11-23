@@ -302,6 +302,19 @@ class _ScanSessionScreenState extends State<ScanSessionScreen>
                                 : state.failure!.message(l),
                           ),
                         ),
+                      if (state.renewed)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.sm,
+                          ),
+                          child: Text(
+                            _cubit.canReadHistory
+                                ? l.sessionRenewedHistory
+                                : l.sessionRenewed,
+                            key: const Key('session.renewed'),
+                            style: AppTypography.caption,
+                          ),
+                        ),
                       if (state.restarted)
                         Padding(
                           padding: const EdgeInsets.symmetric(

@@ -996,6 +996,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessionRestarted => 'A new session started.';
 
   @override
+  String get sessionRenewed =>
+      'A new session started: the last one was full, or closed after 15 minutes without a scan.';
+
+  @override
+  String get sessionRenewedHistory =>
+      'A new session started: the last one was full, or closed after 15 minutes without a scan. Its products are in History, then Sessions.';
+
+  @override
   String get sessionsTitle => 'Sessions';
 
   @override

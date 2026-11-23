@@ -157,24 +157,33 @@ void main() {
     expect(cubit.state.rows, hasLength(1));
   });
   for (final code in ['session_full', 'session_ended']) {
-    test('$code rolls over and retries once', () async {
-      var calls = 0;
-      final sent = <String>[];
-      when(() => repo.scan(any(), any())).thenAnswer((i) async {
-        final id = i.positionalArguments[1] as String;
-        sent.add(id);
-        return ++calls == 1
-            ? Err(Failure(ScanSessionException(code: code)))
-            : Success(scanResult(id));
-      });
-      final cubit = scanner();
-      await cubit.start();
-      await cubit.scan(raw);
-      expect(calls, 2);
-      expect(sent[0], isNot(sent[1]));
-      expect(cubit.state.id, sent.last);
-      expect(cubit.state.rows, hasLength(1));
-    });
+    // TC-MIG-072 (audit 5.2): the roll-over is said, until the next scan.
+    test(
+      '$code rolls over, retries once, and says so until the next scan',
+      () async {
+        var calls = 0;
+        final sent = <String>[];
+        when(() => repo.scan(any(), any())).thenAnswer((i) async {
+          final id = i.positionalArguments[1] as String;
+          sent.add(id);
+          return ++calls == 1
+              ? Err(Failure(ScanSessionException(code: code)))
+              : Success(scanResult(id));
+        });
+        final cubit = scanner();
+        await cubit.start();
+        await cubit.scan(raw);
+        expect(calls, 2);
+        expect(sent[0], isNot(sent[1]));
+        expect(cubit.state.id, sent.last);
+        expect(cubit.state.rows, hasLength(1));
+        expect(cubit.state.renewed, isTrue);
+        expect(cubit.state.restarted, isFalse);
+
+        await cubit.scan('https://example.test/q/A1B2C3D4E5F6');
+        expect(cubit.state.renewed, isFalse);
+      },
+    );
   }
   test('another official session is discarded without replaying', () async {
     final cubit = scanner();

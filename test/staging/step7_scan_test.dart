@@ -251,6 +251,44 @@ void main() {
     expect(find.bySemanticsLabel('Scanned: 1'), findsOneWidget);
     expect(find.byKey(const Key('session.restarted')), findsNothing);
     expect(find.byKey(const Key('session.scanAgain')), findsNothing);
+    // TC-MIG-072 (audit 5.2): the list starts again, and the screen says
+    // why and where the earlier products are.
+    expect(
+      find.text(
+        'A new session started: the last one was full, or closed after 15 '
+        'minutes without a scan. Its products are in History, then Sessions.',
+      ),
+      findsOneWidget,
+    );
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('TC-MIG-072 the real session_ended without History: the '
+      'notice does not point to it', (tester) async {
+    final ended = <String>{};
+    final app = await startApp(
+      tester,
+      profile: Roles.only(['item:bulk_lookup']),
+      overrides: {'POST lookups': realScans(ended: ended)},
+    );
+    await app.tap(find.byKey(const Key('verify.tool.bulk')));
+    final store = ActiveScanStore(
+      app.storage,
+      client: testConfig.clientSlug,
+      official: Roles.only(['item:bulk_lookup'])['id'] as String,
+    );
+    ended.add((await store.read())!);
+    app.scanner.scan(a);
+    await settleScans(tester);
+    expect(
+      find.text(
+        'A new session started: the last one was full, or closed after 15 '
+        'minutes without a scan.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.textContaining('History'), findsNothing);
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
   });

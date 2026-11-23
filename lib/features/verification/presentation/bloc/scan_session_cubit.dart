@@ -39,6 +39,12 @@ abstract class ScanSessionState with _$ScanSessionState {
     /// one started; the screen says so once (guide section 4.3).
     @Default(false) bool restarted,
 
+    /// The session was full or had ended (`409 session_full`,
+    /// `session_ended`): a new one started by itself and the scan went in
+    /// it (guide section 4.3). The list starts again, and the screen says
+    /// why until the next scan (audit 5.2).
+    @Default(false) bool renewed,
+
     /// A resumed session's scans could not be read: Try again reloads them
     /// (guide section 4.6); scanning goes on meanwhile.
     @Default(false) bool rowsFailed,
@@ -99,6 +105,10 @@ class ScanSessionCubit extends Cubit<ScanSessionState> {
   final VerificationRepository _repository;
   final ActiveScanStore _store;
   final LoadRecoveredScans? _loadChecks;
+
+  /// The official may read their history (`history:own`): a session's
+  /// products can be found in History, then Sessions.
+  bool get canReadHistory => _loadChecks != null;
   late final StreamSubscription<SessionState> _auth;
   Future<void> _storageTask = Future<void>.value();
 
@@ -309,6 +319,9 @@ class ScanSessionCubit extends Cubit<ScanSessionState> {
       ),
     );
     var result = await _repository.scan(sent, state.id!);
+    // Whether this scan went into a new session because the last one was
+    // full or had ended.
+    var rolledOver = false;
     if (!_active(generation)) return _drop(read);
     if (result case Err(
       failure: Failure(exception: ScanSessionException(:final code)),
@@ -351,6 +364,8 @@ class ScanSessionCubit extends Cubit<ScanSessionState> {
         _pump();
         return;
       }
+      rolledOver = true;
+      emit(state.copyWith(renewed: true));
       result = await _repository.scan(sent, id);
       if (!_active(generation)) return _drop(read);
     }
@@ -377,6 +392,7 @@ class ScanSessionCubit extends Cubit<ScanSessionState> {
                   },
             repeat: value.repeat,
             restarted: false,
+            renewed: rolledOver,
             totals: value.session,
             answered: state.answered + 1,
             pending: _waiting,

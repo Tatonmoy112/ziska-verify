@@ -1862,6 +1862,18 @@ abstract class AppLocalizations {
   /// **'A new session started.'**
   String get sessionRestarted;
 
+  /// No description provided for @sessionRenewed.
+  ///
+  /// In en, this message translates to:
+  /// **'A new session started: the last one was full, or closed after 15 minutes without a scan.'**
+  String get sessionRenewed;
+
+  /// No description provided for @sessionRenewedHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'A new session started: the last one was full, or closed after 15 minutes without a scan. Its products are in History, then Sessions.'**
+  String get sessionRenewedHistory;
+
   /// No description provided for @sessionsTitle.
   ///
   /// In en, this message translates to:

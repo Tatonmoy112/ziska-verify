@@ -534,6 +534,8 @@
   "sessionNoConnection": "No connection, scan again.",
   "sessionBusy": "The service is busy. Nothing was recorded; scan again.",
   "sessionRestarted": "A new session started.",
+  "sessionRenewed": "A new session started: the last one was full, or closed after 15 minutes without a scan.",
+  "sessionRenewedHistory": "A new session started: the last one was full, or closed after 15 minutes without a scan. Its products are in History, then Sessions.",
   "sessionsTitle": "Sessions",
   "sessionsMore": "Load more",
   "sessionsAll": "All",
