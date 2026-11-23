@@ -126,7 +126,7 @@ A result route restored without its in-memory extra returns to Check. A session-
 
 ## 10. Pagination and time
 
-Pass opaque cursors back unchanged; a full last page can be followed by an empty page. Keep totals from the first checks page; later-page `totals: null` does not erase them. Profile totals come from `GET checks?limit=1`, with no additional endpoint.
+Pass opaque cursors back unchanged, and only to the list that gave them: a filter changed during a 429 wait loads its own first page (TC-HIST-055). A full last page can be followed by an empty page. Keep totals from the first checks page; later-page `totals: null` does not erase them. Profile totals come from `GET checks?limit=1`, with no additional endpoint.
 
 Checks support result, way, inclusive date strings, search, and `session_id`. No history/session request sends `scope`. Clearing ordinary filters in a session detail keeps its session restriction.
 
