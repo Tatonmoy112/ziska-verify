@@ -937,6 +937,16 @@ class AppLocalizationsBn extends AppLocalizations {
   String get serialStackRetry => 'একই তালিকা আবার পাঠান';
 
   @override
+  String get serialStackResendTitle => 'তালিকাটি আবার পাঠাবেন?';
+
+  @override
+  String get serialStackResendBody =>
+      'উত্তর হারিয়ে গেছে, তাই এই সিরিয়ালগুলো হয়তো আগেই রেকর্ড হয়েছে। আবার পাঠালে প্রতিটি আবার যাচাই হবে। আগে দেখতে চাইলে ইতিহাস, তারপর সেশন খুলুন: রেকর্ড হওয়া তালিকা সেখানে সংখ্যাসহ দেখা যায়।';
+
+  @override
+  String get serialStackResendConfirm => 'আবার পাঠান';
+
+  @override
   String get serialStackSubmit => 'সিরিয়াল যাচাই করুন';
 
   @override

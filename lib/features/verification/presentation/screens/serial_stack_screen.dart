@@ -66,6 +66,32 @@ class _SerialStackScreenState extends State<SerialStackScreen>
     super.dispose();
   }
 
+  /// The answer was lost: the stack may already be recorded (a session of
+  /// kind `serial`, guide §4.7), and sending it again checks every serial
+  /// again. Sent only once the official says so (audit 6.2).
+  Future<void> _resend() async {
+    final l = AppLocalizations.of(context);
+    final send = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l.serialStackResendTitle),
+        content: Text(l.serialStackResendBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(l.cancel),
+          ),
+          TextButton(
+            key: const Key('serials.resend'),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(l.serialStackResendConfirm),
+          ),
+        ],
+      ),
+    );
+    if (send == true && mounted) unawaited(_cubit.submit());
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
@@ -261,9 +287,12 @@ class _SerialStackScreenState extends State<SerialStackScreen>
                                 unawaited(_cubit.load());
                                 return;
                               }
+                              if (state.uncertain) {
+                                unawaited(_resend());
+                                return;
+                              }
                               if (state.submitted ||
                                   state.retryAt != null ||
-                                  state.uncertain ||
                                   _cubit.compose(_input.text)) {
                                 unawaited(_cubit.submit());
                               }

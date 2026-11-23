@@ -1754,6 +1754,24 @@ abstract class AppLocalizations {
   /// **'Send the same stack again'**
   String get serialStackRetry;
 
+  /// No description provided for @serialStackResendTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Send the stack again?'**
+  String get serialStackResendTitle;
+
+  /// No description provided for @serialStackResendBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The answer was lost, so these serials may already be recorded. Sending them again checks each one again. To look first, open History, then Sessions: a recorded stack shows there with its count.'**
+  String get serialStackResendBody;
+
+  /// No description provided for @serialStackResendConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Send again'**
+  String get serialStackResendConfirm;
+
   /// No description provided for @serialStackSubmit.
   ///
   /// In en, this message translates to:

@@ -939,6 +939,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get serialStackRetry => 'Send the same stack again';
 
   @override
+  String get serialStackResendTitle => 'Send the stack again?';
+
+  @override
+  String get serialStackResendBody =>
+      'The answer was lost, so these serials may already be recorded. Sending them again checks each one again. To look first, open History, then Sessions: a recorded stack shows there with its count.';
+
+  @override
+  String get serialStackResendConfirm => 'Send again';
+
+  @override
   String get serialStackSubmit => 'Check serials';
 
   @override
