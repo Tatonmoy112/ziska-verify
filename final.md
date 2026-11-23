@@ -237,7 +237,7 @@ Always show the same code-sent confirmation, including for existing accounts. Em
 - Scanner mode has the Check tab's camera look: dark, the frame and its hint; the counters show zeros before the first scan; **Scan again** shows only after a failure; the latest card names the serial and product.
 - History rows show who checked ("Checked by …", always the official logged in, backend D61) and, for a session's check, the session ("Session 7F3C2A10": the ID's first 8 characters), as SRS FR-HIS-04 lists (user decision 2026-11-19); the way filter uses the same chips as the results. The Sessions view is a paged list like History's (skeleton, empty and error states, automatic paging).
 - The stack shows "N of 50 serials" (repeats sent once) before sending, and Back waits while a stack is sent.
-- A photo answered `409` says why ("No more photos: the report has 3, or its hour is over."); **Done** asks before leaving photos that are not sent; My reports opens a report in full.
+- A photo answered `409` says why ("No more photos: the report has 3, or its hour is over."); **Done** and Back ask before leaving photos that are not sent, and the screen cannot be left while the report is filing (TC-REP-064, -065); My reports opens a report in full.
 - Profile's three stat cards add up: Checks = Valid + Needs attention (warning, not found, not in a batch).
 
 ### 13.10 Data-flow rules (2026-11-17)
