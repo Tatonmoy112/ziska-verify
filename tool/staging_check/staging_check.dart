@@ -1528,7 +1528,12 @@ class StagingCheck {
       }
     }
     // A note of 1,000 code points that is 1,001 UTF-16 units. Refused if
-    // the server counts units; filed (a report) if it counts code points.
+    // the server counts units; filed (a real report on the shared server)
+    // if it counts code points, so only when asked for with LENGTHS_NOTE=1.
+    if (Platform.environment['LENGTHS_NOTE'] != '1') {
+      stdout.writeln('INFO  note: not sent (set LENGTHS_NOTE=1 to file one)');
+      return _logOut();
+    }
     final note = '🙂${'n' * 999}';
     try {
       final id = await DioIncidentApiService(api).fileReport({'note': note});
