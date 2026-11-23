@@ -21,7 +21,7 @@ Current migration acceptance: [16-mobile-migration.md](16-mobile-migration.md). 
 | AUTH | [01-auth.md](01-auth.md) | 117 | 42 | 54 | 21 | 103 | 0 | 13 | 1 |
 | SESS | [02-session.md](02-session.md) | 44 | 20 | 19 | 5 | 39 | 0 | 5 | 0 |
 | ROLE and NAV | [03-roles-nav.md](03-roles-nav.md) | 35 | 13 | 16 | 6 | 32 | 0 | 3 | 0 |
-| LOOK | [04-lookup.md](04-lookup.md) | 97 | 39 | 42 | 16 | 84 | 0 | 13 | 0 |
+| LOOK | [04-lookup.md](04-lookup.md) | 98 | 40 | 42 | 16 | 85 | 0 | 13 | 0 |
 | BULK | [05-bulk.md](05-bulk.md) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 | HIST | [06-history.md](06-history.md) | 54 | 17 | 27 | 10 | 51 | 0 | 3 | 0 |
 | REP | [07-reports.md](07-reports.md) | 63 | 17 | 36 | 10 | 51 | 0 | 12 | 0 |
@@ -35,7 +35,7 @@ Current migration acceptance: [16-mobile-migration.md](16-mobile-migration.md). 
 | UI | [15-ui.md](15-ui.md) | 184 | 30 | 100 | 54 | 170 | 0 | 14 | 0 |
 | MIG | [16-mobile-migration.md](16-mobile-migration.md) | 68 | 44 | 23 | 1 | 67 | 0 | 1 | 0 |
 | STG | [17-test-server.md](17-test-server.md) | 58 | 44 | 11 | 3 | 47 | 0 | 11 | 0 |
-| **Total** | | **895** | 304 | 419 | 172 | 766 | 0 | 128 | 1 |
+| **Total** | | **896** | 305 | 419 | 172 | 767 | 0 | 128 | 1 |
 
 ## 3. Case Format
 
