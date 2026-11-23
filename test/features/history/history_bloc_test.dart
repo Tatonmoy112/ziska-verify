@@ -66,6 +66,130 @@ void main() {
 
   HistoryBloc build() => HistoryBloc(GetChecks(repo));
 
+  // TC-HIST-052 and TC-HIST-054: with Bangladesh days chosen, the server's
+  // totals count UTC days (guide §5), so the repository gives none. The
+  // counts are the kept checks', once the whole list is in, and kept
+  // through a refresh; nothing is asked with `limit=1` to count.
+  group('Bangladesh days: the counts', () {
+    final day = DateTime(2026, 11, 23);
+    CheckRecord record(String ref, CheckResult result) => CheckRecord(
+      ref: ref,
+      at: DateTime.utc(2026, 11, 23, 5),
+      way: CheckWay.serial,
+      result: result,
+      reasons: const [],
+      official: 'Asha Rao',
+    );
+
+    void datedPages() {
+      calls = [];
+      when(() => repo.getChecks(any(), any())).thenAnswer((inv) async {
+        final page = inv.positionalArguments[1] as PageRequest;
+        calls.add((inv.positionalArguments[0] as CheckQuery, page.cursor));
+        return page.cursor == null
+            ? Success(
+                CheckPage(
+                  page: CursorPage(
+                    items: [
+                      record('A', CheckResult.valid),
+                      record('B', CheckResult.warning),
+                    ],
+                    nextCursor: 'c1',
+                  ),
+                ),
+              )
+            : Success(
+                CheckPage(
+                  page: CursorPage(
+                    items: [record('C', CheckResult.notFound)],
+                  ),
+                ),
+              );
+      });
+    }
+
+    blocTest<HistoryBloc, HistoryState>(
+      'TC-HIST-052 no counts until the list is complete, then the kept '
+      'checks counted',
+      setUp: datedPages,
+      build: build,
+      act: (bloc) async {
+        bloc.add(HistoryQueryChanged(CheckQuery(from: day, to: day)));
+        await Future<void>.delayed(Duration.zero);
+        expect(bloc.state.chipTotals, isNull);
+        bloc.add(const HistoryNextPageRequested());
+      },
+      verify: (bloc) {
+        expect(bloc.state.list.hasReachedEnd, isTrue);
+        final counts = bloc.state.chipTotals!;
+        expect(counts.total, 3);
+        expect(counts.valid, 1);
+        expect(counts.warning, 1);
+        expect(counts.notFound, 1);
+        expect(counts.unassigned, 0);
+        expect(bloc.state.totals?.total, 3);
+      },
+    );
+
+    blocTest<HistoryBloc, HistoryState>(
+      'TC-HIST-052 a result picked with dates: no limit=1 request to count',
+      setUp: datedPages,
+      build: build,
+      act: (bloc) => bloc.add(
+        HistoryQueryChanged(
+          CheckQuery(from: day, to: day, result: CheckResult.valid),
+        ),
+      ),
+      verify: (bloc) {
+        expect(calls, hasLength(1));
+        expect(calls.single.$1.result, CheckResult.valid);
+      },
+    );
+
+    blocTest<HistoryBloc, HistoryState>(
+      'TC-HIST-054 a refresh keeps the counts until the list is complete '
+      'again',
+      setUp: datedPages,
+      build: build,
+      act: (bloc) async {
+        bloc.add(HistoryQueryChanged(CheckQuery(from: day, to: day)));
+        await Future<void>.delayed(Duration.zero);
+        bloc.add(const HistoryNextPageRequested());
+        await Future<void>.delayed(Duration.zero);
+        expect(bloc.state.chipTotals?.total, 3);
+        bloc.add(const HistoryRefreshed());
+        await Future<void>.delayed(Duration.zero);
+      },
+      verify: (bloc) {
+        expect(bloc.state.list.hasReachedEnd, isFalse);
+        expect(bloc.state.chipTotals?.total, 3, reason: 'kept, not blanked');
+        expect(bloc.state.totals?.total, 3);
+      },
+    );
+
+    blocTest<HistoryBloc, HistoryState>(
+      'TC-HIST-054 a result picked with dates: its checks counted once '
+      'complete; a refresh clears chip counts it cannot count again',
+      setUp: datedPages,
+      build: build,
+      act: (bloc) async {
+        bloc.add(HistoryQueryChanged(CheckQuery(from: day, to: day)));
+        await Future<void>.delayed(Duration.zero);
+        bloc.add(const HistoryNextPageRequested());
+        await Future<void>.delayed(Duration.zero);
+        bloc.add(const HistoryResultPicked(CheckResult.valid));
+        await Future<void>.delayed(Duration.zero);
+        expect(bloc.state.chipTotals?.total, 3, reason: 'same filters');
+        bloc.add(const HistoryNextPageRequested());
+        await Future<void>.delayed(Duration.zero);
+        expect(bloc.state.totals?.total, 3, reason: 'the kept checks');
+        bloc.add(const HistoryRefreshed());
+        await Future<void>.delayed(Duration.zero);
+      },
+      verify: (bloc) => expect(bloc.state.chipTotals, isNull),
+    );
+  });
+
   blocTest<HistoryBloc, HistoryState>(
     'first page: items and totals',
     setUp: pages,

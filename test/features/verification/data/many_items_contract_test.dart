@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:ziska_verify/core/errors/app_exception.dart';
 import 'package:ziska_verify/core/errors/result.dart';
 import 'package:ziska_verify/core/network/api_client.dart';
@@ -15,6 +16,7 @@ import '../../../fakes/scripted_adapter.dart';
 import '../../../fakes/staging_fixtures.dart';
 
 void main() {
+  setUpAll(tz_data.initializeTimeZones);
   late ScriptedAdapter adapter;
   late VerificationRepositoryImpl repository;
   late ScriptedAnswer next;
@@ -257,7 +259,8 @@ void main() {
       'limit': 50,
       'cursor': 'opaque',
       'status': 'ended',
-      'from': '2026-11-01',
+      // The UTC days the Bangladesh days overlap (TC-HIST-051).
+      'from': '2026-10-31',
       'to': '2026-11-16',
     });
   });

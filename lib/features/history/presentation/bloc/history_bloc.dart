@@ -153,29 +153,41 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
     // counts again.
     final keepChips = !keepItems && base == _chipBase;
     _chipBase = base;
+    // With dates and a result picked, nothing can count the chips again, so
+    // a refresh clears them rather than keep counts that may be old.
+    final dated = _dated(query);
+    final refreshChips = keepItems && !(dated && query.result != null);
     emit(
       state.copyWith(
         query: query,
         list: state.list.loadingFirst(keepItems: keepItems),
         totals: keepItems ? null : () => null,
-        chipTotals: keepChips || keepItems ? null : () => null,
+        chipTotals: keepChips || refreshChips ? null : () => null,
       ),
     );
     // With a result picked, the page's totals count that result only: the
     // chips are counted by one more request of a single check (`limit=1`)
-    // without the result, sent alongside.
-    final counting = query.result != null && !keepChips
+    // without the result, sent alongside. With Bangladesh days the server
+    // counts UTC days (guide §5), so nothing is asked: the kept checks are
+    // counted instead (_counted).
+    final counting = query.result != null && !keepChips && !dated
         ? _getChecks(base, const PageRequest(limit: 1))
         : null;
     final result = await _getChecks(query, const PageRequest());
     if (generation != _generation || emit.isDone) return;
     switch (result) {
       case Success(:final value):
+        // With dates the server gives no totals: the counts already shown
+        // stay until the kept checks are counted.
         emit(
-          state.copyWith(
-            list: state.list.firstPage(value.page),
-            totals: () => value.totals,
-            chipTotals: query.result == null ? () => value.totals : null,
+          _counted(
+            state.copyWith(
+              list: state.list.firstPage(value.page),
+              totals: dated ? null : () => value.totals,
+              chipTotals: query.result == null && !dated
+                  ? () => value.totals
+                  : null,
+            ),
           ),
         );
       case Err(:final failure):
@@ -201,9 +213,32 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
     if (generation != _generation || emit.isDone) return;
     switch (result) {
       case Success(:final value):
-        emit(state.copyWith(list: state.list.nextPage(value.page)));
+        emit(_counted(state.copyWith(list: state.list.nextPage(value.page))));
       case Err(:final failure):
         emit(state.copyWith(list: state.list.failed(failure)));
     }
+  }
+
+  static bool _dated(CheckQuery query) =>
+      query.from != null || query.to != null;
+
+  /// With Bangladesh days chosen (guide §5), the counts are the kept
+  /// checks', given once the whole list is in. With a result picked they
+  /// count that result's checks only, so the chips are left as they are.
+  static HistoryState _counted(HistoryState state) {
+    final query = state.query;
+    if (!_dated(query) || !state.list.hasReachedEnd) return state;
+    final items = state.list.items;
+    int count(CheckResult result) =>
+        items.where((c) => c.result == result).length;
+    final counts = CheckTotals(
+      total: items.length,
+      valid: count(CheckResult.valid),
+      warning: count(CheckResult.warning),
+      notFound: count(CheckResult.notFound),
+      unassigned: count(CheckResult.unassigned),
+    );
+    if (query.result != null) return state.copyWith(totals: () => counts);
+    return state.copyWith(totals: () => counts, chipTotals: () => counts);
   }
 }

@@ -278,7 +278,8 @@ void main() {
       expect(picker, findsNothing);
       await app.tapText('প্রয়োগ করুন');
       final sent = app.backend.sent('GET', 'checks').last.queryParameters;
-      expect(sent['from'], '2026-10-01');
+      // The UTC days the Bangladesh days overlap (TC-HIST-051).
+      expect(sent['from'], '2026-09-30');
       expect(sent['to'], '2026-10-28');
     });
   });

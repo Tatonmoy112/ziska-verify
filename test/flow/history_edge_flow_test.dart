@@ -116,7 +116,9 @@ void main() {
           isTrue,
         );
         await app.tapText('Apply');
-        expect(checksSent(app).last['from'], '2026-10-28');
+        // Whole UTC days (guide §5): the Bangladesh 28th starts at 18:00
+        // UTC on the 27th, so the 27th and 28th are asked (TC-HIST-051).
+        expect(checksSent(app).last['from'], '2026-10-27');
         expect(checksSent(app).last['to'], '2026-10-28');
 
         app = await openHistory(tester);
@@ -125,7 +127,7 @@ void main() {
           isTrue,
         );
         await app.tapText('Apply');
-        expect(checksSent(app).last['from'], '2026-10-01');
+        expect(checksSent(app).last['from'], '2026-09-30');
         expect(checksSent(app).last['to'], '2026-10-28');
       });
     });

@@ -34,6 +34,7 @@ import 'package:ziska_verify/core/pagination/page_request.dart';
 import 'package:ziska_verify/core/services/device/phone_id_service.dart';
 import 'package:ziska_verify/core/services/scanner/active_scan_store.dart';
 import 'package:ziska_verify/core/utils/display_time.dart';
+import 'package:ziska_verify/core/utils/local_days.dart';
 import 'package:ziska_verify/features/authentication/data/models/access_request_dtos.dart';
 import 'package:ziska_verify/features/authentication/data/models/auth_dtos.dart';
 import 'package:ziska_verify/features/authentication/data/services/access_request_api_service.dart';
@@ -42,6 +43,7 @@ import 'package:ziska_verify/features/authentication/domain/entities/access_requ
 import 'package:ziska_verify/features/authentication/domain/repositories/access_request_repository.dart';
 import 'package:ziska_verify/features/authentication/domain/usecases/access_request_usecases.dart';
 import 'package:ziska_verify/features/history/data/mappers/check_mappers.dart';
+import 'package:ziska_verify/features/history/data/repositories/history_repository_impl.dart';
 import 'package:ziska_verify/features/history/data/services/history_api_service.dart';
 import 'package:ziska_verify/features/history/domain/entities/check.dart';
 import 'package:ziska_verify/features/incidents/data/repositories/incident_repository_impl.dart';
@@ -62,7 +64,8 @@ import 'package:ziska_verify/features/verification/domain/usecases/verification_
 const _steps =
     'connect, login, verify <code>, session, profile, lookup, history, '
     'stack, scan, report, lengths, signup-probe, signup-code, '
-    'signup <code>, password-probe, serial-probe, backend-probe';
+    'signup <code>, password-probe, serial-probe, backend-probe, '
+    'history-days';
 
 Future<void> main(List<String> args) async {
   String? option(String name) {
@@ -119,6 +122,8 @@ Future<void> main(List<String> args) async {
       await check.serialProbe();
     case 'backend-probe':
       await check.backendProbe();
+    case 'history-days':
+      await check.historyDays();
     default:
       stderr.writeln('Unknown step "${args.first}". Steps: $_steps.');
       exitCode = 64;
@@ -670,6 +675,68 @@ class StagingCheck {
       _fail('the picture ${uri.host}', e);
     }
   }
+
+  /// Today's Bangladesh day in History, through the app's own repository
+  /// (Bangladesh days on the backend's UTC days, guide §5), read only: the
+  /// checks kept, whether each is inside the day, and how many requests the
+  /// whole list took.
+  Future<void> historyDays() async {
+    if (!await _logInTrusted()) return;
+    final now = DisplayTime.inZone(DateTime.now());
+    final today = DateTime(now.year, now.month, now.day);
+    var requests = 0;
+    final counter = InterceptorsWrapper(
+      onRequest: (options, handler) {
+        if (options.path == 'checks') requests++;
+        handler.next(options);
+      },
+    );
+    dio.interceptors.add(counter);
+    final repository = HistoryRepositoryImpl(DioHistoryApiService(api));
+    final query = CheckQuery(from: today, to: today);
+    var kept = 0;
+    var outside = 0;
+    var pages = 0;
+    String? cursor;
+    do {
+      final result = await repository.getChecks(
+        query,
+        PageRequest(cursor: cursor),
+      );
+      pages++;
+      switch (result) {
+        case Success(:final value):
+          kept += value.page.items.length;
+          outside += value.page.items
+              .where((c) => !LocalDays.contains(c.at, from: today, to: today))
+              .length;
+          cursor = value.page.nextCursor;
+        case Err(:final failure):
+          _fail('History for ${_day(today)}', failure.exception);
+          cursor = null;
+      }
+    } while (cursor != null && pages < 20);
+    dio.interceptors.remove(counter);
+    stdout.writeln(
+      'INFO  History for ${_day(today)} (Bangladesh): $kept checks kept, '
+      '$pages pages, $requests requests',
+    );
+    if (outside == 0) {
+      _pass('every kept check is inside the Bangladesh day', '$kept checks');
+    } else {
+      _fail('every kept check is inside the Bangladesh day', '$outside not');
+    }
+    if (cursor == null) {
+      _pass('the list ends', 'no cursor left after $pages pages');
+    } else {
+      _fail('the list ends', 'still a cursor after $pages pages');
+    }
+    await _logOut();
+  }
+
+  static String _day(DateTime d) =>
+      '${d.year}-${d.month.toString().padLeft(2, '0')}-'
+      '${d.day.toString().padLeft(2, '0')}';
 
   /// Step 5: History and the sessions list (read only), through the app's
   /// own query builder, parser and mapper.
