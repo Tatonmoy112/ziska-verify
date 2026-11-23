@@ -213,4 +213,42 @@ void main() {
       await tester.pumpAndSettle();
     });
   });
+
+  // TC-LOOK-130 (audit 4.2): a scan whose answer was lost after sending
+  // may already be recorded; one that never left the phone was not.
+  group('TC-LOOK-130 a scan without an answer', () {
+    testWidgets('lost after sending: the check may be recorded', (
+      tester,
+    ) async {
+      final app = await startApp(
+        tester,
+        overrides: {'POST lookups': timedOut()},
+      );
+      app.scanner.scan(qr);
+      await tester.pumpAndSettle();
+      expect(
+        find.text(
+          'The answer was lost. This check may already be recorded; checking '
+          'again counts as another check.',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('never sent (no connection): check the connection', (
+      tester,
+    ) async {
+      final app = await startApp(
+        tester,
+        overrides: {'POST lookups': offline()},
+      );
+      app.scanner.scan(qr);
+      await tester.pumpAndSettle();
+      expect(
+        find.text('Unable to check. Check the connection and try again.'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('may already be recorded'), findsNothing);
+    });
+  });
 }

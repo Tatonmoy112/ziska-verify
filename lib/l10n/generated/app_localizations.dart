@@ -782,6 +782,12 @@ abstract class AppLocalizations {
   /// **'Unable to check. Check the connection and try again.'**
   String get lookupNetworkError;
 
+  /// No description provided for @lookupAnswerLost.
+  ///
+  /// In en, this message translates to:
+  /// **'The answer was lost. This check may already be recorded; checking again counts as another check.'**
+  String get lookupAnswerLost;
+
   /// No description provided for @verifying.
   ///
   /// In en, this message translates to:

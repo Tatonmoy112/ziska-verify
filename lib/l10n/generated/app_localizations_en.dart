@@ -384,6 +384,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Unable to check. Check the connection and try again.';
 
   @override
+  String get lookupAnswerLost =>
+      'The answer was lost. This check may already be recorded; checking again counts as another check.';
+
+  @override
   String get verifying => 'Checking…';
 
   @override

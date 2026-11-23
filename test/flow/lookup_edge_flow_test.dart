@@ -12,6 +12,9 @@ void main() {
   const formatsFailed = 'Could not load the code formats.';
   const general = 'Something went wrong. Try again.';
   const lookupNetwork = 'Unable to check. Check the connection and try again.';
+  const lookupLost =
+      'The answer was lost. This check may already be recorded; checking '
+      'again counts as another check.';
   final input = find.byKey(const Key('verify.input'));
 
   /// A `POST lookups` answer (app API guide §4.2).
@@ -444,9 +447,12 @@ void main() {
       );
     });
 
-    testWidgets('TC-LOOK-060 a timeout', (tester) async {
+    // Audit 4.2: a timeout after sending is a lost answer, and the check
+    // may already be recorded; checking again counts as another check.
+    testWidgets('TC-LOOK-060 a timeout: the answer was lost', (tester) async {
       await lookUp(tester, timedOut());
-      expect(find.text(lookupNetwork), findsOneWidget);
+      expect(find.text(lookupLost), findsOneWidget);
+      expect(find.text(lookupNetwork), findsNothing);
     });
 
     for (final (name, answer) in [

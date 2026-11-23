@@ -19,9 +19,12 @@ String refusedMessage(
   };
 }
 
-/// Lookup errors (final.md Section 13.1.6).
+/// Lookup errors (final.md Section 13.1.6). A request that never left the
+/// phone recorded nothing; an answer lost after sending may have been
+/// recorded, and checking again counts as another check (audit 4.2).
 String lookupFailureMessage(AppLocalizations l10n, Failure failure) =>
     switch (failure.exception) {
-      NetworkException() => l10n.lookupNetworkError,
+      NetworkException(:final wasNotSent) =>
+        wasNotSent ? l10n.lookupNetworkError : l10n.lookupAnswerLost,
       _ => failure.message(l10n),
     };

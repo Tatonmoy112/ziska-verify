@@ -382,6 +382,10 @@ class AppLocalizationsBn extends AppLocalizations {
       'যাচাই করা যায়নি। সংযোগ দেখে আবার চেষ্টা করুন।';
 
   @override
+  String get lookupAnswerLost =>
+      'উত্তর হারিয়ে গেছে। এই যাচাইটি হয়তো আগেই রেকর্ড হয়েছে; আবার যাচাই করলে তা আরেকটি যাচাই হিসেবে গণনা হবে।';
+
+  @override
   String get verifying => 'যাচাই হচ্ছে…';
 
   @override

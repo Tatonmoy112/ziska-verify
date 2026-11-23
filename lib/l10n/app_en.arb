@@ -217,6 +217,7 @@
   "notProductQr": "This QR code is not a product code of this company.",
   "formatsFailed": "Could not load the code formats.",
   "lookupNetworkError": "Unable to check. Check the connection and try again.",
+  "lookupAnswerLost": "The answer was lost. This check may already be recorded; checking again counts as another check.",
   "verifying": "Checking…",
   "toolsTitle": "MORE",
   "toolReport": "Report incident",
