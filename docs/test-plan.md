@@ -9,7 +9,7 @@
 | Spec | `final.md` (v1.6 and later), Sections 6–18 |
 | Backend contract | `docs/protectb-api/app-api-guide.md`, `app-build-guide.md`, Postman collection |
 | Version | 2.0 — 2026-11-14: 543 cases in `docs/test-cases/` (positive, negative, boundary, edge, worst case, network, security, device, journeys, charters) |
-| Status | `flutter analyze` clean; 1317 automated tests passing; 755 of 883 cases automated (Section 12) |
+| Status | `flutter analyze` clean; 1322 automated tests passing; 757 of 885 cases automated (Section 12) |
 
 ---
 
@@ -134,7 +134,7 @@ The cases live in one file per area in [`docs/test-cases/`](test-cases/README.md
 
 | Area | File | Cases | P1 | P2 | P3 | ✅ Auto | ⏳ To automate | ✋ Manual | ⛔ Blocked |
 |---|---|---|---|---|---|---|---|---|---|
-| AUTH | [01-auth.md](test-cases/01-auth.md) | 106 | 39 | 46 | 21 | 93 | 0 | 13 | 0 |
+| AUTH | [01-auth.md](test-cases/01-auth.md) | 107 | 39 | 47 | 21 | 94 | 0 | 13 | 0 |
 | SESS | [02-session.md](test-cases/02-session.md) | 44 | 20 | 19 | 5 | 39 | 0 | 5 | 0 |
 | ROLE and NAV | [03-roles-nav.md](test-cases/03-roles-nav.md) | 35 | 13 | 16 | 6 | 32 | 0 | 3 | 0 |
 | LOOK | [04-lookup.md](test-cases/04-lookup.md) | 99 | 40 | 43 | 16 | 86 | 0 | 13 | 0 |
@@ -143,7 +143,7 @@ The cases live in one file per area in [`docs/test-cases/`](test-cases/README.md
 | REP | [07-reports.md](test-cases/07-reports.md) | 63 | 17 | 36 | 10 | 51 | 0 | 12 | 0 |
 | RTL | [08-retail-users.md](test-cases/08-retail-users.md) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 | PROF | [09-profile.md](test-cases/09-profile.md) | 45 | 3 | 25 | 17 | 38 | 0 | 7 | 0 |
-| ERR | [10-errors-network.md](test-cases/10-errors-network.md) | 50 | 10 | 26 | 14 | 45 | 0 | 5 | 0 |
+| ERR | [10-errors-network.md](test-cases/10-errors-network.md) | 51 | 10 | 27 | 14 | 46 | 0 | 5 | 0 |
 | SEC | [11-security.md](test-cases/11-security.md) | 28 | 18 | 8 | 2 | 21 | 0 | 7 | 0 |
 | NFR | [12-device-a11y-perf.md](test-cases/12-device-a11y-perf.md) | 27 | 0 | 17 | 10 | 8 | 0 | 19 | 0 |
 | E2E | [13-e2e-journeys.md](test-cases/13-e2e-journeys.md) | 16 | 7 | 9 | 0 | 10 | 0 | 6 | 0 |
@@ -151,7 +151,7 @@ The cases live in one file per area in [`docs/test-cases/`](test-cases/README.md
 | UI | [15-ui.md](test-cases/15-ui.md) | 181 | 29 | 98 | 54 | 167 | 0 | 14 | 0 |
 | MIG | [16-mobile-migration.md](test-cases/16-mobile-migration.md) | 68 | 44 | 23 | 1 | 67 | 0 | 1 | 0 |
 | STG | [17-test-server.md](test-cases/17-test-server.md) | 58 | 44 | 11 | 3 | 47 | 0 | 11 | 0 |
-| **Total** | | **883** | 301 | 410 | 172 | 755 | 0 | 128 | 0 |
+| **Total** | | **885** | 301 | 412 | 172 | 757 | 0 | 128 | 0 |
 
 ---
 
@@ -197,7 +197,7 @@ Every acceptance check has test cases. Two need a real phone or the test server 
 | Photo metadata | REP-010 | 1: 0 ✅, 1 ✋ |
 | Transport | SEC-001, -018, ERR-033 | 3: 2 ✅, 1 ✋ |
 | Time display | HIST-012, -018, LOOK-052 | 3: 2 ✅, 1 ✋ |
-| Sign up | AUTH-022 … -025, -083, -084 | 6: 4 ✅, 2 ✋ |
+| Request access | AUTH-022 … -025, -083, -084 | 6: 4 ✅, 2 ✋ |
 | Retail users | REP-013, MIG-030 | 2: 2 ✅ |
 | Password rule | AUTH-015, -016, -031, -065, -068 … -074 | 11: 11 ✅ |
 
@@ -242,8 +242,8 @@ One line per run:
 | Check | Result |
 |---|---|
 | `flutter analyze` | No issues found |
-| `flutter test` | 1317 passed, 0 failed (133 of them goldens; CI runs the other 1184) |
-| Covered by automated tests (✅) | 755 of 883 (874 test cases and 9 exploratory charters) |
+| `flutter test` | 1322 passed, 0 failed (133 of them goldens; CI runs the other 1189) |
+| Covered by automated tests (✅) | 757 of 885 (876 test cases and 9 exploratory charters) |
 | To be automated (⏳) | 0 |
 | Dependency scan (CI, TC-SEC-024) | OSV-Scanner v2.7.0 on `pubspec.lock`: 195 packages, no known vulnerability (2026-11-14) |
 | Manual only (✋) | 128: 119 cases (12 of them Figma comparisons) and 9 charters, all in `manual-test-checklist.md` (sessions A–D) |

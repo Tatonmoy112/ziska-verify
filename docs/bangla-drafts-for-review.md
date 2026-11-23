@@ -251,15 +251,15 @@ The app had 327 texts. **226** of them were drafted on 2026-11-19 so that the la
 | # | Key | English | Bangla | Drafted | Review |
 |---|---|---|---|---|---|
 | 1 | `appTitle` | Track & Trace | Track & Trace | earlier | |
-| 2 | `requestAccessButton` | Sign up | সাইন আপ | earlier | |
+| 2 | `requestAccessButton` | Request access | অ্যাকাউন্টের আবেদন | 2026-11-23 (guide §3.9: a request, not "Sign up") | |
 | 3 | `changePasswordChoiceSubtitle` | Your password was set by someone else. Choose your own now, or later from Profile. | আপনার পাসওয়ার্ড অন্য কেউ সেট করেছে। এখনই নিজের পাসওয়ার্ড বেছে নিন, অথবা পরে প্রোফাইল থেকে। | 2026-11-17 | **Removed 2026-11-23** (no "Not now", backend D65): no review needed |
 | 4 | `changePasswordLater` | Not now | এখন নয় | 2026-11-17 | **Removed 2026-11-23** (no "Not now", backend D65): no review needed |
 | 5 | `passwordLaterRefused` | Not now is not available for your account. Choose a new password or log out. | আপনার অ্যাকাউন্টে "এখন নয়" নেই। নতুন পাসওয়ার্ড বেছে নিন বা লগ আউট করুন। | 2026-11-17 | **Removed 2026-11-23** (no "Not now", backend D65): no review needed |
 | 6 | `ruleNoControl` | no tabs or line breaks | ট্যাব বা লাইন ব্রেক নয় | 2026-11-17 | |
 | 7 | `resetCodeWrong` | The code is wrong or has expired. Ask for a new code. | কোডটি ভুল বা মেয়াদোত্তীর্ণ। নতুন কোড চান। | 2026-11-17 | |
 | 8 | `resetNewCode` | Send a new code | নতুন কোড পাঠান | 2026-11-17 | |
-| 9 | `requestAccessTitle` | Sign up | সাইন আপ | earlier | |
-| 10 | `requestAccessSubtitle` | Create your account. Your office checks it and emails you its answer. | আপনার অ্যাকাউন্ট তৈরি করুন। অফিস যাচাই করে ইমেইলে উত্তর জানাবে। | 2026-11-19 | |
+| 9 | `requestAccessTitle` | Request access | অ্যাকাউন্টের আবেদন | 2026-11-23 (guide §3.9: a request, not "Sign up") | |
+| 10 | `requestAccessSubtitle` | Ask for an account. Your office checks the request and emails you its answer. | একটি অ্যাকাউন্ট চান। অফিস আবেদনটি যাচাই করে ইমেইলে উত্তর জানাবে। | 2026-11-23 (guide §3.9: a request, not "Sign up") | |
 | 11 | `permissionsSection` | WHAT YOU CAN DO | আপনি যা করতে পারেন | 2026-11-17 | |
 | 12 | `permissionLookup` | Check one item | একটি পণ্য যাচাই | 2026-11-17 | |
 | 13 | `permissionBulkLookup` | Check many items | একাধিক পণ্য যাচাই | 2026-11-17 | |
@@ -281,9 +281,9 @@ The app had 327 texts. **226** of them were drafted on 2026-11-19 so that the la
 | 29 | `reportCheckMyReports` | Check My reports | আমার রিপোর্ট দেখুন | 2026-11-17 | |
 | 30 | `myReportsEmptyBody` | Reports you file appear here. Use New report to file one. | আপনার পাঠানো রিপোর্ট এখানে দেখা যাবে। পাঠাতে নতুন রিপোর্ট ব্যবহার করুন। | 2026-11-17 | |
 | 31 | `backToList` | Back to the list | তালিকায় ফিরুন | 2026-11-17 | |
-| 32 | `accessPending` | Thanks for signing up. Your request was sent. You will get an email when it is answered. | সাইন আপের জন্য ধন্যবাদ। আপনার আবেদন পাঠানো হয়েছে। উত্তর দেওয়া হলে আপনি একটি ইমেইল পাবেন। | 2026-11-19 | |
+| 32 | `accessPending` | Your request was sent. You will get an email when it is answered. | আপনার আবেদন পাঠানো হয়েছে। উত্তর দেওয়া হলে আপনি একটি ইমেইল পাবেন। | 2026-11-23 (guide §3.9: a request, not "Sign up") | |
 | 33 | `accessWrongCode` | The code is wrong or expired. Request a new code if needed. | কোডটি ভুল বা মেয়াদ শেষ। প্রয়োজনে নতুন কোড নিন। | earlier | |
-| 34 | `accessTryLater` | Try again later. Get a new code before you sign up again. | পরে আবার চেষ্টা করুন। আবার সাইন আপের আগে নতুন কোড নিন। | earlier | |
+| 34 | `accessTryLater` | Try again later. Get a new code before you send the request again. | পরে আবার চেষ্টা করুন। আবার আবেদন পাঠানোর আগে নতুন কোড নিন। | 2026-11-23 (guide §3.9: a request, not "Sign up") | |
 | 35 | `accessRoleUnavailable` | This role is no longer available. Choose another role. | এই ভূমিকা এখন আর পাওয়া যাচ্ছে না। অন্য একটি বেছে নিন। | earlier | |
 | 36 | `accessNoRoles` | Ask the office for an account. | অ্যাকাউন্টের জন্য অফিসে যোগাযোগ করুন। | earlier | |
 | 37 | `accessContactOffice` | Contact the office | অফিসে যোগাযোগ করুন। | earlier | |
@@ -298,7 +298,7 @@ The app had 327 texts. **226** of them were drafted on 2026-11-19 so that the la
 | 46 | `accessResend` | Send a new code | নতুন কোড পাঠান | earlier | |
 | 47 | `accessSendCode` | Send code | কোড পাঠান | earlier | |
 | 48 | `accessCodeSent` | A code was sent to the address. | ঠিকানায় একটি কোড পাঠানো হয়েছে। | earlier | |
-| 49 | `accessSubmit` | Sign up | সাইন আপ | earlier | |
+| 49 | `accessSubmit` | Send request | আবেদন পাঠান | 2026-11-23 (guide §3.9: a request, not "Sign up") | |
 | 50 | `scannerModeTitle` | Scanner mode | স্ক্যানার মোড | earlier | |
 | 51 | `serialStackTitle` | Serial stack | সিরিয়ালের তালিকা | earlier | |
 | 52 | `serialStackHint` | Type or paste up to 50 serials, separated by spaces, commas, or new lines. Repeated serials are checked once. | সর্বোচ্চ ৫০টি সিরিয়াল লিখুন বা পেস্ট করুন। স্পেস, কমা বা নতুন লাইন দিয়ে আলাদা করুন। একই সিরিয়াল একবারই যাচাই হবে। | earlier | |

@@ -147,7 +147,7 @@ The manual part is done when, together with [test-plan §11.3](test-plan.md#113-
 
 ## Session A — Phone + Mock Build
 
-### A1. Sign up (log out first)
+### A1. Request access (log out first)
 
 #### TC-AUTH-023 · Email the office · P2
 1. Login → **Contact us to request access** → **Email the office**.
@@ -260,7 +260,7 @@ Expected: the screen turns to Bangla at once, with no restart; the row now reads
 With the app in Bangla (TC-PROF-006):
 1. Visit every screen: Check, a result (serial `1000001`), Scanner mode, Serial stack, Report incident, My reports, History (Checks and Sessions), Profile, Change password.
 2. Look up `1000003` (not found) and read the reference line.
-3. Log out: Login, Forgot password and Sign up.
+3. Log out: Login, Forgot password and Request access.
 
 Expected: every app text in Bangla, Bangla letters drawn properly (no boxes); "রেফারেন্স: …" with the reference itself unchanged; times with Bangla digits. Product names, serials and references stay as sent. Switch back to English at the end.
 
@@ -688,10 +688,10 @@ Expected: Colours, type sizes, spacing, and icons look like the design; every di
 
 - [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
 
-#### TC-UI-150 · Figma by eye: Sign up · P3
+#### TC-UI-150 · Figma by eye: Request access · P3
 *Needs:* Real phone, mock build; `figma/Request for id.png` on the computer.
 
-Open Sign up beside the Figma image.
+Open Request access beside the Figma image.
 
 Expected: Colours, type sizes, spacing, and icons look like the design; every difference written down (Figma is a reference: a difference is a note, not a failure).
 
@@ -883,12 +883,12 @@ Expected: the counter leaves out the spaces; the picker says "No retail user fou
 
 - [x] Pass - [ ] Fail - [ ] Blocked — Notes: 2026-11-22, emulator (staging release build): "Test from the phone: seal cut." with two spaces before and after counted 30/1000; "No retail user found"; check MA-2026-000031 linked; a photo from the emulator's camera; "Report 4 filed.", "Photo 1"; My reports: #4 "1 photo", MA-2026-000031, then #3, #2 and #1 filed by the checker.
 
-#### TC-STG-050 · Sign up on a phone · P1
-1. Log out; **Sign up**.
+#### TC-STG-050 · Request access on a phone · P1
+1. Log out; **Request access**.
 2. Fill the name, a role, a password and a new email address; **Send code**.
-3. Type the emailed code; **Sign up**.
+3. Type the emailed code; **Send request**.
 
-Expected: the server's roles; the password hints met; "A code was sent to the address."; then "Thanks for signing up. Your request was sent. You will get an email when it is answered."
+Expected: the server's roles; the password hints met; "A code was sent to the address."; then "Your request was sent. You will get an email when it is answered."
 
 - [x] Pass - [ ] Fail - [ ] Blocked — Notes: 2026-11-22, emulator (staging release build): "Test Signup mobile app check", Retail seller, a random password, a `+signup` address of the test inbox; the code came by email; the request is pending with the office.
 
@@ -912,7 +912,7 @@ Expected: Check is on; the result of item 1 (serial 1).
 
 #### TC-STG-007 · The staging app reaches the server · P1
 1. Open the staging app: Login shows.
-2. Tap **Sign up**, open the role list.
+2. Tap **Request access**, open the role list.
 
 Expected: the roles come from the server: Distributor, Retail seller.
 

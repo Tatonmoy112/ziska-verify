@@ -18,7 +18,7 @@ Current migration acceptance: [16-mobile-migration.md](16-mobile-migration.md). 
 
 | Area | File | Cases | P1 | P2 | P3 | ✅ Auto | ⏳ To automate | ✋ Manual | ⛔ Blocked |
 |---|---|---|---|---|---|---|---|---|---|
-| AUTH | [01-auth.md](01-auth.md) | 106 | 39 | 46 | 21 | 93 | 0 | 13 | 0 |
+| AUTH | [01-auth.md](01-auth.md) | 107 | 39 | 47 | 21 | 94 | 0 | 13 | 0 |
 | SESS | [02-session.md](02-session.md) | 44 | 20 | 19 | 5 | 39 | 0 | 5 | 0 |
 | ROLE and NAV | [03-roles-nav.md](03-roles-nav.md) | 35 | 13 | 16 | 6 | 32 | 0 | 3 | 0 |
 | LOOK | [04-lookup.md](04-lookup.md) | 99 | 40 | 43 | 16 | 86 | 0 | 13 | 0 |
@@ -27,7 +27,7 @@ Current migration acceptance: [16-mobile-migration.md](16-mobile-migration.md). 
 | REP | [07-reports.md](07-reports.md) | 63 | 17 | 36 | 10 | 51 | 0 | 12 | 0 |
 | RTL | [08-retail-users.md](08-retail-users.md) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 | PROF | [09-profile.md](09-profile.md) | 45 | 3 | 25 | 17 | 38 | 0 | 7 | 0 |
-| ERR | [10-errors-network.md](10-errors-network.md) | 50 | 10 | 26 | 14 | 45 | 0 | 5 | 0 |
+| ERR | [10-errors-network.md](10-errors-network.md) | 51 | 10 | 27 | 14 | 46 | 0 | 5 | 0 |
 | SEC | [11-security.md](11-security.md) | 28 | 18 | 8 | 2 | 21 | 0 | 7 | 0 |
 | NFR | [12-device-a11y-perf.md](12-device-a11y-perf.md) | 27 | 0 | 17 | 10 | 8 | 0 | 19 | 0 |
 | E2E | [13-e2e-journeys.md](13-e2e-journeys.md) | 16 | 7 | 9 | 0 | 10 | 0 | 6 | 0 |
@@ -35,7 +35,7 @@ Current migration acceptance: [16-mobile-migration.md](16-mobile-migration.md). 
 | UI | [15-ui.md](15-ui.md) | 181 | 29 | 98 | 54 | 167 | 0 | 14 | 0 |
 | MIG | [16-mobile-migration.md](16-mobile-migration.md) | 68 | 44 | 23 | 1 | 67 | 0 | 1 | 0 |
 | STG | [17-test-server.md](17-test-server.md) | 58 | 44 | 11 | 3 | 47 | 0 | 11 | 0 |
-| **Total** | | **883** | 301 | 410 | 172 | 755 | 0 | 128 | 0 |
+| **Total** | | **885** | 301 | 412 | 172 | 757 | 0 | 128 | 0 |
 
 ## 3. Case Format
 
@@ -101,7 +101,7 @@ Each spec rule, the cases that cover it today, and what is missing. The step is 
 | Forced change | §6.6, §9.4 | AUTH-013, -014, -055, -060 … -062 | — | 2 ✓ |
 | Voluntary change | §6.6, §13.8 | AUTH-019, -063, -064, -066, -067, PROF-005 | — | 2 ✓ |
 | Forgotten password | §6.6 | AUTH-020, -021, -075 … -082 | — | 2 ✓ |
-| Sign up | §13.9 | AUTH-022 … -025, -083, -084 | — | 2 ✓ |
+| Request access | §13.9 | AUTH-022 … -025, -083, -084 | — | 2 ✓ |
 | Passes and renewal | §6.3, §6.4 | SESS-003, -004, -011 … -022, -031 | — | 2 ✓ |
 | Session end | §6.5 | SESS-005 … -009, -027 … -030 | — | 2 ✓ |
 | Start-up | §6.7, §9.4 | SESS-002, -010, -023 … -026, UI-001 … -005 | — | 2 ✓ |
