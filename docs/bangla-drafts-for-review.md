@@ -2,7 +2,7 @@
 
 **From:** the mobile app team. **Date:** 2026-11-19 (replaces the list of 2026-11-17, which is included). **Status:** drafts, to be read and corrected by a Bangla reader chosen by Ziska (client question B5; final.md Section 20.3).
 
-> **Update 2026-11-23:** 4 texts went with "Not now" (backend D65); their rows are marked **Removed**, and the app now has 323 texts; 7 more were added later the same day ("Added 2026-11-23"), so 330.
+> **Update 2026-11-23:** 4 texts went with "Not now" (backend D65); their rows are marked **Removed**, and the app now has 323 texts; 9 more were added later the same day ("Added 2026-11-23"), so 332.
 
 The app had 327 texts. **226** of them were drafted on 2026-11-19 so that the language switch could ship; the other 101 were written earlier, with the screens they belong to, and are listed at the end. Both lists are part of the review; every text is in `lib/l10n/app_bn.arb`.
 
@@ -352,7 +352,7 @@ The app had 327 texts. **226** of them were drafted on 2026-11-19 so that the la
 | 100 | `appVersionShort` | Version {version} ({build}) | সংস্করণ {version} ({build}) | 2026-11-17 | |
 | 101 | `offlineBanner` | No internet connection. Checks need a connection. | ইন্টারনেট সংযোগ নেই। যাচাই করতে সংযোগ প্রয়োজন। | earlier | |
 
-## Added 2026-11-23 (7)
+## Added 2026-11-23 (9)
 
 Asking before a lost stack is sent again (audit 6.2), a lost check answer (audit 4.2), a resumed session's summary (audit 5.3), and a session that was full or had ended (audit 5.2).
 
@@ -365,6 +365,8 @@ Asking before a lost stack is sent again (audit 6.2), a lost check answer (audit
 | 5 | `sessionSummaryShowing` | Showing {shown} of {count} | {count}টির মধ্যে {shown}টি দেখানো হচ্ছে | 2026-11-23 | |
 | 6 | `sessionRenewed` | A new session started: the last one was full, or closed after 15 minutes without a scan. | নতুন সেশন শুরু হয়েছে: আগেরটি পূর্ণ ছিল, অথবা ১৫ মিনিট কোনো স্ক্যান না হওয়ায় বন্ধ হয়েছে। | 2026-11-23 | |
 | 7 | `sessionRenewedHistory` | A new session started: the last one was full, or closed after 15 minutes without a scan. Its products are in History, then Sessions. | নতুন সেশন শুরু হয়েছে: আগেরটি পূর্ণ ছিল, অথবা ১৫ মিনিট কোনো স্ক্যান না হওয়ায় বন্ধ হয়েছে। এর পণ্যগুলো ইতিহাস, তারপর সেশনে আছে। | 2026-11-23 | |
+| 8 | `historySearchRefusedTitle` | Not a serial or a reference number | এটি সিরিয়াল বা রেফারেন্স নম্বর নয় | 2026-11-23 | |
+| 9 | `historySearchRefusedBody` | Type a whole serial (digits only) or a whole reference number, such as MA-2026-000123. | পুরো সিরিয়াল (শুধু অঙ্ক) বা পুরো রেফারেন্স নম্বর লিখুন, যেমন MA-2026-000123। | 2026-11-23 | |
 
 ## After the review
 
