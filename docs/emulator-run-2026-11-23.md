@@ -56,12 +56,12 @@ The source column points to the backend's guide (`docs/protectb-api/app-api-guid
 
 | ID | Type | Steps | Expected | Source | Result |
 |---|---|---|---|---|---|
-| EMU-19 | N | Open **Serial stack** | The hint "Type or paste up to 50 serials, separated by spaces, commas, or new lines. Repeated serials are checked once." | guide §4.7 | — |
-| EMU-20 | N | Type `1000001 1000002, 1000003` | "3 of 50 serials" | guide §4.7 | — |
-| EMU-21 | E | Type `1000001 1000001 0001000001` | The repeats counted once, leading zeros included (the server drops them): "1 of 50 serials · 2 repeated, sent once" | guide §4.1, §4.7 | — |
-| EMU-22 | E | Type `1000001 12AB 1000003` and tap **Check serials** | "Serial 2 (12AB) is not a serial: digits only, up to N digits."; **nothing sent** | guide §4.7 | — |
-| EMU-23 | W | Paste 51 different serials and tap **Check serials** | "Enter 1 to 50 different serials. Submit another stack for additional items."; **nothing sent** | guide §4.7 | — |
-| EMU-24 | E | Tap **Clear** | The box is empty and the count gone | — | — |
+| EMU-19 | N | Open **Serial stack** | The hint "Type or paste up to 50 serials, separated by spaces, commas, or new lines. Repeated serials are checked once." | guide §4.7 | ✅ The hint exactly; the box empty; no count |
+| EMU-20 | N | Type `1000001 1000002, 1000003` | "3 of 50 serials" | guide §4.7 | ✅ "3 of 50 serials" |
+| EMU-21 | E | Type `1000001 1000001 0001000001` | The repeats counted once, leading zeros included (the server drops them): "1 of 50 serials · 2 repeated, sent once" | guide §4.1, §4.7 | ✅ "1 of 50 serials · 2 repeated, sent once" |
+| EMU-22 | E | Type `1000001 12AB 1000003` and tap **Check serials** | "Serial 2 (12AB) is not a serial: digits only, up to N digits."; **nothing sent** | guide §4.7 | ✅ The box read back first (`1000001 12AB 1000003`); "Serial 2 (12AB) is not a serial: digits only, up to 19 digits."; no request |
+| EMU-23 | W | Paste 51 different serials and tap **Check serials** | "Enter 1 to 50 different serials. Submit another stack for additional items."; **nothing sent** | guide §4.7 | ✅ Typed one serial at a time, then read back: exactly 1000001 … 1000051 (51 different). The count "51 of 50 serials" in red; on **Check serials**: "Enter 1 to 50 different serials. Submit another stack for additional items."; no request |
+| EMU-24 | E | Tap **Clear** | The box is empty and the count gone | — | ⚠️ After an error (EMU-22, -23): the box, the count and the error all go. With no error on screen (after EMU-20, -21, and a clean repeat with three serials): the box empties but **the count stays** ("3 of 50 serials") (finding F-3). Also: **Check serials** with the box empty: "Enter 1 to 50 different serials…"; no request |
 
 ## 5. History and Sessions
 
@@ -132,6 +132,7 @@ The source column points to the backend's guide (`docs/protectb-api/app-api-guid
 |---|---|---|---|
 | F-1 | EMU-13 | After a serial is refused ("A serial has digits only, up to 19 digits."), the error stays under the field when the field is emptied with the delete key; it goes at the next **Check** | Minor (the text is stale, not wrong) |
 | F-2 | EMU-17 | After leaving Scanner mode (Android Back or the app's Back arrow), the Check tab shows **"The camera could not start."** It happens every time (seen twice). Switching to another tab and back brings the camera back. Cause: the Check tab starts its camera as soon as Scanner mode's route pops, while Scanner mode's camera still holds the one native camera, so the start is refused (`AlreadyStarted`); Scanner mode then disposes the native camera about 3 s later and nothing starts it again (mobile_scanner 7.5.0, one native camera per activity) | Major (QR checking on the main tab is gone until the user switches tabs). **Fixed:** Scanner mode now stops its camera before it leaves, by every way out; test TC-LOOK-131; rerun on the emulator passes (EMU-17), EMU-18 rerun still passes |
+| F-3 | EMU-24 | On **Serial stack**, **Clear** empties the box but leaves the count ("3 of 50 serials") when no error is showing. The count is drawn from the box's text, but **Clear** redraws the screen only through the screen's state, and resetting a state with no error changes nothing, so nothing is redrawn (`serial_stack_screen.dart`, the Clear button). After an error it works, as the reset removes the error | Minor (stale count; an empty box is still refused, nothing is sent) |
 
 ## Not covered here (read only, or the test server lacks the data)
 
