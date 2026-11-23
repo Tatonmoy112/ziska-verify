@@ -798,6 +798,7 @@ The backend's docs are the source of truth. These findings are closed:
 | 1.1 | A failed save of the renewed passes reused the spent refresh pass | The new passes are kept in memory first; if the phone cannot store them, the renewal still works from memory and the spent pair is deleted from the phone, so neither a later renewal nor a restart sends it (TC-SESS-045) |
 | 4.2 | A lost check answer read as "no connection" | A timeout after sending says the answer was lost and the check may already be recorded; a request that never left the phone still says to check the connection (TC-LOOK-060, -130) |
 | 7.1 | A filter during a wait mixed two lists | The list remembers the filter its rows and cursor belong to; after the wait, or on the next page, a changed filter loads its own first page (TC-HIST-055) |
+| 5.3 | A resumed session's summary listed only the first page | The summary says "Showing X of Y" and loads the rest with **Load more**; reading an ended session's checks is allowed after Finish (TC-MIG-071) |
 | 2.4 | "Not now" answered 404 | No longer applies: "Not now" is removed (D65; TC-AUTH-095) |
 | Step 3 texts | "Sign up" read as an account made at once | "Request access", "Send request", and the guide's answer text (§3.9; TC-AUTH-118) |
 | — | A 409 `conflict` showed the general text | The server's message (guide §1; TC-ERR-051) |
