@@ -269,7 +269,14 @@ class ReportIncidentBloc
         ],
       ),
     );
-    if (state.isFiled) add(const _UploadRequested());
+    if (state.isFiled) _upload();
+  }
+
+  /// Sends the waiting photos, unless the screen is already closed: after
+  /// an awaited answer the bloc may be gone (audit 8.1), and adding to a
+  /// closed bloc throws.
+  void _upload() {
+    if (!isClosed) add(const _UploadRequested());
   }
 
   void _onRemove(PhotoRemoved event, Emitter<ReportIncidentState> emit) {
@@ -316,7 +323,7 @@ class ReportIncidentBloc
             filedAt: _now(),
           ),
         );
-        add(const _UploadRequested());
+        _upload();
       // Sent and lost: it may be filed. Never sent: filing again is safe.
       // Answered 2xx but unreadable: the server took it, so it may be
       // filed too (a 5xx stays failed: the guide allows filing again).
@@ -391,7 +398,7 @@ class ReportIncidentBloc
         ],
       ),
     );
-    add(const _UploadRequested());
+    _upload();
   }
 
   Future<void> _onUpload(

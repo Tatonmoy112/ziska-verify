@@ -550,4 +550,82 @@ void main() {
       expect(find.textContaining('1044'), findsWidgets);
     });
   });
+
+  // TC-REP-064, TC-REP-065 (audit 8.1; guide §6.2: "keep it and send it
+  // again"): Back asks what Done asks, and the screen cannot be left while
+  // the report is filing, so a filed report always goes on to its photos.
+  group('Back on Report incident', () {
+    Future<void> scrollToSubmit(FlowApp app) async {
+      final list = reportList(app.tester);
+      final button = find.byKey(const Key('report.submit'));
+      for (var i = 0; i < 10 && button.evaluate().isEmpty; i++) {
+        final position = app.tester.state<ScrollableState>(list).position;
+        position.jumpTo(position.maxScrollExtent);
+        await app.tester.pumpAndSettle();
+      }
+    }
+
+    testWidgets('TC-REP-064 Back while filing does nothing; the report is '
+        'filed and its photo sent', (tester) async {
+      final app = await openReport(
+        tester,
+        overrides: {
+          'POST incidents': slow(
+            (_) async => FakeBackend.example(201, 'File a report', '201 Filed'),
+          ),
+          'POST $photosPath': always(photoN(1)),
+        },
+      );
+      await addPhoto(app);
+      await app.enter(const Key('report.note'), 'Torn seal');
+      await scrollToSubmit(app);
+      await tester.tap(find.byKey(const Key('report.submit')));
+      await tester.pump(const Duration(milliseconds: 100));
+
+      await tester.binding.handlePopRoute();
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(find.byKey(const Key('report.note')), findsOneWidget);
+
+      await tester.pumpAndSettle();
+      expect(app.backend.sent('POST', 'incidents'), hasLength(1));
+      expect(app.backend.sent('POST', photosPath), hasLength(1));
+      expect(tester.takeException(), isNull);
+      expect(find.byKey(const Key('report.done')), findsOneWidget);
+    });
+
+    testWidgets('TC-REP-065 Back asks while a photo is not sent, as Done '
+        'does', (tester) async {
+      final app = await openReport(
+        tester,
+        overrides: {
+          'POST $photosPath': always(apiError(500, 'internal_error')),
+        },
+      );
+      await addPhoto(app);
+      await file(app, 'Torn seal');
+      expect(find.text('Not sent. Tap to send again.'), findsOneWidget);
+
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.text('Photos not sent'), findsOneWidget);
+      await app.tapText('Stay');
+      expect(find.byKey(const Key('report.done')), findsOneWidget);
+
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      await app.tap(find.byKey(const Key('report.leave')));
+      expect(find.byKey(const Key('report.done')), findsNothing);
+    });
+
+    testWidgets('TC-REP-065 Back with nothing waiting leaves at once', (
+      tester,
+    ) async {
+      final app = await openReport(tester);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('report.note')), findsNothing);
+      expect(find.text('Photos not sent'), findsNothing);
+      expect(app.backend.sent('POST', 'incidents'), isEmpty);
+    });
+  });
 }

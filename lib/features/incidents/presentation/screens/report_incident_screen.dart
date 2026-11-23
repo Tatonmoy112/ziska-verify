@@ -86,16 +86,19 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
     }
   }
 
-  /// Done: while a photo is sending or can be sent again, leaving loses
-  /// it, so ask first (guide 6.2: keep a failed photo and send it again).
+  /// A photo still to be sent: waiting, sending, or failed and sendable
+  /// again (guide 6.2: keep a failed photo and send it again).
+  static bool _photosPending(ReportIncidentState state) => state.photos.any(
+    (p) =>
+        p.status == PhotoStatus.waiting ||
+        p.status == PhotoStatus.sending ||
+        (p.status == PhotoStatus.failed && p.canRetry),
+  );
+
+  /// Done, and Back: while a photo is sending or can be sent again, leaving
+  /// loses it, so ask first.
   Future<void> _done(ReportIncidentState state) async {
-    final pending = state.photos.any(
-      (p) =>
-          p.status == PhotoStatus.waiting ||
-          p.status == PhotoStatus.sending ||
-          (p.status == PhotoStatus.failed && p.canRetry),
-    );
-    if (pending) {
+    if (_photosPending(state)) {
       final l10n = AppLocalizations.of(context);
       final leave = await showDialog<bool>(
         context: context,
@@ -196,152 +199,167 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
       builder: (context, state) {
         final bloc = context.read<ReportIncidentBloc>();
         final editable = state.canEdit;
-        return Scaffold(
-          backgroundColor: AppColors.surfaceMuted,
-          appBar: NavyAppBar(title: l10n.reportTitle),
-          body: ListView(
-            padding: const EdgeInsets.all(AppSpacing.screen),
-            children: [
-              if (state.isFiled)
-                _FiledBanner(id: state.reportId!)
-              else
-                _Info(text: l10n.reportWhenNotNeeded),
-              const SizedBox(height: AppSpacing.lg),
-              AppTextField(
-                fieldKey: const Key('report.note'),
-                label: l10n.reportNoteLabel,
-                hint: l10n.reportNoteHint,
-                controller: _note,
-                enabled: editable,
-                minLines: 4,
-                maxLines: 8,
-                // The server counts characters as code points (guide
-                // sections 3.6, 6.1), so an emoji of two counts as two,
-                // after removing the spaces around the note.
-                inputFormatters: const [
-                  CodePointLimit(
-                    ReportRules.noteMaxLength,
-                    outerSpaceFree: true,
-                  ),
-                ],
-                counter: '$_noteLength/${ReportRules.noteMaxLength}',
-                textCapitalization: TextCapitalization.sentences,
-                onChanged: (_) => setState(() {}),
-              ),
-              if (state.checkRef != null)
-                _LinkRow(
-                  icon: LucideIcons.fileCheck,
-                  label: l10n.reportCheckLabel,
-                  value: state.checkRef!,
-                  onClear: editable
-                      ? () => bloc.add(const CheckRefCleared())
-                      : null,
-                )
-              else if (editable && widget.pickCheck != null)
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextButton.icon(
-                    key: const Key('report.check'),
-                    onPressed: () => unawaited(_chooseCheck()),
-                    icon: const Icon(LucideIcons.fileCheck, size: 18),
-                    label: Text(l10n.reportChooseCheck),
-                  ),
-                ),
-              if (state.retailUser != null)
-                _LinkRow(
-                  icon: LucideIcons.store,
-                  label: l10n.reportRetailUserLabel,
-                  value: state.retailUser!.name,
-                  onClear: editable
-                      ? () => bloc.add(const RetailUserChosen(null))
-                      : null,
-                )
-              else if (editable)
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextButton.icon(
-                    key: const Key('report.retailUser'),
-                    onPressed: () => unawaited(_chooseRetailUser()),
-                    icon: const Icon(LucideIcons.store, size: 18),
-                    label: Text(l10n.reportChooseRetailUser),
-                  ),
-                ),
-              const SizedBox(height: AppSpacing.md),
-              Text(
-                l10n.reportPhotosLabel.toUpperCase(),
-                style: AppTypography.fieldLabel,
-              ),
-              Text(l10n.reportPhotosHint, style: AppTypography.caption),
-              const SizedBox(height: AppSpacing.sm),
-              Wrap(
-                spacing: AppSpacing.sm,
-                runSpacing: AppSpacing.sm,
-                children: [
-                  for (final photo in state.photos)
-                    _PhotoTile(
-                      photo: photo,
-                      onRetry: () => bloc.add(PhotoRetried(photo.localId)),
-                      onRemove: () => bloc.add(PhotoRemoved(photo.localId)),
+        final filing = state.filing == FilingStatus.filing;
+        // Back (the app bar's and the phone's) asks what Done asks; while
+        // the report is filing it waits, so a filed report always goes on
+        // to its photos (audit 8.1).
+        return PopScope(
+          canPop: !filing && !_photosPending(state),
+          onPopInvokedWithResult: (didPop, _) {
+            if (didPop || filing) return;
+            unawaited(_done(state));
+          },
+          child: Scaffold(
+            backgroundColor: AppColors.surfaceMuted,
+            appBar: NavyAppBar(title: l10n.reportTitle),
+            body: ListView(
+              padding: const EdgeInsets.all(AppSpacing.screen),
+              children: [
+                if (state.isFiled)
+                  _FiledBanner(id: state.reportId!)
+                else
+                  _Info(text: l10n.reportWhenNotNeeded),
+                const SizedBox(height: AppSpacing.lg),
+                AppTextField(
+                  fieldKey: const Key('report.note'),
+                  label: l10n.reportNoteLabel,
+                  hint: l10n.reportNoteHint,
+                  controller: _note,
+                  enabled: editable,
+                  minLines: 4,
+                  maxLines: 8,
+                  // The server counts characters as code points (guide
+                  // sections 3.6, 6.1), so an emoji of two counts as two,
+                  // after removing the spaces around the note.
+                  inputFormatters: const [
+                    CodePointLimit(
+                      ReportRules.noteMaxLength,
+                      outerSpaceFree: true,
                     ),
-                  if (bloc.canAddPhoto && state.filing != FilingStatus.filing)
-                    _AddPhotoTile(
-                      label: l10n.reportAddPhoto,
-                      onTap: () => unawaited(_addPhoto()),
-                    ),
-                ],
-              ),
-              // The last refused or failed photo, with its reference (guide
-              // section 1); a 429 counts down on its own tile.
-              if (_lastPhotoFailure(state) case final failed?) ...[
-                const SizedBox(height: AppSpacing.sm),
-                FailureBanner(
-                  key: const Key('report.photoFailure'),
-                  failure: failed.failure!,
-                  message: _photoMessage(l10n, failed),
+                  ],
+                  counter: '$_noteLength/${ReportRules.noteMaxLength}',
+                  textCapitalization: TextCapitalization.sentences,
+                  onChanged: (_) => setState(() {}),
                 ),
-              ],
-              // The hour is over: a photo still waiting or failed is not sent.
-              if (bloc.photoHourOver &&
-                  state.photos.any(
-                    (p) => p.canRetry || p.status == PhotoStatus.waiting,
-                  )) ...[
-                const SizedBox(height: AppSpacing.sm),
-                Text(l10n.reportPhotoWindowOver, style: AppTypography.caption),
-              ],
-              if (state.filing == FilingStatus.failed ||
-                  state.filing == FilingStatus.unconfirmed) ...[
+                if (state.checkRef != null)
+                  _LinkRow(
+                    icon: LucideIcons.fileCheck,
+                    label: l10n.reportCheckLabel,
+                    value: state.checkRef!,
+                    onClear: editable
+                        ? () => bloc.add(const CheckRefCleared())
+                        : null,
+                  )
+                else if (editable && widget.pickCheck != null)
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      key: const Key('report.check'),
+                      onPressed: () => unawaited(_chooseCheck()),
+                      icon: const Icon(LucideIcons.fileCheck, size: 18),
+                      label: Text(l10n.reportChooseCheck),
+                    ),
+                  ),
+                if (state.retailUser != null)
+                  _LinkRow(
+                    icon: LucideIcons.store,
+                    label: l10n.reportRetailUserLabel,
+                    value: state.retailUser!.name,
+                    onClear: editable
+                        ? () => bloc.add(const RetailUserChosen(null))
+                        : null,
+                  )
+                else if (editable)
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      key: const Key('report.retailUser'),
+                      onPressed: () => unawaited(_chooseRetailUser()),
+                      icon: const Icon(LucideIcons.store, size: 18),
+                      label: Text(l10n.reportChooseRetailUser),
+                    ),
+                  ),
                 const SizedBox(height: AppSpacing.md),
-                FailureBanner(
-                  failure: state.failure!,
-                  retryAt: state.retryAt,
-                  message: _filingError(l10n, state),
+                Text(
+                  l10n.reportPhotosLabel.toUpperCase(),
+                  style: AppTypography.fieldLabel,
                 ),
+                Text(l10n.reportPhotosHint, style: AppTypography.caption),
+                const SizedBox(height: AppSpacing.sm),
+                Wrap(
+                  spacing: AppSpacing.sm,
+                  runSpacing: AppSpacing.sm,
+                  children: [
+                    for (final photo in state.photos)
+                      _PhotoTile(
+                        photo: photo,
+                        onRetry: () => bloc.add(PhotoRetried(photo.localId)),
+                        onRemove: () => bloc.add(PhotoRemoved(photo.localId)),
+                      ),
+                    if (bloc.canAddPhoto && state.filing != FilingStatus.filing)
+                      _AddPhotoTile(
+                        label: l10n.reportAddPhoto,
+                        onTap: () => unawaited(_addPhoto()),
+                      ),
+                  ],
+                ),
+                // The last refused or failed photo, with its reference (guide
+                // section 1); a 429 counts down on its own tile.
+                if (_lastPhotoFailure(state) case final failed?) ...[
+                  const SizedBox(height: AppSpacing.sm),
+                  FailureBanner(
+                    key: const Key('report.photoFailure'),
+                    failure: failed.failure!,
+                    message: _photoMessage(l10n, failed),
+                  ),
+                ],
+                // The hour is over: a photo still waiting or failed is not
+                // sent.
+                if (bloc.photoHourOver &&
+                    state.photos.any(
+                      (p) => p.canRetry || p.status == PhotoStatus.waiting,
+                    )) ...[
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    l10n.reportPhotoWindowOver,
+                    style: AppTypography.caption,
+                  ),
+                ],
+                if (state.filing == FilingStatus.failed ||
+                    state.filing == FilingStatus.unconfirmed) ...[
+                  const SizedBox(height: AppSpacing.md),
+                  FailureBanner(
+                    failure: state.failure!,
+                    retryAt: state.retryAt,
+                    message: _filingError(l10n, state),
+                  ),
+                ],
+                const SizedBox(height: AppSpacing.xl),
+                if (state.isFiled)
+                  AppButton(
+                    key: const Key('report.done'),
+                    label: l10n.reportDone,
+                    onPressed: () => unawaited(_done(state)),
+                  )
+                else if (state.filing == FilingStatus.unconfirmed)
+                  // The report may be filed: look, never file again here.
+                  AppButton(
+                    key: const Key('report.checkMyReports'),
+                    label: l10n.reportCheckMyReports,
+                    onPressed: () =>
+                        context.pushReplacementNamed(RouteNames.myReports),
+                  )
+                else
+                  AppButton(
+                    key: const Key('report.submit'),
+                    label: l10n.reportFile,
+                    loading: state.filing == FilingStatus.filing,
+                    onPressed: _note.text.trim().isEmpty
+                        ? null
+                        : () => bloc.add(ReportSubmitted(_note.text)),
+                  ),
               ],
-              const SizedBox(height: AppSpacing.xl),
-              if (state.isFiled)
-                AppButton(
-                  key: const Key('report.done'),
-                  label: l10n.reportDone,
-                  onPressed: () => unawaited(_done(state)),
-                )
-              else if (state.filing == FilingStatus.unconfirmed)
-                // The report may be filed: look, never file again here.
-                AppButton(
-                  key: const Key('report.checkMyReports'),
-                  label: l10n.reportCheckMyReports,
-                  onPressed: () =>
-                      context.pushReplacementNamed(RouteNames.myReports),
-                )
-              else
-                AppButton(
-                  key: const Key('report.submit'),
-                  label: l10n.reportFile,
-                  loading: state.filing == FilingStatus.filing,
-                  onPressed: _note.text.trim().isEmpty
-                      ? null
-                      : () => bloc.add(ReportSubmitted(_note.text)),
-                ),
-            ],
+            ),
           ),
         );
       },
