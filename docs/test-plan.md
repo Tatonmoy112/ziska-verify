@@ -9,7 +9,7 @@
 | Spec | `final.md` (v1.6 and later), Sections 6–18 |
 | Backend contract | `docs/protectb-api/app-api-guide.md`, `app-build-guide.md`, Postman collection |
 | Version | 2.0 — 2026-11-14: 543 cases in `docs/test-cases/` (positive, negative, boundary, edge, worst case, network, security, device, journeys, charters) |
-| Status | `flutter analyze` clean; 1335 automated tests passing; 766 of 894 cases automated (Section 12) |
+| Status | `flutter analyze` clean; 1336 automated tests passing; 767 of 895 cases automated (Section 12) |
 
 ---
 
@@ -149,9 +149,9 @@ The cases live in one file per area in [`docs/test-cases/`](test-cases/README.md
 | E2E | [13-e2e-journeys.md](test-cases/13-e2e-journeys.md) | 16 | 7 | 9 | 0 | 10 | 0 | 6 | 0 |
 | Exploratory | [14-exploratory-charters.md](test-cases/14-exploratory-charters.md) | 9 | 0 | 6 | 3 | 0 | 0 | 9 | 0 |
 | UI | [15-ui.md](test-cases/15-ui.md) | 181 | 29 | 98 | 54 | 167 | 0 | 14 | 0 |
-| MIG | [16-mobile-migration.md](test-cases/16-mobile-migration.md) | 71 | 46 | 24 | 1 | 70 | 0 | 1 | 0 |
+| MIG | [16-mobile-migration.md](test-cases/16-mobile-migration.md) | 72 | 46 | 25 | 1 | 71 | 0 | 1 | 0 |
 | STG | [17-test-server.md](test-cases/17-test-server.md) | 58 | 44 | 11 | 3 | 47 | 0 | 11 | 0 |
-| **Total** | | **894** | 307 | 415 | 172 | 766 | 0 | 128 | 0 |
+| **Total** | | **895** | 307 | 416 | 172 | 767 | 0 | 128 | 0 |
 
 ---
 
@@ -242,8 +242,8 @@ One line per run:
 | Check | Result |
 |---|---|
 | `flutter analyze` | No issues found |
-| `flutter test` | 1335 passed, 0 failed (133 of them goldens; CI runs the other 1202) |
-| Covered by automated tests (✅) | 766 of 894 (885 test cases and 9 exploratory charters) |
+| `flutter test` | 1336 passed, 0 failed (133 of them goldens; CI runs the other 1203) |
+| Covered by automated tests (✅) | 767 of 895 (886 test cases and 9 exploratory charters) |
 | To be automated (⏳) | 0 |
 | Dependency scan (CI, TC-SEC-024) | OSV-Scanner v2.7.0 on `pubspec.lock`: 195 packages, no known vulnerability (2026-11-14) |
 | Manual only (✋) | 128: 119 cases (12 of them Figma comparisons) and 9 charters, all in `manual-test-checklist.md` (sessions A–D) |

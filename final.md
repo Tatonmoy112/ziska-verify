@@ -178,7 +178,7 @@ Entering scanner mode creates a UUID v4 unless recovering one. There is no start
 
 Show each answer on the camera screen immediately, with authoritative `session` totals and `repeat`. Deduplicate visible rows by reference. Repeated frames are suppressed; a backend repeat shows Already scanned and adds no row. Keep the list newest first and render it lazily.
 
-- session_full/session_ended: create/persist a new UUID, clear the old in-memory session, retry the current scan once.
+- session_full/session_ended: create/persist a new UUID, clear the old in-memory session, retry the current scan once. Until the next scan the screen says "A new session started: the last one was full, or closed after 15 minutes without a scan.", adding "Its products are in History, then Sessions." for a role with `history:own` (TC-MIG-072; user decision 2026-11-23: the list is cleared, not kept).
 - session_not_yours: discard the ID, create a new session, require another scan.
 - 429 with usable Retry-After: pause further submissions, wait, retry the current scan while foregrounded.
 - Network failure or 503 service_unavailable: show Scan again; do not queue it.
