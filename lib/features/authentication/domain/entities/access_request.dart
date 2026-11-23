@@ -13,8 +13,8 @@ class AccessRequest {
     required this.password,
   });
 
-  /// A name is 1 to 100 characters (guide section 3.9), counted in UTF-16
-  /// units as the test server counts them (2026-11-22, backend question B5).
+  /// A name is 1 to 100 characters (guide section 3.9), counted as code
+  /// points: an emoji as one (backend DEC-429).
   static const nameMaxLength = 100;
 
   final String email;

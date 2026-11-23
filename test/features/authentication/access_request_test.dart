@@ -259,11 +259,9 @@ void main() {
       expect(sent.name, 'a' * 100);
       expect(sent.password, ' abcd1234 ');
     });
-    // TC-MIG-065 (test-server integration, step 9): the server counts the
-    // name's 1 to 100 characters in UTF-16 units: 99 letters and an emoji
-    // (100 code points, 101 units) answer 400 (backend question B5). The
-    // password counts code points, as the app does.
-    test('TC-MIG-065 the name is at most 100 UTF-16 units', () async {
+    // TC-MIG-065: a name is 1 to 100 characters, and every length counts
+    // code points: an emoji counts as one (backend DEC-429; guide §1, §3.9).
+    test('TC-MIG-065 the name is at most 100 code points', () async {
       final submit = SubmitAccessRequest(repo);
       Future<Result<void>> named(String name) => submit(
         AccessRequest(
@@ -274,14 +272,13 @@ void main() {
           password: 'abcd1234',
         ),
       );
-      expect(await named('${'a' * 99}🙂'), isA<Err<void>>());
-      expect(await named('🙂' * 51), isA<Err<void>>());
-      expect(await named('${'a' * 98}🙂'), isA<Success<void>>());
-      expect(await named('🙂' * 50), isA<Success<void>>());
+      expect(await named('${'a' * 99}🙂'), isA<Success<void>>());
+      expect(await named('🙂' * 100), isA<Success<void>>());
       expect(await named('ক' * 100), isA<Success<void>>());
       expect(await named(' ${'a' * 100} '), isA<Success<void>>());
-      // A password of 128 code points that is 129 units passes, as on
-      // the server.
+      expect(await named('${'a' * 100}🙂'), isA<Err<void>>());
+      expect(await named('🙂' * 101), isA<Err<void>>());
+      // A password of 128 code points passes too, as on the server.
       expect(
         await submit(
           AccessRequest(

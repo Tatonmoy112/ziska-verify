@@ -9,9 +9,8 @@ class SearchRetailUsers {
   const SearchRetailUsers(this._repository);
   final RetailUserRepository _repository;
 
-  /// The API takes at most 100 characters (guide section 7.1). The test
-  /// server counts them in UTF-16 units, an emoji as two (2026-11-22,
-  /// backend question B5).
+  /// The API takes at most 100 characters (guide section 7.1), counted as
+  /// code points: an emoji as one (backend DEC-429).
   static const maxSearchLength = 100;
 
   Future<Result<CursorPage<RetailUser>>> call(
@@ -22,7 +21,7 @@ class SearchRetailUsers {
     return _repository.search(
       text == null || text.isEmpty
           ? null
-          : TextLimits.fitUtf16(text, maxSearchLength),
+          : TextLimits.fitCodePoints(text, maxSearchLength),
       page,
     );
   }

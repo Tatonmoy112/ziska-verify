@@ -65,23 +65,18 @@ void main() {
     expect(await sent('a' * 150), 'a' * 100);
   });
 
-  // TC-REP-063 (test-server integration, step 8): the server counts a
-  // search in UTF-16 units: 98 letters and an emoji (100 units) pass; 99
-  // letters and an emoji (100 code points, 101 units) answer 400 (backend
-  // question B5). The app keeps a search within 100 units, cut at a whole
-  // character, so it passes whichever way the server counts.
-  test('TC-REP-063 a search is cut at a whole character, within 100 '
-      'UTF-16 units', () async {
-    expect(await sent('${'a' * 98}🙂'), '${'a' * 98}🙂');
-    expect(await sent('${'a' * 99}🙂'), 'a' * 99);
+  // TC-REP-063: a search is up to 100 characters (guide §7.1), and every
+  // length counts code points: an emoji counts as one (backend DEC-429).
+  // A longer search is cut after 100, at a whole character.
+  test('TC-REP-063 a search is cut at 100 code points, at a whole '
+      'character', () async {
+    expect(await sent('${'a' * 99}🙂'), '${'a' * 99}🙂');
     expect(await sent('${'a' * 100}🙂'), 'a' * 100);
 
     final emoji = await sent('🙂' * 101);
-    expect(emoji, '🙂' * 50);
-    expect(emoji!.length, 100);
-    expect(whole(emoji), isTrue);
+    expect(emoji, '🙂' * 100);
+    expect(whole(emoji!), isTrue);
 
-    // Letters outside ASCII are one unit each: 100 of them go whole.
     expect(await sent('é' * 120), 'é' * 100);
     expect(await sent('ক' * 100), 'ক' * 100);
   });

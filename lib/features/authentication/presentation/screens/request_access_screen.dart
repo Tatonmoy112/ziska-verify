@@ -197,9 +197,9 @@ class _RequestAccessScreenState extends State<RequestAccessScreen> {
                           fieldKey: const Key('access.name'),
                           controller: _name,
                           enabled: !state.busy,
-                          // UTF-16 units, as the server counts a name (B5).
+                          // Code points, an emoji as one (DEC-429).
                           inputFormatters: const [
-                            Utf16Limit(AccessRequest.nameMaxLength),
+                            CodePointLimit(AccessRequest.nameMaxLength),
                           ],
                           onChanged: (_) => setState(() {}),
                         ),

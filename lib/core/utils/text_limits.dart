@@ -1,22 +1,11 @@
-/// Text limits counted the way the backend counts them.
-///
-/// The test server counts a search (guide section 7.1) and an access
-/// request's name (section 3.9) in UTF-16 units, an emoji as two; a note
-/// and a password in code points (2026-11-22, backend question B5).
+/// Text limits counted the way the backend counts them: every length is in
+/// Unicode code points, an emoji as one (backend DEC-429; guide §1).
 abstract final class TextLimits {
-  /// [text]'s whole characters, as many as fit in [units] UTF-16 units:
-  /// never half of an emoji. Within the limit whichever way the server
-  /// counts, as code points are never more than units.
-  static String fitUtf16(String text, int units) {
-    if (text.length <= units) return text;
-    final out = StringBuffer();
-    var used = 0;
-    for (final rune in text.runes) {
-      final size = rune > 0xFFFF ? 2 : 1;
-      if (used + size > units) break;
-      out.writeCharCode(rune);
-      used += size;
-    }
-    return out.toString();
+  /// [text]'s first [max] characters counted as code points: cut at a whole
+  /// character, never half of an emoji.
+  static String fitCodePoints(String text, int max) {
+    final runes = text.runes;
+    if (runes.length <= max) return text;
+    return String.fromCharCodes(runes.take(max));
   }
 }

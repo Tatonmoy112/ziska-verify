@@ -25,8 +25,8 @@ class SubmitAccessRequest {
   Future<Result<void>> call(AccessRequest request) async {
     if (!looksLikeEmail(request.email) ||
         request.name.trim().isEmpty ||
-        // UTF-16 units, as the server counts a name (B5).
-        request.name.trim().length > AccessRequest.nameMaxLength ||
+        // Code points, an emoji as one (DEC-429).
+        request.name.trim().runes.length > AccessRequest.nameMaxLength ||
         request.roleId < 1 ||
         !RegExp(r'^[0-9]{6}$').hasMatch(request.code) ||
         !const PasswordPolicy().check(request.password).isValid) {
