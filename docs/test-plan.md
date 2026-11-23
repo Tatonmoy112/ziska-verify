@@ -140,7 +140,7 @@ The cases live in one file per area in [`docs/test-cases/`](test-cases/README.md
 | LOOK | [04-lookup.md](test-cases/04-lookup.md) | 102 | 42 | 43 | 17 | 89 | 0 | 13 | 0 |
 | BULK | [05-bulk.md](test-cases/05-bulk.md) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 | HIST | [06-history.md](test-cases/06-history.md) | 57 | 17 | 30 | 10 | 54 | 0 | 3 | 0 |
-| REP | [07-reports.md](test-cases/07-reports.md) | 67 | 19 | 37 | 11 | 55 | 0 | 12 | 0 |
+| REP | [07-reports.md](test-cases/07-reports.md) | 68 | 19 | 37 | 12 | 56 | 0 | 12 | 0 |
 | RTL | [08-retail-users.md](test-cases/08-retail-users.md) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 | PROF | [09-profile.md](test-cases/09-profile.md) | 45 | 3 | 25 | 17 | 38 | 0 | 7 | 0 |
 | ERR | [10-errors-network.md](test-cases/10-errors-network.md) | 51 | 10 | 27 | 14 | 46 | 0 | 5 | 0 |
@@ -151,7 +151,7 @@ The cases live in one file per area in [`docs/test-cases/`](test-cases/README.md
 | UI | [15-ui.md](test-cases/15-ui.md) | 181 | 29 | 98 | 54 | 167 | 0 | 14 | 0 |
 | MIG | [16-mobile-migration.md](test-cases/16-mobile-migration.md) | 73 | 46 | 25 | 2 | 72 | 0 | 1 | 0 |
 | STG | [17-test-server.md](test-cases/17-test-server.md) | 58 | 44 | 11 | 3 | 47 | 0 | 11 | 0 |
-| **Total** | | **901** | 308 | 418 | 175 | 773 | 0 | 128 | 0 |
+| **Total** | | **902** | 308 | 418 | 176 | 774 | 0 | 128 | 0 |
 
 ---
 

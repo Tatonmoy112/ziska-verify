@@ -169,32 +169,37 @@ Future<void> _showReport(BuildContext context, Report report) {
         AppSpacing.screen,
         AppSpacing.screen,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('#${report.id}', style: AppTypography.headline),
-          Text(
-            DisplayTime.dateTime(report.at, locale),
-            style: AppTypography.caption,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          SelectableText(report.note, style: AppTypography.body),
-          const SizedBox(height: AppSpacing.md),
-          Wrap(
-            spacing: AppSpacing.md,
-            runSpacing: AppSpacing.xs,
-            children: [
-              _Meta(
-                icon: LucideIcons.image,
-                text: l10n.myReportsPhotos(report.photos),
-              ),
-              if (report.checkRef != null)
-                _Meta(icon: LucideIcons.fileCheck, text: report.checkRef!),
-              if (report.retailUserName != null)
-                _Meta(icon: LucideIcons.store, text: report.retailUserName!),
-            ],
-          ),
-        ],
+      // Across the screen whatever the note's length: a column alone takes
+      // its widest line's width, so a short note made a narrow sheet (F-6).
+      child: SizedBox(
+        width: double.infinity,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('#${report.id}', style: AppTypography.headline),
+            Text(
+              DisplayTime.dateTime(report.at, locale),
+              style: AppTypography.caption,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            SelectableText(report.note, style: AppTypography.body),
+            const SizedBox(height: AppSpacing.md),
+            Wrap(
+              spacing: AppSpacing.md,
+              runSpacing: AppSpacing.xs,
+              children: [
+                _Meta(
+                  icon: LucideIcons.image,
+                  text: l10n.myReportsPhotos(report.photos),
+                ),
+                if (report.checkRef != null)
+                  _Meta(icon: LucideIcons.fileCheck, text: report.checkRef!),
+                if (report.retailUserName != null)
+                  _Meta(icon: LucideIcons.store, text: report.retailUserName!),
+              ],
+            ),
+          ],
+        ),
       ),
     ),
   );

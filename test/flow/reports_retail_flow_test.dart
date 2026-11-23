@@ -79,6 +79,37 @@ void main() {
       );
     });
 
+    // TC-REP-068 (emulator run, finding F-6): a report with a short note
+    // opens in a sheet as wide as the screen, not only as wide as its text.
+    testWidgets('TC-REP-068 a short report opens across the screen', (
+      tester,
+    ) async {
+      final app = await startApp(
+        tester,
+        overrides: {
+          'GET incidents': (_) => ok({
+            'reports': [
+              {
+                'id': 4,
+                'at': '2026-11-22T08:12:00Z',
+                'note': 'Seal cut.',
+                'photos': 1,
+                'check_ref': null,
+                'retail_user': null,
+              },
+            ],
+            'next_cursor': null,
+          }),
+        },
+      );
+      await openTile(app, const Key('verify.tool.myReports'));
+      await app.tap(find.byKey(const ValueKey('reports.row.4')));
+      final sheet = find.byKey(const Key('reports.detail'));
+      expect(sheet, findsOneWidget);
+      final screen = tester.getSize(find.byType(Scaffold).first).width;
+      expect(tester.getSize(sheet).width, screen);
+    });
+
     // TC-REP-053 (SRS UC-09): a report opens in full.
     testWidgets('TC-REP-053 a report opens in full from My reports', (
       tester,
