@@ -799,6 +799,7 @@ The backend's docs are the source of truth. These findings are closed:
 | 4.2 | A lost check answer read as "no connection" | A timeout after sending says the answer was lost and the check may already be recorded; a request that never left the phone still says to check the connection (TC-LOOK-060, -130) |
 | 7.1 | A filter during a wait mixed two lists | The list remembers the filter its rows and cursor belong to; after the wait, or on the next page, a changed filter loads its own first page (TC-HIST-055) |
 | 5.3 | A resumed session's summary listed only the first page | The summary says "Showing X of Y" and loads the rest with **Load more**; reading an ended session's checks is allowed after Finish (TC-MIG-071) |
+| 8.2 | A photo after the pass expired | **Not a real problem.** The audit thought the photo's body could be read only once; `Stream.fromIterable` gives its items again to each reader, so after the renewal the photo goes again whole. A test with a connection that reads each body proves it and stays as a guard (TC-REP-066); no app change |
 | 2.4 | "Not now" answered 404 | No longer applies: "Not now" is removed (D65; TC-AUTH-095) |
 | Step 3 texts | "Sign up" read as an account made at once | "Request access", "Send request", and the guide's answer text (§3.9; TC-AUTH-118) |
 | — | A 409 `conflict` showed the general text | The server's message (guide §1; TC-ERR-051) |
