@@ -575,6 +575,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your checks appear here after your first check.';
 
   @override
+  String get historySearchRefusedTitle => 'Not a serial or a reference number';
+
+  @override
+  String get historySearchRefusedBody =>
+      'Type a whole serial (digits only) or a whole reference number, such as MA-2026-000123.';
+
+  @override
   String get historyAll => 'All';
 
   @override

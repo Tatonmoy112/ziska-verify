@@ -75,6 +75,7 @@
 | TC-REP-064 | Back while filing waits; the photos are sent | WORST | P1 | AUTO | ✅ `flow/reports_edge_flow_test` | Fake backend; `POST incidents` answers after 2 s; one photo added | **File report**; press Back while it files | The screen stays; the report is filed once and its photo is sent; no error | guide §6.2; audit 8.1 |
 | TC-REP-065 | Back asks what Done asks | NEG | P1 | AUTO | ✅ `flow/reports_edge_flow_test` | Fake backend; a photo answered 500; or nothing added | File; press Back; **Stay**; Back again; **Leave**. Then, with nothing waiting, Back | With a photo not sent: "Photos not sent", Stay keeps the screen, Leave goes; with nothing waiting Back leaves at once and files nothing | guide §6.2; audit 8.1 |
 | TC-REP-066 | A photo answered `token_expired` is sent again whole | NET | P2 | AUTO | ✅ `core/network/photo_resend_test` | A test connection that reads each body; the photo route answers 401 `token_expired` once; the renewal answers new passes | Send a 3,000-byte photo | The pass is renewed and the photo sent again with every byte; the answer is the photo's number | guide §3.4, §6.2; audit 8.2 (not a real problem: kept as a guard) |
+| TC-REP-067 | The check picker: part of a reference is not sent | NEG | P3 | AUTO | ✅ `flow/reports_retail_flow_test` | Fake backend | Report incident → Choose a check; search `MA-2026`, then `MA-2026-000124` | `MA-2026`: no request, "Not a serial or a reference number"; the whole reference: sent | guide §5; finding F-4 |
 
 ## Spec gaps in this file
 

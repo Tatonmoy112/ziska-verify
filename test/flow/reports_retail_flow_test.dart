@@ -57,6 +57,28 @@ void main() {
       });
     });
 
+    // TC-REP-067 (finding F-4): the check picker searches as History does;
+    // part of a reference is not sent, and the list says what to type.
+    testWidgets('TC-REP-067 the check picker: part of a reference not sent', (
+      tester,
+    ) async {
+      final app = await startApp(tester);
+      await openTile(app, const Key('verify.tool.report'));
+      await app.tap(find.byKey(const Key('report.check')));
+      final before = app.backend.sent('GET', 'checks').length;
+      await app.enter(const Key('checkPicker.search'), 'MA-2026');
+      await app.settleAfter(const Duration(milliseconds: 500));
+      expect(app.backend.sent('GET', 'checks'), hasLength(before));
+      expect(find.text('Not a serial or a reference number'), findsOneWidget);
+
+      await app.enter(const Key('checkPicker.search'), 'MA-2026-000124');
+      await app.settleAfter(const Duration(milliseconds: 500));
+      expect(
+        app.backend.sent('GET', 'checks').last.queryParameters['search'],
+        'MA-2026-000124',
+      );
+    });
+
     // TC-REP-053 (SRS UC-09): a report opens in full.
     testWidgets('TC-REP-053 a report opens in full from My reports', (
       tester,

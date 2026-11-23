@@ -173,6 +173,8 @@
   "historyCheckedBy": "যাচাই করেছেন {name}",
   "historyEmptyBody": "এই ফিল্টারের সাথে কোনো যাচাই মেলেনি।",
   "historyNoChecksYet": "প্রথম যাচাইয়ের পর আপনার যাচাইগুলো এখানে দেখা যাবে।",
+  "historySearchRefusedTitle": "এটি সিরিয়াল বা রেফারেন্স নম্বর নয়",
+  "historySearchRefusedBody": "পুরো সিরিয়াল (শুধু অঙ্ক) বা পুরো রেফারেন্স নম্বর লিখুন, যেমন MA-2026-000123।",
   "historyAll": "সব",
   "historyToday": "আজ",
   "historyYesterday": "গতকাল",

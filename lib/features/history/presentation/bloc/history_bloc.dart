@@ -8,6 +8,7 @@ import 'package:ziska_verify/core/pagination/paginated_state.dart';
 import 'package:ziska_verify/core/pagination/wait_timer.dart';
 import 'package:ziska_verify/core/utils/event_transformers.dart';
 import 'package:ziska_verify/features/history/domain/entities/check.dart';
+import 'package:ziska_verify/features/history/domain/services/history_search.dart';
 import 'package:ziska_verify/features/history/domain/usecases/get_checks.dart';
 
 sealed class HistoryEvent {
@@ -52,9 +53,14 @@ class HistoryState {
     this.list = const PaginatedState<CheckRecord>(),
     this.totals,
     this.chipTotals,
+    this.searchRefused = false,
   });
 
   final CheckQuery query;
+
+  /// The search is neither a serial nor a reference number, so nothing was
+  /// asked for (finding F-4): the list says what to type instead.
+  final bool searchRefused;
   final PaginatedState<CheckRecord> list;
 
   /// From the first page; kept while later pages load (Section 10.6).
@@ -70,11 +76,13 @@ class HistoryState {
     PaginatedState<CheckRecord>? list,
     CheckTotals? Function()? totals,
     CheckTotals? Function()? chipTotals,
+    bool? searchRefused,
   }) => HistoryState(
     query: query ?? this.query,
     list: list ?? this.list,
     totals: totals == null ? this.totals : totals(),
     chipTotals: chipTotals == null ? this.chipTotals : chipTotals(),
+    searchRefused: searchRefused ?? this.searchRefused,
   );
 }
 
@@ -92,10 +100,21 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
       transformer: restartable(),
     );
     on<HistorySearchTyped>(
-      (e, emit) => _loadFirst(
-        state.query.copyWith(search: e.text.trim().isEmpty ? null : e.text),
-        emit,
-      ),
+      (e, emit) {
+        // A serial or a reference number goes as the server reads it;
+        // anything else is kept as typed, and never sent (finding F-4).
+        final search = HistorySearch.read(e.text);
+        return _loadFirst(
+          state.query.copyWith(
+            search: switch (search.status) {
+              SearchStatus.empty => null,
+              SearchStatus.ok => search.value,
+              SearchStatus.refused => e.text,
+            },
+          ),
+          emit,
+        );
+      },
       transformer: debounceRestartable(const Duration(milliseconds: 400)),
     );
     on<HistoryRefreshed>(
@@ -144,11 +163,33 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
     Emitter<HistoryState> emit, {
     bool keepItems = false,
   }) async {
+    // Not a serial or a reference number: the server would answer 400, so
+    // nothing is asked for, by a search, a filter, or a refresh (F-4). An
+    // answer still on its way is dropped; a 429 wait is kept.
+    if (HistorySearch.read(query.search ?? '').status == SearchStatus.refused) {
+      ++_generation;
+      _listQuery = null;
+      _chipBase = null;
+      emit(
+        state.copyWith(
+          query: query,
+          list: PaginatedState(
+            status: PaginationStatus.empty,
+            hasReachedEnd: true,
+            retryAt: state.list.retryAt,
+          ),
+          totals: () => null,
+          chipTotals: () => null,
+          searchRefused: true,
+        ),
+      );
+      return;
+    }
     // A 429 is counting down (guide section 1): the filters follow the tap,
     // and the list is asked for once, when the wait ends.
     final wait = state.list.retryAt;
     if (state.list.isWaiting && wait != null) {
-      emit(state.copyWith(query: query));
+      emit(state.copyWith(query: query, searchRefused: false));
       _deferred.schedule(wait, () {
         if (!isClosed) add(const HistoryRetried());
       });
@@ -169,6 +210,7 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
       state.copyWith(
         query: query,
         list: state.list.loadingFirst(keepItems: keepItems),
+        searchRefused: false,
         totals: keepItems ? null : () => null,
         chipTotals: keepChips || refreshChips ? null : () => null,
       ),

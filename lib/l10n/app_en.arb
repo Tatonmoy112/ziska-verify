@@ -302,6 +302,11 @@
   },
   "historyEmptyBody": "No check matches these filters.",
   "historyNoChecksYet": "Your checks appear here after your first check.",
+  "historySearchRefusedTitle": "Not a serial or a reference number",
+  "@historySearchRefusedTitle": {
+    "description": "History search: the text is neither a whole serial nor a whole reference number, so nothing was searched (guide §5)."
+  },
+  "historySearchRefusedBody": "Type a whole serial (digits only) or a whole reference number, such as MA-2026-000123.",
   "historyAll": "All",
   "@historyAll": {
     "description": "The History result chip that shows every result."

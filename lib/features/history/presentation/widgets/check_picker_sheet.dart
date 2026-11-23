@@ -85,8 +85,14 @@ class _CheckPickerSheet extends StatelessWidget {
                     bloc.add(const HistoryRefreshed());
                     await bloc.stream.firstWhere((s) => !s.list.isLoading);
                   },
-                  emptyTitle: l10n.historyEmptyTitle,
-                  emptyBody: l10n.historyNoChecksYet,
+                  // A search that is not a serial or a reference number is
+                  // not sent; the list says what to type (finding F-4).
+                  emptyTitle: state.searchRefused
+                      ? l10n.historySearchRefusedTitle
+                      : l10n.historyEmptyTitle,
+                  emptyBody: state.searchRefused
+                      ? l10n.historySearchRefusedBody
+                      : l10n.historyNoChecksYet,
                 ),
               ),
             ),

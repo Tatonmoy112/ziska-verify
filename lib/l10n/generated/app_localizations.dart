@@ -1136,6 +1136,18 @@ abstract class AppLocalizations {
   /// **'Your checks appear here after your first check.'**
   String get historyNoChecksYet;
 
+  /// History search: the text is neither a whole serial nor a whole reference number, so nothing was searched (guide §5).
+  ///
+  /// In en, this message translates to:
+  /// **'Not a serial or a reference number'**
+  String get historySearchRefusedTitle;
+
+  /// No description provided for @historySearchRefusedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Type a whole serial (digits only) or a whole reference number, such as MA-2026-000123.'**
+  String get historySearchRefusedBody;
+
   /// The History result chip that shows every result.
   ///
   /// In en, this message translates to:

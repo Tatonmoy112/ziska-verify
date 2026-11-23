@@ -11,6 +11,10 @@ import 'harness.dart';
 /// and paging races are unit and BLoC tests.
 void main() {
   const general = 'Something went wrong. Try again.';
+  const refusedTitle = 'Not a serial or a reference number';
+  const refusedBody =
+      'Type a whole serial (digits only) or a whole reference number, such '
+      'as MA-2026-000123.';
 
   Map<String, Object?> check(
     String ref, {
@@ -186,7 +190,12 @@ void main() {
     expect(searched, hasLength(1));
   });
 
-  testWidgets('TC-HIST-026 a very long search answered 400', (tester) async {
+  // TC-HIST-026: a serial is up to 64 characters (guide §4, "Reading a
+  // serial"); a longer one is not sent (finding F-4). A search the server
+  // still answers 400 shows the general error with its reference.
+  testWidgets('TC-HIST-026 a very long search: not sent; a 400 still shown', (
+    tester,
+  ) async {
     final app = await openHistory(
       tester,
       overrides: {
@@ -197,9 +206,73 @@ void main() {
     );
     await app.enter(const Key('history.search'), '9' * 200);
     await app.settleAfter(const Duration(milliseconds: 500));
+    expect(checksSent(app).where((q) => q['search'] != null), isEmpty);
+    expect(find.text(refusedTitle), findsOneWidget);
+
+    await app.enter(const Key('history.search'), '9' * 64);
+    await app.settleAfter(const Duration(milliseconds: 500));
+    expect(checksSent(app).last['search'], '9' * 64);
     expect(find.text(general), findsOneWidget);
     expect(find.textContaining('req-long'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  // TC-HIST-057 (emulator run, finding F-4): the search is "a serial or a
+  // reference number" (guide §5); anything else answers 400. It is not
+  // sent: the list says what to type, and the whole value then works.
+  group('TC-HIST-057 a search that is not a serial or a reference', () {
+    testWidgets('part of a reference: not sent; the list says what to type', (
+      tester,
+    ) async {
+      final app = await openHistory(tester);
+      final before = checksSent(app).length;
+      await app.enter(const Key('history.search'), 'MA-2026');
+      await app.settleAfter(const Duration(milliseconds: 500));
+      expect(checksSent(app), hasLength(before));
+      expect(find.text(refusedTitle), findsOneWidget);
+      expect(find.text(refusedBody), findsOneWidget);
+      expect(find.text(general), findsNothing);
+
+      await app.enter(const Key('history.search'), 'ma-2026-000124');
+      await app.settleAfter(const Duration(milliseconds: 500));
+      expect(checksSent(app).last['search'], 'MA-2026-000124');
+      expect(find.text(refusedTitle), findsNothing);
+    });
+
+    testWidgets('a filter or a refresh does not send it either', (
+      tester,
+    ) async {
+      final app = await openHistory(tester);
+      await app.enter(const Key('history.search'), 'abc');
+      await app.settleAfter(const Duration(milliseconds: 500));
+      final before = checksSent(app).length;
+      await app.tap(find.byKey(const Key('history.chip.valid')));
+      await tester.fling(
+        find.text(refusedTitle),
+        const Offset(0, 400),
+        1000,
+      );
+      await app.settleAfter(const Duration(milliseconds: 500));
+      expect(checksSent(app), hasLength(before));
+      expect(find.text(refusedTitle), findsOneWidget);
+    });
+
+    testWidgets('Bangla digits are sent as 0-9', (tester) async {
+      final app = await openHistory(tester);
+      await app.enter(const Key('history.search'), '১০০০০০১');
+      await app.settleAfter(const Duration(milliseconds: 500));
+      expect(checksSent(app).last['search'], '1000001');
+    });
+
+    testWidgets('cleared: the whole list again', (tester) async {
+      final app = await openHistory(tester);
+      await app.enter(const Key('history.search'), 'MA-2026');
+      await app.settleAfter(const Duration(milliseconds: 500));
+      await app.tap(find.byTooltip('Clear the search'));
+      await app.settleAfter(const Duration(milliseconds: 500));
+      expect(find.text(refusedTitle), findsNothing);
+      expect(checksSent(app).last.containsKey('search'), isFalse);
+    });
   });
 
   testWidgets('TC-HIST-032 a rate-limited next page counts down and waits', (

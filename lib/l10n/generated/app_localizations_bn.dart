@@ -573,6 +573,13 @@ class AppLocalizationsBn extends AppLocalizations {
       'প্রথম যাচাইয়ের পর আপনার যাচাইগুলো এখানে দেখা যাবে।';
 
   @override
+  String get historySearchRefusedTitle => 'এটি সিরিয়াল বা রেফারেন্স নম্বর নয়';
+
+  @override
+  String get historySearchRefusedBody =>
+      'পুরো সিরিয়াল (শুধু অঙ্ক) বা পুরো রেফারেন্স নম্বর লিখুন, যেমন MA-2026-000123।';
+
+  @override
   String get historyAll => 'সব';
 
   @override

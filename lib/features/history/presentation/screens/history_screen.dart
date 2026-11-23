@@ -189,11 +189,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
             bloc.add(const HistoryRefreshed());
             await bloc.stream.firstWhere((s) => !s.list.isLoading);
           },
-          // No check at all yet, or none for these filters (§14.2).
-          emptyTitle: l10n.historyEmptyTitle,
-          emptyBody:
-              state.query.hasFilters ||
-                  (state.query.search?.trim().isNotEmpty ?? false)
+          // No check at all yet, or none for these filters (§14.2); or a
+          // search that is not a serial or a reference number, not sent (F-4).
+          emptyTitle: state.searchRefused
+              ? l10n.historySearchRefusedTitle
+              : l10n.historyEmptyTitle,
+          emptyBody: state.searchRefused
+              ? l10n.historySearchRefusedBody
+              : state.query.hasFilters ||
+                    (state.query.search?.trim().isNotEmpty ?? false)
               ? l10n.historyEmptyBody
               : l10n.historyNoChecksYet,
           header: _Header(

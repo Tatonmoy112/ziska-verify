@@ -60,7 +60,7 @@ void main() {
   ) async {
     final app = await startApp(tester);
     await openHistory(app);
-    await app.enter(const Key('history.search'), 'MA-2026');
+    await app.enter(const Key('history.search'), 'MA-2026-000124');
     await app.settleAfter(const Duration(milliseconds: 500));
 
     // The first request after a filter change has no cursor. (The fake
@@ -80,7 +80,7 @@ void main() {
     await app.tap(find.byKey(const Key('history.chip.warning')));
     final picked = firstPageAfter(before);
     expect(picked['result'], 'warning');
-    expect(picked['search'], 'MA-2026');
+    expect(picked['search'], 'MA-2026-000124');
 
     // A filter of the sheet: the first page again, with both.
     before = app.backend.sent('GET', 'checks').length;
@@ -97,7 +97,7 @@ void main() {
     final reset = firstPageAfter(before);
     expect(reset.containsKey('way'), isFalse);
     expect(reset['result'], 'warning');
-    expect(reset['search'], 'MA-2026');
+    expect(reset['search'], 'MA-2026-000124');
   });
 
   testWidgets('TC-HIST-047 the chips keep their counts when one is picked', (
