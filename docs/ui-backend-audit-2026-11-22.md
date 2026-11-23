@@ -793,6 +793,7 @@ The backend's docs are the source of truth. These findings are closed:
 | 4.1 | The same QR sent again after Back | The QR is kept after its result and not read again for 5 seconds (guide §4.3; TC-LOOK-129) |
 | 4.3 | A QR in lower case refused | Accepted in either case and sent as read (guide §4; TC-LOOK-128) |
 | 8.1 | Back without asking; Back while filing lost the photos | Back asks what Done asks; the screen cannot be left while the report is filing; the photos are sent only while the screen is open, never on a closed one (TC-REP-064, -065) |
+| 6.2 | A lost stack re-sent by one tap | "Send the same stack again" asks first: the serials may already be recorded, look in History, then Sessions; only **Send again** sends. A stack never sent goes again at once (TC-MIG-069) |
 | 2.4 | "Not now" answered 404 | No longer applies: "Not now" is removed (D65; TC-AUTH-095) |
 | Step 3 texts | "Sign up" read as an account made at once | "Request access", "Send request", and the guide's answer text (§3.9; TC-AUTH-118) |
 | — | A 409 `conflict` showed the general text | The server's message (guide §1; TC-ERR-051) |

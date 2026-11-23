@@ -227,7 +227,7 @@ Always show the same code-sent confirmation, including for existing accounts. Em
 ### 13.9 Screen rules (2026-11-17)
 
 - A 429 countdown disables the primary action of the screen and shows the seconds (sign-in screens, Check, the Check tab's camera, Splash).
-- A request that never left the phone (no connection) is safe to send again; a lost answer may have been recorded: a stack then warns before sending again, and a report is never filed again from its screen (**Check My reports**). A stack answer that was recorded but cannot be read is never sent again.
+- A request that never left the phone (no connection) is safe to send again; a lost answer may have been recorded: a stack then warns, and sends again only after **Send again** in "Send the stack again?", which points to History, then Sessions, to look first (TC-MIG-069), and a report is never filed again from its screen (**Check My reports**). A stack answer that was recorded but cannot be read is never sent again.
 - The Check tab keeps its camera and the tools when the formats fail; only the serial form waits for them, and the camera says "Scanning waits for the code formats."
 - After a failed single QR lookup, **Scan again** restarts the camera so the same QR can be read; nothing is sent again by itself.
 - Scanner mode clears the previous card on a failure and says "No connection, scan again."; a `session_not_yours` restart says "A new session started."
