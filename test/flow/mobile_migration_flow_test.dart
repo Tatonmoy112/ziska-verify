@@ -591,6 +591,69 @@ void main() {
       await tester.pumpAndSettle();
     }
 
+    // TC-MIG-070 (audit 5.1; final.md §13.2: after Finish "the reads
+    // already taken are still sent and answered"): opening a scan's
+    // result while Finish waits must not stop the line, or Finish never
+    // ends.
+    testWidgets('TC-MIG-070 a result opened during Finish: the waiting reads '
+        'still go, and the summary shows', (tester) async {
+      final sessions = <String>[];
+      final counting = countingBackend(sessions);
+      final app = await startApp(
+        tester,
+        profile: Roles.supervisor,
+        overrides: {
+          'POST lookups': (r) async {
+            if ((r.data as Map)['value'] == 'A1B2C3D4E5F3') {
+              await Future<void>.delayed(const Duration(seconds: 2));
+            }
+            return counting(r);
+          },
+        },
+      );
+      await app.tap(find.byKey(const Key('verify.tool.bulk')));
+      app.scanner.scan('https://example.test/q/Q8F2KD91XA7M');
+      await settleScans(tester);
+
+      // One read answered slowly, one more waiting in line behind it.
+      app.scanner
+        ..scan('https://example.test/q/A1B2C3D4E5F3')
+        ..scan('https://example.test/q/B1B2C3D4E5F6');
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.tap(find.byKey(const Key('session.finish')));
+      await tester.pump(const Duration(milliseconds: 100));
+
+      // The earlier scan's row opens its result while Finish waits; Back
+      // returns.
+      final row = find.byKey(const ValueKey('MA-Q8F2KD91XA7M'));
+      await tester.scrollUntilVisible(
+        row,
+        200,
+        scrollable: find
+            .descendant(
+              of: find.byKey(const Key('session.rows')),
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.tap(row);
+      for (var i = 0; i < 3; i++) {
+        await tester.pump(const Duration(milliseconds: 200));
+      }
+      expect(find.byType(LookupResultScreen), findsOneWidget);
+      await tester.binding.handlePopRoute();
+      for (var i = 0; i < 20; i++) {
+        await tester.pump(const Duration(milliseconds: 300));
+      }
+
+      expect(find.byKey(const Key('session.summary')), findsOneWidget);
+      expect(find.text('3 products scanned'), findsOneWidget);
+      expect(app.backend.sent('POST', 'lookups'), hasLength(3));
+      expect(app.scanner.sessions.last.running, isFalse);
+      await tester.pumpAndSettle();
+    });
+
     for (final (name, profile) in [
       ('a supervisor', Roles.supervisor),
       ('a bulk-only role', Roles.only(['item:bulk_lookup'])),

@@ -60,8 +60,10 @@ class _ScanSessionScreenState extends State<ScanSessionScreen>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (_cubit.state.done) return;
     if (state == AppLifecycleState.resumed && !_detail) {
+      // The line goes on; the camera only while scanning, not during
+      // Finish (it stopped for good when Finish was tapped).
       _cubit.resume();
-      unawaited(_camera.start());
+      if (!_cubit.state.finishing) unawaited(_camera.start());
     } else {
       _cubit.pause();
       unawaited(_camera.stop());
@@ -110,9 +112,12 @@ class _ScanSessionScreenState extends State<ScanSessionScreen>
     }
     if (!mounted) return;
     _detail = false;
-    if (scanning && !_cubit.state.done && !_cubit.state.finishing) {
+    if (scanning && !_cubit.state.done) {
+      // The line goes on in any case: during Finish the reads already taken
+      // are still sent and answered (final.md §13.2), or Finish never ends
+      // (audit 5.1). The camera starts again only while scanning.
       _cubit.resume();
-      await _camera.start();
+      if (!_cubit.state.finishing) await _camera.start();
     }
   }
 
