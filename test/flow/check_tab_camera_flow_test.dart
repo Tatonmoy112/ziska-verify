@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ziska_verify/core/services/scanner/scanner_service.dart';
@@ -104,5 +105,78 @@ void main() {
     );
     expect(find.byKey(const Key('verify.camera')), findsNothing);
     expect(app.scanner.sessions, isEmpty);
+  });
+
+  // TC-LOOK-129: back from a result, a pack still in front of the camera is
+  // not checked again by itself. The guide (§4.3): "Do not send the same QR
+  // twice in a row while it stays in front of the camera."
+  group('TC-LOOK-129 back from a result', () {
+    Future<FlowApp> scanAndComeBack(WidgetTester tester) async {
+      final app = await startApp(tester);
+      app.scanner.scan(qr);
+      await tester.pumpAndSettle();
+      expect(find.text('Genuine product'), findsWidgets);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('verify.camera')), findsOneWidget);
+      return app;
+    }
+
+    testWidgets('the same QR read again at once is not sent', (tester) async {
+      var now = DateTime(2026, 11, 23, 10);
+      await withClock(Clock(() => now), () async {
+        final app = await scanAndComeBack(tester);
+        now = now.add(const Duration(seconds: 1));
+        app.scanner.scan(qr);
+        await tester.pumpAndSettle();
+        expect(app.backend.sent('POST', 'lookups'), hasLength(1));
+        expect(find.byKey(const Key('verify.camera')), findsOneWidget);
+      });
+    });
+
+    testWidgets('the same QR a few seconds later is sent: a check on purpose', (
+      tester,
+    ) async {
+      var now = DateTime(2026, 11, 23, 10);
+      await withClock(Clock(() => now), () async {
+        final app = await scanAndComeBack(tester);
+        now = now.add(const Duration(seconds: 6));
+        app.scanner.scan(qr);
+        await tester.pumpAndSettle();
+        expect(app.backend.sent('POST', 'lookups'), hasLength(2));
+      });
+    });
+
+    testWidgets('a different QR right after is sent at once', (tester) async {
+      final now = DateTime(2026, 11, 23, 10);
+      await withClock(Clock(() => now), () async {
+        final app = await scanAndComeBack(tester);
+        app.scanner.scan('https://www.ziskaverify.com/q/Q8F2KD91XA7B');
+        await tester.pumpAndSettle();
+        expect(app.backend.sent('POST', 'lookups'), hasLength(2));
+        expect(app.backend.sent('POST', 'lookups').last.data, {
+          'way': 'qr',
+          'value': 'Q8F2KD91XA7B',
+        });
+      });
+    });
+
+    testWidgets('after a typed serial, a QR read at once is sent', (
+      tester,
+    ) async {
+      var now = DateTime(2026, 11, 23, 10);
+      await withClock(Clock(() => now), () async {
+        final app = await scanAndComeBack(tester);
+        now = now.add(const Duration(seconds: 6));
+        await tester.enterText(find.byKey(const Key('verify.input')), '1');
+        await app.tap(find.byKey(const Key('verify.submit')));
+        await tester.pumpAndSettle();
+        await tester.binding.handlePopRoute();
+        await tester.pumpAndSettle();
+        app.scanner.scan(qr);
+        await tester.pumpAndSettle();
+        expect(app.backend.sent('POST', 'lookups'), hasLength(3));
+      });
+    });
   });
 }

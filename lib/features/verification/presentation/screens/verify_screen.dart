@@ -83,6 +83,19 @@ class _VerifyScreenState extends State<VerifyScreen>
   String? _lastRaw;
   DateTime _lastAt = DateTime.fromMillisecondsSinceEpoch(0);
 
+  /// Back from a scanned code's result: its window ([_afterResult]) starts
+  /// then, so a pack still in front of the camera is not checked again by
+  /// itself (guide §4.3: "Do not send the same QR twice in a row while it
+  /// stays in front of the camera").
+  bool _backFromResult = false;
+
+  /// How long the same code is not read again while scanning.
+  static const _repeat = Duration(seconds: 3);
+
+  /// How long the same code is not read again after its result closes; it
+  /// also covers a slow camera start.
+  static const _afterResult = Duration(seconds: 5);
+
   @override
   void initState() {
     super.initState();
@@ -150,7 +163,9 @@ class _VerifyScreenState extends State<VerifyScreen>
     final bloc = context.read<LookupBloc>();
     if (_held || bloc.state.isBusy || bloc.state.formats == null) return;
     final now = clock.now();
-    if (raw == _lastRaw && now.difference(_lastAt).inSeconds < 3) return;
+    final window = _backFromResult ? _afterResult : _repeat;
+    if (raw == _lastRaw && now.difference(_lastAt) < window) return;
+    _backFromResult = false;
     _lastRaw = raw;
     _lastAt = now;
     _lastWay = LookupWay.qr;
@@ -161,6 +176,7 @@ class _VerifyScreenState extends State<VerifyScreen>
   /// After a failed scan: the camera starts again for the same QR.
   void _scanAgain() {
     _lastRaw = null;
+    _backFromResult = false;
     context.read<LookupBloc>().add(const LookupCleared());
     _hold(false);
   }
@@ -202,7 +218,15 @@ class _VerifyScreenState extends State<VerifyScreen>
     _loader.stop();
     await opening;
     if (!mounted) return;
-    _lastRaw = null;
+    // A scanned code just checked is kept: its window starts now, as the
+    // camera starts again and may still see it. After a typed serial,
+    // nothing is held back.
+    if (view.origin == ResultOrigin.scanner) {
+      _lastAt = clock.now();
+      _backFromResult = true;
+    } else {
+      _lastRaw = null;
+    }
     _hold(false);
   }
 
