@@ -156,6 +156,49 @@ void main() {
       );
     });
 
+    // TC-LOOK-132 (emulator run, finding F-1): a refused serial's message is
+    // about what was typed; it goes as soon as the text changes. A failure
+    // after sending is about the check, not the text: it stays.
+    group('TC-LOOK-132 a refused serial message goes with the text', () {
+      const refused = 'A serial has digits only, up to 19 digits.';
+
+      Future<FlowApp> refuse(WidgetTester tester) async {
+        final app = await startApp(tester);
+        await app.enter(const Key('verify.input'), '10O0001');
+        await app.tap(find.byKey(const Key('verify.submit')));
+        expect(find.text(refused), findsOneWidget);
+        return app;
+      }
+
+      testWidgets('the field emptied', (tester) async {
+        final app = await refuse(tester);
+        await app.enter(const Key('verify.input'), '');
+        expect(find.text(refused), findsNothing);
+        expect(app.enabled(const Key('verify.submit')), isFalse);
+        expect(app.backend.sent('POST', 'lookups'), isEmpty);
+      });
+
+      testWidgets('the serial corrected', (tester) async {
+        final app = await refuse(tester);
+        await app.enter(const Key('verify.input'), '1000001');
+        expect(find.text(refused), findsNothing);
+        expect(app.backend.sent('POST', 'lookups'), isEmpty);
+      });
+
+      testWidgets('a lost answer stays when the text changes', (tester) async {
+        final app = await startApp(
+          tester,
+          overrides: {'POST lookups': timedOut()},
+        );
+        await app.enter(const Key('verify.input'), '1000001');
+        await app.tap(find.byKey(const Key('verify.submit')));
+        final lost = find.textContaining('may already be recorded');
+        expect(lost, findsOneWidget);
+        await app.enter(const Key('verify.input'), '1000002');
+        expect(lost, findsOneWidget);
+      });
+    });
+
     testWidgets('TC-LOOK-031 empty input: Verify product disabled', (
       tester,
     ) async {

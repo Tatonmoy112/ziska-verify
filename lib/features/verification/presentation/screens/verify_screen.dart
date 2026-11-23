@@ -187,6 +187,18 @@ class _VerifyScreenState extends State<VerifyScreen>
     context.read<LookupBloc>().add(LookupRequested(_way, _input.text));
   }
 
+  /// The serial field changed. A refused serial's message is about the text
+  /// that was there, so it goes with it (finding F-1). A failure after
+  /// sending ("may already be recorded") is about the check: it stays.
+  void _onTyped(BuildContext context) {
+    final bloc = context.read<LookupBloc>();
+    if (_lastWay == LookupWay.serial &&
+        bloc.state.status == LookupStatus.refused) {
+      bloc.add(const LookupCleared());
+    }
+    setState(() {});
+  }
+
   void _clear() {
     _input.clear();
     context.read<LookupBloc>().add(const LookupCleared());
@@ -364,7 +376,7 @@ class _VerifyScreenState extends State<VerifyScreen>
                         camera: _camera(context, state, session),
                         input: _input,
                         inputFocus: _inputFocus,
-                        onChanged: () => setState(() {}),
+                        onChanged: () => _onTyped(context),
                         onVerify: _verify,
                         onClear: _clear,
                         tools: tools,
