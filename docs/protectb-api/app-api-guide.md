@@ -10,6 +10,18 @@ on it, step by step, is `app-build-guide.md`._
 > holds up to 50 serials, 500 a minute per official. There is no test server yet
 > (§8); until there is, build against this guide and the Postman collection.
 >
+> **Changed 2026-11-22** (from the app team's test-server report): every length
+> counts characters, an emoji as one (§1; until now a name and a search counted it
+> as two); a password the client's office replaces may come with
+> `must_change_password: false` (§3.2, DEC-429). There is no "Not now".
+>
+> **Written down 2026-11-22** (nothing changed on the server; from the app team's
+> test-server report): a route with no body takes no JSON header (§1); the email
+> at login is matched in any case (§3.1); a renewal during a forced password
+> change (§3.4); a new password may equal the current one (§3.6, §3.7); how a
+> QR value and a serial are read (§4, §4.1); `from` and `to` are whole UTC days,
+> and how to show a local day (§4.5, §5).
+>
 > **Changed 2026-11-15, before any client's app is live:** people can ask for an
 > account from the app (§3.9). Items are looked up by **serial or QR only**:
 > `way: "hidden_code"` answers 400 and `GET formats` has no `hidden_code`. A
@@ -46,9 +58,16 @@ https://<app API host>/v1/clients/<client>/…
 **Requests.**
 - Bodies are JSON (`Content-Type: application/json`), at most 64 KB. The
   one exception is a report's photo (§6.2): the file itself, up to 1 MB.
+- **A route that takes no body** (`auth/logout`, `lookups/sessions/{id}/end`):
+  send no body **and no `Content-Type: application/json` header**. An empty
+  body sent as JSON is **400 `validation_failed`**. Check that your HTTP library
+  does not add the header by itself.
 - A field the route does not know, a missing field or a field of the wrong
   type is **400 `validation_failed`**, and so is a query parameter the route
   does not list. A body over its size is **413**, with the same `code`.
+- **Lengths are in characters**: a character is one Unicode code point, so an
+  emoji counts as one (not the two units of JavaScript's `.length`; count
+  `[...text].length`). This holds for every limit in this guide.
 - After logging in, every request carries the pass in a header:
   `Authorization: Bearer <access_token>`. Nothing is ever sent in a cookie;
   the API sets none and reads none.
@@ -145,6 +164,9 @@ On any other phone a code is emailed instead:
 Then show the code screen and call §3.2. Decide by `data.status`, never by
 the message: it is the same for both.
 
+The email is matched whatever its capitals, and spaces at either end are
+ignored: `Official@Example.com ` logs in as `official@example.com`.
+
 - **401 `unauthenticated`**: the same answer for an unknown email, a wrong
   password, a blocked official and a locked account, on purpose. Show one
   message: "Email or password is incorrect."
@@ -171,8 +193,12 @@ the message: it is the same for both.
 **`must_change_password: true`** means the official's password was set by
 someone else: a new account's first password, typed by whoever added them and
 emailed to them by us or given to them personally; a password their admin replaced; or a new first
-password emailed by us. Whoever makes an account may leave it `false` (for
-example when approving a request with the password the person chose, §3.9). Until it is changed (§3.6), every route
+password emailed by us. **Whoever sets the password decides** whether it must be
+changed: they may leave it `false`, when making an account (for example when
+approving a request with the password the person chose, §3.9) and, since
+2026-11-22, when replacing a password. With `false` the app works as usual, and
+the official can still change the password (§3.6). There is no "Not now": a
+forced change is not postponed. Until it is changed (§3.6), every route
 except `me`, `me/password` and `auth/logout` answers **403
 `password_change_required`**. Show only the change-password screen.
 
@@ -222,6 +248,10 @@ When a request answers **401 `token_expired`**, renew and retry it once:
 - **200**: the same `data` as a login (`status: "logged_in"`, a new access
   pass **and a new refresh pass**). Store both before anything else.
 - **401 `unauthenticated`**: the login has ended; go to the login screen.
+- **During a forced password change** (`must_change_password: true`, §3.2) a
+  renewal still answers **200**, with `must_change_password: true` again: the
+  new access pass is as limited as the old one. Keep showing the
+  change-password screen.
 
 **Renew once at a time.** Each refresh pass works exactly once. Sending one
 that was already used ends the login, because we must assume it was copied.
@@ -240,7 +270,7 @@ function renewOnce(): Promise<boolean> {
 
 ### 3.5 Log out: `POST auth/logout`
 
-No body; the access pass in the header. **200**, `data: null`. The login on
+No body and no JSON header (§1); the access pass in the header. **200**, `data: null`. The login on
 this phone ends; delete both passes. The phone stays trusted, so the next
 login on it needs no code.
 
@@ -270,6 +300,9 @@ and a password their admin types for them):
 - Anything else is allowed: capitals or not, spaces, symbols (`!@#$%…`), and
   letters and numbers of any alphabet (Bangla `পাসওয়ার্ড১` counts as letters and
   a number). Nothing is required beyond the three rules.
+- **The new password may be the same as the current one**: it is not refused,
+  here or in the reset of §3.7. If that ever changes, the answer will be the
+  same **403 `policy_denied`**, so build for it already.
 - Line breaks, tabs and other control characters are refused.
 
 **Show the rule on the screen before the official types**, and tick each part as
@@ -311,6 +344,7 @@ still 200).
   without an account (the same answer).
 - **403 `policy_denied`**: the new password breaks the password rule (§3.6:
   8 or more characters, a letter and a number). Show the same hints as there.
+  The new password may be the current one.
 - A blocked official cannot reset a password: the answer is the same 401.
 - **10 wrong codes in an hour close the official's reset for 15 minutes**
   (D64): the waiting code stops working, step 1 sends no mail, and step 2
@@ -422,7 +456,18 @@ for it (`way: "hidden_code"` answers 400 since 2026-11-15).
 **Reading a QR.** The QR holds a link such as
 `https://www.ziskaverify.com/q/Q8F2KD91XA7M`. Take the part after the last
 `/q/` and send that (`Q8F2KD91XA7M`). Never open the link inside the app: it
-is the consumer's verification page.
+is the consumer's verification page. We read a QR value in capitals, so
+`q8f2kd91xa7m` finds the same item; send it as read.
+
+**Reading a serial.** We read a serial the same way everywhere:
+- only the digits `0`–`9` count: other digits, such as Bangla `১২৩`, are not
+  turned into them, and the value answers `not_found`;
+- leading zeros are dropped: `0001000001` is serial `1000001`;
+- the value may be up to 40 characters with its zeros; the serial's own digits
+  (after the zeros) at most `serial.max_digits` of `GET formats` (§4.1);
+- `0`, `000`, a value of 41 to 64 characters, and a serial with more digits
+  than `max_digits` answer `not_found`, not an error (over 64 characters is the
+  400 of §4.2).
 
 **Permissions.** The client's admin gives each official's role its
 permissions. A route the role lacks answers **403 `forbidden`**: hide what the
@@ -454,6 +499,8 @@ What a valid input looks like, so the app can check it before sending:
             "qr": { "length": 12, "characters": "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789" } } }
 ```
 
+- `serial.max_digits` counts the serial's own digits, after any leading zeros
+  (§4, "Reading a serial").
 - Never build these numbers into the app: they differ between clients and can
   change.
 
@@ -587,8 +634,8 @@ next time is a new session.
 { "success": true, "message": "Session ended.", "data": null }
 ```
 
-- No body; **200**, `data: null`. Ending a session that has already ended
-  answers the same.
+- No body and no JSON header (§1); **200**, `data: null`. Ending a session that
+  has already ended answers the same.
 - **404 `not_found`**: no such session, or another official's.
 - A session nobody ended closes by itself after **15 minutes without a scan**.
 
@@ -606,7 +653,7 @@ GET lookups/sessions?limit=50&status=ended&from=2026-11-01&to=2026-11-10
 | `limit` | 1 to 100, default 50 |
 | `cursor` | from the previous page's `next_cursor` |
 | `status` | `open` or `ended` |
-| `from`, `to` | dates (`YYYY-MM-DD`), both included; the last 7 days when left out |
+| `from`, `to` | dates (`YYYY-MM-DD`), **whole UTC days**, both included; the last 7 UTC days when left out (see §5 for showing a local day) |
 
 `scope` is gone since 2026-11-15: sending it is **400**.
 
@@ -706,7 +753,7 @@ GET checks?limit=50&result=warning&way=qr&from=2026-10-01&to=2026-10-28&search=1
 | `cursor` | from the previous page's `next_cursor` |
 | `result` | `valid`, `warning`, `not_found`, `unassigned` |
 | `way` | `serial`, `qr`, or `hidden_code` (checks made before 2026-11-15 only) |
-| `from`, `to` | dates (`YYYY-MM-DD`), both included |
+| `from`, `to` | dates (`YYYY-MM-DD`), **whole UTC days**, both included |
 | `search` | a serial or a reference number |
 | `session_id` | one session's checks, a scanner session's or a stack's (§4.5) |
 
@@ -722,8 +769,14 @@ GET checks?limit=50&result=warning&way=qr&from=2026-10-01&to=2026-10-28&search=1
             "next_cursor": "3255" } }
 ```
 
+- **Days are UTC days.** `from=2026-11-23` starts at 00:00 UTC, which is 06:00
+  in Dhaka. To show a day in the phone's own time zone, ask for the UTC days it
+  overlaps (for Dhaka, that day and the day before) and keep the checks whose
+  `at` falls inside the local day; every `at` is UTC, so this works in any
+  country.
 - `totals` comes with the first page only (`null` on later pages), counting
-  every check that matches the filters.
+  every check that matches the filters, so **by the UTC days asked for**. For a
+  local day, count the checks the app kept, or label the totals as UTC days.
 - `serial`, `product` and `batch` are `null` for `not_found`, and `product`
   and `batch` for `unassigned`. `official` is the official's own name.
 - `session_id` is the scanner session the check belongs to, `null` for a check
