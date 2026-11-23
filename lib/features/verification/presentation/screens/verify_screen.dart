@@ -29,6 +29,7 @@ import 'package:ziska_verify/shared/widgets/app_empty_state.dart';
 import 'package:ziska_verify/shared/widgets/error_banner.dart';
 import 'package:ziska_verify/shared/widgets/failure_banner.dart';
 import 'package:ziska_verify/shared/widgets/large_text.dart';
+import 'package:ziska_verify/shared/widgets/navy_status_bar.dart';
 import 'package:ziska_verify/shared/widgets/pattern_background.dart';
 import 'package:ziska_verify/shared/widgets/retry_countdown.dart';
 
@@ -319,28 +320,30 @@ class _VerifyScreenState extends State<VerifyScreen>
     ];
 
     if (!canLookup && isLargeText(context)) {
-      return Scaffold(
-        backgroundColor: AppColors.surfaceMuted,
-        body: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            _Header(
-              organisation: profile?.organisation ?? l10n.appTitle,
-              name: profile?.name ?? '',
-              onOpenProfile: widget.onOpenProfile,
-            ),
-            if (tools.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.all(AppSpacing.screen),
-                child: _ToolsSection(tools: tools),
-              )
-            else
-              AppEmptyState(
-                icon: LucideIcons.lockKeyhole,
-                title: l10n.noFeaturesTitle,
-                body: l10n.noFeaturesBody,
+      return NavyStatusBar(
+        child: Scaffold(
+          backgroundColor: AppColors.surfaceMuted,
+          body: ListView(
+            padding: EdgeInsets.zero,
+            children: [
+              _Header(
+                organisation: profile?.organisation ?? l10n.appTitle,
+                name: profile?.name ?? '',
+                onOpenProfile: widget.onOpenProfile,
               ),
-          ],
+              if (tools.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.all(AppSpacing.screen),
+                  child: _ToolsSection(tools: tools),
+                )
+              else
+                AppEmptyState(
+                  icon: LucideIcons.lockKeyhole,
+                  title: l10n.noFeaturesTitle,
+                  body: l10n.noFeaturesBody,
+                ),
+            ],
+          ),
         ),
       );
     }
@@ -355,47 +358,50 @@ class _VerifyScreenState extends State<VerifyScreen>
     // At a large font the header scrolls with the page: fixed above it,
     // it could be taller than a small phone (TC-ERR-045).
     final largeText = isLargeText(context);
-    return Scaffold(
-      backgroundColor: AppColors.surfaceMuted,
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (!largeText) header,
-          Expanded(
-            child: session != null
-                ? BlocConsumer<LookupBloc, LookupState>(
-                    listenWhen: (a, b) => a.status != b.status,
-                    listener: (context, state) => _onStatus(state),
-                    // Back waits while the one lookup runs.
-                    builder: (context, state) => PopScope(
-                      canPop: !state.isBusy,
-                      child: _LookupForm(
-                        state: state,
-                        way: _way,
-                        typed: _lastWay == LookupWay.serial,
-                        camera: _camera(context, state, session),
-                        input: _input,
-                        inputFocus: _inputFocus,
-                        onChanged: () => _onTyped(context),
-                        onVerify: _verify,
-                        onClear: _clear,
-                        tools: tools,
-                        header: largeText ? header : null,
+    return NavyStatusBar(
+      scrim: largeText,
+      child: Scaffold(
+        backgroundColor: AppColors.surfaceMuted,
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (!largeText) header,
+            Expanded(
+              child: session != null
+                  ? BlocConsumer<LookupBloc, LookupState>(
+                      listenWhen: (a, b) => a.status != b.status,
+                      listener: (context, state) => _onStatus(state),
+                      // Back waits while the one lookup runs.
+                      builder: (context, state) => PopScope(
+                        canPop: !state.isBusy,
+                        child: _LookupForm(
+                          state: state,
+                          way: _way,
+                          typed: _lastWay == LookupWay.serial,
+                          camera: _camera(context, state, session),
+                          input: _input,
+                          inputFocus: _inputFocus,
+                          onChanged: () => _onTyped(context),
+                          onVerify: _verify,
+                          onClear: _clear,
+                          tools: tools,
+                          header: largeText ? header : null,
+                        ),
                       ),
+                    )
+                  : tools.isNotEmpty
+                  ? ListView(
+                      padding: const EdgeInsets.all(AppSpacing.screen),
+                      children: [_ToolsSection(tools: tools)],
+                    )
+                  : AppEmptyState(
+                      icon: LucideIcons.lockKeyhole,
+                      title: l10n.noFeaturesTitle,
+                      body: l10n.noFeaturesBody,
                     ),
-                  )
-                : tools.isNotEmpty
-                ? ListView(
-                    padding: const EdgeInsets.all(AppSpacing.screen),
-                    children: [_ToolsSection(tools: tools)],
-                  )
-                : AppEmptyState(
-                    icon: LucideIcons.lockKeyhole,
-                    title: l10n.noFeaturesTitle,
-                    body: l10n.noFeaturesBody,
-                  ),
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }

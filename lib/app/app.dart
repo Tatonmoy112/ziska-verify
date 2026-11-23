@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:get_it/get_it.dart';
@@ -104,9 +105,16 @@ class _AppState extends State<App> {
           ],
           supportedLocales: AppLocalizations.supportedLocales,
           // The offline banner above every screen (final.md Section 14.2).
-          builder: (context, child) => NetworkStatusShell(
-            connectivity: widget.locator<ConnectivityService>(),
-            child: child ?? const SizedBox.shrink(),
+          // Dark status bar icons where a screen says nothing (a white
+          // top); navy screens and app bars set their own (finding F-7).
+          builder: (context, child) => AnnotatedRegion<SystemUiOverlayStyle>(
+            value: SystemUiOverlayStyle.dark.copyWith(
+              statusBarColor: Colors.transparent,
+            ),
+            child: NetworkStatusShell(
+              connectivity: widget.locator<ConnectivityService>(),
+              child: child ?? const SizedBox.shrink(),
+            ),
           ),
         ),
       ),

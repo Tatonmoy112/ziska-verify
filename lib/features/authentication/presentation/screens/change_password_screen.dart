@@ -16,6 +16,7 @@ import 'package:ziska_verify/shared/design_system/tokens/app_spacing.dart';
 import 'package:ziska_verify/shared/extensions/failure_message.dart';
 import 'package:ziska_verify/shared/widgets/failure_banner.dart';
 import 'package:ziska_verify/shared/widgets/gradient_header.dart';
+import 'package:ziska_verify/shared/widgets/navy_status_bar.dart';
 import 'package:ziska_verify/shared/widgets/retry_countdown.dart';
 
 /// `me/password` (final.md Section 6.6). When [forced], it is the only
@@ -77,7 +78,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     );
     return PopScope(
       canPop: !widget.forced,
-      child: Scaffold(body: screen),
+      child: NavyStatusBar(
+        child: Scaffold(body: screen),
+      ),
     );
   }
 

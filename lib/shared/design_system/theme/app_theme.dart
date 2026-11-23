@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_colors.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_radius.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_spacing.dart';
@@ -51,6 +52,9 @@ abstract final class AppTheme {
       scaffoldBackgroundColor: AppColors.background,
       // One title style per level: app bars and dialogs use `headline`.
       appBarTheme: AppBarTheme(
+        // Dark status bar icons over a light app bar (the date pickers'
+        // white page among them); the navy app bar sets light ones (F-7).
+        systemOverlayStyle: SystemUiOverlayStyle.dark,
         foregroundColor: AppColors.textStrong,
         titleTextStyle: title,
       ),

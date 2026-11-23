@@ -14,6 +14,7 @@ import 'package:ziska_verify/shared/design_system/tokens/app_spacing.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_typography.dart';
 import 'package:ziska_verify/shared/widgets/label_value_row.dart';
 import 'package:ziska_verify/shared/widgets/large_text.dart';
+import 'package:ziska_verify/shared/widgets/navy_status_bar.dart';
 
 /// The Profile tab (Figma "Profile"; final.md Section 13.7). Actions that
 /// belong to other features are passed in by the router. With a
@@ -183,169 +184,171 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     final totals = _totals;
 
-    return Scaffold(
-      backgroundColor: AppColors.surfaceMuted,
-      body: RefreshIndicator(
-        // Pull to refresh asks for the counts again (the profile itself is
-        // loaded at start).
-        onRefresh: () async => totals?.load(),
-        notificationPredicate: (_) => totals != null,
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            _HeaderAndCard(
-              profile: profile,
-              title: l10n.profileTitle,
-              rows: [
-                _InfoRow(
-                  label: l10n.organisationLabel,
-                  value: profile.organisation ?? '—',
-                ),
-                _InfoRow(label: l10n.emailLabel, value: profile.email),
-                _InfoRow(label: l10n.roleLabel, value: profile.role),
-              ],
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.screen,
-                AppSpacing.lg,
-                AppSpacing.screen,
-                AppSpacing.screen,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (totals != null) ...[
-                    BlocBuilder<CheckTotalsCubit, CheckTotalsState>(
-                      bloc: totals,
-                      builder: (context, state) => _Stats(
-                        state: state,
-                        onRetry: () => unawaited(totals.load()),
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.xl),
-                  ],
-                  // What the role allows, by the SRS names (FR-ACC-15).
-                  Text(
-                    l10n.permissionsSection,
-                    style: AppTypography.fieldLabel,
+    return NavyStatusBar(
+      child: Scaffold(
+        backgroundColor: AppColors.surfaceMuted,
+        body: RefreshIndicator(
+          // Pull to refresh asks for the counts again (the profile itself is
+          // loaded at start).
+          onRefresh: () async => totals?.load(),
+          notificationPredicate: (_) => totals != null,
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: [
+              _HeaderAndCard(
+                profile: profile,
+                title: l10n.profileTitle,
+                rows: [
+                  _InfoRow(
+                    label: l10n.organisationLabel,
+                    value: profile.organisation ?? '—',
                   ),
-                  const SizedBox(height: AppSpacing.xs),
-                  _Card(
-                    key: const Key('profile.permissions'),
-                    children: [
-                      for (final (key, icon, title) in [
-                        (
-                          'item:lookup',
-                          LucideIcons.shieldCheck,
-                          l10n.permissionLookup,
-                        ),
-                        (
-                          'item:bulk_lookup',
-                          LucideIcons.layers,
-                          l10n.permissionBulkLookup,
-                        ),
-                        (
-                          'history:own',
-                          LucideIcons.clock,
-                          l10n.permissionHistory,
-                        ),
-                        (
-                          'incident:report',
-                          LucideIcons.flag,
-                          l10n.permissionReport,
-                        ),
-                      ])
-                        if (profile.can(key))
-                          _ActionRow(
-                            key: Key('profile.permission.$key'),
-                            icon: icon,
-                            title: title,
-                          ),
-                      if (!_knownPermissions.any(profile.can))
-                        _ActionRow(
-                          icon: LucideIcons.circleSlash,
-                          title: l10n.permissionsNone,
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.xl),
-                  Text(l10n.accountSection, style: AppTypography.fieldLabel),
-                  const SizedBox(height: AppSpacing.xs),
-                  _Card(
-                    children: [
-                      _ActionRow(
-                        icon: LucideIcons.lock,
-                        title: l10n.changePasswordRow,
-                        onTap: widget.onChangePassword,
-                      ),
-                      _ActionRow(
-                        key: const Key('profile.language'),
-                        icon: LucideIcons.languages,
-                        title: l10n.languageRow,
-                        subtitle: _languageName(
-                          Localizations.localeOf(context).languageCode,
-                        ),
-                        onTap: () => unawaited(_chooseLanguage(context)),
-                      ),
-                      // Each channel the office set (guide section 3.8):
-                      // email and phone both, or "Not set".
-                      if (supportEmail != null)
-                        _ActionRow(
-                          key: const Key('profile.supportEmail'),
-                          icon: LucideIcons.mail,
-                          title: l10n.supportContactRow,
-                          subtitle: supportEmail,
-                          onTap: () => unawaited(
-                            _contact(context, email: supportEmail),
-                          ),
-                        ),
-                      if (supportPhone != null)
-                        _ActionRow(
-                          key: const Key('profile.supportPhone'),
-                          icon: LucideIcons.phone,
-                          title: l10n.supportContactRow,
-                          subtitle: supportPhone,
-                          onTap: () => unawaited(
-                            _contact(context, phone: supportPhone),
-                          ),
-                        ),
-                      if (supportEmail == null && supportPhone == null)
-                        _ActionRow(
-                          icon: LucideIcons.mail,
-                          title: l10n.supportContactRow,
-                          subtitle: l10n.supportNotSet,
-                        ),
-                      FutureBuilder(
-                        future: widget.versionInfo,
-                        builder: (context, snapshot) => _ActionRow(
-                          icon: LucideIcons.clock,
-                          title: l10n.appVersionRow,
-                          subtitle: snapshot.data == null
-                              ? null
-                              : l10n.appVersionValue(
-                                  snapshot.data!.version,
-                                  snapshot.data!.build,
-                                ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  AppButton(
-                    key: const Key('profile.logout'),
-                    variant: AppButtonVariant.danger,
-                    icon: LucideIcons.logOut,
-                    label: l10n.logout,
-                    loading: _loggingOut,
-                    onPressed: _loggingOut
-                        ? null
-                        : () => unawaited(_confirmLogout(context)),
-                  ),
+                  _InfoRow(label: l10n.emailLabel, value: profile.email),
+                  _InfoRow(label: l10n.roleLabel, value: profile.role),
                 ],
               ),
-            ),
-          ],
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.screen,
+                  AppSpacing.lg,
+                  AppSpacing.screen,
+                  AppSpacing.screen,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (totals != null) ...[
+                      BlocBuilder<CheckTotalsCubit, CheckTotalsState>(
+                        bloc: totals,
+                        builder: (context, state) => _Stats(
+                          state: state,
+                          onRetry: () => unawaited(totals.load()),
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.xl),
+                    ],
+                    // What the role allows, by the SRS names (FR-ACC-15).
+                    Text(
+                      l10n.permissionsSection,
+                      style: AppTypography.fieldLabel,
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    _Card(
+                      key: const Key('profile.permissions'),
+                      children: [
+                        for (final (key, icon, title) in [
+                          (
+                            'item:lookup',
+                            LucideIcons.shieldCheck,
+                            l10n.permissionLookup,
+                          ),
+                          (
+                            'item:bulk_lookup',
+                            LucideIcons.layers,
+                            l10n.permissionBulkLookup,
+                          ),
+                          (
+                            'history:own',
+                            LucideIcons.clock,
+                            l10n.permissionHistory,
+                          ),
+                          (
+                            'incident:report',
+                            LucideIcons.flag,
+                            l10n.permissionReport,
+                          ),
+                        ])
+                          if (profile.can(key))
+                            _ActionRow(
+                              key: Key('profile.permission.$key'),
+                              icon: icon,
+                              title: title,
+                            ),
+                        if (!_knownPermissions.any(profile.can))
+                          _ActionRow(
+                            icon: LucideIcons.circleSlash,
+                            title: l10n.permissionsNone,
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.xl),
+                    Text(l10n.accountSection, style: AppTypography.fieldLabel),
+                    const SizedBox(height: AppSpacing.xs),
+                    _Card(
+                      children: [
+                        _ActionRow(
+                          icon: LucideIcons.lock,
+                          title: l10n.changePasswordRow,
+                          onTap: widget.onChangePassword,
+                        ),
+                        _ActionRow(
+                          key: const Key('profile.language'),
+                          icon: LucideIcons.languages,
+                          title: l10n.languageRow,
+                          subtitle: _languageName(
+                            Localizations.localeOf(context).languageCode,
+                          ),
+                          onTap: () => unawaited(_chooseLanguage(context)),
+                        ),
+                        // Each channel the office set (guide section 3.8):
+                        // email and phone both, or "Not set".
+                        if (supportEmail != null)
+                          _ActionRow(
+                            key: const Key('profile.supportEmail'),
+                            icon: LucideIcons.mail,
+                            title: l10n.supportContactRow,
+                            subtitle: supportEmail,
+                            onTap: () => unawaited(
+                              _contact(context, email: supportEmail),
+                            ),
+                          ),
+                        if (supportPhone != null)
+                          _ActionRow(
+                            key: const Key('profile.supportPhone'),
+                            icon: LucideIcons.phone,
+                            title: l10n.supportContactRow,
+                            subtitle: supportPhone,
+                            onTap: () => unawaited(
+                              _contact(context, phone: supportPhone),
+                            ),
+                          ),
+                        if (supportEmail == null && supportPhone == null)
+                          _ActionRow(
+                            icon: LucideIcons.mail,
+                            title: l10n.supportContactRow,
+                            subtitle: l10n.supportNotSet,
+                          ),
+                        FutureBuilder(
+                          future: widget.versionInfo,
+                          builder: (context, snapshot) => _ActionRow(
+                            icon: LucideIcons.clock,
+                            title: l10n.appVersionRow,
+                            subtitle: snapshot.data == null
+                                ? null
+                                : l10n.appVersionValue(
+                                    snapshot.data!.version,
+                                    snapshot.data!.build,
+                                  ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    AppButton(
+                      key: const Key('profile.logout'),
+                      variant: AppButtonVariant.danger,
+                      icon: LucideIcons.logOut,
+                      label: l10n.logout,
+                      loading: _loggingOut,
+                      onPressed: _loggingOut
+                          ? null
+                          : () => unawaited(_confirmLogout(context)),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

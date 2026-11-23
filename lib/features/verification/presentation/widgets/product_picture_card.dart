@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:ziska_verify/core/services/picture/picture_images.dart';
@@ -151,6 +152,7 @@ class PictureViewer extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.scrim,
       appBar: AppBar(
+        systemOverlayStyle: SystemUiOverlayStyle.light,
         backgroundColor: AppColors.scrim,
         foregroundColor: AppColors.onPrimary,
         titleTextStyle: Theme.of(
