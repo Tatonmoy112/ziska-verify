@@ -241,7 +241,7 @@ Each of these was seen on the test server or is in your other docs. Please copy 
 
 **Left on the test server by our checks:**
 - checks MA-2026-000001 … -000043, with their sessions and stacks;
-- reports #1 to #4;
+- reports #1 to #4, and #5 (2026-11-23, a length check filed by mistake: an emoji and 999 "n"; please delete it if you like);
 - two sign-up requests, pending (see item 1).
 
 The test login's password is unchanged.

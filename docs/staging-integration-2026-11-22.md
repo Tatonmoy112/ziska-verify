@@ -63,7 +63,7 @@ All of these are covered offline.
 
 **Left on the test server by these checks:**
 - **Checks and sessions:** checks MA-2026-000001 … -000032, the sessions of steps 6 and 7, and the stacks.
-- **Reports:** #1 … #4, three with photos.
+- **Reports:** #1 … #4, three with photos; and #5 (2026-11-23), filed by mistake by the checker's `lengths` step: its note test ran without the `LENGTHS_NOTE=1` switch, which is now required. Its note is an emoji and 999 "n"; the app cannot delete it.
 - **Sign-up:** one sign-up request, pending.
 - **The test login:** still logged in on the emulator; its password unchanged.
 
