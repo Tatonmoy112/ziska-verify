@@ -319,7 +319,13 @@ class _VerifyScreenState extends State<VerifyScreen>
       ],
     ];
 
-    if (!canLookup && isLargeText(context)) {
+    // At a large font, or with the phone on its side, the header scrolls
+    // with the page: fixed above it, it could take most of the screen
+    // (TC-ERR-045; finding F-8, half the height in landscape).
+    final scrollingHeader =
+        isLargeText(context) ||
+        MediaQuery.orientationOf(context) == Orientation.landscape;
+    if (!canLookup && scrollingHeader) {
       return NavyStatusBar(
         child: Scaffold(
           backgroundColor: AppColors.surfaceMuted,
@@ -355,17 +361,14 @@ class _VerifyScreenState extends State<VerifyScreen>
       name: profile?.name ?? '',
       onOpenProfile: widget.onOpenProfile,
     );
-    // At a large font the header scrolls with the page: fixed above it,
-    // it could be taller than a small phone (TC-ERR-045).
-    final largeText = isLargeText(context);
     return NavyStatusBar(
-      scrim: largeText,
+      scrim: scrollingHeader,
       child: Scaffold(
         backgroundColor: AppColors.surfaceMuted,
         body: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (!largeText) header,
+            if (!scrollingHeader) header,
             Expanded(
               child: session != null
                   ? BlocConsumer<LookupBloc, LookupState>(
@@ -385,7 +388,7 @@ class _VerifyScreenState extends State<VerifyScreen>
                           onVerify: _verify,
                           onClear: _clear,
                           tools: tools,
-                          header: largeText ? header : null,
+                          header: scrollingHeader ? header : null,
                         ),
                       ),
                     )
