@@ -21,14 +21,14 @@ The source column points to the backend's guide (`docs/protectb-api/app-api-guid
 
 | ID | Type | Steps | Expected | Source | Result |
 |---|---|---|---|---|---|
-| EMU-01 | N | Install and open the app (logged out) | Splash, then Login: "Login to Track & Trace", Email, Password, **Login securely**, **Forgot password?**, **Request access**; the copyright footer | final.md §13.9 | — |
-| EMU-02 | E | Tap **Login securely** with both fields empty, then with an email that has no `@` | Field errors under the fields; nothing sent | guide §3.1; final.md §13.9 | — |
-| EMU-03 | W | Log in with a made-up address at `example.com` and any password | "Email or password is incorrect." The same text as for a real address with a wrong password, so it never says whether an account exists | guide §3.1 | — |
-| EMU-04 | N | Log in with the user's email (typed with capitals and a space before it) and password | Accepted: the email is matched in any case, spaces removed. This is a new phone, so the code screen shows ("We sent a code to …") | guide §3.1, §3.2 | — |
-| EMU-05 | E | On the code screen, type 5 digits | **Verify** stays off until 6 digits | guide §3.2 | — |
-| EMU-06 | W | Type one wrong 6-digit code | "The code is wrong or has expired. Check the latest email, or send the code again."; the screen stays | guide §3.2 | — |
-| EMU-07 | N | Type the emailed code (from the user) | Logged in: the Check tab with the bottom bar (Check, History, Profile, as the permissions allow) | guide §3.2, §3.8 | — |
-| EMU-08 | W | Kill the app (`am force-stop`) and open it again | Still logged in, straight to the Check tab; no code asked | final.md §6 | — |
+| EMU-01 | N | Install and open the app (logged out) | Splash, then Login: "Login to Track & Trace", Email, Password, **Login securely**, **Forgot password?**, **Request access**; the copyright footer | final.md §13.9 | ✅ All parts shown, the version "0.1.0 (1)" in the footer |
+| EMU-02 | E | Tap **Login securely** with both fields empty, then with an email that has no `@` | Field errors under the fields; nothing sent | guide §3.1; final.md §13.9 | ✅ "Enter a valid email address" and "Required"; with no `@` the email error stays; no request sent (app log) |
+| EMU-03 | W | Log in with a made-up address at `example.com` and any password | "Email or password is incorrect." The same text as for a real address with a wrong password, so it never says whether an account exists | guide §3.1 | ✅ `POST auth/login` → 401; "Email or password is incorrect." with the reference |
+| EMU-04 | N | Log in with the user's email (typed with capitals and a space before it) and password | Accepted: the email is matched in any case, spaces removed. This is a new phone, so the code screen shows ("We sent a code to …") | guide §3.1, §3.2 | ✅ `POST auth/login` → 200 with capitals and a leading space; "Check your email … We sent a 6-digit code to …"; **Send again** counts down from 60 s |
+| EMU-05 | E | On the code screen, type 5 digits | **Verify** stays off until 6 digits | guide §3.2 | ✅ **Continue** off (not enabled) with 5 digits |
+| EMU-06 | W | Type one wrong 6-digit code | "The code is wrong or has expired. Check the latest email, or send the code again."; the screen stays | guide §3.2 | ✅ `POST auth/verify-phone` → 401; "The code is wrong or has expired. Check the latest email, or send the code again." with the reference; the screen stays |
+| EMU-07 | N | Type the emailed code (from the user) | Logged in: the Check tab with the bottom bar (Check, History, Profile, as the permissions allow) | guide §3.2, §3.8 | ✅ `verify-phone` → 200, `GET me` → 200, `GET formats` → 200; Android asked for the camera (allowed while using the app); the Check tab with Check, History, Profile; "Welcome back, Trendsbird", "Ziska-test"; the serial field says "Up to 19 digits" (the server's `max_digits`) |
+| EMU-08 | W | Kill the app (`am force-stop`) and open it again | Still logged in, straight to the Check tab; no code asked | final.md §6 | ✅ After a force-stop: `GET me` → 200 and the Check tab; no code asked |
 
 ## 2. The Check tab (one check), nothing sent
 
