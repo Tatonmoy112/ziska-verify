@@ -57,6 +57,11 @@ void main() {
       (LookupWay.serial, '10A1', InputProblem.wrongFormat),
       (LookupWay.serial, '', InputProblem.empty),
       (LookupWay.qr, 'Q8F2KD91XA7M', null),
+      (LookupWay.qr, 'q8f2kd91xa7m', null),
+      (LookupWay.qr, 'q8f2kd91xa7_', InputProblem.wrongFormat),
+      // One character for one: a ligature whose capitals are two letters
+      // ("ﬆ" → "ST") is not read as them.
+      (LookupWay.qr, 'Q8F2KD91XA7ﬆ', InputProblem.wrongFormat),
       (LookupWay.qr, 'Q8F2KD91XA7', InputProblem.wrongFormat),
     ];
     for (final (way, value, expected) in cases) {
@@ -176,9 +181,32 @@ void main() {
       (
         'LOOK-041',
         LookupWay.qr,
-        // Sent as read (guide section 4): lower case is not among the
-        // formats' characters, so it is refused, never made capitals.
+        // A QR in lower case finds the same item: send it as read (guide
+        // §4, "Reading a QR"); the server reads it in capitals.
         'https://a.example/q/${qr.toLowerCase()}',
+        formats,
+        qr.toLowerCase(),
+      ),
+      // TC-LOOK-128: either case of the formats' letters; the length and
+      // anything else still refused.
+      (
+        'LOOK-128',
+        LookupWay.qr,
+        'https://a.example/q/Q8f2Kd91xA7m',
+        formats,
+        'Q8f2Kd91xA7m',
+      ),
+      (
+        'LOOK-128',
+        LookupWay.qr,
+        'https://a.example/q/q8f2kd91xa7',
+        formats,
+        null,
+      ),
+      (
+        'LOOK-128',
+        LookupWay.qr,
+        'https://a.example/q/q8f2kd91xa7!',
         formats,
         null,
       ),

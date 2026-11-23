@@ -179,4 +179,38 @@ void main() {
       });
     });
   });
+
+  // TC-LOOK-128: a QR in lower case finds the same item; it is sent as read
+  // (guide §4, "Reading a QR"), on the Check tab and in Scanner mode.
+  group('TC-LOOK-128 a QR in lower case', () {
+    const lower = 'https://www.ziskaverify.com/q/q8f2kd91xa7m';
+
+    testWidgets('on the Check tab: sent as read', (tester) async {
+      final app = await startApp(tester);
+      app.scanner.scan(lower);
+      await tester.pumpAndSettle();
+      expect(app.backend.sent('POST', 'lookups').single.data, {
+        'way': 'qr',
+        'value': 'q8f2kd91xa7m',
+      });
+      expect(find.text('Genuine product'), findsWidgets);
+    });
+
+    testWidgets('in Scanner mode: sent as read, with the session', (
+      tester,
+    ) async {
+      final app = await startApp(tester, profile: Roles.supervisor);
+      await app.tap(find.byKey(const Key('verify.tool.bulk')));
+      app.scanner.scan(lower);
+      await tester.pumpAndSettle();
+      final sent =
+          app.backend.sent('POST', 'lookups').single.data
+              as Map<String, Object?>;
+      expect(sent['way'], 'qr');
+      expect(sent['value'], 'q8f2kd91xa7m');
+      expect(sent['session_id'], isA<String>());
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+    });
+  });
 }

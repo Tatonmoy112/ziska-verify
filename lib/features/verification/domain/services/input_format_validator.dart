@@ -37,5 +37,15 @@ class InputFormatValidator {
 
   static bool _matches(String value, CodeFormat format) =>
       value.length == format.length &&
-      value.split('').every(format.characters.contains);
+      value.split('').every((c) => _allowed(c, format.characters));
+
+  /// One of the formats' characters, or the lower case of one: a QR in
+  /// lower case finds the same item, as the server reads it in capitals
+  /// (guide §4, "Reading a QR"). One character for one, so a ligature such
+  /// as "ﬆ" is not read as "ST".
+  static bool _allowed(String c, String characters) {
+    if (characters.contains(c)) return true;
+    final upper = c.toUpperCase();
+    return upper.length == 1 && characters.contains(upper);
+  }
 }
