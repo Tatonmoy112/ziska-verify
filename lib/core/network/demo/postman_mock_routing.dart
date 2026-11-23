@@ -21,7 +21,8 @@ import 'package:dio/dio.dart';
 ///   for the "later page" example.
 /// - Every other route names its success example, as the mock may score a
 ///   body unlike the saved one closer to an error example. The code
-///   `111111` logs in to a forced password change (to try **Not now**).
+///   `111111` logs in to a forced password change (only the change
+///   screen and Log out: there is no "Not now", backend D65).
 /// - Every photo answers "photo 1": each report's photos are numbered here.
 /// - The examples' passes are shortened with "…", which no HTTP header may
 ///   carry (the app could send nothing after logging in): each is replaced

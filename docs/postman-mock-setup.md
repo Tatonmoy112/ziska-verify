@@ -45,7 +45,7 @@ A fixed mock cannot tell some requests apart, and it scores a body unlike the sa
 | History, next page | "A later page" |
 | A session (open one, end one) | The example session, shown under the app's own session ID |
 | Log in | "New phone: a code was emailed"; any 6 digits log in |
-| The code `111111` | A login that must set a new password (to try **Not now**) |
+| The code `111111` | A login that must set a new password (only the change screen and Log out: there is no "Not now", backend D65) |
 | A photo | Numbered 1, 2, 3 per report (the example always says 1) |
 | A login's passes | The examples' passes are shortened with "…", which no HTTP header may carry (the app could not send anything after logging in, and said "No connection"); each is replaced by a stand-in such as `mock-access-1`, new on every renewal |
 | Every other route | Its success example by name; the mock scores a body unlike the saved one closer to an error example |
