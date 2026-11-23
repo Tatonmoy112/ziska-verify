@@ -368,6 +368,11 @@
   "reportPhotoConflict": "No more photos: the report has 3, or its hour is over.",
   "reportLeaveTitle": "Photos not sent",
   "reportLeaveBody": "Some photos are still sending or can be sent again. If you leave, they are not sent.",
+  "reportDiscardTitle": "Leave this report?",
+  "@reportDiscardTitle": {
+    "description": "Back on a report not filed yet, with a note, photos, a check, or a retail user entered (emulator run, finding F-5)."
+  },
+  "reportDiscardBody": "What you entered here is not kept: the note, photos, and choices.",
   "reportStay": "Stay",
   "reportLeave": "Leave",
   "reportPhotoSent": "Photo {n}",

@@ -690,6 +690,13 @@ class AppLocalizationsBn extends AppLocalizations {
       'কিছু ছবি এখনো পাঠানো হচ্ছে বা আবার পাঠানো যায়। চলে গেলে সেগুলো পাঠানো হবে না।';
 
   @override
+  String get reportDiscardTitle => 'এই রিপোর্ট ছেড়ে যাবেন?';
+
+  @override
+  String get reportDiscardBody =>
+      'এখানে যা দিয়েছেন তা রাখা হবে না: লেখা, ছবি ও বেছে নেওয়া তথ্য।';
+
+  @override
   String get reportStay => 'থাকুন';
 
   @override

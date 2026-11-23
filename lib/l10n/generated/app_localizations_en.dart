@@ -691,6 +691,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Some photos are still sending or can be sent again. If you leave, they are not sent.';
 
   @override
+  String get reportDiscardTitle => 'Leave this report?';
+
+  @override
+  String get reportDiscardBody =>
+      'What you entered here is not kept: the note, photos, and choices.';
+
+  @override
   String get reportStay => 'Stay';
 
   @override

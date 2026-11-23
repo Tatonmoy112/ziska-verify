@@ -95,30 +95,56 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
         (p.status == PhotoStatus.failed && p.canRetry),
   );
 
-  /// Done, and Back: while a photo is sending or can be sent again, leaving
-  /// loses it, so ask first.
+  /// Something entered on a report not filed yet: a note, photos, a check,
+  /// or a retail user. Back would drop it, so it asks first (finding F-5).
+  bool _unfiled(ReportIncidentState state) =>
+      !state.isFiled &&
+      (_note.text.trim().isNotEmpty ||
+          state.photos.isNotEmpty ||
+          state.checkRef != null ||
+          state.retailUser != null);
+
+  /// Asks whether to leave; `true` to leave.
+  Future<bool> _askLeave(String title, String body) async {
+    final l10n = AppLocalizations.of(context);
+    final leave = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(title),
+        content: Text(body),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(l10n.reportStay),
+          ),
+          TextButton(
+            key: const Key('report.leave'),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(l10n.reportLeave),
+          ),
+        ],
+      ),
+    );
+    return leave ?? false;
+  }
+
+  /// Done, and Back: a report not filed yet with something entered, or a
+  /// photo still sending or sendable again, is lost by leaving, so ask
+  /// first.
   Future<void> _done(ReportIncidentState state) async {
-    if (_photosPending(state)) {
-      final l10n = AppLocalizations.of(context);
-      final leave = await showDialog<bool>(
-        context: context,
-        builder: (dialogContext) => AlertDialog(
-          title: Text(l10n.reportLeaveTitle),
-          content: Text(l10n.reportLeaveBody),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: Text(l10n.reportStay),
-            ),
-            TextButton(
-              key: const Key('report.leave'),
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: Text(l10n.reportLeave),
-            ),
-          ],
-        ),
+    final l10n = AppLocalizations.of(context);
+    if (_unfiled(state)) {
+      final leave = await _askLeave(
+        l10n.reportDiscardTitle,
+        l10n.reportDiscardBody,
       );
-      if (leave != true || !mounted) return;
+      if (!leave || !mounted) return;
+    } else if (_photosPending(state)) {
+      final leave = await _askLeave(
+        l10n.reportLeaveTitle,
+        l10n.reportLeaveBody,
+      );
+      if (!leave || !mounted) return;
     }
     if (mounted) context.pop();
   }
@@ -202,9 +228,10 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
         final filing = state.filing == FilingStatus.filing;
         // Back (the app bar's and the phone's) asks what Done asks; while
         // the report is filing it waits, so a filed report always goes on
-        // to its photos (audit 8.1).
+        // to its photos (audit 8.1). A report not filed yet with something
+        // entered asks before dropping it (F-5).
         return PopScope(
-          canPop: !filing && !_photosPending(state),
+          canPop: !filing && !_photosPending(state) && !_unfiled(state),
           onPopInvokedWithResult: (didPop, _) {
             if (didPop || filing) return;
             unawaited(_done(state));

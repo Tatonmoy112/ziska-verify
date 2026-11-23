@@ -627,5 +627,81 @@ void main() {
       expect(find.text('Photos not sent'), findsNothing);
       expect(app.backend.sent('POST', 'incidents'), isEmpty);
     });
+
+    // TC-REP-069 (emulator run, finding F-5): Back on a report not filed
+    // yet, with something entered, asks before dropping it; Stay keeps it
+    // all, Leave leaves. Nothing is ever sent by Back.
+    group('TC-REP-069 Back on a report not filed asks first', () {
+      const title = 'Leave this report?';
+
+      testWidgets('a note: Stay keeps it, Leave leaves', (tester) async {
+        final app = await openReport(tester);
+        await app.enter(const Key('report.note'), 'Torn seal');
+        await tester.binding.handlePopRoute();
+        await tester.pumpAndSettle();
+        expect(find.text(title), findsOneWidget);
+        expect(
+          find.text(
+            'What you entered here is not kept: the note, photos, and '
+            'choices.',
+          ),
+          findsOneWidget,
+        );
+        await app.tapText('Stay');
+        expect(find.text(title), findsNothing);
+        expect(find.text('Torn seal'), findsOneWidget);
+
+        await tester.binding.handlePopRoute();
+        await tester.pumpAndSettle();
+        await app.tap(find.byKey(const Key('report.leave')));
+        expect(find.byKey(const Key('report.note')), findsNothing);
+        expect(app.backend.sent('POST', 'incidents'), isEmpty);
+      });
+
+      testWidgets("the app bar's back arrow asks too", (tester) async {
+        final app = await openReport(tester);
+        await app.enter(const Key('report.note'), 'Torn seal');
+        await app.tap(find.byType(BackButton));
+        expect(find.text(title), findsOneWidget);
+      });
+
+      testWidgets('spaces only: nothing entered, leaves at once', (
+        tester,
+      ) async {
+        final app = await openReport(tester);
+        await app.enter(const Key('report.note'), '   ');
+        await tester.binding.handlePopRoute();
+        await tester.pumpAndSettle();
+        expect(find.text(title), findsNothing);
+        expect(find.byKey(const Key('report.note')), findsNothing);
+      });
+
+      testWidgets('a photo only, not filed: this question, not the photo '
+          'one', (tester) async {
+        final app = await openReport(tester);
+        await addPhoto(app);
+        await tester.binding.handlePopRoute();
+        await tester.pumpAndSettle();
+        expect(find.text(title), findsOneWidget);
+        expect(find.text('Photos not sent'), findsNothing);
+        expect(app.backend.sent('POST', photosPath), isEmpty);
+      });
+
+      testWidgets('filed, its photo sent: Back leaves at once', (
+        tester,
+      ) async {
+        final app = await openReport(
+          tester,
+          overrides: {'POST $photosPath': always(photoN(1))},
+        );
+        await addPhoto(app);
+        await file(app, 'Torn seal');
+        expect(find.byKey(const Key('report.done')), findsOneWidget);
+        await tester.binding.handlePopRoute();
+        await tester.pumpAndSettle();
+        expect(find.text(title), findsNothing);
+        expect(find.byKey(const Key('report.done')), findsNothing);
+      });
+    });
   });
 }

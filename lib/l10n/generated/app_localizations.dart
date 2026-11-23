@@ -1334,6 +1334,18 @@ abstract class AppLocalizations {
   /// **'Some photos are still sending or can be sent again. If you leave, they are not sent.'**
   String get reportLeaveBody;
 
+  /// Back on a report not filed yet, with a note, photos, a check, or a retail user entered (emulator run, finding F-5).
+  ///
+  /// In en, this message translates to:
+  /// **'Leave this report?'**
+  String get reportDiscardTitle;
+
+  /// No description provided for @reportDiscardBody.
+  ///
+  /// In en, this message translates to:
+  /// **'What you entered here is not kept: the note, photos, and choices.'**
+  String get reportDiscardBody;
+
   /// No description provided for @reportStay.
   ///
   /// In en, this message translates to:

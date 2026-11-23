@@ -206,6 +206,8 @@
   "reportPhotoConflict": "আর ছবি নয়: রিপোর্টে ৩টি আছে, অথবা এক ঘণ্টা পেরিয়ে গেছে।",
   "reportLeaveTitle": "ছবি পাঠানো হয়নি",
   "reportLeaveBody": "কিছু ছবি এখনো পাঠানো হচ্ছে বা আবার পাঠানো যায়। চলে গেলে সেগুলো পাঠানো হবে না।",
+  "reportDiscardTitle": "এই রিপোর্ট ছেড়ে যাবেন?",
+  "reportDiscardBody": "এখানে যা দিয়েছেন তা রাখা হবে না: লেখা, ছবি ও বেছে নেওয়া তথ্য।",
   "reportStay": "থাকুন",
   "reportLeave": "চলে যান",
   "reportPhotoSent": "ছবি {n}",
