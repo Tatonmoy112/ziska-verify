@@ -74,7 +74,7 @@ Preserve the existing four routing states: unauthenticated, awaiting new-phone c
 - Login failures use the same message for wrong email/password, blocked and locked accounts.
 - A trusted phone skips the emailed code. A new phone sends the same installation ID with login and with the emailed code.
 - Access passes last 15 minutes; rotating refresh passes last 30 idle days. The refresh pass goes only in `auth/refresh`'s body.
-- Concurrent expired requests wait for one renewal. Store both replacement passes before retrying each original request once. Stale responses never end a newer login or restore ended credentials.
+- Concurrent expired requests wait for one renewal. Store both replacement passes before retrying each original request once. They are kept in memory first: the old refresh pass is spent and is never sent again (guide §3.4). If the phone cannot store them, the login goes on from memory and the stored spent pair is deleted, so a restart opens Login (TC-SESS-045). Stale responses never end a newer login or restore ended credentials.
 - Authenticated `401 unauthenticated` ends the login, except the documented wrong-old-password response from `me/password`.
 - Public code/password/access-request errors stay in their respective forms and do not clear another session.
 - Whoever makes an account decides whether its first password must be changed (backend D59): the portal and the staff panel tick it by default, an approved access request leaves it off. The app follows `must_change_password` as `logged_in`, `GET me` and renewals send it. Only profile, change password, and logout remain available until it is changed.

@@ -795,6 +795,7 @@ The backend's docs are the source of truth. These findings are closed:
 | 8.1 | Back without asking; Back while filing lost the photos | Back asks what Done asks; the screen cannot be left while the report is filing; the photos are sent only while the screen is open, never on a closed one (TC-REP-064, -065) |
 | 6.2 | A lost stack re-sent by one tap | "Send the same stack again" asks first: the serials may already be recorded, look in History, then Sessions; only **Send again** sends. A stack never sent goes again at once (TC-MIG-069) |
 | 5.1 | Finish can hang | Back from a result opened during Finish lets the line go on, so the reads already taken are sent and Finish ends; the camera stays off. Coming back to the app during Finish no longer starts the camera (TC-MIG-070) |
+| 1.1 | A failed save of the renewed passes reused the spent refresh pass | The new passes are kept in memory first; if the phone cannot store them, the renewal still works from memory and the spent pair is deleted from the phone, so neither a later renewal nor a restart sends it (TC-SESS-045) |
 | 2.4 | "Not now" answered 404 | No longer applies: "Not now" is removed (D65; TC-AUTH-095) |
 | Step 3 texts | "Sign up" read as an account made at once | "Request access", "Send request", and the guide's answer text (§3.9; TC-AUTH-118) |
 | — | A 409 `conflict` showed the general text | The server's message (guide §1; TC-ERR-051) |

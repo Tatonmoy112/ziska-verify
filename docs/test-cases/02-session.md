@@ -53,6 +53,7 @@
 | TC-SESS-042 | Phone ID cannot be read | WORST | P2 | AUTO | ✅ `features/authentication/data/auth_repository_test` | Fake backend; secure storage throws on the phone ID | Log in; verify the code | "Something went wrong. Try again."; the button stops spinning | Guide §2 |
 | TC-SESS-043 | A late 403 for an older pass | WORST | P2 | AUTO | ✅ `core/network/session_worst_test` | Fake backend; a request of the old login held | Log out and in while it waits; it answers `403 password_change_required` | The new login stays as it is; no change screen | §6.4, guide §3.2 |
 | TC-SESS-044 | Logout sent bare, with a spinner | POS | P3 | AUTO | ✅ `flow/auth_flow_test` | Fake backend; logout held | Profile; **Log out**; confirm | No body and no `Content-Type` (as in Postman); **Log out** spins; then Login | Guide §3.5 |
+| TC-SESS-045 | The new passes of a renewal cannot be stored | WORST | P1 | AUTO | ✅ `core/network/session_worst_test` | Fake backend; secure storage that fails to write after the login | Renew twice; then restart the app on the same storage | Each renewal works from memory and the next one sends the new refresh pass, never the spent one; the spent pair is deleted from the phone, so a restart opens Login instead of sending it. A first login that cannot be stored keeps no pass in memory | guide §3.4; audit 1.1 |
 
 ## Spec gaps in this file
 
