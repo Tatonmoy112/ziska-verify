@@ -13,6 +13,8 @@
 
 **Results:** ✅ pass · ❌ fail (with what was seen) · ⛔ blocked (why) · — not run yet.
 
+**Recorded on the server by mistake during this run:** one check, MA-2026-000046 (EMU-12). Nothing else.
+
 The source column points to the backend's guide (`docs/protectb-api/app-api-guide.md`, the copy of ProtectB-DOCS e163a52) or to `final.md`.
 
 ---
@@ -34,10 +36,10 @@ The source column points to the backend's guide (`docs/protectb-api/app-api-guid
 
 | ID | Type | Steps | Expected | Source | Result |
 |---|---|---|---|---|---|
-| EMU-09 | N | Look at the Check tab | The camera area (the emulator's camera), the serial field, and the tools the role allows (Scanner mode, Serial stack, Report incident); no "Request access" or admin tools | final.md §7, §13.1 | — |
-| EMU-10 | E | Tap **Check** with an empty serial | "Enter a value first"; nothing sent | final.md §13.1 | — |
-| EMU-11 | E | Type `12AB34` key by key | The letters do not enter: the field shows `1234` (a typed character other than a digit, space or `-` is dropped; a paste is kept and refused by the input check instead) | guide §4 "Reading a serial"; `SerialInputFormatter` | — |
-| EMU-12 | W | Type 41 digits | Refused before sending: "A serial has digits only, up to N digits." | guide §4.1 | — |
+| EMU-09 | N | Look at the Check tab | The camera area (the emulator's camera), the serial field, and the tools the role allows (Scanner mode, Serial stack, Report incident); no "Request access" or admin tools | final.md §7, §13.1 | ✅ More: Scanner mode, Serial stack, Report incident, My reports; no admin tool |
+| EMU-10 | E | Tap **Check** with an empty serial | "Enter a value first"; nothing sent | final.md §13.1 | ✅ **Check** is off (not enabled) while the field is empty, so nothing can be sent (stricter than the expected message, which never shows) |
+| EMU-11 | E | Type `12AB34` key by key | The letters do not enter: the field shows `1234` (a typed character other than a digit, space or `-` is dropped; a paste is kept and refused by the input check instead) | guide §4 "Reading a serial"; `SerialInputFormatter` | ✅ Typed key by key, the field shows `1234` |
+| EMU-12 | W | Type 41 digits | Refused before sending: "A serial has digits only, up to N digits." | guide §4.1 | ⚠️ **Not run as written; a real check was recorded by mistake.** adb typed only 11 of the 41 digits, a valid serial, and the tester tapped **Check** without first confirming the length: `POST lookups` → 200, reference **MA-2026-000046**, serial `11111111111`, **Not found**, 2026-11-23 16:01. The app behaved correctly; the mistake was the tester's. To run again only after confirming the field holds 20 or more digits |
 | EMU-13 | E | Type a serial in Bangla digits (`১২৩`) with a Bangla keyboard | Shown as `123`, the app's own choice; **not sent**. adb cannot type Bangla, so this may be ⛔ on the emulator (covered by TC-PROF-035 in the automated tests) | final.md §16 | — |
 | EMU-14 | N | Open the camera, wait 10 s, then switch to History and back | The camera runs only while the Check tab shows; no QR is read (the emulator shows no product QR) | final.md §13.1 | — |
 
