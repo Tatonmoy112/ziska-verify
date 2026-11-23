@@ -107,6 +107,70 @@ void main() {
     );
   });
 
+  // TC-SESS-045 (audit 1.1; guide §3.4): a renewal spends the old refresh
+  // pass, and "sending one that was already used ends the login" on every
+  // phone. When the new passes cannot be stored, the app goes on with them
+  // from memory and never sends the spent pass again, not after a restart
+  // either.
+  group('TC-SESS-045 the new passes of a renewal cannot be stored', () {
+    test('the renewal works from memory, and the next one sends the new '
+        'refresh pass', () async {
+      final sent = <String>[];
+      var n = 1;
+      final w = _build(
+        api: ScriptedAdapter((_) async => ScriptedAnswer(200, okBody({}))),
+        refresh: ScriptedAdapter((r) async {
+          sent.add((r.data as Map)['refresh_token'] as String);
+          n++;
+          return ScriptedAnswer(200, _renewed('a$n', 'r$n'));
+        }),
+      );
+      await w.session.saveLogin(
+        accessToken: 'a1',
+        refreshToken: 'r1',
+        mustChangePassword: false,
+      );
+      w.storage.failWrites = true;
+
+      expect(await w.session.renew(), isA<Renewed>());
+      expect(w.session.accessToken, 'a2');
+      expect(w.session.current, isA<SessionAuthenticated>());
+
+      expect(await w.session.renew(), isA<Renewed>());
+      expect(sent, ['r1', 'r2'], reason: 'r1 is spent: never sent again');
+    });
+
+    test('the spent pair is not left on the phone: a restart asks for a '
+        'login instead of sending it', () async {
+      final w = _build(
+        api: ScriptedAdapter((_) async => ScriptedAnswer(200, okBody({}))),
+        refresh: ScriptedAdapter(
+          (_) async => ScriptedAnswer(200, _renewed('a2', 'r2')),
+        ),
+      );
+      await w.session.saveLogin(
+        accessToken: 'a1',
+        refreshToken: 'r1',
+        mustChangePassword: false,
+      );
+      w.storage.failWrites = true;
+      await w.session.renew();
+      expect(w.storage.values[SecureKeys.refreshToken], isNot('r1'));
+
+      final restarted = DioSessionService(
+        storage: w.storage,
+        refreshDio: Dio(DioFactory.options(_root))
+          ..httpClientAdapter = ScriptedAdapter(
+            (_) async => throw StateError('no renewal expected'),
+          ),
+        logger: FakeLoggerService(),
+      );
+      addTearDown(restarted.dispose);
+      await restarted.restore();
+      expect(restarted.current, isA<SessionUnauthenticated>());
+    });
+  });
+
   group('TC-SESS-035 secure storage cannot be written or cleared', () {
     test(
       'logout still reaches Login when the passes cannot be deleted',
@@ -148,6 +212,7 @@ void main() {
           throwsA(isA<AppException>()),
         );
         expect(w.session.current, isNot(isA<SessionAuthenticated>()));
+        expect(w.session.accessToken, isNull, reason: 'not logged in');
       },
     );
   });

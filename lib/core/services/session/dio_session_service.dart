@@ -86,7 +86,14 @@ class DioSessionService implements SessionService {
     required bool mustChangePassword,
   }) async {
     _generation++;
-    await _storePasses(accessToken, refreshToken);
+    try {
+      await _storePasses(accessToken, refreshToken);
+    } on InternalErrorException {
+      // Not logged in: the passes do not stay in memory either.
+      _accessToken = null;
+      _refreshToken = null;
+      rethrow;
+    }
     _emit(
       mustChangePassword
           ? const SessionPasswordChangeRequired()
@@ -149,8 +156,14 @@ class DioSessionService implements SessionService {
       // Logged out (or in again) meanwhile: these passes belong to a login
       // that is over.
       if (generation != _generation) return const SessionEnded();
-      // Both new passes are stored before anything else (Section 6.4).
-      await _storePasses(access, next);
+      // Both new passes are stored before anything else (Section 6.4). If
+      // the phone cannot store them, they still work from memory: the old
+      // refresh pass is spent and must never be sent again (guide §3.4).
+      try {
+        await _storePasses(access, next);
+      } on InternalErrorException catch (e) {
+        _logger.warning('renewed passes kept in memory only: $e');
+      }
       if (data['must_change_password'] == true) requirePasswordChange();
       _logger.info('session renewed');
       return const Renewed();
@@ -169,11 +182,32 @@ class DioSessionService implements SessionService {
     }
   }
 
+  /// Keeps the new passes in memory first, then on the phone (audit 1.1).
+  /// A renewal has already spent the old refresh pass, and "sending one
+  /// that was already used ends the login" on every phone (guide §3.4), so
+  /// it must never be sent again. When they cannot be stored, the old pair
+  /// is deleted too, so a restart asks for a login instead of sending it.
   Future<void> _storePasses(String access, String refresh) async {
-    await _write(SecureKeys.accessToken, access);
-    await _write(SecureKeys.refreshToken, refresh);
     _accessToken = access;
     _refreshToken = refresh;
+    try {
+      await _write(SecureKeys.accessToken, access);
+      await _write(SecureKeys.refreshToken, refresh);
+    } on InternalErrorException {
+      await _deleteStored();
+      rethrow;
+    }
+  }
+
+  /// Deletes both stored passes, as far as the phone allows.
+  Future<void> _deleteStored() async {
+    for (final key in [SecureKeys.accessToken, SecureKeys.refreshToken]) {
+      try {
+        await _storage.delete(key);
+      } on Object catch (e) {
+        _logger.warning('pass not deleted: ${e.runtimeType}');
+      }
+    }
   }
 
   /// A storage write that fails (a full disk, a broken keystore) is an app
@@ -194,13 +228,7 @@ class DioSessionService implements SessionService {
     _refreshToken = null;
     // Login is reached even when the passes cannot be deleted; the next
     // start finds no usable pair and starts again (Section 6.5).
-    for (final key in [SecureKeys.accessToken, SecureKeys.refreshToken]) {
-      try {
-        await _storage.delete(key);
-      } on Object catch (e) {
-        _logger.warning('pass not deleted: ${e.runtimeType}');
-      }
-    }
+    await _deleteStored();
     // The phone ID is kept on purpose (Section 6.1).
     if (_current is! SessionUnauthenticated) {
       _emit(const SessionUnauthenticated());
