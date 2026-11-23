@@ -144,10 +144,10 @@ To settle them, fill in the [decision sheet](../decision-sheet.md): each questio
 |---|---|---|---|
 | 1 | The certificate (§13.3). **Withdrawn:** the backend removed certificates (SRS v1.2); not built, not a release feature. | LOOK-068 … -088 (withdrawn) | — |
 | 2 | The language switch (§13.8, §16). **Built 2026-11-19;** every text has a Bangla draft, waiting for the client's Bangla reader (§20.3, [bangla-drafts-for-review.md](../bangla-drafts-for-review.md)). | PROF-006 and I18N cases | Client (review) |
-| 3 | Which time zone defines a day for History `from` / `to` (§16, §20.2). | HIST-010 | Backend |
-| 4 | Email input is not defined beyond "a valid email address": spaces around it, capitals, and which addresses the app refuses. **Fixed 2026-11-16 (decision 56): spaces around it removed; one `@` with text on both sides; no space or invisible character inside (AUTH-110).** Whether the backend matches emails without case is not stated. | AUTH-027 … -030 | App, backend |
+| 3 | Which time zone defines a day for History `from` / `to` (§16, §20.2). **Answered (guide §4.5, §5, e163a52): whole UTC days. Built 2026-11-23:** the app asks for the UTC days a Bangladesh day overlaps and keeps the rows inside it; counts from the kept rows (HIST-051 … -054). | HIST-010, -051 … -054 | — |
+| 4 | Email input is not defined beyond "a valid email address": spaces around it, capitals, and which addresses the app refuses. **Fixed 2026-11-16 (decision 56): spaces around it removed; one `@` with text on both sides; no space or invisible character inside (AUTH-110).** **Answered (guide §3.1, e163a52): the backend matches an email in any case, spaces around it ignored.** | AUTH-027 … -030 | App, backend |
 | 5 | A login or code answer with an unknown `data.status` has no defined display. App today: not logged in, the Login screen stays. | AUTH-036 | App |
-| 6 | A new password equal to the current one: neither final.md nor the API guide says whether it is refused. | AUTH-063 | Backend |
+| 6 | A new password equal to the current one: neither final.md nor the API guide said whether it is refused. **Answered (guide §3.6, §3.7, e163a52): allowed; if that changes, the answer will be 403 `policy_denied`, which the app shows with the rules.** | AUTH-063 | — |
 | 7 | "Call the office" on a phone without a dialler has no message (Email has "No email app found. Write to …"). **Fixed 2026-11-16: "No phone app found. Call …" (AUTH-084).** | AUTH-084 | App |
 | 8 | Secure storage that cannot be read at start: the screen is not defined (§6.1 only says the phone ID is never regenerated on an error). **Fixed 2026-11-16 (decision 56): the app opens on Login; the phone ID is not replaced and is read again at the next try (SESS-034).** | SESS-025, -034 | App |
 | 9 | `GET me` without `permissions`, or with `permissions: null`: no defined display (the API guide always sends a list). App today (after the ROLE-012 fix): read as no permission, "No features yet". | ROLE-012 | App |
@@ -160,7 +160,7 @@ To settle them, fill in the [decision sheet](../decision-sheet.md): each questio
 | 16 | A certificate that cannot be made. **Withdrawn** (no certificate). | — | — |
 | 17 | The certificate's language. **Withdrawn** (no certificate). | — | — |
 | 18 | The language at the first start: the phone's language when it is Bangla, or English always (§16 lists both languages, not the default). **App answer 2026-11-19:** English until chosen. | PROF-030 | Client |
-| 19 | Bangla digits (১২৩) typed into a serial or hidden code: refused, or read as 0–9 (the formats list Latin digits only). **App answer 2026-11-19:** read as 0–9. | PROF-035 | Backend (19B) |
+| 19 | Bangla digits (১২৩) typed into a serial: refused, or read as 0–9 (the formats list Latin digits only). **App answer 2026-11-19:** read as 0–9. **The backend (guide §4, e163a52):** the server does not convert them, and such a value answers `not_found`. **Kept as the app's own choice (user decision 2026-11-23):** the server only ever receives 0–9. | PROF-035 | Client (19A) |
 | 20 | `final.md` §14.1 names components that are built under other names or not built (15-ui.md, section G). | UI-159 | App |
 | 21 | A chosen segment or chip has no token colour. **Decided 2026-11-15: navy fill, white text (`primary`, `onPrimary`), as the Figma History chips.** | UI-018 | App |
 

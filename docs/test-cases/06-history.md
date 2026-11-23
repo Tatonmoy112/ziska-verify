@@ -69,4 +69,4 @@
 
 ## Spec gaps in this file
 
-See [README §7](README.md#7-open-questions-spec-gaps): 2 (the language switch, built 2026-11-19), 3 (the day boundary of `from` and `to`).
+See [README §7](README.md#7-open-questions-spec-gaps): 2 (the language switch, built 2026-11-19), 3 (the day boundary of `from` and `to`, answered: whole UTC days; built 2026-11-23, TC-HIST-051 … -054).

@@ -782,3 +782,19 @@ Nothing in the app is changed during the audit. The user picks what to fix.
 | "Add photos" on a recent report in My reports (8.3) | Medium | Medium |
 | On a warning result, "No report needed: your office already knows" next to Report (as 4.8) | Medium | Small |
 | From the Check tab, offer the last check of the past few minutes as the linked check | Low-medium | Small |
+
+## Fixed against ProtectB-DOCS e163a52 (2026-11-23)
+
+The backend's docs are the source of truth. These findings are closed:
+
+| # | Finding | How |
+|---|---|---|
+| 7.7 | Dates | Whole UTC days (guide §4.5, §5): the app asks for the UTC days a Bangladesh day overlaps, keeps the rows inside it, ends the list at the first day, and counts the kept rows (TC-HIST-051 … -054) |
+| 4.1 | The same QR sent again after Back | The QR is kept after its result and not read again for 5 seconds (guide §4.3; TC-LOOK-129) |
+| 4.3 | A QR in lower case refused | Accepted in either case and sent as read (guide §4; TC-LOOK-128) |
+| 2.4 | "Not now" answered 404 | No longer applies: "Not now" is removed (D65; TC-AUTH-095) |
+| Step 3 texts | "Sign up" read as an account made at once | "Request access", "Send request", and the guide's answer text (§3.9; TC-AUTH-118) |
+| — | A 409 `conflict` showed the general text | The server's message (guide §1; TC-ERR-051) |
+
+**Held:** the name and the search counted in code points (DEC-429), ready on `hold/code-point-lengths` until the test server runs it.
+**Kept as the app's choice:** Bangla digits in a serial read as 0–9 before sending.

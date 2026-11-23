@@ -78,7 +78,7 @@ Preserve the existing four routing states: unauthenticated, awaiting new-phone c
 - Authenticated `401 unauthenticated` ends the login, except the documented wrong-old-password response from `me/password`.
 - Public code/password/access-request errors stay in their respective forms and do not clear another session.
 - Whoever makes an account decides whether its first password must be changed (backend D59): the portal and the staff panel tick it by default, an approved access request leaves it off. The app follows `must_change_password` as `logged_in`, `GET me` and renewals send it. Only profile, change password, and logout remain available until it is changed.
-- **Not now** on a forced change: when the answer also carries `password_change_skippable: true`, the change screen offers **Not now** under **Save password**. It sends `POST me/password/later`, which returns a normal access pass (the refresh pass stays), and the app continues to the Check tab. `GET me` then says `password_change_pending: true` and Profile shows a reminder card with **Change password**; the next login asks again. Without the field the change stays required. A `403 forbidden` hides Not now and says it is not available. The route and fields are requested from the backend team (`docs/backend-requests/password-change-later.md`), who will deliver them; until then the mock build plays them locally (`DEMO_PASSWORD_LATER`, mock only, Section 17).
+- **No "Not now"** (backend D65, DEC-429; guide §3.2; removed 2026-11-23): whoever sets an official's password ticks "must change password" or not (D59), also when replacing a password. Ticked, the login answers `must_change_password: true` and only the change screen and **Log out** are open until the password is changed; unticked, the app works as usual and the password can be changed in Profile. Fields the guide does not have (`password_change_skippable`, `password_change_pending`) are ignored.
 - User-chosen passwords require 8-128 code points, a Unicode letter, a Unicode digit, and no control characters. Show live rule hints and a visibility control before typing.
 - A wrong, expired or closed reset code (backend D64: 10 wrong codes in an hour close the reset for 15 minutes, with the same 401) shows "The code is wrong or has expired. Ask for a new code." and **Send a new code**, which returns to the email step with the email kept. The neutral sentence of step 1 is never contradicted on the reset screen.
 - Password change replaces the access pass while keeping the refresh pass. Forgotten-password reset returns to login.
@@ -132,7 +132,13 @@ Checks support result, way, inclusive date strings, search, and `session_id`. No
 
 Session lists support status, dates, limit and cursor, with both QR and serial kinds in the returned rows. Omitted dates use the server's last-seven-days default. There is no undocumented kind query.
 
-Render times in Asia/Dhaka using the existing utilities and injectable clock. Date-picker strings retain existing behavior; the backend day-boundary question remains in the release backlog.
+Render times in Asia/Dhaka using the existing utilities and injectable clock.
+
+**Dates (2026-11-23).** The backend's `from`/`to` are whole UTC days, both included, and the totals count those UTC days (guide §4.5, §5). The app shows Bangladesh days, which run from 18:00 UTC the day before to 18:00 UTC, so for the Bangladesh days F to T (`LocalDays`):
+- it sends `from` = F − 1 and `to` = T, in `YYYY-MM-DD` with Latin digits; an open side stays open;
+- it keeps only the rows inside the chosen days: checks by `at`, sessions by `started_at` (which time the backend filters sessions by is not written down);
+- rows come newest first, so the list ends at the first row before the first day (a check by `at`, a session by `last_scan_at`); a page that keeps no row but has a cursor loads the next by itself, up to 50 in a row;
+- the server's totals are not shown for a date filter: the counts are the kept checks', given once the list is complete and kept through a refresh; with a result picked, its own checks are counted. No `limit=1` request counts them. Without dates, the server's totals as before (TC-HIST-051 … -054).
 
 ## 11. Configuration and organization
 
@@ -152,7 +158,7 @@ Show backend request references on API errors. Never open QR links. Show `item.c
 
 ### 13.1 Single lookup
 
-Load `formats` once per login and validate only serial/QR inputs using that response. Keep serials as text, including leading zeros. Reuse normalization and QR parsing; take the value after the last `/q/` without opening the URL.
+Load `formats` once per login and validate only serial/QR inputs using that response. A QR's letters are checked in either case, one character for one, and the value is sent as read: the server reads it in capitals (guide §4, "Reading a QR"; TC-LOOK-128). Back from a scanned result, the same QR is not read again for 5 seconds, as the camera may still see it (guide §4.3, "Do not send the same QR twice in a row while it stays in front of the camera"; TC-LOOK-129). Keep serials as text, including leading zeros. Reuse normalization and QR parsing; take the value after the last `/q/` without opening the URL.
 
 Show the backend result and reference:
 
@@ -196,7 +202,7 @@ Lock the submitted payload through retries. A confirmed 503 service_unavailable 
 
 Search serial/reference, filter, and page through own checks. Session details use `checks?session_id=...` and retain that filter when changing other controls. Legacy history can still display/filter `way: hidden_code`; it is not a submission option.
 
-The History tab has a **Checks | Sessions** switch under its title (a segmented control, navy for the chosen segment). **Checks** is the own-checks list. **Sessions** lists the official's own sessions, scanner sessions and serial stacks alike, newest first, with status (all, open, ended) and date filters; without dates the backend answers the last 7 days. Each row shows the kind, the status, the first and last scan times, and the backend totals. A row opens **Session checks**, the checks of that session (`/history/sessions/{id}`), without the switch; back returns to the Sessions view. Returning to the retained History tab refreshes it. Profile totals refresh when the profile tab returns.
+The History tab has a **Checks | Sessions** switch under its title (a segmented control, navy for the chosen segment). **Checks** is the own-checks list. **Sessions** lists the official's own sessions, scanner sessions and serial stacks alike, newest first, with status (all, open, ended) and date filters; without dates the backend answers the last 7 UTC days. Dates chosen in Checks or Sessions are Bangladesh days, asked as the UTC days they overlap (Section 10, "Dates"). Each row shows the kind, the status, the first and last scan times, and the backend totals. A row opens **Session checks**, the checks of that session (`/history/sessions/{id}`), without the switch; back returns to the Sessions view. Returning to the retained History tab refreshes it. Profile totals refresh when the profile tab returns.
 
 ### 13.5 Incident reports and photos
 
@@ -210,7 +216,7 @@ Only `GET retail-users` remains. It requires incident permission, searches activ
 
 Retain the current token-based visual design. Home shows serial entry/QR for single permission and separate Scanner mode/Serial stack tools for bulk permission, plus permitted reports. Empty permissions show an empty state.
 
-Profile shows identity, role, organisation, support, language (Section 16), version, voluntary password change and logout. While `GET me` says `password_change_pending: true` (after **Not now**), a warning card under the identity card reads "Your password was set by someone else. Change it to keep your account safe." with **Change password**. A **What you can do** card lists the official's permissions by their names in the SRS (FR-ACC-15): Check one item, Check many items, Own history, Report incidents; unknown keys are not shown, and an empty set shows "None. Ask your office.". Check totals require history permission. Crashlytics provisioning remains separate release work.
+Profile shows identity, role, organisation, support, language (Section 16), version, voluntary password change and logout. A **What you can do** card lists the official's permissions by their names in the SRS (FR-ACC-15): Check one item, Check many items, Own history, Report incidents; unknown keys are not shown, and an empty set shows "None. Ask your office.". Check totals require history permission. Crashlytics provisioning remains separate release work.
 
 ### 13.8 Public access requests
 
@@ -236,7 +242,7 @@ Always show the same code-sent confirmation, including for existing accounts. Em
 
 ### 13.10 Data-flow rules (2026-11-17)
 
-- Every 429 waits its own `Retry-After`. Sign up counts codes and requests apart, each photo has its own wait, and the loop stops at a 429 photo. The formats' Retry, the list Retry buttons and a resumed session's scans wait out the countdown.
+- Every 429 waits its own `Retry-After`. Request access counts codes and requests apart, each photo has its own wait, and the loop stops at a 429 photo. The formats' Retry, the list Retry buttons and a resumed session's scans wait out the countdown.
 - History, Sessions, My reports and the retail user picker keep the filter or search tapped during a wait and load once when it ends; a pull during a wait sends nothing.
 - `Retry-After` is read in seconds or as an HTTP date still to come. Without a usable value the screen says "Try again later" and allows a manual retry; no wait is made up.
 - The report note takes at most 1,000 code points, and its counter counts code points (a flag counts two).
@@ -245,14 +251,15 @@ Always show the same code-sent confirmation, including for existing accounts. Em
 - A report answered 2xx with a body that cannot be read may be filed: it is never filed again from the screen (**Check My reports**).
 - A 404 names what is gone: "Check not found." the check, "Retail user not found." the retail user (taken off the report, so the picker is offered again), "Role not found." the role; any other 404 is "Not available". A page without the error envelope is decided by its status: 400/413/415 a defect, 403 a general error, 404 "Not available".
 - A refused photo shows, under the photos, the server's message for a 409 and the reference.
-- The QR value is sent as read, trimmed only, and checked against the `characters` of `GET formats`.
+- The QR value is sent as read, trimmed only, and checked against the `characters` of `GET formats` in either case (Section 13.1).
+- A `409 conflict` shows the server's message (guide §1: "Show the message"), unless the screen handles it itself (TC-ERR-051).
 - A refused certificate means nothing was sent. A request sent without a pass carries no `Authorization`. A late 403 `password_change_required` for an older pass leaves the login of now as it is.
-- Logout and Not now are sent with no body and no `Content-Type`; Log out spins until the login has ended.
+- Logout and the end of a session are sent with no body and no `Content-Type` (guide §1); Log out spins until the login has ended.
 - A phone ID that secure storage cannot read gives "Something went wrong. Try again." on Login and the email code screen.
 - The app never says "verify" (SRS v1.2 glossary: an official's look-up is a **check**; "verification" is the consumer's public website, which the app never touches). The tab is **Check**, the card **Check authenticity** with its button **Check**, the loader **Checking…**, the result page **Check result**; the email code screens say **Code from the email** and **Continue**; the brand lines say **Product Authenticity Check** and **TRACK · TRACE · CHECK**. Code and route names keep their old words (`verify_screen.dart`, `auth/verify-phone`).
-- **Login's Sign up is the access request** (user decision 2026-11-18): the screen of guide §3.9 under the name **Sign up**, with the same fields (name, role, password with the rule, email), the emailed code and the office's approval by email; only the words differ. Its texts follow guide §3.9: "Create your account. Your office checks it and emails you its answer." and, once sent, "Thanks for signing up. Your request was sent. You will get an email when it is answered." (an answer may be a refusal). Code and API names keep the backend's term (`request_access_screen.dart`, `auth/access`).
+- **Login's Request access** (guide §3.9; renamed from "Sign up" 2026-11-23, TC-AUTH-118): the screen of guide §3.9 with its fields (name, role, password with the rule, email), the emailed code and the office's answer by email. It says it is a request: "Ask for an account. Your office checks the request and emails you its answer.", the button **Send request**, and once sent the guide's "Your request was sent. You will get an email when it is answered." (an answer may be a refusal). Code and API names keep the backend's term (`request_access_screen.dart`, `auth/access`).
 - **The offline banner** (built 2026-11-19, §14.2): "No internet connection. Checks need a connection." above every screen, login screens included, after one second without a link and gone at once when it is back. It follows the phone's link only (Wi-Fi without internet shows no banner; the failed request says so), never blocks or covers a button, sends nothing by itself when the link returns, and is read by TalkBack (the screens below are their own semantics container, so a page route cannot hide it). At a large font the Check tab's header scrolls with the page, so it never overflows a small phone.
-- **Login ends with a copyright footer** (user decision 2026-11-18): under **Sign up**, "Only authorized users can access this system", a hairline, "© {year} Ziska Pharmaceuticals Ltd. All rights reserved." (the year from the clock) and "Version {version} ({build})" from the installed app. It rests at the bottom of a tall phone and scrolls after the form on a short one or at a large font; screen readers read the copyright and version as one item.
+- **Login ends with a copyright footer** (user decision 2026-11-18): under **Request access**, "Only authorized users can access this system", a hairline, "© {year} Ziska Pharmaceuticals Ltd. All rights reserved." (the year from the clock) and "Version {version} ({build})" from the installed app. It rests at the bottom of a tall phone and scrolls after the form on a short one or at a large font; screen readers read the copyright and version as one item.
 - **The Check tab is the camera** (user decision 2026-11-18). With `item:lookup` the tab opens on a live camera under the header: a read QR is the trigger, sent at once as `POST lookups {"way":"qr","value":…}` with no button, and its result opens; back returns to the running camera. The serial is typed right under the camera ("Or type the serial", **Check**); the tools follow. The camera runs only while it can be seen: the tab shown and not covered, the app in the foreground, no result open and no failed scan waiting for **Scan again**. Camera refused: the message with **Open settings**, and typing still works. Without `item:lookup` there is no camera. The former **Scan QR code** card and its separate screen (`/home/scan`) are gone.
 - Scanner mode never drops a read QR: reads that come while one is being checked wait in line and are sent in the order read, one at a time, 500 ms apart (guide §4.3: 2 scans a second). A 429 holds the line until `Retry-After`; any other failure lets the waiting reads go and says how many to scan again. Each answer shows at once on the camera in its colour (Genuine, Needs attention, Not found, Not in a batch, Already scanned) with the serial and product, the frame takes that colour, and the phone vibrates: a short buzz for Genuine, a longer one for anything else.
 - The Check tab shows a formats failure with **Try again** under the camera. Scanner mode offers **Try again** when a resumed session's scans fail to load, and a resumed session without its totals says "Resumed session. The counts show after the next scan." instead of zeros.
@@ -308,25 +315,29 @@ English and Bangla ARBs with generated accessors. Every English text has a Bangl
 - **Switch:** Profile → **Language** offers English and বাংলা, each named in its own language, the current one marked. The choice applies at once, without a restart, and is kept on the phone (`PreferencesService` on `shared_preferences`) across restarts and logouts; it is a phone setting, not part of the login. `LocaleCubit` reads it before the first screen.
 - **First start:** English until a choice is made, whatever the phone's language.
 - **Times and dates:** Bangladesh time, written with the chosen language's calendar data (in Bangla: Bangla digits and month names). Dates sent to the API stay `YYYY-MM-DD` in Latin digits.
-- **Digits typed:** Bangla digits typed or pasted into a serial or hidden code are read as 0–9 (`CodeNormalizer`, `SerialInputFormatter`).
+- **Digits typed:** Bangla digits typed or pasted into a serial are read as 0–9 (`CodeNormalizer`, `SerialInputFormatter`). This is the app's own choice (user decision 2026-11-23): the server does not convert them, and a value with Bangla digits answers `not_found` there (guide §4, "Reading a serial"), so the server only ever receives 0–9.
 - **Errors:** a known `error.code` shows the app's text in the chosen language; an unknown code shows the server's message, with the reference.
 - **Font:** the platform's Bangla font. The theme names Noto Sans Bengali as its fallback; the tests load it from `test/fonts/` (OFL 1.1), so the Bangla goldens show real letters.
 
 ## 17. Environments
 
-Mock builds use the updated Postman snapshot and require its current mock server. Staging/live retain HTTPS and fixed client identity. The mock build sets `DEMO_PASSWORD_LATER: true`, which plays `me/password/later` and its fields until the backend ships them; staging and live builds refuse the flag.
+Mock builds use the updated Postman snapshot and require its current mock server. Staging/live retain HTTPS and fixed client identity. The mock build has no other demo flag than `POSTMAN_MOCK_ROUTING` (Section 20.2); `DEMO_PASSWORD_LATER` was removed with "Not now" (2026-11-23).
 
 The backend's test server (2026-11-22) is the staging environment: `https://testapp.protecb.com`, client `ziska-test`. The app was checked against it in 11 steps (`docs/staging-integration-2026-11-22.md`); the server's answers are fixtures replayed in `test/staging/`. Do not test recorded checks against a live client.
 
 What is still open on the backend's side is in `docs/backend-requests/2026-11-22-backend-fix-list.md`.
 
-What the test server showed, beyond the guide (backend question B5; rechecked against `ProtectB-DOCS` at 5d96a91 on 2026-11-22):
-- **Serials are read without their leading zeros** (backend DEC-371): `001` and `1` are one item, and a serial may be padded with zeros up to 40 characters. The app sends the first typed of such serials once, and counts `serial.max_digits` without the leading zeros. `0` is looked up like any serial (`not_found`).
-- **Characters are counted two ways:**
-  - a retail-user search and a sign-up name count UTF-16 units (an emoji counts two). The app keeps both within 100 units, cut at a whole character (`TextLimits.fitUtf16`);
-  - a note and a password count code points, as the app does.
+The backend's documented rules (`ProtectB-DOCS` e163a52, DEC-429 and D65, and its reply to our fix list; the contract copy in `docs/protectb-api/` is byte-identical):
+- **Serials** (guide §4.1): digits 0–9 only, leading zeros dropped (`001` and `1` are one item), up to 40 characters, `serial.max_digits` counting the serial's own digits; `0` is `not_found`. The app sends the first typed of such serials once; Bangla digits are read as 0–9 on the phone first (Section 16).
+- **QR values** are read in capitals; the app sends a QR as read, in either case (Section 13.1).
+- **Dates** are whole UTC days; the app asks for the UTC days a Bangladesh day overlaps (Section 10, "Dates").
+- **Lengths** count code points, an emoji as one (DEC-429). **The test server does not run it yet** (2026-11-23: a request's name and a retail search of 99 letters and an emoji still answer 400), so the app keeps those two within 100 UTF-16 units (`TextLimits.fitUtf16`). The change to code points is ready on the branch `hold/code-point-lengths`, to merge once the checker's `signup-probe` and `lengths` show it accepted. A note and a password already count code points.
 - **A note is trimmed before it is counted:** the spaces around it do not count toward its 1,000 characters.
-- **A new password may equal the current one.**
+- **Email** is matched in any case, spaces around it ignored; the app trims it.
+- **A new password may equal the current one**; if that changes, the answer will be 403 `policy_denied`, which the app shows with the rules.
+- **A renewal during a forced change** answers 200 with `must_change_password` again; the app keeps the change screen.
+- **Routes without a body** are sent with no body and no JSON `Content-Type`.
+- **No "Not now"** (D65): Section 6.
 
 ## 18. Verification
 
@@ -340,7 +351,7 @@ Approved for this migration: full Flutter contract migration; serial entry limit
 
 | # | Decision (2026-11-16) | Source |
 |---|---|---|
-| M1 | **Not now stays** (confirmed by the client, 2026-11-22). The backend team will add `me/password/later` and `password_change_skippable` (`docs/backend-requests/password-change-later.md`); D59 also lets the office skip the forced change per account. Until the route exists, the mock build plays it (`DEMO_PASSWORD_LATER: true` in `config/mock.json`); staging and live refuse the flag. | User decision 2026-11-17 |
+| M1 | **No "Not now"** (backend D65, DEC-429; guide §3.2). Whoever sets the password ticks "must change password" or not (D59). The button, its route `me/password/later`, the fields, the Profile reminder and the mock demo were removed on 2026-11-23, following ProtectB-DOCS as the source of truth (it had stayed since 2026-11-17, waiting for a route the backend decided not to build). | User decisions 2026-11-17, 2026-11-23 |
 | M2 | **Sessions live in the History tab**, behind a Checks / Sessions switch; one session's checks open above it. | User decision; SRS UC-06, FR-SCN-16 |
 | M3 | **Two Check tiles**, Scanner mode and Serial stack, both with `item:bulk_lookup`. | User decision; SRS FR-SCN-01, FR-STK-01 |
 | M4 | **Profile lists the permissions** by their SRS names. | SRS FR-ACC-15 |
@@ -349,12 +360,12 @@ Approved for this migration: full Flutter contract migration; serial entry limit
 | N2 | **The History tracking log is the official's own**: a searched serial shows "Your checks of serial X", never suggesting other officials' checks. | User decision 2026-11-17; backend D61 |
 | N3 | **Report incident links one of the official's own checks** through a picker of the own history (search by serial or reference); offered only with `history:own`. | User decision 2026-11-17; SRS UC-08 |
 | N4 | **Bangla drafts** for the strings added with D56–D63 and the screen fixes are in `app_bn.arb`, listed for the client in `docs/bangla-drafts-for-review.md`. | User decision 2026-11-17 |
-| N6 | **The app follows the backend plan at 4ec8318 (2026-11-18) in full**: a stack's unreadable 200 counts as recorded; an unknown code on any status shows the server's message; Sign up's texts follow guide §3.9; no photo over 2,048 px; History rows show the official and the session (SRS FR-HIS-04). **Not now** stays, waiting for the backend's route (B2). | User decision 2026-11-19; `docs/backend-alignment-2026-11-19.md` |
+| N6 | **The app follows the backend plan at 4ec8318 (2026-11-18) in full**: a stack's unreadable 200 counts as recorded; an unknown code on any status shows the server's message; Request access's texts follow guide §3.9; no photo over 2,048 px; History rows show the official and the session (SRS FR-HIS-04). ("Not now" was later removed: M1.) | User decision 2026-11-19; `docs/backend-alignment-2026-11-19.md` |
 | N5 | **The language switch ships with every text drafted in Bangla**, all marked for the client's review in `docs/bangla-drafts-for-review.md`. The first start is English; Bangla digits in a serial are read as 0–9 (the app's answers to open questions 18 and 19A, sent to the client). | User decision 2026-11-19 |
 
 ## 20. Remaining dependencies
 
-See `docs/release-backlog.md` for the test server's remaining data (QR values, a retail user, an item with a picture), backend day boundary, the client's review of the Bangla texts, release signing, Firebase/Crashlytics and iOS schemes. The architecture is not evidence that manual/staging acceptance has run. Record actual tool results in the migration report.
+See `docs/release-backlog.md` for the test server's remaining data (QR values, a retail user, an item with a picture), the code-point lengths on the test server (DEC-429), the client's review of the Bangla texts, release signing, Firebase/Crashlytics and iOS schemes. The architecture is not evidence that manual/staging acceptance has run. Record actual tool results in the migration report.
 
 ### 20.0 The backend plan of 2026-11-18
 
@@ -362,12 +373,12 @@ The plan at commit 4ec8318 changed two things the app meets, and neither needs a
 
 ### 20.1 Backend questions (2026-11-17)
 
-Four points are with the backend team in `docs/backend-requests/data-flow-questions.md`; the app works as written there until they answer:
+Four points went to the backend team in `docs/backend-requests/data-flow-questions.md`. **All four are answered in ProtectB-DOCS e163a52**, and the app follows the answers (Section 17):
 
-- `from`/`to` of `GET checks` and `GET lookups/sessions`: the app sends the picked Dhaka calendar date. **Risk (2026-11-22):** the backend's other lists filter whole UTC days (`frontend-guide/api-guide.md:2303`); if these do too, from 00:00 to 06:00 Dhaka a day filter shows the wrong checks. Asked as item 4 of the backend fix list.
-- QR case: the app sends the value as read and checks it against the formats' characters.
-- `auth/refresh` during a forced change: a 200 with `must_change_password: true` opens the change screen; a 403 keeps the login and fails only the request that needed the renewal.
-- An empty logout body: the app sends no body and no `Content-Type`.
+- `from`/`to` of `GET checks` and `GET lookups/sessions`: whole UTC days; the app asks for the UTC days a Bangladesh day overlaps and keeps the rows inside it (Section 10, "Dates").
+- QR case: read in capitals; the app accepts a QR in either case and sends it as read.
+- `auth/refresh` during a forced change: a 200 with `must_change_password: true` again, as the app handles it.
+- A route without a body: no body and no JSON `Content-Type`, as the app sends it.
 
 ### 20.2 The Postman mock (2026-11-18)
 
