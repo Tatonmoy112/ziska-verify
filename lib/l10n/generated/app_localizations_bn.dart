@@ -1084,6 +1084,11 @@ class AppLocalizationsBn extends AppLocalizations {
   }
 
   @override
+  String sessionSummaryShowing(int shown, int count) {
+    return '$countটির মধ্যে $shownটি দেখানো হচ্ছে';
+  }
+
+  @override
   String get sessionScanMore => 'আরও স্ক্যান';
 
   @override

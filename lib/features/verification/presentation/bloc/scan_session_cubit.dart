@@ -534,10 +534,13 @@ class ScanSessionCubit extends Cubit<ScanSessionState> {
     return wait != null && clock.now().isBefore(wait);
   }
 
+  /// The next page of the session's scans: while scanning, and on the
+  /// summary, which shows every product (final.md §13.2; audit 5.3).
+  /// Reading an ended session's checks is read only.
   Future<void> more() async {
     final cursor = state.nextCursor;
     final id = state.id;
-    if (_ended ||
+    if ((_ended && !state.done) ||
         state.loadingMore ||
         _rowsWaiting ||
         cursor == null ||
@@ -548,7 +551,10 @@ class ScanSessionCubit extends Cubit<ScanSessionState> {
     final generation = _generation;
     emit(state.copyWith(loadingMore: true));
     final result = await _loadChecks(id, cursor);
-    if (!_active(generation)) return;
+    // Dropped once the screen closed or Scan more began.
+    if (isClosed || generation != _generation || (_ended && !state.done)) {
+      return;
+    }
     switch (result) {
       case Success(:final value):
         final refs = state.rows.map((r) => r.ref).toSet();

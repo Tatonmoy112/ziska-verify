@@ -583,6 +583,13 @@
       }
     }
   },
+  "sessionSummaryShowing": "Showing {shown} of {count}",
+  "@sessionSummaryShowing": {
+    "placeholders": {
+      "shown": {"type": "int"},
+      "count": {"type": "int"}
+    }
+  },
   "sessionScanMore": "Scan more",
   "@sessionScanMore": {
     "description": "On the summary: starts a new scanner session."

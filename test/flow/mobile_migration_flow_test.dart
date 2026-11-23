@@ -187,6 +187,85 @@ void main() {
       await tester.pumpAndSettle();
     },
   );
+  // TC-MIG-071 (audit 5.3; final.md §13.2: the summary shows "every
+  // product with its result"): a resumed session's scans come a page at a
+  // time; the summary says how many show and loads the rest.
+  testWidgets('TC-MIG-071 a resumed session: the summary loads every scan', (
+    tester,
+  ) async {
+    const id = '7f3c2a10-5b1e-4c8e-9d4a-2e6f0b9c1d33';
+    Map<String, Object?> check(String ref) => {
+      'ref': ref,
+      'at': '2026-11-23T05:00:00+00:00',
+      'way': 'qr',
+      'result': 'valid',
+      'reasons': <String>[],
+      'serial': null,
+      'product': null,
+      'batch': null,
+      'official': 'Test Official',
+      'session_id': id,
+    };
+    final app = await startApp(
+      tester,
+      overrides: {
+        'GET lookups/sessions/$id': always(
+          ok({
+            'id': id,
+            'kind': 'qr',
+            'status': 'open',
+            'started_at': '2026-11-23T05:00:00+00:00',
+            'last_scan_at': '2026-11-23T05:10:00+00:00',
+            'scanned': 3,
+            'valid': 3,
+            'warning': 0,
+            'not_found': 0,
+            'unassigned': 0,
+            'left': 4997,
+            'official': 'Test Official',
+          }),
+        ),
+        'GET checks': (r) async => r.queryParameters['cursor'] == null
+            ? ok({
+                'checks': [check('MA-R1'), check('MA-R2')],
+                'totals': null,
+                'next_cursor': 'c1',
+              })
+            : ok({
+                'checks': [check('MA-R3')],
+                'totals': null,
+                'next_cursor': null,
+              }),
+      },
+    );
+    await ActiveScanStore(
+      app.storage,
+      client: testConfig.clientSlug,
+      official: Roles.fieldInspector['id'] as String,
+    ).save(id);
+    await app.tap(find.byKey(const Key('verify.tool.bulk')));
+    await app.tap(find.byKey(const Key('session.finish')));
+
+    final summary = find.byKey(const Key('session.summary'));
+    expect(summary, findsOneWidget);
+    expect(find.text('3 products scanned'), findsOneWidget);
+    expect(find.text('Showing 2 of 3'), findsOneWidget);
+    expect(find.byKey(const ValueKey('summary.MA-R3')), findsNothing);
+
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('session.summary.more')),
+      200,
+      scrollable: find
+          .descendant(of: summary, matching: find.byType(Scrollable))
+          .first,
+    );
+    await app.tap(find.byKey(const Key('session.summary.more')));
+    expect(find.byKey(const ValueKey('summary.MA-R3')), findsOneWidget);
+    expect(find.text('Showing 2 of 3'), findsNothing);
+    expect(find.byKey(const Key('session.summary.more')), findsNothing);
+    await app.tap(find.byKey(const Key('session.done')));
+  });
+
   testWidgets('scanner result layout fits narrow screens with large text', (
     tester,
   ) async {

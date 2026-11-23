@@ -1085,6 +1085,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String sessionSummaryShowing(int shown, int count) {
+    return 'Showing $shown of $count';
+  }
+
+  @override
   String get sessionScanMore => 'Scan more';
 
   @override

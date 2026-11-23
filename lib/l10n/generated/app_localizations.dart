@@ -2012,6 +2012,12 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{1 product scanned} other{{count} products scanned}}'**
   String sessionSummaryCount(int count);
 
+  /// No description provided for @sessionSummaryShowing.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing {shown} of {count}'**
+  String sessionSummaryShowing(int shown, int count);
+
   /// On the summary: starts a new scanner session.
   ///
   /// In en, this message translates to:

@@ -174,6 +174,7 @@ class _ScanSessionScreenState extends State<ScanSessionScreen>
               return _SessionSummary(
                 state: state,
                 onOpen: (answer) => unawaited(_openAnswer(answer, state)),
+                onMore: () => unawaited(_cubit.more()),
               );
             }
             if (state.id == null) {
@@ -820,10 +821,17 @@ class _BottomBar extends StatelessWidget {
 
 /// After Finish: every scan of the session together, with the totals.
 class _SessionSummary extends StatelessWidget {
-  const _SessionSummary({required this.state, required this.onOpen});
+  const _SessionSummary({
+    required this.state,
+    required this.onOpen,
+    required this.onMore,
+  });
 
   final ScanSessionState state;
   final ValueChanged<ScanAnswer> onOpen;
+
+  /// The next page of a resumed session's scans (audit 5.3).
+  final VoidCallback onMore;
 
   @override
   Widget build(BuildContext context) {
@@ -878,6 +886,34 @@ class _SessionSummary extends StatelessWidget {
               final answer? => () => onOpen(answer),
               null => null,
             },
+          ),
+        // A resumed session's scans come a page at a time: say how many
+        // show, and load the rest (final.md §13.2: every product).
+        if (state.nextCursor != null)
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.screen,
+              vertical: AppSpacing.sm,
+            ),
+            child: Column(
+              children: [
+                Text(
+                  l.sessionSummaryShowing(state.rows.length, count),
+                  key: const Key('session.summary.showing'),
+                  style: AppTypography.body,
+                ),
+                RetryCountdown(
+                  until: state.rowsRetryAt,
+                  builder: (_, wait) => TextButton(
+                    key: const Key('session.summary.more'),
+                    onPressed: state.loadingMore || wait > 0 ? null : onMore,
+                    child: Text(
+                      wait > 0 ? l.errorRateLimited(wait) : l.sessionsMore,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
       ],
     );
