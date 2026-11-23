@@ -75,6 +75,59 @@ void main() {
     },
   );
 
+  // TC-HIST-055 (audit 7.1; guide §5: a cursor goes back to the list that
+  // gave it): the next page waits out a 429; a filter picked meanwhile
+  // loads its own first page, never the new filter with the old cursor.
+  test(
+    'TC-HIST-055 History: a filter during a next-page wait starts its own '
+    'list',
+    () async {
+      CheckRecord row(String ref) => CheckRecord(
+        ref: ref,
+        at: DateTime.utc(2026, 11, 23, 5),
+        way: CheckWay.serial,
+        result: CheckResult.valid,
+        reasons: const [],
+        official: 'Asha Rao',
+      );
+      final repo = _History();
+      final sent = <(CheckQuery, String?)>[];
+      when(() => repo.getChecks(any(), any())).thenAnswer((inv) async {
+        final query = inv.positionalArguments[0] as CheckQuery;
+        final cursor = (inv.positionalArguments[1] as PageRequest).cursor;
+        sent.add((query, cursor));
+        if (sent.length == 1) {
+          return Success(
+            CheckPage(
+              page: CursorPage(items: [row('OLD')], nextCursor: 'c1'),
+            ),
+          );
+        }
+        if (sent.length == 2) return _limited;
+        return Success(CheckPage(page: CursorPage(items: [row('NEW')])));
+      });
+      final bloc = HistoryBloc(GetChecks(repo))
+        ..add(const HistoryQueryChanged(CheckQuery()));
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      bloc.add(const HistoryNextPageRequested());
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      expect(bloc.state.list.isWaiting, isTrue);
+
+      const picked = CheckQuery(way: CheckWay.qr);
+      bloc.add(const HistoryQueryChanged(picked));
+      await Future<void>.delayed(_wait * 2);
+
+      final after = sent.skip(2).toList();
+      expect(after, isNotEmpty);
+      for (final (query, cursor) in after) {
+        expect(query.way, CheckWay.qr);
+        expect(cursor, isNull, reason: 'never the old list cursor');
+      }
+      expect(bloc.state.list.items.map((c) => c.ref), ['NEW']);
+      await bloc.close();
+    },
+  );
+
   test(
     'TC-MIG-043 Sessions: a filter during a wait loads once, after it',
     () async {

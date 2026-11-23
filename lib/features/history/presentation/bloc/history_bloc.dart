@@ -108,7 +108,10 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
     );
     on<HistoryRetried>((_, emit) {
       if (state.list.isWaiting) return null;
-      if (state.list.status == PaginationStatus.failureMore) {
+      // The failed next page is asked again only for the list it belongs
+      // to; a filter changed meanwhile starts its own list (audit 7.1).
+      if (state.list.status == PaginationStatus.failureMore &&
+          state.query == _listQuery) {
         return _loadNext(emit);
       }
       return _loadFirst(state.query, emit);
@@ -122,6 +125,10 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
 
   /// The query (without its result) that [HistoryState.chipTotals] count.
   CheckQuery? _chipBase;
+
+  /// The query the list's rows and cursor belong to: a cursor goes back
+  /// only to the list that gave it (guide §5).
+  CheckQuery? _listQuery;
 
   /// A load asked for during a `429` wait, sent when the wait ends.
   final _deferred = WaitTimer();
@@ -148,6 +155,7 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
       return;
     }
     final generation = ++_generation;
+    _listQuery = query;
     final base = query.copyWith(result: null);
     // The chip counts still hold when only the result changed; a refresh
     // counts again.
@@ -202,6 +210,11 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
   }
 
   Future<void> _loadNext(Emitter<HistoryState> emit) async {
+    // The filters changed since the list loaded (during a 429 wait): its
+    // cursor is not theirs, so their own first page loads (audit 7.1).
+    if (_listQuery != null && state.query != _listQuery) {
+      return _loadFirst(state.query, emit);
+    }
     final list = state.list;
     if (!list.canLoadMore) return;
     final generation = _generation;
