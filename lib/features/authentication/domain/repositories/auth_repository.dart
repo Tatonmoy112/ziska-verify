@@ -21,9 +21,6 @@ abstract interface class AuthRepository {
     required String newPassword,
   });
 
-  /// **Not now** on a forced change (final.md Section 6.6).
-  Future<Result<void>> postponePasswordChange();
-
   Future<Result<void>> requestPasswordReset(String email);
 
   Future<Result<void>> resetPassword({

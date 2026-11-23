@@ -86,12 +86,6 @@ class AuthRepositoryImpl implements AuthRepository {
   });
 
   @override
-  Future<Result<void>> postponePasswordChange() => guard(() async {
-    final dto = await _api.postponePasswordChange();
-    await _session.postponePasswordChange(dto.accessToken);
-  });
-
-  @override
   Future<Result<void>> requestPasswordReset(String email) =>
       guard(() => _api.forgotPassword(email));
 
@@ -161,7 +155,6 @@ class AuthRepositoryImpl implements AuthRepository {
           accessToken: access,
           refreshToken: refresh,
           mustChangePassword: mustChange,
-          canSkip: mustChange && (dto.passwordChangeSkippable ?? false),
         );
         return LoggedIn(mustChangePassword: mustChange);
       default:

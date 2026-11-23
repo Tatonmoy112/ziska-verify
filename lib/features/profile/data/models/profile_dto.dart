@@ -12,8 +12,6 @@ class ProfileDto {
     required this.role,
     required this.permissions,
     required this.mustChangePassword,
-    this.passwordChangeSkippable,
-    this.passwordChangePending,
     this.organisation,
     this.support,
   });
@@ -31,13 +29,6 @@ class ProfileDto {
   @JsonKey(defaultValue: <String>[])
   final List<String> permissions;
   final bool mustChangePassword;
-
-  /// With `must_change_password`: **Not now** is allowed.
-  final bool? passwordChangeSkippable;
-
-  /// The password is still the one someone else set (the official chose
-  /// **Not now**): the Profile reminder shows.
-  final bool? passwordChangePending;
   final String? organisation;
   final SupportDto? support;
 }

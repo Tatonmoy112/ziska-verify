@@ -259,24 +259,13 @@ GoRouter buildRouter({
         name: RouteNames.changePassword,
         path: RoutePaths.changePassword,
         builder: (_, _) {
-          final current = session.current;
-          return MultiBlocProvider(
-            providers: [
-              BlocProvider(
-                create: (_) => ChangePasswordCubit(
-                  locator<ChangePassword>(),
-                  locator<Logout>(),
-                ),
-              ),
-              BlocProvider(
-                create: (_) =>
-                    PostponePasswordCubit(locator<PostponePasswordChange>()),
-              ),
-            ],
+          return BlocProvider(
+            create: (_) => ChangePasswordCubit(
+              locator<ChangePassword>(),
+              locator<Logout>(),
+            ),
             child: ChangePasswordScreen(
-              forced: current is SessionPasswordChangeRequired,
-              canSkip:
-                  current is SessionPasswordChangeRequired && current.canSkip,
+              forced: session.current is SessionPasswordChangeRequired,
             ),
           );
         },

@@ -22,31 +22,6 @@ void main() {
     });
   });
 
-  group('DEMO_PASSWORD_LATER (TC-AUTH-096)', () {
-    AppConfig build(String flavor, {bool demo = false}) => AppConfig.fromValues(
-      flavorName: flavor,
-      baseUrl: 'https://api.example.com',
-      clientSlug: 'demo-pharma',
-      officeEmail: '',
-      officePhone: '',
-      demoPasswordLater: demo,
-    );
-
-    test('off unless set', () {
-      expect(build('mock').demoPasswordLater, isFalse);
-      expect(build('live').demoPasswordLater, isFalse);
-    });
-
-    test('on in the mock build', () {
-      expect(build('mock', demo: true).demoPasswordLater, isTrue);
-    });
-
-    test('a staging or live build with it fails at start', () {
-      expect(() => build('staging', demo: true), throwsStateError);
-      expect(() => build('live', demo: true), throwsStateError);
-    });
-  });
-
   // The test server (2026-11-22): its address is given as the whole API
   // root, https://testapp.protecb.com/v1/clients/ziska-test; the build
   // takes the host and the client name apart.

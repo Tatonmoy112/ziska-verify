@@ -290,24 +290,6 @@ abstract class AppLocalizations {
   /// **'Your password was set by someone else. Choose your own password to continue.'**
   String get changePasswordForcedSubtitle;
 
-  /// No description provided for @changePasswordChoiceSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Your password was set by someone else. Choose your own now, or later from Profile.'**
-  String get changePasswordChoiceSubtitle;
-
-  /// No description provided for @changePasswordLater.
-  ///
-  /// In en, this message translates to:
-  /// **'Not now'**
-  String get changePasswordLater;
-
-  /// No description provided for @passwordLaterRefused.
-  ///
-  /// In en, this message translates to:
-  /// **'Not now is not available for your account. Choose a new password or log out.'**
-  String get passwordLaterRefused;
-
   /// No description provided for @changePasswordSubtitle.
   ///
   /// In en, this message translates to:
@@ -667,12 +649,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'App language'**
   String get languageTitle;
-
-  /// No description provided for @passwordPendingBanner.
-  ///
-  /// In en, this message translates to:
-  /// **'Your password was set by someone else. Change it to keep your account safe.'**
-  String get passwordPendingBanner;
 
   /// No description provided for @supportContactRow.
   ///

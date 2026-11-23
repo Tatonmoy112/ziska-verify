@@ -41,7 +41,7 @@ void main() {
     }
     // The server sends support as an object with both values null.
     expect(find.text('Not set by your office'), findsOneWidget);
-    // No password_change_pending in the answer: no reminder.
+    // No password reminder: there is no "Not now" (backend D65).
     expect(find.byKey(const Key('profile.passwordPending')), findsNothing);
   });
 

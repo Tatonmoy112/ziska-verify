@@ -17,13 +17,11 @@ final class SessionAwaitingCode extends SessionState {
   final String email;
 }
 
-/// Logged in with `must_change_password: true`: only Change password.
-/// With [canSkip] (the backend's `password_change_skippable`), the official
-/// may choose **Not now** instead (final.md Section 6.6).
+/// Logged in with `must_change_password: true`: only Change password (and
+/// Log out) until it is changed. There is no "Not now" (backend D65, guide
+/// §3.2).
 final class SessionPasswordChangeRequired extends SessionState {
-  const SessionPasswordChangeRequired({this.canSkip = false});
-
-  final bool canSkip;
+  const SessionPasswordChangeRequired();
 }
 
 /// Logged in, password accepted.

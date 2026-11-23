@@ -19,19 +19,12 @@ import 'package:ziska_verify/shared/widgets/gradient_header.dart';
 import 'package:ziska_verify/shared/widgets/retry_countdown.dart';
 
 /// `me/password` (final.md Section 6.6). When [forced], it is the only
-/// screen allowed and back is blocked. Without [canSkip], Logout is the only
-/// way out; with it (the backend's `password_change_skippable`), the
-/// official may also choose **Not now** (`me/password/later`), which needs
-/// a [PostponePasswordCubit] above this screen.
+/// screen allowed and back is blocked; Log out is the only other way out.
+/// There is no "Not now" (backend D65, guide §3.2).
 class ChangePasswordScreen extends StatefulWidget {
-  const ChangePasswordScreen({
-    required this.forced,
-    this.canSkip = false,
-    super.key,
-  });
+  const ChangePasswordScreen({required this.forced, super.key});
 
   final bool forced;
-  final bool canSkip;
 
   @override
   State<ChangePasswordScreen> createState() => _ChangePasswordScreenState();
@@ -42,13 +35,6 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   final _old = TextEditingController();
   final _new = TextEditingController();
   final _repeat = TextEditingController();
-
-  /// The backend refused **Not now** (`403 forbidden`): it is hidden and
-  /// its message stays shown.
-  SubmitState? _laterRefusal;
-  bool get _laterRefused => _laterRefusal != null;
-
-  bool get _choice => widget.forced && widget.canSkip && !_laterRefused;
 
   @override
   void dispose() {
@@ -61,12 +47,6 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   PasswordCheck get _check => _policy.check(_new.text);
   bool get _matches => _new.text == _repeat.text;
   bool get _ready => _old.text.isNotEmpty && _check.isValid && _matches;
-
-  String _laterErrorText(AppLocalizations l10n, SubmitState state) =>
-      switch (state.failure!.exception) {
-        ForbiddenException() => l10n.passwordLaterRefused,
-        _ => state.failure!.message(l10n),
-      };
 
   String _errorText(AppLocalizations l10n, SubmitState state) =>
       switch (state.failure!.exception) {
@@ -93,23 +73,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
           unawaited(Navigator.of(context).maybePop(true));
         }
       },
-      builder: (context, state) => _choice
-          ? BlocConsumer<PostponePasswordCubit, SubmitState>(
-              listener: (context, later) {
-                switch (later.status) {
-                  case SubmitStatus.success:
-                    // Not now: on to Home, as after a change.
-                    context.goNamed(RouteNames.home);
-                  case SubmitStatus.failure
-                      when later.failure!.exception is ForbiddenException:
-                    setState(() => _laterRefusal = later);
-                  case _:
-                    break;
-                }
-              },
-              builder: (context, later) => _form(context, l10n, state, later),
-            )
-          : _form(context, l10n, state, null),
+      builder: (context, state) => _form(context, l10n, state),
     );
     return PopScope(
       canPop: !widget.forced,
@@ -117,22 +81,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     );
   }
 
-  /// The form. [later] is the **Not now** request's state in the choice
-  /// mode; `null` otherwise.
-  Widget _form(
-    BuildContext context,
-    AppLocalizations l10n,
-    SubmitState state,
-    SubmitState? later,
-  ) {
-    final busy = state.isSubmitting || (later?.isSubmitting ?? false);
-    // The last failure of either request; a refused Not now shows its own
-    // message.
-    final failed = later?.status == SubmitStatus.failure
-        ? later
-        : state.status == SubmitStatus.failure
-        ? state
-        : _laterRefusal;
+  Widget _form(BuildContext context, AppLocalizations l10n, SubmitState state) {
+    final busy = state.isSubmitting;
+    final failed = state.status == SubmitStatus.failure ? state : null;
     return ListView(
       padding: EdgeInsets.zero,
       children: [
@@ -140,9 +91,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
           title: widget.forced
               ? l10n.changePasswordTitle
               : l10n.changePasswordRow,
-          subtitle: _choice
-              ? l10n.changePasswordChoiceSubtitle
-              : widget.forced
+          subtitle: widget.forced
               ? l10n.changePasswordForcedSubtitle
               : l10n.changePasswordSubtitle,
           onBack: widget.forced ? null : () => Navigator.of(context).maybePop(),
@@ -191,11 +140,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 FailureBanner(
                   failure: failed.failure!,
                   retryAt: failed.retryAt,
-                  message:
-                      identical(failed, later) ||
-                          identical(failed, _laterRefusal)
-                      ? _laterErrorText(l10n, failed)
-                      : _errorText(l10n, failed),
+                  message: _errorText(l10n, failed),
                 ),
                 const SizedBox(height: AppSpacing.md),
               ],
@@ -213,28 +158,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       : null,
                 ),
               ),
-              if (later != null) ...[
-                const SizedBox(height: AppSpacing.sm),
-                AppButton(
-                  key: const Key('change.later'),
-                  label: l10n.changePasswordLater,
-                  variant: AppButtonVariant.tonal,
-                  loading: later.isSubmitting,
-                  onPressed: busy
-                      ? null
-                      : () => context.read<PostponePasswordCubit>().submit(),
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Center(
-                  child: TextButton(
-                    key: const Key('change.logout'),
-                    onPressed: busy
-                        ? null
-                        : () => context.read<ChangePasswordCubit>().logout(),
-                    child: Text(l10n.logout),
-                  ),
-                ),
-              ] else if (widget.forced) ...[
+              if (widget.forced) ...[
                 const SizedBox(height: AppSpacing.sm),
                 AppButton(
                   key: const Key('change.logout'),

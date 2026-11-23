@@ -283,35 +283,6 @@ void main() {
       expect(find.byKey(const Key('profile.logout')), findsOneWidget);
     });
 
-    uiTest('TC-UI-181 profile: the password reminder', (tester, shot) async {
-      await openProfile(
-        tester,
-        profile: {...Roles.fieldInspector, 'password_change_pending': true},
-      );
-      final banner = find.byKey(const Key('profile.passwordPending'));
-      expect(banner, findsOneWidget);
-      expect(find.text(l10n.passwordPendingBanner), findsOneWidget);
-      final box =
-          tester.widget<DecoratedBox>(banner).decoration as BoxDecoration;
-      expect(box.color, AppColors.warningBackground);
-      // Under the identity card, above the counts.
-      expect(
-        tester.getRect(banner).top,
-        greaterThan(
-          tester.getRect(find.byKey(const Key('profile.identity'))).bottom,
-        ),
-      );
-      expect(
-        tester.getRect(banner).bottom,
-        lessThan(tester.getRect(find.byKey(const Key('profile.stats'))).top),
-      );
-      expect(
-        find.byKey(const Key('profile.passwordPending.change')),
-        findsOneWidget,
-      );
-      await shot('screen_profile_password_pending');
-    });
-
     uiTest('TC-UI-182 profile: no reminder when the password is the '
         "official's own", (tester, _) async {
       await openProfile(tester);

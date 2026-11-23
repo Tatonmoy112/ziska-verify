@@ -11,7 +11,6 @@ import 'package:ziska_verify/core/locale/locale_cubit.dart';
 import 'package:ziska_verify/core/network/api_client.dart';
 import 'package:ziska_verify/core/network/auth_interceptor.dart';
 import 'package:ziska_verify/core/network/bodiless_request_interceptor.dart';
-import 'package:ziska_verify/core/network/demo/password_later_demo.dart';
 import 'package:ziska_verify/core/network/demo/postman_mock_routing.dart';
 import 'package:ziska_verify/core/network/logging_interceptor.dart';
 import 'package:ziska_verify/core/services/connectivity/connectivity_service.dart';
@@ -129,11 +128,6 @@ void registerCore({
   HttpClientAdapter? httpAdapter,
 }) {
   final secureStorage = storage ?? FlutterSecureStorageService();
-  // Mock build only, until the backend ships `me/password/later`: plays its
-  // answers on both clients (renewals go through `refreshDio`).
-  final demo = config.flavor == AppFlavor.mock && config.demoPasswordLater
-      ? PasswordLaterDemo(logger)
-      : null;
   // Mock build only: picks the Postman mock's examples, on both clients
   // (docs/postman-mock-setup.md).
   final mockRouting =
@@ -141,7 +135,7 @@ void registerCore({
       ? PostmanMockRouting()
       : null;
   final refreshDio = Dio(DioFactory.options(config.apiRoot))
-    ..interceptors.addAll([?demo, ?mockRouting, LoggingInterceptor(logger)]);
+    ..interceptors.addAll([?mockRouting, LoggingInterceptor(logger)]);
   final session = DioSessionService(
     storage: secureStorage,
     refreshDio: refreshDio,
@@ -155,7 +149,6 @@ void registerCore({
   final forbidden = ForbiddenSignal();
   dio.interceptors.addAll([
     const BodilessRequestInterceptor(),
-    ?demo,
     ?mockRouting,
     AuthInterceptor(session: session, dio: dio, onForbidden: forbidden.raise),
     LoggingInterceptor(logger),
@@ -224,7 +217,6 @@ void registerFeatures() {
     ..registerFactory(() => ResendCode(locator()))
     ..registerFactory(() => CancelCode(locator()))
     ..registerFactory(() => ChangePassword(locator()))
-    ..registerFactory(() => PostponePasswordChange(locator()))
     ..registerFactory(() => RequestPasswordReset(locator()))
     ..registerFactory(() => ResetPassword(locator()))
     ..registerFactory(() => Logout(locator()))

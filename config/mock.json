@@ -4,6 +4,5 @@
   "CLIENT_SLUG": "ziska",
   "OFFICE_EMAIL": "office@example.com",
   "OFFICE_PHONE": "+8800000000000",
-  "DEMO_PASSWORD_LATER": true,
   "POSTMAN_MOCK_ROUTING": true
 }

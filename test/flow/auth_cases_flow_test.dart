@@ -18,9 +18,6 @@ void main() {
       'The code is wrong or has expired. Check the latest email, or send the '
       'code again.';
   const general = 'Something went wrong. Try again.';
-  const choiceSubtitle =
-      'Your password was set by someone else. Choose your own now, or later '
-      'from Profile.';
   const forcedSubtitle =
       'Your password was set by someone else. Choose your own password to '
       'continue.';
@@ -149,95 +146,24 @@ void main() {
     }
   });
 
-  testWidgets('TC-AUTH-106 the code answer may carry '
-      'password_change_skippable', (tester) async {
+  // D65 (guide §3.2): a code answer with must_change_password opens only
+  // the change screen; there is no "Not now", whatever else the answer has.
+  testWidgets('TC-AUTH-106 the code answer with must_change_password: only '
+      'the change screen', (tester) async {
     final app = await startApp(
       tester,
       loggedIn: false,
       overrides: {
-        'POST auth/verify-phone': always(
-          loggedIn(mustChange: true, canSkip: true),
-        ),
+        'POST auth/verify-phone': always(loggedIn(mustChange: true)),
       },
     );
     await logInWithCode(app);
-    expect(find.text(choiceSubtitle), findsOneWidget);
+    expect(find.text(forcedSubtitle), findsOneWidget);
+    expect(find.text('Not now'), findsNothing);
   });
 
-  group('Not now: the error answers (TC-AUTH-107)', () {
-    final pending = {
-      ...Roles.fieldInspector,
-      'must_change_password': false,
-      'password_change_pending': true,
-    };
-
-    Future<FlowApp> start(WidgetTester tester, Answer later) async {
-      final app = await startApp(
-        tester,
-        loggedIn: false,
-        profile: pending,
-        overrides: {
-          'POST auth/login': always(loggedIn(mustChange: true, canSkip: true)),
-          'POST me/password/later': later,
-        },
-      );
-      await logInToCode(app);
-      return app;
-    }
-
-    final passLater = ok({
-      'access_token': 'access-later',
-      'access_expires_in': 900,
-      'must_change_password': false,
-      'password_change_pending': true,
-    });
-
-    testWidgets('token_expired: renewed, then sent once more', (tester) async {
-      var calls = 0;
-      final app = await start(
-        tester,
-        (r) async => calls++ == 0 ? apiError(401, 'token_expired') : passLater,
-      );
-      await app.tap(find.byKey(const Key('change.later')));
-      expect(app.backend.sent('POST', 'me/password/later'), hasLength(2));
-      expect(app.backend.sent('POST', 'auth/refresh'), hasLength(1));
-      expect(find.byKey(const Key('verify.input')), findsOneWidget);
-    });
-
-    testWidgets('unauthenticated: back to Login', (tester) async {
-      final app = await start(
-        tester,
-        always(apiError(401, 'unauthenticated')),
-      );
-      await app.tap(find.byKey(const Key('change.later')));
-      expect(find.text(loginTitle), findsOneWidget);
-    });
-
-    testWidgets('429: a countdown; nothing sent again before it ends', (
-      tester,
-    ) async {
-      final app = await start(
-        tester,
-        always(apiError(429, 'rate_limited', retryAfter: 30)),
-      );
-      await app.tap(find.byKey(const Key('change.later')));
-      expect(find.textContaining('30'), findsWidgets);
-      expect(find.text(choiceSubtitle), findsOneWidget);
-    });
-
-    testWidgets('500: the error with its reference', (tester) async {
-      final app = await start(
-        tester,
-        always(apiError(500, 'internal_error', requestId: 'req-later')),
-      );
-      await app.tap(find.byKey(const Key('change.later')));
-      expect(find.text('Reference: req-later'), findsOneWidget);
-      expect(find.text(choiceSubtitle), findsOneWidget);
-    });
-  });
-
-  // Without `password_change_skippable` (backend D59: the account's maker
-  // decides), a forced change offers Save and Log out only.
+  // Whoever sets the password decides (backend D59, D65): a forced change
+  // offers Save and Log out only.
   group('TC-AUTH-115 the change is forced only when the answer says so', () {
     testWidgets('must_change_password false: straight to Verify', (
       tester,
@@ -252,8 +178,7 @@ void main() {
       expect(find.text(forcedSubtitle), findsNothing);
     });
 
-    testWidgets('must_change_password true without skippable: Save and '
-        'Logout only', (
+    testWidgets('must_change_password true: Save and Logout only', (
       tester,
     ) async {
       final app = await startApp(
@@ -268,7 +193,6 @@ void main() {
       expect(find.byKey(const Key('change.submit')), findsOneWidget);
       expect(find.byKey(const Key('change.logout')), findsOneWidget);
       expect(find.text('Not now'), findsNothing);
-      expect(app.backend.sent('POST', 'me/password/later'), isEmpty);
     });
   });
 

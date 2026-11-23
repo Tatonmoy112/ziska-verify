@@ -12,7 +12,6 @@ class AppConfig {
     required this.clientSlug,
     required this.officeEmail,
     required this.officePhone,
-    this.demoPasswordLater = false,
     this.postmanMockRouting = false,
   });
 
@@ -29,9 +28,6 @@ class AppConfig {
     // Read at build time: true in the mock build (config/mock.json), though
     // the analyzer sees the default.
     // ignore: avoid_redundant_argument_values
-    demoPasswordLater: const bool.fromEnvironment('DEMO_PASSWORD_LATER'),
-    // True in the mock build too; the analyzer sees the default.
-    // ignore: avoid_redundant_argument_values
     postmanMockRouting: const bool.fromEnvironment('POSTMAN_MOCK_ROUTING'),
   );
 
@@ -42,7 +38,6 @@ class AppConfig {
     required String clientSlug,
     required String officeEmail,
     required String officePhone,
-    bool demoPasswordLater = false,
     bool postmanMockRouting = false,
   }) {
     final flavor = AppFlavor.values.where((f) => f.name == flavorName);
@@ -51,11 +46,6 @@ class AppConfig {
         'FLAVOR must be one of mock, staging, live. '
         'Run with --dart-define-from-file=config/<flavor>.json',
       );
-    }
-    // The demo plays answers the backend does not send yet: never outside
-    // the mock build.
-    if (demoPasswordLater && flavor.single != AppFlavor.mock) {
-      throw StateError('DEMO_PASSWORD_LATER is for the mock build only.');
     }
     if (postmanMockRouting && flavor.single != AppFlavor.mock) {
       throw StateError('POSTMAN_MOCK_ROUTING is for the mock build only.');
@@ -66,7 +56,6 @@ class AppConfig {
       clientSlug: validateClientSlug(clientSlug),
       officeEmail: officeEmail,
       officePhone: officePhone,
-      demoPasswordLater: demoPasswordLater,
       postmanMockRouting: postmanMockRouting,
     );
   }
@@ -82,12 +71,6 @@ class AppConfig {
   /// The client office's contact for Sign up (final.md Section 13.9).
   final String officeEmail;
   final String officePhone;
-
-  /// Mock build only: plays the backend's coming answers for **Not now** on
-  /// a forced password change (`PasswordLaterDemo`). Removed when the
-  /// backend ships `me/password/later`
-  /// (docs/backend-requests/password-change-later.md).
-  final bool demoPasswordLater;
 
   /// Mock build only: lets the Postman mock tell apart the flows it cannot
   /// by itself (`PostmanMockRouting`, docs/postman-mock-setup.md).

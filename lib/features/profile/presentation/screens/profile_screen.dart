@@ -215,10 +215,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  if (profile.passwordChangePending) ...[
-                    _PasswordPendingBanner(onChange: widget.onChangePassword),
-                    const SizedBox(height: AppSpacing.lg),
-                  ],
                   if (totals != null) ...[
                     BlocBuilder<CheckTotalsCubit, CheckTotalsState>(
                       bloc: totals,
@@ -784,66 +780,6 @@ class _ActionRow extends StatelessWidget {
       trailing: onTap == null
           ? null
           : const Icon(LucideIcons.chevronRight, color: AppColors.textMuted),
-    );
-  }
-}
-
-/// After **Not now** on a forced change: the password is still the one
-/// someone else set (final.md Section 13.7). Change password opens the
-/// voluntary change.
-class _PasswordPendingBanner extends StatelessWidget {
-  const _PasswordPendingBanner({required this.onChange});
-
-  final VoidCallback onChange;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return DecoratedBox(
-      key: const Key('profile.passwordPending'),
-      decoration: BoxDecoration(
-        color: AppColors.warningBackground,
-        borderRadius: AppRadius.card,
-        border: Border.all(color: AppColors.warning.withValues(alpha: 0.35)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.md,
-          AppSpacing.md,
-          AppSpacing.md,
-          AppSpacing.xs,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Icon(
-                  LucideIcons.triangleAlert,
-                  size: 20,
-                  color: AppColors.warning,
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: Text(
-                    l10n.passwordPendingBanner,
-                    style: AppTypography.body,
-                  ),
-                ),
-              ],
-            ),
-            Align(
-              alignment: AlignmentDirectional.centerEnd,
-              child: TextButton(
-                key: const Key('profile.passwordPending.change'),
-                onPressed: onChange,
-                child: Text(l10n.changePasswordRow),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

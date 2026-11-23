@@ -12,7 +12,6 @@ class LoginResponseDto {
     this.accessToken,
     this.refreshToken,
     this.mustChangePassword,
-    this.passwordChangeSkippable,
   });
 
   factory LoginResponseDto.fromJson(Map<String, dynamic> json) =>
@@ -23,24 +22,6 @@ class LoginResponseDto {
   final String? accessToken;
   final String? refreshToken;
   final bool? mustChangePassword;
-
-  /// With `must_change_password`: the official may choose **Not now**
-  /// (docs/backend-requests/password-change-later.md). Missing on a backend
-  /// without the route: the change stays required.
-  final bool? passwordChangeSkippable;
-}
-
-/// `me/password/later` → `data`: a normal access pass while the password
-/// is still the one someone else set (docs/backend-requests/
-/// password-change-later.md). The refresh pass stays.
-@JsonSerializable(fieldRename: FieldRename.snake, createToJson: false)
-class PasswordLaterResponseDto {
-  const PasswordLaterResponseDto({required this.accessToken});
-
-  factory PasswordLaterResponseDto.fromJson(Map<String, dynamic> json) =>
-      _$PasswordLaterResponseDtoFromJson(json);
-
-  final String accessToken;
 }
 
 /// `me/password` → `data` (app API guide §3.6). The refresh pass stays.

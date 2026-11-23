@@ -55,9 +55,6 @@
   "backToLogin": "Back to login",
   "changePasswordTitle": "Set a new password",
   "changePasswordForcedSubtitle": "Your password was set by someone else. Choose your own password to continue.",
-  "changePasswordChoiceSubtitle": "Your password was set by someone else. Choose your own now, or later from Profile.",
-  "changePasswordLater": "Not now",
-  "passwordLaterRefused": "Not now is not available for your account. Choose a new password or log out.",
   "changePasswordSubtitle": "Choose a new password. Your other phones will be logged out.",
   "currentPasswordLabel": "Current password",
   "newPasswordLabel": "New password",
@@ -168,7 +165,6 @@
   "@languageTitle": {
     "description": "Title of the sheet offering English and Bangla."
   },
-  "passwordPendingBanner": "Your password was set by someone else. Change it to keep your account safe.",
   "supportContactRow": "Support contact",
   "supportNotSet": "Not set by your office",
   "appVersionRow": "App version",

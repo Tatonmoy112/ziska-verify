@@ -14,9 +14,7 @@ class ProfileRepositoryImpl implements ProfileRepository {
   @override
   Future<Result<Profile>> getProfile() => guard(() async {
     final profile = (await _api.getMe()).toEntity();
-    if (profile.mustChangePassword) {
-      _session.requirePasswordChange(canSkip: profile.passwordChangeSkippable);
-    }
+    if (profile.mustChangePassword) _session.requirePasswordChange();
     return profile;
   });
 }

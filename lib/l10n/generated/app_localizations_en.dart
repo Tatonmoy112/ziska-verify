@@ -112,17 +112,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your password was set by someone else. Choose your own password to continue.';
 
   @override
-  String get changePasswordChoiceSubtitle =>
-      'Your password was set by someone else. Choose your own now, or later from Profile.';
-
-  @override
-  String get changePasswordLater => 'Not now';
-
-  @override
-  String get passwordLaterRefused =>
-      'Not now is not available for your account. Choose a new password or log out.';
-
-  @override
   String get changePasswordSubtitle =>
       'Choose a new password. Your other phones will be logged out.';
 
@@ -318,10 +307,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get languageTitle => 'App language';
-
-  @override
-  String get passwordPendingBanner =>
-      'Your password was set by someone else. Change it to keep your account safe.';
 
   @override
   String get supportContactRow => 'Support contact';

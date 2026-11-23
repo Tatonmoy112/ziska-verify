@@ -12,8 +12,6 @@ extension ProfileMapper on ProfileDto {
     role: role,
     permissions: permissions.toSet(),
     mustChangePassword: mustChangePassword,
-    passwordChangeSkippable: passwordChangeSkippable ?? false,
-    passwordChangePending: passwordChangePending ?? false,
     organisation: _text(organisation),
     supportEmail: _text(support?.email),
     supportPhone: _text(support?.phone),

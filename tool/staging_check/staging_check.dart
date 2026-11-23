@@ -232,9 +232,7 @@ class StagingCheck {
     final change = answer.mustChangePassword ?? false;
     _pass(
       what,
-      'logged_in, both passes, must_change_password: $change'
-      '${answer.passwordChangeSkippable == null ? '' : ', skippable: '
-                '${answer.passwordChangeSkippable}'}',
+      'logged_in, both passes, must_change_password: $change',
     );
     if (change) {
       stdout.writeln(
@@ -513,8 +511,7 @@ class StagingCheck {
       _pass(
         'GET me',
         'role "${me.role}"; organisation "$organisation"; '
-            'support ${me.supportEmail ?? '-'} / ${me.supportPhone ?? '-'}; '
-            'pending change: ${me.passwordChangePending}',
+            'support ${me.supportEmail ?? '-'} / ${me.supportPhone ?? '-'}',
       );
       _pass('the permissions', me.permissions.join(', '));
     } on Object catch (e) {
@@ -1843,17 +1840,14 @@ class StagingCheck {
       }
     }
 
-    // 2. The "Not now" route.
-    await info('POST me/password/later', () => api.post('me/password/later'));
-
-    // 3. A serial in Bangla digits (serial 1), sent raw: the app turns them
+    // 2. A serial in Bangla digits (serial 1), sent raw: the app turns them
     // into 0-9 before sending.
     await info(
       'POST lookups serial "১" (Bangla one, sent raw)',
       () => api.post('lookups', body: {'way': 'serial', 'value': '১'}),
     );
 
-    // 4. An empty JSON body on the bodiless routes: a session with one scan,
+    // 3. An empty JSON body on the bodiless routes: a session with one scan,
     // ended with `Content-Type: application/json` and no body; then the
     // same for logout. The app sends both bare.
     final id = ActiveScanStore.newId();

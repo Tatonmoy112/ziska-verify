@@ -414,65 +414,6 @@ void main() {
       await shot('screen_change_forced');
     });
 
-    /// A forced change that may be skipped (`password_change_skippable`).
-    Map<String, dynamic> skippable() => {
-      ...forced(Roles.fieldInspector),
-      'password_change_skippable': true,
-    };
-
-    uiTest('TC-UI-179 set a new password, or Not now', (tester, shot) async {
-      await startApp(tester, profile: skippable());
-      await atOneX(tester);
-      expect(find.text(l10n.changePasswordTitle), findsOneWidget);
-      expect(find.text(l10n.changePasswordChoiceSubtitle), findsOneWidget);
-      expect(back, findsNothing);
-      // Save first (navy), Not now under it (white), Log out as a link.
-      expect(
-        button(tester, const Key('change.submit')).variant,
-        AppButtonVariant.primary,
-      );
-      final later = button(tester, const Key('change.later'));
-      expect(later.label, l10n.changePasswordLater);
-      expect(later.variant, AppButtonVariant.tonal);
-      expect(later.onPressed, isNotNull);
-      final save = tester.getRect(find.byKey(const Key('change.submit')));
-      final notNow = tester.getRect(find.byKey(const Key('change.later')));
-      final logOut = tester.getRect(find.byKey(const Key('change.logout')));
-      expect(notNow.top, greaterThan(save.bottom));
-      expect(logOut.top, greaterThan(notNow.bottom));
-      expect(
-        find.descendant(
-          of: find.byKey(const Key('change.logout')),
-          matching: find.text(l10n.logout),
-        ),
-        findsOneWidget,
-      );
-      await shot('screen_change_choice');
-    });
-
-    uiTest('TC-UI-180 set a new password, or Not now, at font size 2×', (
-      tester,
-      shot,
-    ) async {
-      tester.platformDispatcher.textScaleFactorTestValue = 2;
-      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
-      await startApp(tester, profile: skippable());
-      await atOneX(tester);
-      expect(tester.takeException(), isNull);
-      await tester.scrollUntilVisible(
-        find.byKey(const Key('change.logout')),
-        200,
-        scrollable: find.byType(Scrollable).first,
-      );
-      await tester.ensureVisible(find.byKey(const Key('change.logout')));
-      await tester.pumpAndSettle();
-      expect(find.byKey(const Key('change.later')), findsOneWidget);
-      // Both buttons fit inside the screen sides at this size.
-      final later = tester.getRect(find.byKey(const Key('change.later')));
-      expect(later.right, lessThanOrEqualTo(phone.width));
-      await shot('screen_change_choice_2x');
-    });
-
     uiTest('TC-UI-084 change password (from Profile)', (tester, shot) async {
       final app = await startApp(tester);
       await app.tapText(l10n.tabProfile);

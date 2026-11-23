@@ -113,17 +113,6 @@ class AppLocalizationsBn extends AppLocalizations {
       'আপনার পাসওয়ার্ড অন্য কেউ সেট করেছে। চালিয়ে যেতে নিজের পাসওয়ার্ড বেছে নিন।';
 
   @override
-  String get changePasswordChoiceSubtitle =>
-      'আপনার পাসওয়ার্ড অন্য কেউ সেট করেছে। এখনই নিজের পাসওয়ার্ড বেছে নিন, অথবা পরে প্রোফাইল থেকে।';
-
-  @override
-  String get changePasswordLater => 'এখন নয়';
-
-  @override
-  String get passwordLaterRefused =>
-      'আপনার অ্যাকাউন্টে \"এখন নয়\" নেই। নতুন পাসওয়ার্ড বেছে নিন বা লগ আউট করুন।';
-
-  @override
   String get changePasswordSubtitle =>
       'একটি নতুন পাসওয়ার্ড বেছে নিন। আপনার অন্যান্য ফোন থেকে লগআউট হয়ে যাবে।';
 
@@ -317,10 +306,6 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get languageTitle => 'অ্যাপের ভাষা';
-
-  @override
-  String get passwordPendingBanner =>
-      'আপনার পাসওয়ার্ড অন্য কেউ সেট করেছে। অ্যাকাউন্ট নিরাপদ রাখতে এটি বদলান।';
 
   @override
   String get supportContactRow => 'সহায়তার যোগাযোগ';

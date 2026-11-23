@@ -17,8 +17,6 @@ ProfileDto _$ProfileDtoFromJson(Map<String, dynamic> json) => ProfileDto(
           .toList() ??
       [],
   mustChangePassword: json['must_change_password'] as bool,
-  passwordChangeSkippable: json['password_change_skippable'] as bool?,
-  passwordChangePending: json['password_change_pending'] as bool?,
   organisation: json['organisation'] as String?,
   support: json['support'] == null
       ? null

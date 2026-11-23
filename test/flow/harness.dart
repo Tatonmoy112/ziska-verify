@@ -145,14 +145,6 @@ class FakeBackend {
         'Change the password',
         '200 Changed: a new access pass',
       ),
-      // Not in the backend's Postman collection yet: the answer of the
-      // contract in docs/backend-requests/password-change-later.md.
-      'POST me/password/later' => ok({
-        'access_token': 'access-later',
-        'access_expires_in': 900,
-        'must_change_password': false,
-        'password_change_pending': true,
-      }),
       'GET formats' => example(200, 'Input formats', '200 The formats'),
       'POST lookups' =>
         r.data is Map && (r.data as Map).containsKey('session_id')
@@ -550,9 +542,6 @@ Future<FlowApp> startApp(
   /// The phone's preferences; the same one again is a restart.
   FakePreferencesService? preferences,
   Map<String, Answer> overrides = const {},
-
-  /// The mock build's **Not now** demo (`DEMO_PASSWORD_LATER`).
-  bool demoPasswordLater = false,
 }) async {
   if (!_timezonesLoaded) {
     tz_data.initializeTimeZones();
@@ -589,16 +578,7 @@ Future<FlowApp> startApp(
   final prefs = preferences ?? FakePreferencesService();
 
   registerCore(
-    config: demoPasswordLater
-        ? AppConfig(
-            flavor: testConfig.flavor,
-            baseUrl: testConfig.baseUrl,
-            clientSlug: testConfig.clientSlug,
-            officeEmail: testConfig.officeEmail,
-            officePhone: testConfig.officePhone,
-            demoPasswordLater: true,
-          )
-        : testConfig,
+    config: testConfig,
     crash: const NoOpCrashReportingService(),
     logger: logger,
     storage: store,
@@ -655,15 +635,14 @@ Future<void> logInToCode(FlowApp app, {String password = 'secret-pass'}) async {
 }
 
 /// The `logged_in` answer of a login or a code, with or without a forced
-/// password change; [canSkip] adds `password_change_skippable`.
-ScriptedAnswer loggedIn({bool mustChange = false, bool canSkip = false}) => ok({
+/// password change.
+ScriptedAnswer loggedIn({bool mustChange = false}) => ok({
   'status': 'logged_in',
   'access_token': 'access-new',
   'access_expires_in': 900,
   'refresh_token': 'refresh-new',
   'refresh_expires_in': 2592000,
   'must_change_password': mustChange,
-  if (canSkip) 'password_change_skippable': true,
 });
 
 /// Logs in through the screens: email, password, emailed code.

@@ -79,23 +79,17 @@ class DioSessionService implements SessionService {
   @override
   void cancelCode() => _emit(const SessionUnauthenticated());
 
-  /// Whether the last answer allowed **Not now**; kept for a bare `403
-  /// password_change_required`, which does not say.
-  bool _canSkip = false;
-
   @override
   Future<void> saveLogin({
     required String accessToken,
     required String refreshToken,
     required bool mustChangePassword,
-    bool canSkip = false,
   }) async {
     _generation++;
     await _storePasses(accessToken, refreshToken);
-    _canSkip = canSkip;
     _emit(
       mustChangePassword
-          ? SessionPasswordChangeRequired(canSkip: canSkip)
+          ? const SessionPasswordChangeRequired()
           : const SessionAuthenticated(),
     );
   }
@@ -115,21 +109,9 @@ class DioSessionService implements SessionService {
   }
 
   @override
-  Future<void> postponePasswordChange(String accessToken) async {
-    await _write(SecureKeys.accessToken, accessToken);
-    _accessToken = accessToken;
-    _emit(const SessionAuthenticated());
-  }
-
-  @override
-  void requirePasswordChange({bool? canSkip}) {
-    if (canSkip != null) _canSkip = canSkip;
-    final current = _current;
-    if (current is SessionPasswordChangeRequired &&
-        current.canSkip == _canSkip) {
-      return;
-    }
-    _emit(SessionPasswordChangeRequired(canSkip: _canSkip));
+  void requirePasswordChange() {
+    if (_current is SessionPasswordChangeRequired) return;
+    _emit(const SessionPasswordChangeRequired());
   }
 
   @override
@@ -169,11 +151,7 @@ class DioSessionService implements SessionService {
       if (generation != _generation) return const SessionEnded();
       // Both new passes are stored before anything else (Section 6.4).
       await _storePasses(access, next);
-      if (data['must_change_password'] == true) {
-        requirePasswordChange(
-          canSkip: data['password_change_skippable'] == true,
-        );
-      }
+      if (data['must_change_password'] == true) requirePasswordChange();
       _logger.info('session renewed');
       return const Renewed();
     } on DioException catch (e) {
