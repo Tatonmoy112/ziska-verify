@@ -2,7 +2,7 @@
 
 **From:** the mobile app team. **Date:** 2026-11-19 (replaces the list of 2026-11-17, which is included). **Status:** drafts, to be read and corrected by a Bangla reader chosen by Ziska (client question B5; final.md Section 20.3).
 
-> **Update 2026-11-23:** 4 texts went with "Not now" (backend D65); their rows are marked **Removed**, and the app now has 323 texts; 3 more were added later the same day ("Added 2026-11-23"), so 326.
+> **Update 2026-11-23:** 4 texts went with "Not now" (backend D65); their rows are marked **Removed**, and the app now has 323 texts; 4 more were added later the same day ("Added 2026-11-23"), so 327.
 
 The app had 327 texts. **226** of them were drafted on 2026-11-19 so that the language switch could ship; the other 101 were written earlier, with the screens they belong to, and are listed at the end. Both lists are part of the review; every text is in `lib/l10n/app_bn.arb`.
 
@@ -352,15 +352,16 @@ The app had 327 texts. **226** of them were drafted on 2026-11-19 so that the la
 | 100 | `appVersionShort` | Version {version} ({build}) | সংস্করণ {version} ({build}) | 2026-11-17 | |
 | 101 | `offlineBanner` | No internet connection. Checks need a connection. | ইন্টারনেট সংযোগ নেই। যাচাই করতে সংযোগ প্রয়োজন। | earlier | |
 
-## Added 2026-11-23 (3)
+## Added 2026-11-23 (4)
 
-Asking before a lost stack is sent again (audit 6.2).
+Asking before a lost stack is sent again (audit 6.2), and a lost check answer (audit 4.2).
 
 | # | Key | English | Bangla | Drafted | Review |
 |---|---|---|---|---|---|
 | 1 | `serialStackResendTitle` | Send the stack again? | তালিকাটি আবার পাঠাবেন? | 2026-11-23 | |
 | 2 | `serialStackResendBody` | The answer was lost, so these serials may already be recorded. Sending them again checks each one again. To look first, open History, then Sessions: a recorded stack shows there with its count. | উত্তর হারিয়ে গেছে, তাই এই সিরিয়ালগুলো হয়তো আগেই রেকর্ড হয়েছে। আবার পাঠালে প্রতিটি আবার যাচাই হবে। আগে দেখতে চাইলে ইতিহাস, তারপর সেশন খুলুন: রেকর্ড হওয়া তালিকা সেখানে সংখ্যাসহ দেখা যায়। | 2026-11-23 | |
 | 3 | `serialStackResendConfirm` | Send again | আবার পাঠান | 2026-11-23 | |
+| 4 | `lookupAnswerLost` | The answer was lost. This check may already be recorded; checking again counts as another check. | উত্তর হারিয়ে গেছে। এই যাচাইটি হয়তো আগেই রেকর্ড হয়েছে; আবার যাচাই করলে তা আরেকটি যাচাই হিসেবে গণনা হবে। | 2026-11-23 | |
 
 ## After the review
 
