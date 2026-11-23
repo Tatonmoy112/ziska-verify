@@ -289,6 +289,12 @@ class FakeScanner implements ScannerService {
 
   ScannerProblem? _problem;
 
+  /// The session holding the phone's one camera. As in the plugin
+  /// (mobile_scanner: one native camera per app), a start while another
+  /// session holds it is refused ("The camera could not start."), and only
+  /// the holder's stop or dispose lets it go (emulator run, finding F-2).
+  FakeScannerSession? holder;
+
   /// Shows [raw] to the camera that is running (the newest one, as only
   /// one camera runs at a time); a stopped camera reads nothing.
   void scan(String raw) {
@@ -299,17 +305,38 @@ class FakeScanner implements ScannerService {
 
   @override
   ScannerSession createSession() {
-    final made = FakeScannerSession(problem: problem);
+    final made = FakeScannerSession(this, problem: problem);
     sessions.add(made);
     return session = made;
+  }
+
+  bool _claim(FakeScannerSession s) {
+    if (holder != null && !identical(holder, s)) return false;
+    holder = s;
+    return true;
+  }
+
+  void _release(FakeScannerSession s) {
+    if (identical(holder, s)) holder = null;
   }
 }
 
 class FakeScannerSession implements ScannerSession {
-  FakeScannerSession({this.problem});
+  /// The plugin's camera starts by itself when its preview is shown; here
+  /// as soon as it is made, if the camera is free.
+  FakeScannerSession(this._device, {this.problem}) {
+    running = _device._claim(this);
+    if (!running) refusals++;
+    _refused.value = !running;
+  }
 
+  final FakeScanner _device;
   ScannerProblem? problem;
   void Function(String raw)? onCode;
+
+  /// Whether the last start was refused, the camera being held by another
+  /// session; the preview then shows the plugin's error.
+  final _refused = ValueNotifier<bool>(false);
 
   @override
   Widget preview({
@@ -321,28 +348,39 @@ class FakeScannerSession implements ScannerSession {
     if (problem case final problem?) {
       return Builder(builder: (context) => errorBuilder(context, problem));
     }
-    return const ColoredBox(
-      key: Key('fake.camera'),
-      color: Colors.black,
-      child: SizedBox.expand(),
+    return ValueListenableBuilder<bool>(
+      valueListenable: _refused,
+      builder: (context, refused, _) => refused
+          ? errorBuilder(context, ScannerProblem.other)
+          : const ColoredBox(
+              key: Key('fake.camera'),
+              color: Colors.black,
+              child: SizedBox.expand(),
+            ),
     );
   }
 
-  /// The plugin's camera starts by itself when its preview is shown.
-  bool running = true;
+  late bool running;
   int starts = 0;
   int stops = 0;
 
+  /// Starts refused because another session held the camera.
+  int refusals = 0;
+
   @override
   Future<void> start() async {
-    running = true;
     starts++;
+    if (running) return;
+    running = _device._claim(this);
+    if (!running) refusals++;
+    _refused.value = !running;
   }
 
   @override
   Future<void> stop() async {
     running = false;
     stops++;
+    _device._release(this);
   }
 
   /// How many times the torch was switched.
@@ -351,7 +389,10 @@ class FakeScannerSession implements ScannerSession {
   @override
   Future<void> toggleTorch() async => torchToggles++;
   @override
-  Future<void> dispose() async => running = false;
+  Future<void> dispose() async {
+    running = false;
+    _device._release(this);
+  }
 }
 
 /// A 1×1 PNG, so photo thumbnails decode in tests.

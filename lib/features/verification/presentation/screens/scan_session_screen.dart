@@ -44,6 +44,9 @@ class _ScanSessionScreenState extends State<ScanSessionScreen>
   late final ScannerSession _camera = widget.scanner.createSession();
   late ScanSessionCubit _cubit;
   bool _detail = false;
+
+  /// Set once the camera is let go on the way out (see [_leave]).
+  bool _leaving = false;
   @override
   void initState() {
     super.initState();
@@ -58,7 +61,7 @@ class _ScanSessionScreenState extends State<ScanSessionScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (_cubit.state.done) return;
+    if (_cubit.state.done || _leaving) return;
     if (state == AppLifecycleState.resumed && !_detail) {
       // The line goes on; the camera only while scanning, not during
       // Finish (it stopped for good when Finish was tapped).
@@ -128,6 +131,22 @@ class _ScanSessionScreenState extends State<ScanSessionScreen>
     await _cubit.complete();
   }
 
+  /// Leaves Scanner mode, its camera stopped first. The phone has one camera,
+  /// shared with the Check tab, which starts it as soon as this screen goes;
+  /// held by this screen until its dispose, that start would be refused and
+  /// the Check tab would show "The camera could not start." (finding F-2).
+  Future<void> _leave() async {
+    if (_leaving) return;
+    setState(() => _leaving = true);
+    try {
+      await _camera.stop().timeout(const Duration(seconds: 2));
+    } on Object {
+      // Leaving is never blocked: at worst the Check tab's camera starts
+      // again the next time the tab shows.
+    }
+    if (mounted) Navigator.of(context).pop();
+  }
+
   /// Scan more: a new session on the camera.
   Future<void> _scanMore() async {
     await _cubit.restart();
@@ -138,8 +157,15 @@ class _ScanSessionScreenState extends State<ScanSessionScreen>
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     return PopScope(
+      // Every way out (Android Back, the back arrow, Done) lets the camera
+      // go first, then leaves (finding F-2).
+      canPop: _leaving,
       onPopInvokedWithResult: (didPop, _) {
-        if (didPop) unawaited(_cubit.finish());
+        if (didPop) {
+          unawaited(_cubit.finish());
+        } else {
+          unawaited(_leave());
+        }
       },
       child: Scaffold(
         backgroundColor: AppColors.surfaceMuted,

@@ -180,6 +180,60 @@ void main() {
     });
   });
 
+  // TC-LOOK-131 (emulator run, finding F-2): the phone has one camera,
+  // shared by the Check tab and Scanner mode. Leaving Scanner mode, its
+  // camera is let go before the Check tab starts again; otherwise the Check
+  // tab's start is refused and it shows "The camera could not start."
+  group('TC-LOOK-131 back from Scanner mode, the Check tab camera runs', () {
+    Future<void> expectCheckCamera(FlowApp app, WidgetTester tester) async {
+      final camera = app.scanner.sessions.first;
+      expect(find.byKey(const Key('verify.camera')), findsOneWidget);
+      expect(camera.running, isTrue);
+      expect(app.scanner.holder, same(camera));
+      expect(camera.refusals, 0, reason: 'no start was refused');
+      expect(find.text('The camera could not start.'), findsNothing);
+
+      app.scanner.scan(qr);
+      await tester.pumpAndSettle();
+      expect(
+        app.backend.sent('POST', 'lookups').last.data,
+        {'way': 'qr', 'value': 'Q8F2KD91XA7M'},
+        reason: 'the Check tab reads QR codes again',
+      );
+    }
+
+    Future<FlowApp> openScanner(WidgetTester tester) async {
+      final app = await startApp(tester, profile: Roles.supervisor);
+      await app.tap(find.byKey(const Key('verify.tool.bulk')));
+      expect(app.scanner.sessions, hasLength(2));
+      expect(app.scanner.holder, same(app.scanner.sessions.last));
+      return app;
+    }
+
+    testWidgets('by Android Back', (tester) async {
+      final app = await openScanner(tester);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      await expectCheckCamera(app, tester);
+    });
+
+    testWidgets("by the app bar's back arrow", (tester) async {
+      final app = await openScanner(tester);
+      await app.tap(find.byType(BackButton));
+      await expectCheckCamera(app, tester);
+    });
+
+    testWidgets('by Done after Finish', (tester) async {
+      final app = await openScanner(tester);
+      app.scanner.scan(qr);
+      await tester.pumpAndSettle();
+      await app.tapText('Finish');
+      await app.tapText('Done');
+      expect(find.byKey(const Key('verify.camera')), findsOneWidget);
+      await expectCheckCamera(app, tester);
+    });
+  });
+
   // TC-LOOK-128: a QR in lower case finds the same item; it is sent as read
   // (guide §4, "Reading a QR"), on the Check tab and in Scanner mode.
   group('TC-LOOK-128 a QR in lower case', () {
