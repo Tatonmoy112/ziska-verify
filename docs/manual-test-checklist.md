@@ -140,7 +140,7 @@ The manual part is done when, together with [test-plan §11.3](test-plan.md#113-
    - a typed serial ending in 1 is Genuine, 2 needs attention, 3 not found, 4 not in a batch, anything else Genuine;
    - in Scanner mode a QR ending in 3 is not found, any other the "first scan" example;
    - a stack of serials always answers the collection's three-serial example;
-   - the login asks for a code, and any 6 digits are accepted; the code `111111` logs in to a forced password change (to try **Not now**);
+   - the login asks for a code, and any 6 digits are accepted; the code `111111` logs in to a forced password change (only **Set a new password** and **Log out**: there is no "Not now", D65);
    - photos are numbered 1, 2, 3 per report.
 
 ---
@@ -1052,19 +1052,19 @@ Expected: step 1 and the 5 wrong tries: "Email or password is incorrect."; the r
 
 - [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
 
-#### TC-AUTH-095 · Not now on the test server · P1
-**Blocked: needs `POST me/password/later` on the test server** (`docs/backend-requests/password-change-later.md`). Confirmed by the client on 2026-11-22; the backend team will add it.
-*Needs:* Staging; an account with a first password; real phone.
+#### TC-AUTH-095 · Whoever sets the password decides: tick on, tick off · P1
+Backend D59, D65 (guide §3.2): there is no "Not now". Automated in `flow/forced_change_flow_test`; on a phone once the test server has the logins (backend item 1).
+*Needs:* Staging; one account with "must change password" ticked, one unticked; real phone.
 
-1. Log in with the first password (and the emailed code on a new phone).
-2. On **Set a new password**, tap **Not now**.
-3. Check an item on the Check tab.
-4. Open **Profile**.
-5. Log out, then log in again.
+1. Log in with the ticked account (and the emailed code on a new phone).
+2. Try Android back; look for any way past the screen.
+3. Set a new password.
+4. Log out; log in with the unticked account.
+5. Open **Profile** → **Change password**.
 
-Expected: step 2: the Check tab opens. Step 3: the item is checked. Step 4: the reminder card with **Change password**. Step 5: the choice screen comes back.
+Expected: steps 1–2: only **Set a new password** and **Log out**; back does nothing; no **Not now**, no bottom bar. Step 3: the Check tab opens. Step 4: the app as usual. Step 5: the password can be changed.
 
-- [ ] Pass - [ ] Fail - [x] Blocked — Notes: waiting for the backend route
+- [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
 
 ### C2. Session (added 2026-11-14)
 

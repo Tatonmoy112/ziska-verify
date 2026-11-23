@@ -2,7 +2,9 @@
 
 **From:** the mobile app team. **Date:** 2026-11-19 (replaces the list of 2026-11-17, which is included). **Status:** drafts, to be read and corrected by a Bangla reader chosen by Ziska (client question B5; final.md Section 20.3).
 
-The app has 327 texts. **226** of them were drafted on 2026-11-19 so that the language switch could ship; the other 101 were written earlier, with the screens they belong to, and are listed at the end. Both lists are part of the review; every text is in `lib/l10n/app_bn.arb`.
+> **Update 2026-11-23:** 4 texts went with "Not now" (backend D65); their rows are marked **Removed**, and the app now has 323 texts.
+
+The app had 327 texts. **226** of them were drafted on 2026-11-19 so that the language switch could ship; the other 101 were written earlier, with the screens they belong to, and are listed at the end. Both lists are part of the review; every text is in `lib/l10n/app_bn.arb`.
 
 ## How to review
 
@@ -250,9 +252,9 @@ The app has 327 texts. **226** of them were drafted on 2026-11-19 so that the la
 |---|---|---|---|---|---|
 | 1 | `appTitle` | Track & Trace | Track & Trace | earlier | |
 | 2 | `requestAccessButton` | Sign up | সাইন আপ | earlier | |
-| 3 | `changePasswordChoiceSubtitle` | Your password was set by someone else. Choose your own now, or later from Profile. | আপনার পাসওয়ার্ড অন্য কেউ সেট করেছে। এখনই নিজের পাসওয়ার্ড বেছে নিন, অথবা পরে প্রোফাইল থেকে। | 2026-11-17 | |
-| 4 | `changePasswordLater` | Not now | এখন নয় | 2026-11-17 | |
-| 5 | `passwordLaterRefused` | Not now is not available for your account. Choose a new password or log out. | আপনার অ্যাকাউন্টে "এখন নয়" নেই। নতুন পাসওয়ার্ড বেছে নিন বা লগ আউট করুন। | 2026-11-17 | |
+| 3 | `changePasswordChoiceSubtitle` | Your password was set by someone else. Choose your own now, or later from Profile. | আপনার পাসওয়ার্ড অন্য কেউ সেট করেছে। এখনই নিজের পাসওয়ার্ড বেছে নিন, অথবা পরে প্রোফাইল থেকে। | 2026-11-17 | **Removed 2026-11-23** (no "Not now", backend D65): no review needed |
+| 4 | `changePasswordLater` | Not now | এখন নয় | 2026-11-17 | **Removed 2026-11-23** (no "Not now", backend D65): no review needed |
+| 5 | `passwordLaterRefused` | Not now is not available for your account. Choose a new password or log out. | আপনার অ্যাকাউন্টে "এখন নয়" নেই। নতুন পাসওয়ার্ড বেছে নিন বা লগ আউট করুন। | 2026-11-17 | **Removed 2026-11-23** (no "Not now", backend D65): no review needed |
 | 6 | `ruleNoControl` | no tabs or line breaks | ট্যাব বা লাইন ব্রেক নয় | 2026-11-17 | |
 | 7 | `resetCodeWrong` | The code is wrong or has expired. Ask for a new code. | কোডটি ভুল বা মেয়াদোত্তীর্ণ। নতুন কোড চান। | 2026-11-17 | |
 | 8 | `resetNewCode` | Send a new code | নতুন কোড পাঠান | 2026-11-17 | |
@@ -265,7 +267,7 @@ The app has 327 texts. **226** of them were drafted on 2026-11-19 so that the la
 | 15 | `permissionReport` | Report incidents | ঘটনা রিপোর্ট | 2026-11-17 | |
 | 16 | `permissionsNone` | None. Ask your office. | কিছু নেই। আপনার অফিসকে জিজ্ঞাসা করুন। | 2026-11-17 | |
 | 17 | `statNotVerified` | Needs attention | মনোযোগ দরকার | 2026-11-17 | |
-| 18 | `passwordPendingBanner` | Your password was set by someone else. Change it to keep your account safe. | আপনার পাসওয়ার্ড অন্য কেউ সেট করেছে। অ্যাকাউন্ট নিরাপদ রাখতে এটি বদলান। | 2026-11-17 | |
+| 18 | `passwordPendingBanner` | Your password was set by someone else. Change it to keep your account safe. | আপনার পাসওয়ার্ড অন্য কেউ সেট করেছে। অ্যাকাউন্ট নিরাপদ রাখতে এটি বদলান। | 2026-11-17 | **Removed 2026-11-23** (no "Not now", backend D65): no review needed |
 | 19 | `supportNotSet` | Not set by your office | আপনার অফিস সেট করেনি | 2026-11-17 | |
 | 20 | `wayOther` | Other | অন্যান্য | 2026-11-17 | |
 | 21 | `historyNoChecksYet` | Your checks appear here after your first check. | প্রথম যাচাইয়ের পর আপনার যাচাইগুলো এখানে দেখা যাবে। | 2026-11-17 | |

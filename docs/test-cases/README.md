@@ -18,7 +18,7 @@ Current migration acceptance: [16-mobile-migration.md](16-mobile-migration.md). 
 
 | Area | File | Cases | P1 | P2 | P3 | ✅ Auto | ⏳ To automate | ✋ Manual | ⛔ Blocked |
 |---|---|---|---|---|---|---|---|---|---|
-| AUTH | [01-auth.md](01-auth.md) | 117 | 42 | 54 | 21 | 103 | 0 | 13 | 1 |
+| AUTH | [01-auth.md](01-auth.md) | 106 | 39 | 46 | 21 | 93 | 0 | 13 | 0 |
 | SESS | [02-session.md](02-session.md) | 44 | 20 | 19 | 5 | 39 | 0 | 5 | 0 |
 | ROLE and NAV | [03-roles-nav.md](03-roles-nav.md) | 35 | 13 | 16 | 6 | 32 | 0 | 3 | 0 |
 | LOOK | [04-lookup.md](04-lookup.md) | 99 | 40 | 43 | 16 | 86 | 0 | 13 | 0 |
@@ -32,10 +32,10 @@ Current migration acceptance: [16-mobile-migration.md](16-mobile-migration.md). 
 | NFR | [12-device-a11y-perf.md](12-device-a11y-perf.md) | 27 | 0 | 17 | 10 | 8 | 0 | 19 | 0 |
 | E2E | [13-e2e-journeys.md](13-e2e-journeys.md) | 16 | 7 | 9 | 0 | 10 | 0 | 6 | 0 |
 | Exploratory | [14-exploratory-charters.md](14-exploratory-charters.md) | 9 | 0 | 6 | 3 | 0 | 0 | 9 | 0 |
-| UI | [15-ui.md](15-ui.md) | 184 | 30 | 100 | 54 | 170 | 0 | 14 | 0 |
+| UI | [15-ui.md](15-ui.md) | 181 | 29 | 98 | 54 | 167 | 0 | 14 | 0 |
 | MIG | [16-mobile-migration.md](16-mobile-migration.md) | 68 | 44 | 23 | 1 | 67 | 0 | 1 | 0 |
 | STG | [17-test-server.md](17-test-server.md) | 58 | 44 | 11 | 3 | 47 | 0 | 11 | 0 |
-| **Total** | | **897** | 305 | 420 | 172 | 768 | 0 | 128 | 1 |
+| **Total** | | **883** | 301 | 410 | 172 | 755 | 0 | 128 | 0 |
 
 ## 3. Case Format
 
