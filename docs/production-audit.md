@@ -5,7 +5,7 @@ The production-grade review of the app, done on the `production` branch one area
 | Step | Area | State |
 |---|---|---|
 | 2 | High-level architecture | Checked 2026-11-24: P-1 … P-15. **All fixed**; P-10 on for staging, live waits for its production project |
-| 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11) |
+| 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11). Fixed: P-16 |
 | 4 | Low-level architecture | To do |
 | 5 | Dead code | To do |
 | 6+ | Comments, data layer, UI components, state and lifecycle, security, build and release, monitoring, tests, localisation, performance, docs | To do |
@@ -593,6 +593,22 @@ Read only.
 - **normal:** a citation within one line;
 - **edge:** a citation split across two or three comment lines; XML `<!-- -->` comments;
 - **worst:** a split citation of a removed section, reported at its first line.
+
+**✅ Fixed 2026-11-24:**
+- **Tests first,** TC-ARCH-023 … -025 in `doc_references_test.dart`, red before:
+  - a citation split over lines is read as one (Dart, Kotlin, XML);
+  - a `//` inside a string, an example between backticks and a finished line are not citations;
+  - "test plan Section N" is checked against `docs/test-plan.md`;
+  - a split citation that leads nowhere is reported at the line of its `Section` or `§`.
+
+  TC-ARCH-019 now reads `lib/`, `test/`, `tool/`, `android/` and `ios/`. It found **48**: 7 in `lib/`, 5 in the Android project, 36 in the tests.
+- **A bug found by the worst case:** the first join trimmed only line ends, so "Section" + "12.1" became `Section  12.1` and still escaped. Each part is now trimmed on both sides.
+- **The change:**
+  - a second script used P-11's mapping plus 2.3 → §17, 13.4.1 → §13.4, 18.2 → §18, and the checker's rule (a citation belongs to the last document named before it on its line). Its dry run caught two wrong rewrites of a first version: guide citations after a guide named earlier on the line;
+  - it rewrote 45 files, and one more by hand (`picture_images.dart`, a split citation with no document named);
+  - two citations whose number still exists but changed topic, 13.9 (once Request access, now Screen rules) in `request_access_screen.dart` and `AndroidManifest.xml`, now say §13.8;
+  - ten test comments made too long were rewrapped.
+- **Checked:** outside the checker itself, only comment lines changed.
 
 #### P-17 (should): route paths are text in eight files
 **Evidence:**

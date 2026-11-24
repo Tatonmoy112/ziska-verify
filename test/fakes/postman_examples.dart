@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 /// Reads a saved example answer from the backend's Postman collection
-/// (`docs/protectb-api/`), the app's contract (final.md Section 15).
+/// (`docs/protectb-api/`), the app's contract (final.md §15).
 Map<String, dynamic> postmanExample({
   required String request,
   required String example,

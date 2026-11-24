@@ -77,7 +77,7 @@ void main() {
       ),
     );
     // `checked_before` is the badge and the check number; every other
-    // reason is a row (final.md Section 13.1.4).
+    // reason is a row (final.md §13.1).
     expect(find.text('CHECKED BEFORE'), findsOneWidget);
     for (final label in [
       'Batch recalled',
@@ -88,7 +88,7 @@ void main() {
     ]) {
       expect(find.text(label), findsOneWidget, reason: label);
     }
-    // 09:14 UTC is 3:14 PM in Bangladesh (final.md Section 16).
+    // 09:14 UTC is 3:14 PM in Bangladesh (final.md §16).
     expect(find.textContaining('check number 3'), findsOneWidget);
     expect(find.textContaining('3:14'), findsOneWidget);
   });

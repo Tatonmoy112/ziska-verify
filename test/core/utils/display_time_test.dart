@@ -3,7 +3,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:ziska_verify/core/utils/display_time.dart';
 
-/// History's "Today · 4:02 PM" (a narrow space before AM/PM, as intl writes it) (final.md Section 13.4): the day is counted
+/// History's "Today · 4:02 PM" (a narrow space before AM/PM, as intl writes it) (final.md §13.4): the day is counted
 /// in Bangladesh time (UTC+6), whatever the phone's zone.
 void main() {
   setUpAll(() async {

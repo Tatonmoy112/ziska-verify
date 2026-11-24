@@ -18,7 +18,7 @@ import '../../fakes/postman_examples.dart';
 import '../../fakes/scripted_adapter.dart';
 
 /// Reports, photos, and the retail user picker against the backend's
-/// Postman examples (final.md Sections 13.5, 13.6, 18.2).
+/// Postman examples (final.md §13.5, §13.6, §18).
 void main() {
   late ScriptedAdapter adapter;
   late ApiClient api;

@@ -6,8 +6,8 @@ import 'package:ziska_verify/shared/widgets/error_banner.dart';
 import 'package:ziska_verify/shared/widgets/retry_countdown.dart';
 
 /// A failed request under a form: [message] with the reference, or for a
-/// `429` a countdown to [retryAt] that goes away at 0 (final.md Sections
-/// 14.1, 15.4).
+/// `429` a countdown to [retryAt] that goes away at 0 (final.md
+/// §14.1, §15).
 class FailureBanner extends StatelessWidget {
   const FailureBanner({
     required this.failure,

@@ -14,8 +14,8 @@ abstract class SubmitState with _$SubmitState {
     @Default(SubmitStatus.idle) SubmitStatus status,
     Failure? failure,
 
-    /// After a `429`: no new request before this time (final.md Section
-    /// 15.4: a countdown from `Retry-After`, then a retry is allowed).
+    /// After a `429`: no new request before this time (final.md
+    /// §15: a countdown from `Retry-After`, then a retry is allowed).
     DateTime? retryAt,
   }) = _SubmitState;
 

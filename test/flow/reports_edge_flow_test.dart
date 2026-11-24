@@ -551,9 +551,9 @@ void main() {
     });
   });
 
-  // TC-REP-064, TC-REP-065 (audit 8.1; guide §6.2: "keep it and send it
-  // again"): Back asks what Done asks, and the screen cannot be left while
-  // the report is filing, so a filed report always goes on to its photos.
+  // TC-REP-064, TC-REP-065 (UI audit 2026-11-22, 8.1; guide §6.2: "keep it and
+  // send it again"): Back asks what Done asks, and the screen cannot be left
+  // while the report is filing, so a filed report always goes on to its photos.
   group('Back on Report incident', () {
     Future<void> scrollToSubmit(FlowApp app) async {
       final list = reportList(app.tester);

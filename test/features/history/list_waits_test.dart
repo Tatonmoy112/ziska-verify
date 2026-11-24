@@ -76,9 +76,10 @@ void main() {
     },
   );
 
-  // TC-HIST-055 (audit 7.1; guide §5: a cursor goes back to the list that
-  // gave it): the next page waits out a 429; a filter picked meanwhile
-  // loads its own first page, never the new filter with the old cursor.
+  // TC-HIST-055 (UI audit 2026-11-22, 7.1; guide §5: a cursor goes back to the
+  // list that gave it): the next page waits out a 429; a filter picked
+  // meanwhile loads its own first page, never the new filter with the old
+  // cursor.
   test(
     'TC-HIST-055 History: a filter during a next-page wait starts its own '
     'list',

@@ -9,7 +9,7 @@ import '../../ui/ui_helpers.dart';
 
 /// TC-AUTH-101: the password field and the password rule count the same
 /// thing — characters (code points), as the backend does (app API guide
-/// §3.6; final.md Section 6.6). TC-SEC-011: no Android backup.
+/// §3.6; final.md §6). TC-SEC-011: no Android backup.
 void main() {
   testWidgets('TC-AUTH-101 the field stops at 128 characters, as the rule '
       'counts them', (tester) async {

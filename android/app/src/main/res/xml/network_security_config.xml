@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- HTTPS only; certificates validated by the system trust store (final.md Section 12.1). -->
+<!-- HTTPS only; certificates validated by the system trust store (final.md §12). -->
 <network-security-config>
     <base-config cleartextTrafficPermitted="false">
         <trust-anchors>

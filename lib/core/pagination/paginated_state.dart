@@ -31,8 +31,8 @@ class PaginatedState<T> {
   final bool hasReachedEnd;
   final Failure? failure;
 
-  /// After a `429`: Retry sends nothing before this time (final.md Sections
-  /// 10.4, 10.6: a countdown, never a retry in a loop).
+  /// After a `429`: Retry sends nothing before this time (final.md
+  /// §10: a countdown, never a retry in a loop).
   final DateTime? retryAt;
 
   /// A `429` countdown is still running.

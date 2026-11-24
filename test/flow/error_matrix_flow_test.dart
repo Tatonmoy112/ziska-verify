@@ -296,7 +296,7 @@ void main() {
 
           final own = row.own[status];
           if (row.name == 'logout') {
-            // Any answer: the official is logged out anyway (§6.5).
+            // Any answer: the official is logged out anyway (§6).
             await tester.pumpAndSettle();
             expect(find.text(loginTitle), findsOneWidget);
             return;
@@ -315,7 +315,7 @@ void main() {
                 expect(find.textContaining(general), findsWidgets);
               }
             case 403:
-              // The profile is loaded again once; no loop (§7.2).
+              // The profile is loaded again once; no loop (§7).
               await tester.pump(const Duration(seconds: 3));
               await tester.pumpAndSettle();
               expect(app.backend.sent('GET', 'me').length, mesBefore + 1);

@@ -11,7 +11,7 @@ import '../../../fakes/postman_examples.dart';
 import '../../../fakes/scripted_adapter.dart';
 
 /// API contract tests on the backend's Postman examples
-/// (final.md Section 18.2).
+/// (final.md §18).
 void main() {
   late ScriptedAdapter adapter;
   late DioVerificationApiService service;

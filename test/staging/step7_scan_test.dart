@@ -251,8 +251,8 @@ void main() {
     expect(find.bySemanticsLabel('Scanned: 1'), findsOneWidget);
     expect(find.byKey(const Key('session.restarted')), findsNothing);
     expect(find.byKey(const Key('session.scanAgain')), findsNothing);
-    // TC-MIG-072 (audit 5.2): the list starts again, and the screen says
-    // why and where the earlier products are.
+    // TC-MIG-072 (UI audit 2026-11-22, 5.2): the list starts again, and the
+    // screen says why and where the earlier products are.
     expect(
       find.text(
         'A new session started: the last one was full, or closed after 15 '

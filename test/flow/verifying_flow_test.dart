@@ -6,7 +6,7 @@ import 'package:ziska_verify/features/verification/presentation/screens/verifyin
 import '../fakes/scripted_adapter.dart';
 import 'harness.dart';
 
-/// Flow tests: the verification loader (final.md Section 13.1.2, decision
+/// Flow tests: the verification loader (final.md §13.1, decision
 /// 48; docs/test-cases/04-lookup.md TC-LOOK-102 … -107).
 void main() {
   const valid = 'Genuine product';

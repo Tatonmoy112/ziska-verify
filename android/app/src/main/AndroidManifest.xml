@@ -2,7 +2,7 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.CAMERA"/>
     <!-- No Android backup: the login session and the phone ID stay on this
-         phone (final.md Section 12.1). -->
+         phone (final.md §12). -->
     <application
         android:allowBackup="false"
         android:fullBackupContent="@xml/backup_rules"
@@ -50,7 +50,7 @@
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
-        <!-- Request access opens mail and the dialler (final.md Section 13.9). -->
+        <!-- Request access opens mail and the dialler (final.md §13.8). -->
         <intent>
             <action android:name="android.intent.action.SENDTO"/>
             <data android:scheme="mailto"/>

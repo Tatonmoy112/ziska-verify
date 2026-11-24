@@ -4,9 +4,9 @@ import 'package:flutter_test/flutter_test.dart';
 import '../fakes/roles.dart';
 import 'harness.dart';
 
-/// TC-MIG-069 (audit 6.2): a stack whose answer was lost may already be
-/// recorded, as a session of kind `serial` (guide §4.7), so sending it
-/// again checks every serial again. The app asks before it does; a stack
+/// TC-MIG-069 (UI audit 2026-11-22, 6.2): a stack whose answer was lost may
+/// already be recorded, as a session of kind `serial` (guide §4.7), so sending
+/// it again checks every serial again. The app asks before it does; a stack
 /// that never left the phone goes again without asking.
 void main() {
   const serials = '1000001 1000002 1000003';

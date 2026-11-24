@@ -26,7 +26,7 @@ void main() {
   const change = SessionPasswordChangeRequired();
   const inside = SessionAuthenticated();
 
-  // One case per row of final.md Section 9.4.
+  // One case per row of final.md §9.
   test('start-up goes to Splash', () {
     expect(go(null, RoutePaths.home), RoutePaths.splash);
     expect(go(null, RoutePaths.splash), isNull);

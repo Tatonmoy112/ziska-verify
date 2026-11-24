@@ -44,12 +44,12 @@ class _ReadingAdapter implements HttpClientAdapter {
   void close({bool force = false}) {}
 }
 
-/// TC-REP-066 (audit 8.2): the access pass lasts 15 minutes, so the first
-/// photo after a quiet spell meets `401 token_expired`. The app renews the
-/// pass and sends the same photo again; its bytes go again whole. (The
-/// audit thought the body could be read only once; `Stream.fromIterable`
-/// gives its items again to each reader, so it already works. This test
-/// keeps it so if the body ever changes.)
+/// TC-REP-066 (UI audit 2026-11-22, 8.2): the access pass lasts 15 minutes, so
+/// the first photo after a quiet spell meets `401 token_expired`. The app
+/// renews the pass and sends the same photo again; its bytes go again whole.
+/// (The audit thought the body could be read only once; `Stream.fromIterable`
+/// gives its items again to each reader, so it already works. This test keeps
+/// it so if the body ever changes.)
 void main() {
   test('TC-REP-066 a photo answered token_expired is sent again whole '
       'after the renewal', () async {

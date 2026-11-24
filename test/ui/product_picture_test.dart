@@ -11,8 +11,8 @@ import 'package:ziska_verify/shared/design_system/tokens/app_spacing.dart';
 import '../fakes/fake_picture_images.dart';
 import 'ui_helpers.dart';
 
-/// The product picture card and the full-screen viewer (final.md Section
-/// 13.1.4, decision 47): TC-UI-160 … -164, TC-LOOK-108 … -114, -117.
+/// The product picture card and the full-screen viewer (final.md
+/// §13.1, decision 47): TC-UI-160 … -164, TC-LOOK-108 … -114, -117.
 void main() {
   setUpAll(() async {
     await loadUiFonts();

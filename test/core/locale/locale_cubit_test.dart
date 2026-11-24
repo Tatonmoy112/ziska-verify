@@ -6,7 +6,7 @@ import 'package:ziska_verify/core/locale/locale_cubit.dart';
 import '../../fakes/fake_logger_service.dart';
 import '../../fakes/fake_preferences_service.dart';
 
-/// The app language (final.md Section 16; TC-PROF-019, -023, -030).
+/// The app language (final.md §16; TC-PROF-019, -023, -030).
 void main() {
   late FakePreferencesService preferences;
   late FakeLoggerService logger;

@@ -163,7 +163,7 @@ void main() {
   });
 
   // Sellers see the history of their own checks only (history:own, the
-  // default for retail roles, backend D53; final.md Section 7.2).
+  // default for retail roles, backend D53; final.md §7).
   for (final (name, profile) in [
     ('Retail seller', Roles.retailSeller),
     ('Senior seller', Roles.seniorSeller),

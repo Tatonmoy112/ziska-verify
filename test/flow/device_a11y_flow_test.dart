@@ -212,7 +212,7 @@ void main() {
       await app.tap(find.byKey(const Key('verify.submit')));
       expect(find.text(title), findsWidgets, reason: result);
       // A round icon and a badge in words in the top card, not only a
-      // colour (final.md Section 13.1.4).
+      // colour (final.md §13.1).
       final card = find.byType(VerificationResultCard);
       expect(
         find.descendant(of: card, matching: find.byType(Icon)),

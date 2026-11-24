@@ -758,7 +758,7 @@ void expectHistoryChipCounts(WidgetTester tester) {
 }
 
 /// History shows the tracking log of [serial]: the item card with the
-/// serial, then the numbered log (final.md Section 13.4.1).
+/// serial, then the numbered log (final.md §13.4).
 void expectTrackingLog(String serial) {
   final card = find.byKey(const Key('history.itemCard'));
   expect(card, findsOneWidget);

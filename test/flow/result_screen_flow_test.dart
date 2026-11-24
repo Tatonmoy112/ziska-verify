@@ -9,8 +9,8 @@ import 'package:ziska_verify/shared/design_system/tokens/app_colors.dart';
 import '../fakes/roles.dart';
 import 'harness.dart';
 
-/// Flow tests: the result screen without an item (final.md Section
-/// 13.1.4, decision 49): what was entered, hints, and the actions
+/// Flow tests: the result screen without an item (final.md
+/// §13.1, decision 49): what was entered, hints, and the actions
 /// (docs/test-cases/04-lookup.md, TC-LOOK-094 … -101).
 void main() {
   const notFound = {'ref': 'MA-2026-000999', 'result': 'not_found'};

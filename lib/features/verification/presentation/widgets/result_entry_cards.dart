@@ -17,8 +17,8 @@ String wayName(LookupWay way, AppLocalizations l10n) => switch (way) {
   LookupWay.qr => l10n.wayQr,
 };
 
-/// **WHAT YOU ENTERED** for a result without an item (final.md Section
-/// 13.1.4, decision 49): the submitted serial/QR value,
+/// **WHAT YOU ENTERED** for a result without an item (final.md
+/// §13.1, decision 49): the submitted serial/QR value,
 /// the check time in Bangladesh time, the result, and the reference.
 class EnteredCard extends StatelessWidget {
   const EnteredCard({required this.view, super.key});

@@ -13,8 +13,8 @@ Uri? pictureAddress(String? url) {
 
 /// Loads product pictures (final.md §13.1). Never through the API
 /// client, so the picture host never receives the access pass; kept only in
-/// Flutter's memory image cache, never on the phone's storage (Section
-/// 12.1, backend D21).
+/// Flutter's memory image cache, never on the phone's storage (final.md
+/// §12, backend D21).
 abstract interface class PictureImages {
   /// The picture at [address] (an address [pictureAddress] accepted).
   ImageProvider of(Uri address);

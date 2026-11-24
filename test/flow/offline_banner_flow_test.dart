@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import '../fakes/roles.dart';
 import 'harness.dart';
 
-/// The offline banner above every screen (final.md Section 14.2;
+/// The offline banner above every screen (final.md §14.2;
 /// docs/test-cases/10-errors-network.md, TC-ERR-037 … -045).
 void main() {
   final banner = find.byKey(const Key('network.offline'));

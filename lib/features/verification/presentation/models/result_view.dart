@@ -1,8 +1,8 @@
 import 'package:ziska_verify/features/verification/domain/entities/checked_input.dart';
 import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
 
-/// Where a lookup started: where **Try again** returns (final.md Section
-/// 13.1.4).
+/// Where a lookup started: where **Try again** returns (final.md
+/// §13.1).
 enum ResultOrigin { verify, scanner, manyItems }
 
 /// Everything the result screen shows, passed as the route's `extra`

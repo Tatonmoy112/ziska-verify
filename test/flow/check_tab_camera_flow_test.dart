@@ -7,7 +7,7 @@ import '../fakes/roles.dart';
 import 'harness.dart';
 
 /// The Check tab opens on the camera: a read QR is the trigger, sent at once
-/// as `POST lookups` (app API guide §4.2; final.md Sections 13.1.2, 13.7).
+/// as `POST lookups` (app API guide §4.2; final.md §13.1, §13.7).
 void main() {
   const qr = 'https://www.ziskaverify.com/q/Q8F2KD91XA7M';
 
@@ -268,8 +268,8 @@ void main() {
     });
   });
 
-  // TC-LOOK-130 (audit 4.2): a scan whose answer was lost after sending
-  // may already be recorded; one that never left the phone was not.
+  // TC-LOOK-130 (UI audit 2026-11-22, 4.2): a scan whose answer was lost after
+  // sending may already be recorded; one that never left the phone was not.
   group('TC-LOOK-130 a scan without an answer', () {
     testWidgets('lost after sending: the check may be recorded', (
       tester,

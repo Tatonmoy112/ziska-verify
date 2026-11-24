@@ -11,7 +11,7 @@ import '../../fakes/postman_examples.dart';
 import '../../fakes/scripted_adapter.dart';
 
 /// `GET checks` against the backend's Postman examples
-/// (final.md Sections 10, 13.4, 18.2).
+/// (final.md §10, §13.4, §18).
 void main() {
   late ScriptedAdapter adapter;
   late DioHistoryApiService service;

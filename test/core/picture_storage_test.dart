@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import '../ui/source_scan.dart';
 
 /// TC-SEC-028: the product picture is never written to the phone's
-/// storage (final.md Sections 12.1, 13.1.4; backend D21). Pictures load
+/// storage (final.md §12, §13.1; backend D21). Pictures load
 /// through `PictureImages` into Flutter's memory image cache only.
 void main() {
   test('no disk image cache package is in the app', () {

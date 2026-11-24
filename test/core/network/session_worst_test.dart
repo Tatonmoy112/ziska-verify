@@ -58,7 +58,7 @@ Map<String, dynamic> _renewed(Object access, Object refresh) => okBody({
   'must_change_password': false,
 });
 
-/// Worst cases of the session (final.md Sections 6.1, 6.4, 6.5):
+/// Worst cases of the session (final.md §6):
 /// TC-SESS-033 … -037.
 void main() {
   test(
@@ -107,10 +107,10 @@ void main() {
     );
   });
 
-  // TC-SESS-045 (audit 1.1; guide §3.4): a renewal spends the old refresh
-  // pass, and "sending one that was already used ends the login" on every
-  // phone. When the new passes cannot be stored, the app goes on with them
-  // from memory and never sends the spent pass again, not after a restart
+  // TC-SESS-045 (UI audit 2026-11-22, 1.1; guide §3.4): a renewal spends the
+  // old refresh pass, and "sending one that was already used ends the login" on
+  // every phone. When the new passes cannot be stored, the app goes on with
+  // them from memory and never sends the spent pass again, not after a restart
   // either.
   group('TC-SESS-045 the new passes of a renewal cannot be stored', () {
     test('the renewal works from memory, and the next one sends the new '

@@ -166,7 +166,8 @@ void main() {
     expect(cubit.state.rows, hasLength(1));
   });
   for (final code in ['session_full', 'session_ended']) {
-    // TC-MIG-072 (audit 5.2): the roll-over is said, until the next scan.
+    // TC-MIG-072 (UI audit 2026-11-22, 5.2): the roll-over is said, until the
+    // next scan.
     test(
       '$code rolls over, retries once, and says so until the next scan',
       () async {

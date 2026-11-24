@@ -40,7 +40,7 @@ void main() {
   });
 
   /// Answers pages by cursor: null → page 1 (cursor "c1"), "c1" → page 2
-  /// (empty, end), as a full page followed by an empty one (Section 10.2).
+  /// (empty, end), as a full page followed by an empty one (§10).
   void pages({Result<CheckPage>? second}) {
     calls = [];
     when(() => repo.getChecks(any(), any())).thenAnswer((inv) async {

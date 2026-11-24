@@ -39,7 +39,7 @@ void main() {
     );
 
     /// The card's fill, round icon, title, and badge as drawn (final.md
-    /// Section 13.1.4).
+    /// §13.1).
     void expectLook(
       WidgetTester tester, {
       required Color color,

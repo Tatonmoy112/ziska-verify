@@ -27,7 +27,7 @@ const Result<CheckPage> _page = Success(
   ),
 );
 
-/// The Profile's check counts (final.md Section 13.8; TC-PROF-036, -038).
+/// The Profile's check counts (final.md §13.8; TC-PROF-036, -038).
 void main() {
   late _MockRepo repo;
   late List<(CheckQuery, PageRequest)> asked;

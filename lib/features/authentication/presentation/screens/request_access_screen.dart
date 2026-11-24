@@ -25,8 +25,8 @@ import 'package:ziska_verify/shared/widgets/navy_status_bar.dart';
 import 'package:ziska_verify/shared/widgets/retry_countdown.dart';
 
 /// Sign up: the access request of the app API guide §3.9 under the name
-/// users see, no login needed (app API guide §3.9, final.md Section
-/// 13.9): the name, the role, the password and the email first; then the
+/// users see, no login needed (app API guide §3.9, final.md
+/// §13.8): the name, the role, the password and the email first; then the
 /// emailed code; then the request.
 class RequestAccessScreen extends StatefulWidget {
   const RequestAccessScreen({required this.onContactOffice, super.key});

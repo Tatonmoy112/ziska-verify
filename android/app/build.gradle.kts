@@ -38,7 +38,7 @@ android {
         versionName = flutter.versionName
     }
 
-    // Three flavors (final.md Section 2.3). Each has its own application ID,
+    // Three flavors (final.md §17). Each has its own application ID,
     // so the mock, staging, and live builds install side by side. Android
     // forbids flavor names starting with "test", so the build for the
     // backend's test server is named "staging".

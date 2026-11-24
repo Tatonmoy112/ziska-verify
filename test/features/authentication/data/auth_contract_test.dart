@@ -9,7 +9,7 @@ import '../../../fakes/postman_examples.dart';
 import '../../../fakes/scripted_adapter.dart';
 
 /// API contract tests: every answer is parsed from the backend's own
-/// Postman examples (final.md Section 18.2).
+/// Postman examples (final.md §18).
 void main() {
   late ScriptedAdapter adapter;
   late ApiClient api;

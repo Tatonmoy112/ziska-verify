@@ -227,7 +227,7 @@ void main() {
       );
       expect(find.text('Genuine, needs attention'), findsOneWidget);
       // `checked_before` is the badge and the check number; the others
-      // are rows (final.md Section 13.1.4).
+      // are rows (final.md §13.1).
       expect(find.text('CHECKED BEFORE'), findsOneWidget);
       expect(find.textContaining('check number 3'), findsOneWidget);
       for (final reason in [
@@ -521,7 +521,7 @@ void main() {
     }
   });
 
-  // Audit (final.md Section 13.7): without the formats only the serial form
+  // Audit (final.md §13.7): without the formats only the serial form
   // waits; scanning and the tools need no formats.
   testWidgets('TC-LOOK-120 a formats failure keeps the camera and the '
       'tools', (tester) async {

@@ -145,7 +145,7 @@ Render times in Asia/Dhaka using the existing utilities and injectable clock.
 
 Use mock/staging/live flavors and matching JSON configuration. API base addresses are HTTPS; the slug is fixed per build. Office contact configuration is used for the empty-access-role fallback; authenticated support comes from `GET me`.
 
-**Citations in code comments** (2026-11-24, production audit P-11) name the current section: `final.md §N`, `guide §N` (the app API guide), `build guide §N`, `UI audit 2026-11-22, N.N`; a test checks that each exists. Register implementations in `app/bootstrap.dart`; feature widgets receive interfaces/callbacks. Tests mirror the feature layers and use the fake backend, secure storage, camera, photo, launcher, and image wrappers. No automated tests call real services or plugins.
+**Citations in code comments** (2026-11-24, production audit P-11) name the current section: `final.md §N`, `guide §N` (the app API guide), `build guide §N`, `UI audit 2026-11-22, N.N`, `test plan §N`; a test checks that each exists, in the code, the tests, the tools and the Android and iOS projects, a citation over two lines included (P-16). Register implementations in `app/bootstrap.dart`; feature widgets receive interfaces/callbacks. Tests mirror the feature layers and use the fake backend, secure storage, camera, photo, launcher, and image wrappers. No automated tests call real services or plugins.
 
 ## 12. Security and privacy
 

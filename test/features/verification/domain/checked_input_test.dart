@@ -5,7 +5,7 @@ import 'package:ziska_verify/features/verification/domain/entities/checked_input
 import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
 
 /// What the result screen shows of the input, and which picture addresses
-/// may be loaded (final.md Sections 12.1, 13.1.4; TC-LOOK-095, -112).
+/// may be loaded (final.md §12, §13.1; TC-LOOK-095, -112).
 void main() {
   test('submission ways exclude hidden codes', () {
     expect(LookupWay.values.map((w) => w.wire), ['serial', 'qr']);

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Android 11 and older: nothing of the app is backed up (the login
-     session and the phone ID stay on this phone; final.md Section 12.1). -->
+     session and the phone ID stay on this phone; final.md §12). -->
 <full-backup-content>
     <exclude domain="root" path="." />
     <exclude domain="file" path="." />

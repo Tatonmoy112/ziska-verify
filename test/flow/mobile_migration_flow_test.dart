@@ -187,9 +187,9 @@ void main() {
       await tester.pumpAndSettle();
     },
   );
-  // TC-MIG-071 (audit 5.3; final.md §13.2: the summary shows "every
-  // product with its result"): a resumed session's scans come a page at a
-  // time; the summary says how many show and loads the rest.
+  // TC-MIG-071 (UI audit 2026-11-22, 5.3; final.md §13.2: the summary shows
+  // "every product with its result"): a resumed session's scans come a page at
+  // a time; the summary says how many show and loads the rest.
   testWidgets('TC-MIG-071 a resumed session: the summary loads every scan', (
     tester,
   ) async {
@@ -706,10 +706,9 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    // TC-MIG-070 (audit 5.1; final.md §13.2: after Finish "the reads
-    // already taken are still sent and answered"): opening a scan's
-    // result while Finish waits must not stop the line, or Finish never
-    // ends.
+    // TC-MIG-070 (UI audit 2026-11-22, 5.1; final.md §13.2: after Finish "the
+    // reads already taken are still sent and answered"): opening a scan's
+    // result while Finish waits must not stop the line, or Finish never ends.
     testWidgets('TC-MIG-070 a result opened during Finish: the waiting reads '
         'still go, and the summary shows', (tester) async {
       final sessions = <String>[];
