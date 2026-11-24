@@ -28,7 +28,11 @@ enum Rule {
   ),
   interfaceWithPlugin('R16', 'an interface file in core also uses a plugin'),
   coreFolderCycle('R17', 'core folders depend on each other in a circle'),
-  foreignRoute('R18', "a feature opens another feature's route itself")
+  foreignRoute('R18', "a feature opens another feature's route itself"),
+  apiServiceWithoutInterface(
+    'R19',
+    'an API service is not an interface with a Dio implementation',
+  )
   ;
 
   const Rule(this.id, this.text);
@@ -127,6 +131,9 @@ class LayerRules {
             );
           }
         }
+      }
+      if (from.layer == _Layer.data && _apiServiceFile.hasMatch(file)) {
+        _checkApiService(file, sources[file]!, add);
       }
       if (from.area == _Area.feature && from.layer == null) {
         add(Rule.outsideLayers, file, 'not in a layer');
@@ -259,6 +266,36 @@ class LayerRules {
     }
   }
 
+  /// An API service is an `abstract interface class …ApiService` and a
+  /// `Dio…` class implementing it (P-14): repositories and tests depend on
+  /// the interface, only the composition root on Dio.
+  void _checkApiService(
+    String file,
+    String source,
+    void Function(Rule, String, String) add,
+  ) {
+    final code = source.replaceAll(_comment, '');
+    final interface = _apiInterface.firstMatch(code)?.group(1);
+    if (interface == null) {
+      add(
+        Rule.apiServiceWithoutInterface,
+        file,
+        'no abstract interface class …ApiService',
+      );
+      return;
+    }
+    final implementation = RegExp(
+      '\\bclass Dio$interface\\s+implements\\s+$interface\\b',
+    );
+    if (!implementation.hasMatch(code)) {
+      add(
+        Rule.apiServiceWithoutInterface,
+        file,
+        'no Dio$interface implementing $interface',
+      );
+    }
+  }
+
   /// Reports each circle of `core` folders once (P-8): the first file of
   /// the first folder that starts it, then the folders that lead back. A
   /// subfolder is a folder of its own.
@@ -372,6 +409,15 @@ bool isGenerated(String path) =>
     path.startsWith('l10n/generated/');
 
 final _comment = RegExp(r'//[^\n]*|/\*[\s\S]*?\*/');
+
+/// A feature's API service file and its interface (R19).
+final _apiServiceFile = RegExp(
+  r'^features/\w+/data/services/\w+_api_service\.dart$',
+);
+final _apiInterface = RegExp(
+  r'^abstract interface class (\w+ApiService)\b',
+  multiLine: true,
+);
 
 /// A route a screen names (`RouteNames.scannerMode`).
 final _routeName = RegExp(r'\bRouteNames\.(\w+)');

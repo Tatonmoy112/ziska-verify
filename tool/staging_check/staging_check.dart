@@ -249,7 +249,7 @@ class StagingCheck {
 
     // A public route, read by the app's own Sign up service and parser.
     try {
-      final roles = await AccessRequestApiService(api).roles();
+      final roles = await DioAccessRequestApiService(api).roles();
       if (roles.isEmpty) {
         _fail('GET roles/requestable', 'no role');
       } else {
@@ -1559,7 +1559,7 @@ class StagingCheck {
   /// answers 400 or 403 first. Nothing is filed and no mail is sent. At
   /// most 10 requests an hour are allowed from one address: 5 are used.
   Future<void> signupProbe() async {
-    final service = AccessRequestApiService(api);
+    final service = DioAccessRequestApiService(api);
     final List<RequestableRoleDto> roles;
     try {
       roles = await service.roles();
@@ -1635,7 +1635,7 @@ class StagingCheck {
       return;
     }
     try {
-      await AccessRequestApiService(api).sendCode(email);
+      await DioAccessRequestApiService(api).sendCode(email);
       _pass('POST auth/access/code', '200: a code was sent');
     } on AppException catch (e) {
       _fail('POST auth/access/code', '${e.statusCode} ${e.code}');
@@ -1651,7 +1651,7 @@ class StagingCheck {
       _fail('the sign-up address', 'set STAGING_SIGNUP_EMAIL');
       return;
     }
-    final service = AccessRequestApiService(api);
+    final service = DioAccessRequestApiService(api);
     final roles = await service.roles();
     final retail = roles.where((r) => r.name == 'Retail seller').firstOrNull;
     final role = retail ?? roles.first;

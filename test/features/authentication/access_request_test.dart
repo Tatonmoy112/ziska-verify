@@ -43,7 +43,7 @@ void main() {
       )..httpClientAdapter = adapter;
       dio.interceptors.add(AuthInterceptor(session: session, dio: dio));
       repository = AccessRequestRepositoryImpl(
-        AccessRequestApiService(ApiClient(dio)),
+        DioAccessRequestApiService(ApiClient(dio)),
       );
       addTearDown(session.dispose);
     });

@@ -250,6 +250,10 @@ void main() {
         'core/services/session/session.dart':
             "import 'package:ziska_verify/core/services/session/state.dart';",
         'core/services/session/state.dart': '',
+        // An API service as every feature writes it (P-14).
+        'features/a/data/services/a_api_service.dart':
+            'abstract interface class AApiService {}\n'
+            'class DioAApiService implements AApiService {}',
       });
       expect(found, isEmpty);
     });
@@ -331,6 +335,9 @@ void main() {
             "import 'package:mobile_scanner/mobile_scanner.dart';\n"
             'abstract interface class X {}',
       },
+      Rule.apiServiceWithoutInterface: {
+        'features/a/data/services/a_api_service.dart': 'class AApiService {}',
+      },
       Rule.foreignRoute: {
         'features/verification/presentation/x.dart':
             'void open() => go(RouteNames.reportIncident);',
@@ -347,7 +354,7 @@ void main() {
       },
     };
 
-    test('TC-ARCH-008 each rule R1 … R18 is reported, with its file', () {
+    test('TC-ARCH-008 each rule R1 … R19 is reported, with its file', () {
       expect(cases.keys, unorderedEquals(Rule.values));
       for (final MapEntry(key: rule, value: files) in cases.entries) {
         final found = check(files);
@@ -384,6 +391,36 @@ void main() {
         'R15 features/a/data/d.dart -> core/b.dart -> $plugin',
         'R9 features/a/domain/u.dart -> core/b.dart -> $plugin',
         'R15 shared/widgets/w.dart -> core/a.dart -> core/b.dart -> $plugin',
+      ]);
+    });
+
+    test('TC-ARCH-022 an API service is an interface with a Dio '
+        'implementation', () {
+      final found = check({
+        // Both, as every feature has them: allowed.
+        'features/a/data/services/a_api_service.dart':
+            'abstract interface class AApiService {}\n'
+            'final class DioAApiService implements AApiService {}',
+        // A concrete class only.
+        'features/b/data/services/b_api_service.dart': 'class BApiService {}',
+        // An interface no Dio class implements.
+        'features/c/data/services/c_api_service.dart':
+            'abstract interface class CApiService {}',
+        // An interface named only in comments.
+        'features/d/data/services/d_api_service.dart':
+            '// abstract interface class DApiService {}\n'
+            '/* class DioDApiService implements DApiService */\n'
+            'class DApiService {}',
+        // Other files of data, and files outside features: not API services.
+        'features/e/data/services/e_helpers.dart': 'class Helper {}',
+        'core/network/api_client.dart': 'class ApiClient {}',
+      });
+      const noInterface = 'no abstract interface class …ApiService';
+      String at(String f) => 'features/$f/data/services/${f}_api_service.dart';
+      expect(found.map((v) => '${v.rule.id} ${v.file} -> ${v.detail}'), [
+        'R19 ${at('b')} -> $noInterface',
+        'R19 ${at('c')} -> no DioCApiService implementing CApiService',
+        'R19 ${at('d')} -> $noInterface',
       ]);
     });
 

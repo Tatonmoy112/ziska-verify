@@ -4,7 +4,7 @@ The production-grade review of the app, done on the `production` branch one area
 
 | Step | Area | State |
 |---|---|---|
-| 2 | High-level architecture | Checked 2026-11-24: P-1 … P-15. Fixed: P-1 … P-9, P-11 … P-13; P-10 ready, waits for the Firebase project |
+| 2 | High-level architecture | Checked 2026-11-24: P-1 … P-15. Fixed: P-1 … P-9, P-11 … P-14; P-10 ready, waits for the Firebase project |
 | 3 | The central API | To do |
 | 4 | Low-level architecture | To do |
 | 5 | Dead code | To do |
@@ -488,6 +488,13 @@ No change is needed where they already comply.
 **Evidence:** every other API service is an `abstract interface class` with a `Dio…` implementation; this one is a concrete class.
 
 **Proposal:** the same pattern, guarded by a new architecture rule.
+
+**✅ Fixed 2026-11-24:**
+- **Test first:** architecture rule **R19**, "an API service is an interface with a Dio implementation", was red on `access_request_api_service.dart` alone. It has a sample in TC-ARCH-008, the allowed shape in TC-ARCH-007, and TC-ARCH-022 for its edges.
+- **The change:**
+  - `AccessRequestApiService` is now the interface (its three routes documented), and `DioAccessRequestApiService` the implementation, unchanged inside;
+  - `bootstrap.dart`, two tests, a staging replay test and the staging tool build the `Dio…` class;
+  - the repository still takes the interface.
 
 #### P-15 (should, found while fixing P-4): the tab guard still names `/home/scan`
 **Evidence:** `tabPermissionByPath` in `app/shell/main_shell.dart` guards `/home/scan`, a route removed on 2026-11-18.

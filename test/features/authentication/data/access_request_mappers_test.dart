@@ -47,7 +47,7 @@ void main() {
         DioFactory.options('https://api.example.test/v1/clients/x/'),
       )..httpClientAdapter = ScriptedAdapter((_) async => next);
       repo = AccessRequestRepositoryImpl(
-        AccessRequestApiService(ApiClient(dio)),
+        DioAccessRequestApiService(ApiClient(dio)),
       );
     });
 

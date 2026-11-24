@@ -45,7 +45,7 @@ Presentation calls domain use cases only, never a repository interface (2026-11-
 - Incidents own report filing/uploading; retail users expose only the incident picker.
 - `lib/core/` contains infrastructure and plugin interfaces, and never imports a feature. Its folders depend on one another one way only: `network` (with the Dio session service) uses `services/session`'s interface, never the reverse (2026-11-24, production audit P-8; rule R17).
 - Features do not import one another's internals. The app-wide profile entity/Cubit is the existing exception.
-- These rules are checked on every import by `test/architecture/layer_rules_test.dart` (R1–R17, `docs/test-cases/18-architecture.md`).
+- Every API service is an `abstract interface class …ApiService` with a `Dio…` implementation (P-14). These rules are checked on every import by `test/architecture/layer_rules_test.dart` (R1–R19, `docs/test-cases/18-architecture.md`).
 - The router maps history records into verification-owned recovered row summaries through a callback. It also composes report/picker and session/history navigation.
 
 ## 5. Core and data services

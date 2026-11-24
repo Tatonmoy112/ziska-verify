@@ -29,7 +29,7 @@ void main() {
     'TC-STG-001 the public roles are read as the server sends them',
     () async {
       next = stagingScripted('roles_requestable_200.json');
-      final roles = await AccessRequestApiService(api).roles();
+      final roles = await DioAccessRequestApiService(api).roles();
       expect(
         [for (final r in roles) (r.id, r.name)],
         [

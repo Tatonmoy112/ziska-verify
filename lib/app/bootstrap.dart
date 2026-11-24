@@ -212,7 +212,7 @@ void registerFeatures() {
     )
     ..registerFactory(() => GetProfile(locator()))
     ..registerLazySingleton<AccessRequestApiService>(
-      () => AccessRequestApiService(locator()),
+      () => DioAccessRequestApiService(locator()),
     )
     ..registerLazySingleton<AccessRequestRepository>(
       () => AccessRequestRepositoryImpl(locator()),
