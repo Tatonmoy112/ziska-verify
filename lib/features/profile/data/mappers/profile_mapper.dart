@@ -10,7 +10,8 @@ extension ProfileMapper on ProfileDto {
     name: _text(name) ?? email.trim(),
     email: email,
     role: role,
-    permissions: permissions.toSet(),
+    // Typed here: a key the app does not know grants nothing (final.md §7).
+    permissions: permissions.map(Permission.fromKey).nonNulls.toSet(),
     mustChangePassword: mustChangePassword,
     organisation: _text(organisation),
     supportEmail: _text(support?.email),

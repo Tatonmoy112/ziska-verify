@@ -93,7 +93,7 @@ Preserve the existing four routing states: unauthenticated, awaiting new-phone c
 | `history:own` | Own checks, own session list/detail, profile totals |
 | `incident:report` | File incidents, upload photos, own reports, retail picker |
 
-Read permissions from `GET me`, not role names or tokens. Empty sets are valid; unknown keys grant no capabilities. Reload profile after `403 forbidden` and remove inaccessible routes. Guard parameterized session-check paths as well as menu entry points.
+Read permissions from `GET me`, not role names or tokens. Empty sets are valid; unknown keys grant no capabilities. The keys become the typed `Permission` values at the data boundary (`features/profile/domain/entities/profile.dart`, the only place they are written); a key not written exactly as the backend writes it is dropped there (2026-11-24, production audit P-4). Reload profile after `403 forbidden` and remove inaccessible routes. Guard parameterized session-check paths as well as menu entry points.
 
 A custom role can have bulk without single lookup or history. It can inspect its current results; recovery and session browsing must not call history endpoints without `history:own`. `history:all` and `retail_user:add` are withdrawn and grant no UI.
 

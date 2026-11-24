@@ -2,7 +2,7 @@
 
 These cases check the layer rules of `final.md` §3, §4 and §11 on the imports of every hand-written file in `lib/`. They come from the production audit, step 2, finding P-1 ([docs/production-audit.md](../production-audit.md)).
 
-TC-ARCH-001 … -011 run in `test/architecture/layer_rules_test.dart`, and TC-ARCH-012 … -014 (the verification use cases, P-3) in `test/features/verification/domain/verification_usecases_test.dart`, both in CI with the other tests. The checker is `test/architecture/layer_rules.dart`. It reads only text: no plugin and no network.
+TC-ARCH-001 … -011 and -015 run in `test/architecture/layer_rules_test.dart`, and TC-ARCH-012 … -014 (the verification use cases, P-3) in `test/features/verification/domain/verification_usecases_test.dart`, both in CI with the other tests. The checker is `test/architecture/layer_rules.dart`. It reads only text: no plugin and no network.
 
 ## The rules
 
@@ -43,3 +43,4 @@ TC-ARCH-001 … -011 run in `test/architecture/layer_rules_test.dart`, and TC-AR
 | TC-ARCH-012 | Each verification use case makes its one call | POS | P2 | AUTO | ✅ `verification_usecases_test` | A mocked repository | Call `GetFormats`, `GetSession`, `ScanItem`, `CheckSerials`, `EndSession` and `GetSessions` | Each calls its repository method once and nothing else, and returns the repository's answer itself | final.md §4; guide §4.1, §4.3–4.5, §4.7 |
 | TC-ARCH-013 | Arguments pass unchanged | EDGE | P3 | AUTO | ✅ `verification_usecases_test` | A QR value with spaces and lower case; a session ID in mixed case; serials with leading zeros and a repeat; a query with dates and the first page | Call the use cases | The same value, ID, list (same object, order kept), query and page reach the repository; no cursor made up | final.md §13.10 (the QR value sent as read) |
 | TC-ARCH-014 | A failure comes back untouched | WORST | P2 | AUTO | ✅ `verification_usecases_test` | The repository answers a 429 (`Retry-After: 30`, `req-429`), then a lost answer | Call each use case | The same failure object: request reference and wait kept; one call, no retry | final.md §13.10 |
+| TC-ARCH-015 | A permission key is written in one place | WORST | P2 | AUTO | ✅ `layer_rules_test` | The real `lib/` | Look for the six keys of `GET me` (the four the app uses and the two withdrawn) written as text | None outside `features/profile/domain/entities/profile.dart` (comments aside), which defines the four; code reads `Permission` and `Profile.can…` (P-4) | final.md §7 |

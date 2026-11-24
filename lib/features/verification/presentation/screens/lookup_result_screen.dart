@@ -47,7 +47,7 @@ class LookupResultScreen extends StatelessWidget {
     final result = view.result;
     final item = result.item;
     final canReport = context.select<ProfileCubit, bool>(
-      (c) => c.state.permissions.contains('incident:report'),
+      (c) => c.state.profile?.canReport ?? false,
     );
     final profile = context.select<ProfileCubit, Profile?>(
       (c) => c.state.profile,

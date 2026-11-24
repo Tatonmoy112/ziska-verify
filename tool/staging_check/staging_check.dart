@@ -51,6 +51,7 @@ import 'package:ziska_verify/features/incidents/data/services/incident_api_servi
 import 'package:ziska_verify/features/incidents/domain/entities/report.dart';
 import 'package:ziska_verify/features/profile/data/mappers/profile_mapper.dart';
 import 'package:ziska_verify/features/profile/data/services/profile_api_service.dart';
+import 'package:ziska_verify/features/profile/domain/entities/profile.dart';
 import 'package:ziska_verify/features/retail_users/data/repositories/retail_user_repository_impl.dart';
 import 'package:ziska_verify/features/retail_users/data/services/retail_user_api_service.dart';
 import 'package:ziska_verify/features/retail_users/domain/usecases/search_retail_users.dart';
@@ -503,7 +504,7 @@ class StagingCheck {
   /// route for each permission it lists (read only).
   Future<void> profile() async {
     if (!await _logInTrusted()) return;
-    var permissions = const <String>{};
+    var permissions = const <Permission>{};
     try {
       final me = (await DioProfileApiService(api).getMe()).toEntity();
       permissions = me.permissions;
@@ -513,21 +514,25 @@ class StagingCheck {
         'role "${me.role}"; organisation "$organisation"; '
             'support ${me.supportEmail ?? '-'} / ${me.supportPhone ?? '-'}',
       );
-      _pass('the permissions', me.permissions.join(', '));
+      _pass(
+        'the permissions',
+        me.permissions.map((p) => p.key).join(', '),
+      );
     } on Object catch (e) {
       _fail('GET me', e);
     }
 
     // What each permission opens in the app, and a read-only route of it.
-    final routes = <String, (String, Map<String, Object?>)>{
-      'item:lookup': ('formats', {}),
-      'history:own': ('checks', {'limit': 1}),
-      'item:bulk_lookup': ('lookups/sessions', {'limit': 1}),
-      'incident:report': ('incidents', {'limit': 1}),
+    final routes = <Permission, (String, Map<String, Object?>)>{
+      Permission.lookup: ('formats', {}),
+      Permission.ownHistory: ('checks', {'limit': 1}),
+      Permission.bulkLookup: ('lookups/sessions', {'limit': 1}),
+      Permission.report: ('incidents', {'limit': 1}),
     };
-    for (final MapEntry(key: permission, value: (path, query))
+    for (final MapEntry(key: granting, value: (path, query))
         in routes.entries) {
-      final granted = permissions.contains(permission);
+      final granted = permissions.contains(granting);
+      final permission = granting.key;
       try {
         await api.get(path, query: query);
         if (granted) {
@@ -545,7 +550,7 @@ class StagingCheck {
         _fail('GET $path ($permission)', e);
       }
     }
-    if (permissions.contains('incident:report')) {
+    if (permissions.contains(Permission.report)) {
       try {
         await api.get('retail-users', query: {'search': 'a', 'limit': 1});
         _pass('GET retail-users (incident:report)', '200');

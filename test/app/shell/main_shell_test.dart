@@ -17,7 +17,7 @@ import '../../fakes/fake_session_service.dart';
 
 class _MockProfileRepo extends Mock implements ProfileRepository {}
 
-Profile _profile(Set<String> permissions) => Profile(
+Profile _profile(Set<Permission> permissions) => Profile(
   id: '1',
   name: 'Asha Rao',
   email: 'a@b.c',
@@ -27,7 +27,10 @@ Profile _profile(Set<String> permissions) => Profile(
 );
 
 void main() {
-  Future<void> pumpShell(WidgetTester tester, Set<String> permissions) async {
+  Future<void> pumpShell(
+    WidgetTester tester,
+    Set<Permission> permissions,
+  ) async {
     final repo = _MockProfileRepo();
     when(
       repo.getProfile,
@@ -70,7 +73,7 @@ void main() {
   }
 
   testWidgets('shows all three tabs with history permission', (tester) async {
-    await pumpShell(tester, {'item:lookup', 'history:own'});
+    await pumpShell(tester, {Permission.lookup, Permission.ownHistory});
     for (final label in ['Check', 'History', 'Profile']) {
       expect(find.text(label), findsOneWidget, reason: label);
     }
@@ -79,14 +82,14 @@ void main() {
   testWidgets('hides History without history permission', (
     tester,
   ) async {
-    await pumpShell(tester, {'item:lookup'});
+    await pumpShell(tester, {Permission.lookup});
     expect(find.text('Check'), findsOneWidget);
     expect(find.text('Profile'), findsOneWidget);
     expect(find.text('History'), findsNothing);
   });
 
   testWidgets('tapping a tab switches to it', (tester) async {
-    await pumpShell(tester, {'history:own'});
+    await pumpShell(tester, {Permission.ownHistory});
     await tester.tap(find.text('History'));
     await tester.pumpAndSettle();
     expect(find.text('/history'), findsOneWidget);
@@ -94,15 +97,15 @@ void main() {
 
   test('the guard sends /history to Home without permission', () {
     final guard = RouteGuard(permissionByPath: tabPermissionByPath);
-    String? go(String path, Set<String> p) => guard.redirect(
+    String? go(String path, Set<Permission> p) => guard.redirect(
       session: const SessionAuthenticated(),
       profileLoaded: true,
       permissions: p,
       location: path,
     );
     expect(go('/history', {}), '/home');
-    expect(go('/history', {'item:lookup'}), '/home');
-    expect(go('/history', {'history:own'}), isNull);
+    expect(go('/history', {Permission.lookup}), '/home');
+    expect(go('/history', {Permission.ownHistory}), isNull);
     expect(go('/profile', {}), isNull);
   });
 }

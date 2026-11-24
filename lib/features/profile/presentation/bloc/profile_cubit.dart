@@ -22,7 +22,7 @@ abstract class ProfileState with _$ProfileState {
 
   const ProfileState._();
 
-  Set<String> get permissions => profile?.permissions ?? const {};
+  Set<Permission> get permissions => profile?.permissions ?? const {};
 }
 
 /// App-scoped profile (final.md Section 5.9). Loads when the official is

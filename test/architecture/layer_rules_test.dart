@@ -41,6 +41,34 @@ void main() {
       );
     });
 
+    test('TC-ARCH-015 a permission key is written in one place only', () {
+      // The keys of `GET me`, the withdrawn ones too (final.md §7). Code
+      // reads `Permission` and `Profile.canLookup`…; a key typed anywhere
+      // else could be mistyped and silently hide a feature (P-4).
+      final key = RegExp(
+        '[\'"](item:lookup|item:bulk_lookup|history:own|incident:report|'
+        'history:all|retail_user:add)[\'"]',
+      );
+      final comment = RegExp(r'//[^\n]*');
+      final found = [
+        for (final MapEntry(key: file, value: source) in sources.entries)
+          if (!isGenerated(file) && file != permissionsHome)
+            for (final m in key.allMatches(source.replaceAll(comment, '')))
+              '$file: ${m.group(0)}',
+      ];
+      expect(found, isEmpty, reason: 'Use Permission / Profile.can…');
+      expect(
+        key.allMatches(sources[permissionsHome]!).map((m) => m.group(1)),
+        containsAll([
+          'item:lookup',
+          'item:bulk_lookup',
+          'history:own',
+          'incident:report',
+        ]),
+        reason: 'the keys are defined in $permissionsHome',
+      );
+    });
+
     test('TC-ARCH-003 reads the code and finds the plugins', () {
       expect(sources.length, greaterThan(150));
       expect(sources.keys, contains('main.dart'));
@@ -319,6 +347,9 @@ void main() {
     });
   });
 }
+
+/// The one file that writes the permission keys of `GET me`.
+const permissionsHome = 'features/profile/domain/entities/profile.dart';
 
 /// Breaks that are known and planned, each with the finding that fixes it,
 /// as `'<rule> <file> -> <import>': '<finding>'`. Empty: P-2 (Profile →

@@ -51,6 +51,7 @@ import 'package:ziska_verify/features/incidents/presentation/bloc/my_reports_blo
 import 'package:ziska_verify/features/incidents/presentation/bloc/report_incident_bloc.dart';
 import 'package:ziska_verify/features/incidents/presentation/screens/my_reports_screen.dart';
 import 'package:ziska_verify/features/incidents/presentation/screens/report_incident_screen.dart';
+import 'package:ziska_verify/features/profile/domain/entities/profile.dart';
 import 'package:ziska_verify/features/profile/presentation/bloc/profile_cubit.dart';
 import 'package:ziska_verify/features/profile/presentation/screens/profile_screen.dart';
 import 'package:ziska_verify/features/retail_users/domain/usecases/search_retail_users.dart';
@@ -316,7 +317,8 @@ GoRouter buildRouter({
                 official: profileCubit.state.profile!.id,
               ),
               authStates: session.states,
-              loadChecks: profileCubit.state.permissions.contains('history:own')
+              loadChecks:
+                  profileCubit.state.permissions.contains(Permission.ownHistory)
                   ? recovered
                   : null,
             );
@@ -347,7 +349,7 @@ GoRouter buildRouter({
             onOpenResult: (result, input, formats) =>
                 openManyResult(context, result, input, formats),
             onOpenSession:
-                profileCubit.state.permissions.contains('history:own')
+                profileCubit.state.permissions.contains(Permission.ownHistory)
                 ? (id) => context.pushNamed(
                     RouteNames.sessionChecks,
                     pathParameters: {'id': id},
@@ -402,7 +404,8 @@ GoRouter buildRouter({
               search: locator<SearchRetailUsers>(),
             ),
             // The picker reads the official's own history.
-            pickCheck: profileCubit.state.permissions.contains('history:own')
+            pickCheck:
+                profileCubit.state.permissions.contains(Permission.ownHistory)
                 ? (context) =>
                       showCheckPicker(context, getChecks: locator<GetChecks>())
                 : null,
@@ -506,7 +509,7 @@ GoRouter buildRouter({
                       .read<ProfileCubit>()
                       .state
                       .permissions;
-                  if (!permissions.contains('history:own')) {
+                  if (!permissions.contains(Permission.ownHistory)) {
                     return screen();
                   }
                   return BlocProvider(
@@ -630,15 +633,16 @@ Iterable<String> _matchedLocations(List<RouteMatchBase> matches) sync* {
 
 /// What the guard reads from the profile, as one comparable value.
 String _guardInput(ProfileState state) {
-  final permissions = state.permissions.toList()..sort();
+  // Enum values are not comparable: sort their names.
+  final permissions = state.permissions.map((p) => p.name).toList()..sort();
   return '${state.status == ProfileStatus.loaded}|${permissions.join(',')}';
 }
 
-bool _allowsResult(ResultView view, Set<String> permissions) =>
+bool _allowsResult(ResultView view, Set<Permission> permissions) =>
     permissions.contains(
       view.origin == ResultOrigin.manyItems
-          ? 'item:bulk_lookup'
-          : 'item:lookup',
+          ? Permission.bulkLookup
+          : Permission.lookup,
     );
 Iterable<ResultView> _matchedResults(List<RouteMatchBase> matches) sync* {
   for (final match in matches) {

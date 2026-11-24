@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ziska_verify/app/router/route_guard.dart';
 import 'package:ziska_verify/app/router/route_paths.dart';
 import 'package:ziska_verify/core/services/session/session_state.dart';
+import 'package:ziska_verify/features/profile/domain/entities/profile.dart';
 
 void main() {
   const guard = RouteGuard(
@@ -12,7 +13,7 @@ void main() {
     SessionState? session,
     String location, {
     bool profileLoaded = true,
-    Set<String> permissions = const {},
+    Set<Permission> permissions = const {},
   }) => guard.redirect(
     session: session,
     profileLoaded: profileLoaded,
@@ -70,10 +71,10 @@ void main() {
   test('logged in: a route without its permission goes Home', () {
     expect(go(inside, '/home/lookup'), RoutePaths.home);
     expect(
-      go(inside, '/home/lookup', permissions: {'item:lookup'}),
+      go(inside, '/home/lookup', permissions: {Permission.lookup}),
       isNull,
     );
   });
 }
 
-bool _canLookup(Set<String> p) => p.contains('item:lookup');
+bool _canLookup(Set<Permission> p) => p.contains(Permission.lookup);

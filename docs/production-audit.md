@@ -4,7 +4,7 @@ The production-grade review of the app, done on the `production` branch one area
 
 | Step | Area | State |
 |---|---|---|
-| 2 | High-level architecture | Checked 2026-11-24: P-1 … P-11. Fixed: P-1, P-2, P-3 |
+| 2 | High-level architecture | Checked 2026-11-24: P-1 … P-11. Fixed: P-1 … P-4 |
 | 3 | The central API | To do |
 | 4 | Low-level architecture | To do |
 | 5 | Dead code | To do |
@@ -213,6 +213,25 @@ These run alongside the existing Profile flows, and the P-1 test no longer marks
 - **edge:** an empty set grants nothing, and `history:all` and `retail_user:add` grant nothing (§7);
 - **worst:** an unknown key, or a key in a different case, grants nothing;
 - the permission flows pass unchanged.
+
+**✅ Fixed 2026-11-24:** the permissions are **typed**, going beyond the proposal.
+- **Tests first, both red before the change:**
+  - TC-ROLE-021 … -023 (`test/features/profile/domain/permission_test.dart`), through the real mapper:
+    - each key grants only its own capability;
+    - an empty set, the withdrawn keys and a repeated key grant nothing more;
+    - keys in another case, with spaces, a suffix, cut short, empty or unknown grant nothing.
+  - TC-ARCH-015, "a permission key is written in one place", found the 25.
+- **The change:**
+  - a `Permission` enum (`lookup`, `bulkLookup`, `ownHistory`, `report`) with each key written once, in `profile.dart`, the profile entity every feature may already import;
+  - `Profile.permissions` is a `Set<Permission>`, filled by the mapper with `Permission.fromKey`, so an unknown key is dropped at the data boundary (§7);
+  - `Profile.canLookup`, `canBulkLookup`, `canReadHistory` and `canReport`;
+  - the route guard, shell, router, Profile, Check and the result screen read these, so a typo no longer compiles.
+- **Also changed:** the router's guard input sorted the permissions, which an enum can't do; it now sorts their names. The staging tool (`tool/staging_check`) keys its route table by `Permission`.
+- **Checked:**
+  - `route_guard_test` and `main_shell_test` changed only their set literals;
+  - the Profile permission rows keep their widget keys;
+  - `final.md` §7 says where the keys live.
+- **For the dead-code step:** `tabPermissionByPath` in `main_shell.dart` still guards `/home/scan`, a route removed on 2026-11-18.
 
 #### P-5 (should): models become entities in two different ways
 **Evidence:**

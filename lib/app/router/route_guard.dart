@@ -1,5 +1,6 @@
 import 'package:ziska_verify/app/router/route_paths.dart';
 import 'package:ziska_verify/core/services/session/session_state.dart';
+import 'package:ziska_verify/features/profile/domain/entities/profile.dart';
 
 /// The redirect decision of final.md Section 9.4, as a pure function.
 class RouteGuard {
@@ -7,13 +8,14 @@ class RouteGuard {
 
   /// The permission each logged-in path needs. A path whose permission the
   /// profile lacks redirects to Home. Paths not listed need none.
-  final Map<String, bool Function(Set<String> permissions)> permissionByPath;
+  final Map<String, bool Function(Set<Permission> permissions)>
+  permissionByPath;
 
   /// Returns where to go instead of [location], or `null` to stay.
   String? redirect({
     required SessionState? session,
     required bool profileLoaded,
-    required Set<String> permissions,
+    required Set<Permission> permissions,
     required String location,
   }) {
     final path = Uri.parse(location).path;

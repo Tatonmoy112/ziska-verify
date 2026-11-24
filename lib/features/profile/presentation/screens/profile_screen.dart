@@ -224,35 +224,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     _Card(
                       key: const Key('profile.permissions'),
                       children: [
-                        for (final (key, icon, title) in [
+                        for (final (permission, icon, title) in [
                           (
-                            'item:lookup',
+                            Permission.lookup,
                             LucideIcons.shieldCheck,
                             l10n.permissionLookup,
                           ),
                           (
-                            'item:bulk_lookup',
+                            Permission.bulkLookup,
                             LucideIcons.layers,
                             l10n.permissionBulkLookup,
                           ),
                           (
-                            'history:own',
+                            Permission.ownHistory,
                             LucideIcons.clock,
                             l10n.permissionHistory,
                           ),
                           (
-                            'incident:report',
+                            Permission.report,
                             LucideIcons.flag,
                             l10n.permissionReport,
                           ),
                         ])
-                          if (profile.can(key))
+                          if (profile.can(permission))
                             _ActionRow(
-                              key: Key('profile.permission.$key'),
+                              key: Key('profile.permission.${permission.key}'),
                               icon: icon,
                               title: title,
                             ),
-                        if (!_knownPermissions.any(profile.can))
+                        // Only the app's permissions are kept (the mapper).
+                        if (profile.permissions.isEmpty)
                           _ActionRow(
                             icon: LucideIcons.circleSlash,
                             title: l10n.permissionsNone,
@@ -578,14 +579,6 @@ class _InfoRow extends StatelessWidget {
     );
   }
 }
-
-/// The four permissions of the app (backend D61, SRS 4.2).
-const _knownPermissions = [
-  'item:lookup',
-  'item:bulk_lookup',
-  'history:own',
-  'incident:report',
-];
 
 class _ActionRow extends StatelessWidget {
   const _ActionRow({

@@ -286,24 +286,24 @@ class _VerifyScreenState extends State<VerifyScreen>
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final profile = context.watch<ProfileCubit>().state.profile;
-    final canLookup = profile?.can('item:lookup') ?? false;
+    final canLookup = profile?.canLookup ?? false;
     // Entry points to the other features the role allows (Section 13.7).
     final tools = <Widget>[
-      if (profile?.can('item:bulk_lookup') ?? false)
+      if (profile?.canBulkLookup ?? false)
         _ToolTile(
           key: const Key('verify.tool.bulk'),
           icon: LucideIcons.layers,
           title: l10n.scannerModeTitle,
           onTap: () => unawaited(_open(RouteNames.scannerMode)),
         ),
-      if (profile?.can('item:bulk_lookup') ?? false)
+      if (profile?.canBulkLookup ?? false)
         _ToolTile(
           key: const Key('verify.tool.serials'),
           icon: LucideIcons.listOrdered,
           title: l10n.serialStackTitle,
           onTap: () => unawaited(_open(RouteNames.serialStack)),
         ),
-      if (profile?.can('incident:report') ?? false) ...[
+      if (profile?.canReport ?? false) ...[
         _ToolTile(
           key: const Key('verify.tool.report'),
           icon: LucideIcons.flag,

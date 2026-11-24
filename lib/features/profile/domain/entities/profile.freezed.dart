@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Profile {
 
- String get id; String get name; String get email; String get role; Set<String> get permissions; bool get mustChangePassword; String? get organisation; String? get supportEmail; String? get supportPhone;
+ String get id; String get name; String get email; String get role; Set<Permission> get permissions; bool get mustChangePassword; String? get organisation; String? get supportEmail; String? get supportPhone;
 /// Create a copy of Profile
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -45,7 +45,7 @@ abstract mixin class $ProfileCopyWith<$Res>  {
   factory $ProfileCopyWith(Profile value, $Res Function(Profile) _then) = _$ProfileCopyWithImpl;
 @useResult
 $Res call({
- String id, String name, String email, String role, Set<String> permissions, bool mustChangePassword, String? organisation, String? supportEmail, String? supportPhone
+ String id, String name, String email, String role, Set<Permission> permissions, bool mustChangePassword, String? organisation, String? supportEmail, String? supportPhone
 });
 
 
@@ -69,7 +69,7 @@ as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non
 as String,email: null == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
 as String,role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
 as String,permissions: null == permissions ? _self.permissions : permissions // ignore: cast_nullable_to_non_nullable
-as Set<String>,mustChangePassword: null == mustChangePassword ? _self.mustChangePassword : mustChangePassword // ignore: cast_nullable_to_non_nullable
+as Set<Permission>,mustChangePassword: null == mustChangePassword ? _self.mustChangePassword : mustChangePassword // ignore: cast_nullable_to_non_nullable
 as bool,organisation: freezed == organisation ? _self.organisation : organisation // ignore: cast_nullable_to_non_nullable
 as String?,supportEmail: freezed == supportEmail ? _self.supportEmail : supportEmail // ignore: cast_nullable_to_non_nullable
 as String?,supportPhone: freezed == supportPhone ? _self.supportPhone : supportPhone // ignore: cast_nullable_to_non_nullable
@@ -158,7 +158,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String email,  String role,  Set<String> permissions,  bool mustChangePassword,  String? organisation,  String? supportEmail,  String? supportPhone)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String email,  String role,  Set<Permission> permissions,  bool mustChangePassword,  String? organisation,  String? supportEmail,  String? supportPhone)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Profile() when $default != null:
 return $default(_that.id,_that.name,_that.email,_that.role,_that.permissions,_that.mustChangePassword,_that.organisation,_that.supportEmail,_that.supportPhone);case _:
@@ -179,7 +179,7 @@ return $default(_that.id,_that.name,_that.email,_that.role,_that.permissions,_th
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String email,  String role,  Set<String> permissions,  bool mustChangePassword,  String? organisation,  String? supportEmail,  String? supportPhone)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String email,  String role,  Set<Permission> permissions,  bool mustChangePassword,  String? organisation,  String? supportEmail,  String? supportPhone)  $default,) {final _that = this;
 switch (_that) {
 case _Profile():
 return $default(_that.id,_that.name,_that.email,_that.role,_that.permissions,_that.mustChangePassword,_that.organisation,_that.supportEmail,_that.supportPhone);case _:
@@ -199,7 +199,7 @@ return $default(_that.id,_that.name,_that.email,_that.role,_that.permissions,_th
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String email,  String role,  Set<String> permissions,  bool mustChangePassword,  String? organisation,  String? supportEmail,  String? supportPhone)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String email,  String role,  Set<Permission> permissions,  bool mustChangePassword,  String? organisation,  String? supportEmail,  String? supportPhone)?  $default,) {final _that = this;
 switch (_that) {
 case _Profile() when $default != null:
 return $default(_that.id,_that.name,_that.email,_that.role,_that.permissions,_that.mustChangePassword,_that.organisation,_that.supportEmail,_that.supportPhone);case _:
@@ -214,15 +214,15 @@ return $default(_that.id,_that.name,_that.email,_that.role,_that.permissions,_th
 
 
 class _Profile extends Profile {
-  const _Profile({required this.id, required this.name, required this.email, required this.role, required final  Set<String> permissions, required this.mustChangePassword, this.organisation, this.supportEmail, this.supportPhone}): _permissions = permissions,super._();
+  const _Profile({required this.id, required this.name, required this.email, required this.role, required final  Set<Permission> permissions, required this.mustChangePassword, this.organisation, this.supportEmail, this.supportPhone}): _permissions = permissions,super._();
   
 
 @override final  String id;
 @override final  String name;
 @override final  String email;
 @override final  String role;
- final  Set<String> _permissions;
-@override Set<String> get permissions {
+ final  Set<Permission> _permissions;
+@override Set<Permission> get permissions {
   if (_permissions is EqualUnmodifiableSetView) return _permissions;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableSetView(_permissions);
@@ -263,7 +263,7 @@ abstract mixin class _$ProfileCopyWith<$Res> implements $ProfileCopyWith<$Res> {
   factory _$ProfileCopyWith(_Profile value, $Res Function(_Profile) _then) = __$ProfileCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String name, String email, String role, Set<String> permissions, bool mustChangePassword, String? organisation, String? supportEmail, String? supportPhone
+ String id, String name, String email, String role, Set<Permission> permissions, bool mustChangePassword, String? organisation, String? supportEmail, String? supportPhone
 });
 
 
@@ -287,7 +287,7 @@ as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non
 as String,email: null == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
 as String,role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
 as String,permissions: null == permissions ? _self._permissions : permissions // ignore: cast_nullable_to_non_nullable
-as Set<String>,mustChangePassword: null == mustChangePassword ? _self.mustChangePassword : mustChangePassword // ignore: cast_nullable_to_non_nullable
+as Set<Permission>,mustChangePassword: null == mustChangePassword ? _self.mustChangePassword : mustChangePassword // ignore: cast_nullable_to_non_nullable
 as bool,organisation: freezed == organisation ? _self.organisation : organisation // ignore: cast_nullable_to_non_nullable
 as String?,supportEmail: freezed == supportEmail ? _self.supportEmail : supportEmail // ignore: cast_nullable_to_non_nullable
 as String?,supportPhone: freezed == supportPhone ? _self.supportPhone : supportPhone // ignore: cast_nullable_to_non_nullable
