@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ziska_verify/app/router/route_paths.dart';
+import 'package:ziska_verify/app/shell/main_shell.dart';
 import 'package:ziska_verify/core/navigation/route_names.dart';
 
 import '../fakes/roles.dart';
@@ -164,5 +165,50 @@ void main() {
       await tester.pumpAndSettle();
       expect(at(tester), RoutePaths.home);
     });
+  });
+
+  group('TC-NAV-022 … -024 the guard table and the routes', () {
+    /// The prefix that guards `/history/sessions/{id}` (RouteGuard).
+    const sessionsPrefix = '/history/sessions';
+
+    testWidgets('TC-NAV-022 the guard names real routes only', (
+      tester,
+    ) async {
+      await startApp(tester, profile: Roles.supervisor);
+      final paths = table(routerOf(tester).configuration.routes).values;
+      for (final guarded in tabPermissionByPath.keys) {
+        final real =
+            paths.contains(guarded) ||
+            (guarded == sessionsPrefix &&
+                paths.contains(RoutePaths.sessionChecks));
+        expect(real, isTrue, reason: '$guarded is no route of the app');
+      }
+    });
+
+    test('TC-NAV-023 every page that needs a permission is guarded, and '
+        'no other', () {
+      expect(tabPermissionByPath.keys.toSet(), {
+        RoutePaths.history,
+        sessionsPrefix,
+        RoutePaths.lookupResult,
+        RoutePaths.scannerMode,
+        RoutePaths.serialStack,
+        RoutePaths.myReports,
+        RoutePaths.reportIncident,
+      });
+    });
+
+    for (final (role, profile) in [
+      ('with item:lookup', Roles.supervisor),
+      ('without item:lookup', Roles.incidentReporter),
+    ]) {
+      testWidgets('TC-NAV-024 a removed route is not available, $role', (
+        tester,
+      ) async {
+        await startApp(tester, profile: profile);
+        await go(tester, '/home/scan');
+        expect(find.text('Not available.'), findsOneWidget);
+      });
+    }
   });
 }

@@ -43,7 +43,6 @@ final List<ShellTab> shellTabs = [
 /// The permission each tab path needs, for the router guard.
 final Map<String, bool Function(Set<Permission>)> tabPermissionByPath = {
   '/history': _canSeeHistory,
-  '/home/scan': _canLookup,
   '/home/result': (p) => _canLookup(p) || _canBulkLookup(p),
   '/home/scanner-mode': _canBulkLookup,
   '/home/serial-stack': _canBulkLookup,

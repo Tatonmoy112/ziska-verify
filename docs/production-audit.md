@@ -4,7 +4,7 @@ The production-grade review of the app, done on the `production` branch one area
 
 | Step | Area | State |
 |---|---|---|
-| 2 | High-level architecture | Checked 2026-11-24: P-1 … P-15. Fixed: P-1 … P-9, P-11 … P-14; P-10 ready, waits for the Firebase project |
+| 2 | High-level architecture | Checked 2026-11-24: P-1 … P-15. Fixed: P-1 … P-9, P-11 … P-15; P-10: code ready, Crashlytics for staging next |
 | 3 | The central API | To do |
 | 4 | Low-level architecture | To do |
 | 5 | Dead code | To do |
@@ -500,6 +500,15 @@ No change is needed where they already comply.
 **Evidence:** `tabPermissionByPath` in `app/shell/main_shell.dart` guards `/home/scan`, a route removed on 2026-11-18.
 
 **Proposal:** remove it; a test checks every guarded path is a real route.
+
+**✅ Fixed 2026-11-24:**
+- **Tests first,** TC-NAV-022 … -024 (`test/flow/route_table_flow_test.dart`):
+  - the guard names real routes only;
+  - it guards exactly the seven pages that need a permission;
+  - `/home/scan` shows "Not available." for every role.
+
+  All were red: the stale entry sent a role without `item:lookup` to Check instead of "Not available.", while a role with it got "Not available.".
+- **The change:** the `/home/scan` entry is removed from `tabPermissionByPath`.
 
 ### Noticed for later steps (not architecture)
 - `config/live.json` still holds placeholders. The app correctly refuses to start with them, but the live host and slug are needed from the backend (**build and release** step).

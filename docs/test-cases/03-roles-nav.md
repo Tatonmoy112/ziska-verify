@@ -63,6 +63,9 @@
 | TC-NAV-019 | Check opens New report and My reports | POS | P2 | AUTO | ✅ `flow/cross_feature_navigation_flow_test` | Supervisor | On Check tap New report, Back; tap My reports, Back | Each opens its page (`/home/reports/new`, `/home/reports`); the camera stops while it is open and runs again on Check after Back | §9, §13.10 |
 | TC-NAV-020 | A result opens New report with its check | POS | P2 | AUTO | ✅ `flow/cross_feature_navigation_flow_test` | Supervisor; serial `1000001` | Check it; tap **Report a problem** | New report opens with `check_ref` the result's reference (`MA-YYYY-NNNNNN`), shown on the form | §9, §13.5 |
 | TC-NAV-021 | No report permission; pages opened and closed in turn | WORST | P2 | AUTO | ✅ `flow/cross_feature_navigation_flow_test` | Auditor (no `incident:report`); supervisor | Look at Check and a result; open New report, Back, My reports, Back | No report tool and no report button without the permission; after the round, Check with its camera running, no error | §7, §9 |
+| TC-NAV-022 | The guard names real routes only | POS | P2 | AUTO | ✅ `flow/route_table_flow_test` | The running app | Compare each path of the guard table (`tabPermissionByPath`) with the router's routes | Each is a route of the app, or the prefix of `/history/sessions/:id` | §9; production audit P-15 |
+| TC-NAV-023 | Every page that needs a permission is guarded, and no other | EDGE | P2 | AUTO | ✅ `flow/route_table_flow_test` | — | Read the guard table | Exactly History, a session's checks, the result, scanner mode, the serial stack, My reports and a new report | §7, §9 |
+| TC-NAV-024 | A removed route is not available to anyone | WORST | P2 | AUTO | ✅ `flow/route_table_flow_test` | A supervisor (with `item:lookup`); an incident reporter (without) | Open `/home/scan`, removed 2026-11-18 | "Not available." for both; no role is sent elsewhere by a guard left behind | §9 |
 
 ## Spec gaps in this file
 
