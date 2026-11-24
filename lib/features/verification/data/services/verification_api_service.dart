@@ -1,5 +1,6 @@
 import 'package:ziska_verify/core/errors/app_exception.dart';
 import 'package:ziska_verify/core/network/api_client.dart';
+import 'package:ziska_verify/core/network/api_routes.dart';
 import 'package:ziska_verify/core/pagination/page_request.dart';
 import 'package:ziska_verify/features/verification/data/models/verification_dtos.dart';
 import 'package:ziska_verify/features/verification/domain/entities/scan_session.dart';
@@ -19,32 +20,33 @@ class DioVerificationApiService implements VerificationApiService {
   final ApiClient _api;
   @override
   Future<FormatsDto> getFormats() async =>
-      FormatsDto.fromJson(_map(await _api.get('formats')));
+      FormatsDto.fromJson(_map(await _api.get(ApiRoutes.formats)));
   @override
   Future<LookupResultDto> lookup({
     required String way,
     required String value,
   }) async => LookupResultDto.fromJson(
-    _map(await _api.post('lookups', body: {'way': way, 'value': value})),
+    _map(
+      await _api.post(ApiRoutes.lookups, body: {'way': way, 'value': value}),
+    ),
   );
   @override
   Future<Map<String, dynamic>> scan(String value, String sessionId) async =>
       _map(
         await _api.post(
-          'lookups',
+          ApiRoutes.lookups,
           body: {'way': 'qr', 'value': value, 'session_id': sessionId},
         ),
       );
   @override
   Future<Map<String, dynamic>> serials(List<String> values) async =>
-      _map(await _api.post('lookups/serials', body: {'serials': values}));
+      _map(await _api.post(ApiRoutes.serials, body: {'serials': values}));
   @override
-  Future<void> endSession(String id) =>
-      _api.post('lookups/sessions/${Uri.encodeComponent(id)}/end');
+  Future<void> endSession(String id) => _api.post(ApiRoutes.endSession(id));
   @override
   Future<SessionSummaryDto> session(String id) async =>
       SessionSummaryDto.fromJson(
-        _map(await _api.get('lookups/sessions/${Uri.encodeComponent(id)}')),
+        _map(await _api.get(ApiRoutes.session(id))),
       );
   @override
   Future<SessionsPageDto> sessions(
@@ -53,7 +55,7 @@ class DioVerificationApiService implements VerificationApiService {
   ) async => SessionsPageDto.fromJson(
     _map(
       await _api.get(
-        'lookups/sessions',
+        ApiRoutes.sessions,
         query: {
           'limit': page.limit,
           'cursor': page.cursor,

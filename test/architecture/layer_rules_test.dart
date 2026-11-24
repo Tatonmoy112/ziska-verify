@@ -250,6 +250,15 @@ void main() {
         'core/services/session/session.dart':
             "import 'package:ziska_verify/core/services/session/state.dart';",
         'core/services/session/state.dart': '',
+        // The routes are made in one file (P-17); a service only names them.
+        'core/network/api_routes.dart':
+            "static const me = ApiRoute(ApiMethod.get, 'me');",
+        'features/a/data/services/me_api_service.dart':
+            'abstract interface class MeApiService {}\n'
+            'class DioMeApiService implements MeApiService {\n'
+            '  // ApiRoute(…) is made in api_routes.dart.\n'
+            '  void f() => api.get(ApiRoutes.me);\n'
+            '}',
         // An API service as every feature writes it (P-14).
         'features/a/data/services/a_api_service.dart':
             'abstract interface class AApiService {}\n'
@@ -335,6 +344,10 @@ void main() {
             "import 'package:mobile_scanner/mobile_scanner.dart';\n"
             'abstract interface class X {}',
       },
+      Rule.routeOutsideApiRoutes: {
+        'features/a/data/x.dart':
+            "final r = ApiRoute(ApiMethod.get, 'secret-route');",
+      },
       Rule.apiServiceWithoutInterface: {
         'features/a/data/services/a_api_service.dart': 'class AApiService {}',
       },
@@ -354,7 +367,7 @@ void main() {
       },
     };
 
-    test('TC-ARCH-008 each rule R1 … R19 is reported, with its file', () {
+    test('TC-ARCH-008 each rule R1 … R20 is reported, with its file', () {
       expect(cases.keys, unorderedEquals(Rule.values));
       for (final MapEntry(key: rule, value: files) in cases.entries) {
         final found = check(files);

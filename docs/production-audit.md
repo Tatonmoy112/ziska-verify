@@ -5,7 +5,7 @@ The production-grade review of the app, done on the `production` branch one area
 | Step | Area | State |
 |---|---|---|
 | 2 | High-level architecture | Checked 2026-11-24: P-1 … P-15. **All fixed**; P-10 on for staging, live waits for its production project |
-| 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11). Fixed: P-16 |
+| 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11). Fixed: P-16, P-17 |
 | 4 | Low-level architecture | To do |
 | 5 | Dead code | To do |
 | 6+ | Comments, data layer, UI components, state and lifecycle, security, build and release, monitoring, tests, localisation, performance, docs | To do |
@@ -624,6 +624,21 @@ Read only.
 - **normal:** every route of the collection is in `ApiRoutes` and the reverse;
 - **edge:** an ID with `/`, a space or `%` is encoded once;
 - **worst:** a route the backend does not have, or a method changed, fails with its name.
+
+**✅ Fixed 2026-11-24:**
+- **Tests first:**
+  - TC-ARCH-026 … -028 (`test/core/network/api_routes_test.dart`), red before: `ApiRoutes` did not exist. They check:
+    - the app's routes equal the Postman collection's 23 both ways;
+    - IDs are encoded once;
+    - a route of the wrong method is refused before any request;
+    - an empty ID is refused;
+    - every route declared is in the list.
+  - A new architecture rule, **R20**: an `ApiRoute` is made only in `api_routes.dart`.
+- **The change:**
+  - `ApiRoute` (method, the path as the contract writes it, the path to send) and `ApiRoutes`: the 23 routes, grouped by guide section, with `session(id)`, `endSession(id)` and `reportPhotos(n)` encoding their IDs;
+  - `ApiClient.get`, `post` and `postBytes` take an `ApiRoute`, so a path typed as text no longer compiles;
+  - the seven services, the renewal (`dio_session_service.dart`), three test files and the staging tool use `ApiRoutes`.
+- **Mutation check:** `auth/login` typed as `auth/logon` failed TC-ARCH-026 with "POST auth/logon" among the routes the backend does not have.
 
 #### P-18 (nice): `ApiClient`'s `cancelToken` is never used
 **Evidence:** `get`, `post` and `postBytes` take a `CancelToken` (`api_client.dart:20, 37, 57`), and no caller passes one. Answers that arrive after a screen closes are dropped by the blocs instead (`isClosed`, final.md §8).

@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ziska_verify/core/errors/app_exception.dart';
 import 'package:ziska_verify/core/network/api_client.dart';
+import 'package:ziska_verify/core/network/api_routes.dart';
 import 'package:ziska_verify/core/network/auth_interceptor.dart';
 import 'package:ziska_verify/core/network/dio_session_service.dart';
 import 'package:ziska_verify/core/services/session/session_state.dart';
@@ -68,8 +69,8 @@ void main() {
       mustChangePassword: false,
     );
 
-    final a = w.api.get('me');
-    final b = w.api.get('formats');
+    final a = w.api.get(ApiRoutes.me);
+    final b = w.api.get(ApiRoutes.formats);
     await Future<void>.delayed(const Duration(milliseconds: 20));
     renewalGate.complete();
 
@@ -100,7 +101,7 @@ void main() {
     );
 
     await expectLater(
-      w.api.get('me'),
+      w.api.get(ApiRoutes.me),
       throwsA(isA<UnauthenticatedException>()),
     );
     expect(w.session.current, isA<SessionUnauthenticated>());
@@ -126,7 +127,10 @@ void main() {
       mustChangePassword: false,
     );
 
-    await expectLater(w.api.get('me'), throwsA(isA<TokenExpiredException>()));
+    await expectLater(
+      w.api.get(ApiRoutes.me),
+      throwsA(isA<TokenExpiredException>()),
+    );
     expect(api.countPath('me'), 2);
     expect(refresh.requests, hasLength(1));
   });
@@ -143,7 +147,7 @@ void main() {
     );
 
     await expectLater(
-      w.api.get('me'),
+      w.api.get(ApiRoutes.me),
       throwsA(isA<UnauthenticatedException>()),
     );
     expect(w.session.current, isA<SessionUnauthenticated>());
@@ -161,7 +165,7 @@ void main() {
     );
 
     await expectLater(
-      w.api.post('me/password', body: {}, keepSessionOn401: true),
+      w.api.post(ApiRoutes.changePassword, body: {}, keepSessionOn401: true),
       throwsA(isA<UnauthenticatedException>()),
     );
     expect(w.session.current, isA<SessionAuthenticated>());
@@ -177,7 +181,7 @@ void main() {
     w.session.awaitCode(challengeId: 'challenge-1', email: 'a@b.c');
 
     await expectLater(
-      w.api.post('auth/verify-phone', body: {}, skipAuth: true),
+      w.api.post(ApiRoutes.verifyPhone, body: {}, skipAuth: true),
       throwsA(isA<UnauthenticatedException>()),
     );
     expect(w.session.current, isA<SessionAwaitingCode>());
@@ -197,7 +201,7 @@ void main() {
     final w = _build(api: api, refresh: _unused());
 
     await expectLater(
-      w.api.get('formats'),
+      w.api.get(ApiRoutes.formats),
       throwsA(
         isA<RateLimitedException>().having(
           (e) => e.retryAfter,
@@ -250,12 +254,15 @@ void sessionEdgeCases() {
     final w = _build(api: expiresOldPass(), refresh: refresh);
     await loggedIn(w.session);
 
-    await expectLater(w.api.get('checks'), throwsA(isA<NetworkException>()));
+    await expectLater(
+      w.api.get(ApiRoutes.checks),
+      throwsA(isA<NetworkException>()),
+    );
     expect(w.session.current, isA<SessionAuthenticated>());
     expect(w.storage.values[SecureKeys.refreshToken], 'old-refresh');
 
     online = true;
-    expect(await w.api.get('checks'), {'path': 'checks'});
+    expect(await w.api.get(ApiRoutes.checks), {'path': 'checks'});
   });
 
   test('TC-SESS-013 a renewal answered 503 keeps the login', () async {
@@ -266,7 +273,7 @@ void sessionEdgeCases() {
     await loggedIn(w.session);
 
     await expectLater(
-      w.api.get('checks'),
+      w.api.get(ApiRoutes.checks),
       throwsA(isA<ServiceUnavailableException>()),
     );
     expect(w.session.current, isA<SessionAuthenticated>());
@@ -283,7 +290,11 @@ void sessionEdgeCases() {
     final w = _build(api: api, refresh: refresh);
     await loggedIn(w.session);
 
-    final calls = [w.api.get('me'), w.api.get('formats'), w.api.get('checks')];
+    final calls = [
+      w.api.get(ApiRoutes.me),
+      w.api.get(ApiRoutes.formats),
+      w.api.get(ApiRoutes.checks),
+    ];
     await Future<void>.delayed(const Duration(milliseconds: 20));
     gate.complete();
     await Future.wait(calls);
@@ -314,7 +325,7 @@ void sessionEdgeCases() {
     storage = w.storage;
     await loggedIn(w.session);
 
-    await w.api.get('checks');
+    await w.api.get(ApiRoutes.checks);
     expect(seenAtRetry, ['new-access', 'new-refresh', 'Bearer new-access']);
   });
 
@@ -336,9 +347,9 @@ void sessionEdgeCases() {
     final w = _build(api: api, refresh: refresh);
     await loggedIn(w.session);
 
-    await w.api.get('checks');
+    await w.api.get(ApiRoutes.checks);
     expired.add('Bearer access-1'); // 15 minutes later
-    await w.api.get('checks');
+    await w.api.get(ApiRoutes.checks);
 
     final sent = [
       for (final r in refresh.requests)
@@ -359,7 +370,10 @@ void sessionEdgeCases() {
     final w = _build(api: api, refresh: refresh);
     await loggedIn(w.session);
 
-    await w.api.post('lookups', body: {'way': 'serial', 'value': '1000001'});
+    await w.api.post(
+      ApiRoutes.lookups,
+      body: {'way': 'serial', 'value': '1000001'},
+    );
     expect(api.countPath('lookups'), 2);
     expect(refresh.requests, hasLength(1));
   });

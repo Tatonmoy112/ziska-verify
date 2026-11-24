@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ziska_verify/core/errors/app_exception.dart';
 import 'package:ziska_verify/core/network/api_client.dart';
+import 'package:ziska_verify/core/network/api_routes.dart';
 import 'package:ziska_verify/features/authentication/data/services/access_request_api_service.dart';
 
 import '../fakes/scripted_adapter.dart';
@@ -44,7 +45,7 @@ void main() {
       'with its reference', () async {
     next = stagingScripted('formats_no_login_401.json');
     await expectLater(
-      api.get('formats', skipAuth: true),
+      api.get(ApiRoutes.formats, skipAuth: true),
       throwsA(
         isA<UnauthenticatedException>()
             .having((e) => e.statusCode, 'status', 401)
@@ -59,7 +60,7 @@ void main() {
     () async {
       next = stagingScripted('unknown_route_404.json');
       await expectLater(
-        api.get('no-such-route', skipAuth: true),
+        api.get(const ApiRoute(ApiMethod.get, 'no-such-route'), skipAuth: true),
         throwsA(
           isA<NotFoundException>()
               .having((e) => e.code, 'code', 'not_found')

@@ -1,5 +1,6 @@
 import 'package:ziska_verify/core/errors/app_exception.dart';
 import 'package:ziska_verify/core/network/api_client.dart';
+import 'package:ziska_verify/core/network/api_routes.dart';
 import 'package:ziska_verify/core/pagination/page_request.dart';
 import 'package:ziska_verify/features/history/data/models/checks_page_dto.dart';
 import 'package:ziska_verify/features/history/domain/entities/check.dart';
@@ -16,7 +17,10 @@ class DioHistoryApiService implements HistoryApiService {
 
   @override
   Future<ChecksPageDto> getChecks(CheckQuery query, PageRequest page) async {
-    final data = await _api.get('checks', query: checksQuery(query, page));
+    final data = await _api.get(
+      ApiRoutes.checks,
+      query: checksQuery(query, page),
+    );
     if (data is! Map<String, dynamic>) {
       throw const InternalErrorException(message: 'checks_shape');
     }

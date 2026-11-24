@@ -1,5 +1,6 @@
 import 'package:ziska_verify/core/errors/app_exception.dart';
 import 'package:ziska_verify/core/network/api_client.dart';
+import 'package:ziska_verify/core/network/api_routes.dart';
 import 'package:ziska_verify/features/profile/data/models/profile_dto.dart';
 
 /// `GET me` (final.md §15).
@@ -14,7 +15,7 @@ class DioProfileApiService implements ProfileApiService {
 
   @override
   Future<ProfileDto> getMe() async {
-    final data = await _api.get('me');
+    final data = await _api.get(ApiRoutes.me);
     if (data is! Map<String, dynamic>) {
       throw const InternalErrorException(message: 'me_shape');
     }

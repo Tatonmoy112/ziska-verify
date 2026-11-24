@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ziska_verify/core/network/api_client.dart';
+import 'package:ziska_verify/core/network/api_routes.dart';
 import 'package:ziska_verify/core/network/auth_interceptor.dart';
 import 'package:ziska_verify/core/network/dio_session_service.dart';
 
@@ -85,7 +86,7 @@ void main() {
     dio.interceptors.add(AuthInterceptor(session: session, dio: dio));
 
     final answer = await ApiClient(dio).postBytes(
-      'incidents/1042/photos',
+      ApiRoutes.reportPhotos(1042),
       photo,
       contentType: 'image/jpeg',
     );

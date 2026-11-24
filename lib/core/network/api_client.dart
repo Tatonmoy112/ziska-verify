@@ -3,25 +3,29 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:ziska_verify/core/errors/app_exception.dart';
 import 'package:ziska_verify/core/network/api_envelope.dart';
+import 'package:ziska_verify/core/network/api_routes.dart';
 import 'package:ziska_verify/core/network/auth_interceptor.dart';
 import 'package:ziska_verify/core/network/error_mapper.dart';
 
 /// Every API service calls the backend through this client
-/// (final.md §4). It returns the envelope's `data` and throws one
-/// typed [AppException] on failure.
+/// (final.md §4), on a route of [ApiRoutes] (P-17). It returns the
+/// envelope's `data` and throws one typed [AppException] on failure; a
+/// route of the other method is refused before anything is sent.
 class ApiClient {
   ApiClient(this._dio);
 
   final Dio _dio;
 
   Future<Object?> get(
-    String path, {
+    ApiRoute route, {
     Map<String, Object?>? query,
     CancelToken? cancelToken,
     bool skipAuth = false,
   }) => _send(
+    route,
+    ApiMethod.get,
     () => _dio.get<Object?>(
-      path,
+      route.path,
       // Empty filters are never sent (final.md §10).
       queryParameters: _withoutEmpty(query),
       options: Options(extra: {RequestFlags.skipAuth: skipAuth}),
@@ -30,14 +34,16 @@ class ApiClient {
   );
 
   Future<Object?> post(
-    String path, {
+    ApiRoute route, {
     Object? body,
     bool skipAuth = false,
     bool keepSessionOn401 = false,
     CancelToken? cancelToken,
   }) => _send(
+    route,
+    ApiMethod.post,
     () => _dio.post<Object?>(
-      path,
+      route.path,
       data: body,
       cancelToken: cancelToken,
       options: Options(
@@ -51,13 +57,15 @@ class ApiClient {
 
   /// Sends a raw file as the body (report photos, app API guide §6.2).
   Future<Object?> postBytes(
-    String path,
+    ApiRoute route,
     Uint8List bytes, {
     required String contentType,
     CancelToken? cancelToken,
   }) => _send(
+    route,
+    ApiMethod.post,
     () => _dio.post<Object?>(
-      path,
+      route.path,
       data: Stream.fromIterable([bytes]),
       cancelToken: cancelToken,
       options: Options(
@@ -67,7 +75,14 @@ class ApiClient {
     ),
   );
 
-  Future<Object?> _send(Future<Response<Object?>> Function() call) async {
+  Future<Object?> _send(
+    ApiRoute route,
+    ApiMethod method,
+    Future<Response<Object?>> Function() call,
+  ) async {
+    if (route.method != method) {
+      throw ArgumentError.value(route, 'route', 'not a ${method.name} route');
+    }
     try {
       final response = await call();
       return ApiEnvelope.unwrap(

@@ -28,6 +28,7 @@ import 'package:ziska_verify/core/errors/app_exception.dart';
 import 'package:ziska_verify/core/errors/result.dart';
 import 'package:ziska_verify/core/network/api_client.dart';
 import 'package:ziska_verify/core/network/api_envelope.dart';
+import 'package:ziska_verify/core/network/api_routes.dart';
 import 'package:ziska_verify/core/network/bodiless_request_interceptor.dart';
 import 'package:ziska_verify/core/network/error_mapper.dart';
 import 'package:ziska_verify/core/pagination/page_request.dart';
@@ -265,7 +266,7 @@ class StagingCheck {
     // A route that needs a login, asked without one: the app must read
     // the error as "not logged in" and keep its reference.
     try {
-      await api.get('formats', skipAuth: true);
+      await api.get(ApiRoutes.formats, skipAuth: true);
       _fail('GET formats without a login', 'answered 200');
     } on UnauthenticatedException catch (e) {
       if (e.requestId == null || e.requestId!.isEmpty) {
@@ -279,7 +280,10 @@ class StagingCheck {
 
     // An unknown route: a 404 the app reads as "not available".
     try {
-      await api.get('no-such-route', skipAuth: true);
+      await api.get(
+        const ApiRoute(ApiMethod.get, 'no-such-route'),
+        skipAuth: true,
+      );
       _fail('GET an unknown route', 'answered 200');
     } on AppException catch (e) {
       _pass(
@@ -374,7 +378,7 @@ class StagingCheck {
     }
 
     try {
-      await api.get('formats');
+      await api.get(ApiRoutes.formats);
       _pass('GET formats with the pass', '200');
     } on Object catch (e) {
       _fail('GET formats with the pass', e);
@@ -402,7 +406,7 @@ class StagingCheck {
     }
 
     try {
-      await api.get('me');
+      await api.get(ApiRoutes.me);
       _pass('GET me with the new pass', '200');
     } on Object catch (e) {
       _fail('GET me with the new pass', e);
@@ -416,7 +420,7 @@ class StagingCheck {
     }
 
     try {
-      await api.get('me');
+      await api.get(ApiRoutes.me);
       _fail('GET me after logout', 'answered 200');
     } on UnauthenticatedException catch (e) {
       _pass('GET me after logout', '401 ${e.code}');
@@ -523,18 +527,19 @@ class StagingCheck {
     }
 
     // What each permission opens in the app, and a read-only route of it.
-    final routes = <Permission, (String, Map<String, Object?>)>{
-      Permission.lookup: ('formats', {}),
-      Permission.ownHistory: ('checks', {'limit': 1}),
-      Permission.bulkLookup: ('lookups/sessions', {'limit': 1}),
-      Permission.report: ('incidents', {'limit': 1}),
+    final routes = <Permission, (ApiRoute, Map<String, Object?>)>{
+      Permission.lookup: (ApiRoutes.formats, {}),
+      Permission.ownHistory: (ApiRoutes.checks, {'limit': 1}),
+      Permission.bulkLookup: (ApiRoutes.sessions, {'limit': 1}),
+      Permission.report: (ApiRoutes.myReports, {'limit': 1}),
     };
-    for (final MapEntry(key: granting, value: (path, query))
+    for (final MapEntry(key: granting, value: (route, query))
         in routes.entries) {
       final granted = permissions.contains(granting);
       final permission = granting.key;
+      final path = route.path;
       try {
-        await api.get(path, query: query);
+        await api.get(route, query: query);
         if (granted) {
           _pass('GET $path ($permission)', '200');
         } else {
@@ -552,7 +557,10 @@ class StagingCheck {
     }
     if (permissions.contains(Permission.report)) {
       try {
-        await api.get('retail-users', query: {'search': 'a', 'limit': 1});
+        await api.get(
+          ApiRoutes.retailUsers,
+          query: {'search': 'a', 'limit': 1},
+        );
         _pass('GET retail-users (incident:report)', '200');
       } on Object catch (e) {
         _fail('GET retail-users (incident:report)', e);
@@ -1227,7 +1235,7 @@ class StagingCheck {
       ),
     ]) {
       try {
-        await api.post('lookups', body: body);
+        await api.post(ApiRoutes.lookups, body: body);
         _fail('POST lookups $what', '200: the guide says 400');
       } on ValidationException catch (e) {
         _pass('POST lookups $what', '400 ${e.code}');
@@ -1477,7 +1485,7 @@ class StagingCheck {
     }
     await refused<ValidationException>(
       'GET incidents with another parameter',
-      () => api.get('incidents', query: {'sort': 'old'}),
+      () => api.get(ApiRoutes.myReports, query: {'sort': 'old'}),
     );
 
     // The retail-user picker, as the app searches.
@@ -1506,7 +1514,7 @@ class StagingCheck {
     }
     await refused<ValidationException>(
       'GET retail-users search of 101 characters (sent raw)',
-      () => api.get('retail-users', query: {'search': 'a' * 101}),
+      () => api.get(ApiRoutes.retailUsers, query: {'search': 'a' * 101}),
     );
     await _logOut();
   }
@@ -1526,7 +1534,7 @@ class StagingCheck {
           '${text.runes.length} code points, ${text.length} UTF-16 units, '
           '${utf8.encode(text).length} bytes';
       try {
-        await api.get('retail-users', query: {'search': text});
+        await api.get(ApiRoutes.retailUsers, query: {'search': text});
         stdout.writeln('INFO  search: $what ($counts)  200');
       } on AppException catch (e) {
         stdout.writeln('INFO  search: $what ($counts)  ${e.statusCode}');
@@ -1718,7 +1726,7 @@ class StagingCheck {
     }
     // Still logged in after a wrong old password (guide section 3.6).
     try {
-      await api.get('me');
+      await api.get(ApiRoutes.me);
       _pass('GET me after the wrong old password', '200: still logged in');
     } on AppException catch (e) {
       _fail('GET me after the wrong old password', '${e.statusCode}');
@@ -1854,7 +1862,7 @@ class StagingCheck {
     // into 0-9 before sending.
     await info(
       'POST lookups serial "১" (Bangla one, sent raw)',
-      () => api.post('lookups', body: {'way': 'serial', 'value': '১'}),
+      () => api.post(ApiRoutes.lookups, body: {'way': 'serial', 'value': '১'}),
     );
 
     // 3. An empty JSON body on the bodiless routes: a session with one scan,
@@ -1864,7 +1872,7 @@ class StagingCheck {
     await info(
       'POST lookups (one scan, to open a session)',
       () => api.post(
-        'lookups',
+        ApiRoutes.lookups,
         body: {'way': 'qr', 'value': 'Q8F2KD91XA7M', 'session_id': id},
       ),
     );
@@ -1890,7 +1898,7 @@ class StagingCheck {
     );
     await info(
       'POST lookups/sessions/{id}/end, bare',
-      () => api.post('lookups/sessions/$id/end'),
+      () => api.post(ApiRoutes.endSession(id)),
     );
     stdout.writeln(
       'INFO  POST auth/logout, empty JSON body  '

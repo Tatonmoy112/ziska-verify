@@ -1,5 +1,6 @@
 import 'package:ziska_verify/core/errors/app_exception.dart';
 import 'package:ziska_verify/core/network/api_client.dart';
+import 'package:ziska_verify/core/network/api_routes.dart';
 import 'package:ziska_verify/core/pagination/page_request.dart';
 import 'package:ziska_verify/features/retail_users/data/models/retail_user_dtos.dart';
 
@@ -16,7 +17,7 @@ class DioRetailUserApiService implements RetailUserApiService {
   @override
   Future<RetailUsersPageDto> search(String? search, PageRequest page) async {
     final data = await _api.get(
-      'retail-users',
+      ApiRoutes.retailUsers,
       query: {'search': search, 'limit': page.limit, 'cursor': page.cursor},
     );
     if (data is! Map<String, dynamic>) {

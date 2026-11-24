@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ziska_verify/core/errors/app_exception.dart';
 import 'package:ziska_verify/core/network/api_client.dart';
+import 'package:ziska_verify/core/network/api_routes.dart';
 import 'package:ziska_verify/core/network/auth_interceptor.dart';
 import 'package:ziska_verify/core/network/dio_session_service.dart';
 import 'package:ziska_verify/core/services/device/phone_id_service.dart';
@@ -272,7 +273,7 @@ void main() {
         mustChangePassword: false,
       );
       // A request of the old login, still on its way.
-      final late = w.api.get('checks');
+      final late = w.api.get(ApiRoutes.checks);
       await arrived.future;
       // Logged out and in again meanwhile.
       await w.session.end();
@@ -312,7 +313,7 @@ void main() {
         refreshToken: 'r-old',
         mustChangePassword: false,
       );
-      final late = w.api.get('checks');
+      final late = w.api.get(ApiRoutes.checks);
       await arrived.future;
       await w.session.end();
       await w.session.saveLogin(
@@ -366,8 +367,8 @@ void main() {
       final sub = w.session.states.listen(ended.add);
       addTearDown(sub.cancel);
       final results = await Future.wait([
-        for (final path in ['me', 'formats', 'checks'])
-          w.api.get(path).then<Object?>((v) => v, onError: (Object e) => e),
+        for (final route in [ApiRoutes.me, ApiRoutes.formats, ApiRoutes.checks])
+          w.api.get(route).then<Object?>((v) => v, onError: (Object e) => e),
       ]);
       return [...results, ended.whereType<SessionUnauthenticated>().length];
     }

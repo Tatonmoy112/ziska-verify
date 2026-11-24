@@ -32,6 +32,10 @@ enum Rule {
   apiServiceWithoutInterface(
     'R19',
     'an API service is not an interface with a Dio implementation',
+  ),
+  routeOutsideApiRoutes(
+    'R20',
+    'a route is made outside core/network/api_routes.dart',
   )
   ;
 
@@ -131,6 +135,11 @@ class LayerRules {
             );
           }
         }
+      }
+      // Every route of the API is made in one file (P-17).
+      if (file != 'core/network/api_routes.dart' &&
+          _newRoute.hasMatch(sources[file]!.replaceAll(_comment, ''))) {
+        add(Rule.routeOutsideApiRoutes, file, 'ApiRoute(…)');
       }
       if (from.layer == _Layer.data && _apiServiceFile.hasMatch(file)) {
         _checkApiService(file, sources[file]!, add);
@@ -409,6 +418,9 @@ bool isGenerated(String path) =>
     path.startsWith('l10n/generated/');
 
 final _comment = RegExp(r'//[^\n]*|/\*[\s\S]*?\*/');
+
+/// An `ApiRoute` being made (R20); `ApiRoutes.x` is not one.
+final _newRoute = RegExp(r'\bApiRoute(?:\._)?\(');
 
 /// A feature's API service file and its interface (R19).
 final _apiServiceFile = RegExp(

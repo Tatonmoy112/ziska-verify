@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:ziska_verify/core/errors/app_exception.dart';
 import 'package:ziska_verify/core/network/api_envelope.dart';
+import 'package:ziska_verify/core/network/api_routes.dart';
 import 'package:ziska_verify/core/network/error_mapper.dart';
 import 'package:ziska_verify/core/services/logging/logger_service.dart';
 import 'package:ziska_verify/core/services/session/session_service.dart';
@@ -141,7 +142,7 @@ class DioSessionService implements SessionService {
     }
     try {
       final response = await _refreshDio.post<Object?>(
-        'auth/refresh',
+        ApiRoutes.refresh.path,
         data: {'refresh_token': refresh},
       );
       final data = ApiEnvelope.unwrap(response.data);
