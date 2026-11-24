@@ -9,6 +9,7 @@ import 'package:ziska_verify/shared/design_system/tokens/app_radius.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_spacing.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_typography.dart';
 import 'package:ziska_verify/shared/widgets/large_text.dart';
+import 'package:ziska_verify/shared/widgets/retry_countdown.dart';
 
 /// The official's own check counts, shown on Profile (final.md §13.7):
 /// Checks, Valid (green) and Needs attention (amber: warnings, not found
@@ -46,7 +47,14 @@ class _Stats extends StatelessWidget {
           Expanded(
             child: Text(l10n.statsFailed, style: AppTypography.caption),
           ),
-          TextButton(onPressed: onRetry, child: Text(l10n.retry)),
+          // After a 429, Try again waits out `Retry-After` (§13.10).
+          RetryCountdown(
+            until: state.retryAt,
+            builder: (_, wait) => TextButton(
+              onPressed: wait > 0 ? null : onRetry,
+              child: Text(l10n.retry),
+            ),
+          ),
         ],
       );
     }

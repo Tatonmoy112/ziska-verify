@@ -177,4 +177,49 @@ void main() {
     expect(statCount(tester, 'Checks'), '120');
     expect(countRequests(app), hasLength(1));
   });
+
+  testWidgets('TC-PROF-051 a 429 is waited out: Try again is off, a pull '
+      'sends nothing, the counts come once the wait ends', (tester) async {
+    var calls = 0;
+    final app = await openProfile(
+      tester,
+      overrides: {
+        'GET checks': (_) async => calls++ == 0
+            ? apiError(429, 'rate_limited', retryAfter: 30)
+            : FakeBackend.example(200, 'History of checks', '200 First page'),
+      },
+    );
+    final retry = find.descendant(
+      of: find.byKey(failed),
+      matching: find.byType(TextButton),
+    );
+    expect(tester.widget<TextButton>(retry).onPressed, isNull);
+
+    await pull(tester);
+    await tester.pump(const Duration(seconds: 5));
+    expect(countRequests(app), hasLength(1));
+
+    await tester.pump(const Duration(seconds: 26));
+    await tester.pumpAndSettle();
+    expect(countRequests(app), hasLength(2));
+    expect(statCount(tester, 'Checks'), '120');
+  });
+
+  testWidgets('TC-PROF-052 a 429 without Retry-After: Try again works at '
+      'once', (tester) async {
+    var calls = 0;
+    final app = await openProfile(
+      tester,
+      overrides: {
+        'GET checks': (_) async => calls++ == 0
+            ? apiError(429, 'rate_limited')
+            : FakeBackend.example(200, 'History of checks', '200 First page'),
+      },
+    );
+    await app.tap(
+      find.descendant(of: find.byKey(failed), matching: find.text('Try again')),
+    );
+    expect(countRequests(app), hasLength(2));
+    expect(statCount(tester, 'Checks'), '120');
+  });
 }

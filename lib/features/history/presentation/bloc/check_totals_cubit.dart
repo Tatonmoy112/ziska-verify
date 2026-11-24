@@ -1,23 +1,33 @@
+import 'dart:async';
+
+import 'package:clock/clock.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ziska_verify/core/errors/result.dart';
 import 'package:ziska_verify/core/pagination/page_request.dart';
+import 'package:ziska_verify/core/pagination/wait_timer.dart';
 import 'package:ziska_verify/features/history/domain/entities/check.dart';
 import 'package:ziska_verify/features/history/domain/usecases/get_checks.dart';
 
 enum CheckTotalsStatus { loading, ready, failed }
 
 class CheckTotalsState {
-  const CheckTotalsState({required this.status, this.totals});
+  const CheckTotalsState({required this.status, this.totals, this.retryAt});
 
   final CheckTotalsStatus status;
 
   /// The last counts; kept while they are asked for again.
   final CheckTotals? totals;
+
+  /// After a `429` with `Retry-After`: when the counts may be asked for
+  /// again (final.md §13.10). `null` without a usable `Retry-After`.
+  final DateTime? retryAt;
+
+  bool get isWaiting => retryAt != null && clock.now().isBefore(retryAt!);
 }
 
-/// The official's own check counts for the Profile cards (final.md Section
-/// 13.8): the first page of `GET checks` with no filters and `limit=1`,
-/// whose `totals` count every own check. No new endpoint.
+/// The official's own check counts for the Profile cards (final.md §13.7):
+/// the first page of `GET checks` with no filters and `limit=1`, whose
+/// `totals` count every own check. No new endpoint.
 class CheckTotalsCubit extends Cubit<CheckTotalsState> {
   CheckTotalsCubit(this._getChecks)
     : super(const CheckTotalsState(status: CheckTotalsStatus.loading));
@@ -25,9 +35,27 @@ class CheckTotalsCubit extends Cubit<CheckTotalsState> {
   final GetChecks _getChecks;
   bool _loading = false;
 
-  /// Asks for the counts; a second call while one runs is ignored.
+  /// A load asked for during a `429` wait, sent once when it ends.
+  final _deferred = WaitTimer();
+
+  @override
+  Future<void> close() {
+    _deferred.cancel();
+    return super.close();
+  }
+
+  /// Asks for the counts; a second call while one runs is ignored. During a
+  /// `429` wait nothing is sent: the counts are asked for once, when it
+  /// ends (final.md §13.10).
   Future<void> load() async {
     if (_loading) return;
+    final wait = state.retryAt;
+    if (state.isWaiting && wait != null) {
+      _deferred.schedule(wait, () {
+        if (!isClosed) unawaited(load());
+      });
+      return;
+    }
     _loading = true;
     emit(
       CheckTotalsState(status: CheckTotalsStatus.loading, totals: state.totals),
@@ -43,6 +71,14 @@ class CheckTotalsCubit extends Cubit<CheckTotalsState> {
       // unknown, as when the request fails.
       case Success(value: CheckPage(:final totals?)):
         emit(CheckTotalsState(status: CheckTotalsStatus.ready, totals: totals));
+      case Err(:final failure):
+        emit(
+          CheckTotalsState(
+            status: CheckTotalsStatus.failed,
+            totals: state.totals,
+            retryAt: failure.retryAtFrom(clock.now()),
+          ),
+        );
       case _:
         emit(
           CheckTotalsState(

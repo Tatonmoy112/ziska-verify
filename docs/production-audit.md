@@ -4,7 +4,7 @@ The production-grade review of the app, done on the `production` branch one area
 
 | Step | Area | State |
 |---|---|---|
-| 2 | High-level architecture | Checked 2026-11-24: P-1 … P-15. Fixed: P-1 … P-9, P-11, P-12; P-10 ready, waits for the Firebase project |
+| 2 | High-level architecture | Checked 2026-11-24: P-1 … P-15. Fixed: P-1 … P-9, P-11 … P-13; P-10 ready, waits for the Firebase project |
 | 3 | The central API | To do |
 | 4 | Low-level architecture | To do |
 | 5 | Dead code | To do |
@@ -472,6 +472,17 @@ No change is needed where they already comply.
 **Evidence:** after a 429 on `GET checks?limit=1`, **Try again** (and a pull, and the tab coming back) send again at once (`CheckTotalsCubit.load`). final.md §13.10: every 429 waits its own `Retry-After`.
 
 **Proposal:** wait as the lists do (`core/pagination/wait_timer.dart`): nothing is sent during the wait, and it loads once when the wait ends. Without `Retry-After`, a manual retry, with no made-up wait.
+
+**✅ Fixed 2026-11-24:**
+- **Tests first:**
+  - the cubit's TC-PROF-051 … -053 (`test/features/history/check_totals_cubit_test.dart`) were red: no wait existed;
+  - the flow's TC-PROF-051 (`test/flow/profile_totals_flow_test.dart`) was red: **Try again** was on and a pull sent at once;
+  - TC-PROF-052 (no `Retry-After`: Try again at once) already passed and pins that case.
+- **The change:**
+  - `CheckTotalsState` has `retryAt` and `isWaiting`;
+  - `CheckTotalsCubit` sends nothing during a wait and asks once when it ends, through `WaitTimer` like the lists; it cancels the timer on close;
+  - `CheckTotalsCard`'s **Try again** is off while `RetryCountdown` runs.
+- **A timing fix in the new test:** "a second 429 starts a new wait" uses a 300 ms wait, so the check falls well inside the second wait. It passed three runs in a row.
 
 #### P-14 (should, found while fixing P-5): `AccessRequestApiService` has no interface
 **Evidence:** every other API service is an `abstract interface class` with a `Dio…` implementation; this one is a concrete class.

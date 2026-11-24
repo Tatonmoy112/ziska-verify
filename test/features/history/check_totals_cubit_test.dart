@@ -132,4 +132,112 @@ void main() {
     },
     verify: (_) => expect(asked, hasLength(1)),
   );
+
+  // A 429 waits its own Retry-After (final.md §13.10; production audit
+  // P-13). The wait is short, so these run in real time.
+  const wait = Duration(milliseconds: 80);
+  const limited = Err<CheckPage>(
+    Failure(RateLimitedException(retryAfter: wait, statusCode: 429)),
+  );
+  Future<void> pastTheWait() => Future<void>.delayed(wait * 3);
+
+  group('TC-PROF-051 normal: a 429 is waited out', () {
+    test('loads asked for during the wait: none sent, then one', () async {
+      answer([limited, _page]);
+      final cubit = build();
+      await cubit.load();
+      expect(cubit.state.status, CheckTotalsStatus.failed);
+      expect(cubit.state.isWaiting, isTrue);
+      expect(cubit.state.retryAt, isNotNull);
+
+      // Try again, a pull and the tab coming back, all during the wait.
+      await cubit.load();
+      await cubit.load();
+      await cubit.load();
+      expect(asked, hasLength(1));
+
+      await pastTheWait();
+      expect(asked, hasLength(2));
+      expect(cubit.state.status, CheckTotalsStatus.ready);
+      expect(cubit.state.totals, _totals);
+      expect(cubit.state.isWaiting, isFalse);
+      await cubit.close();
+    });
+
+    test('nothing asked for during the wait: nothing sent after it', () async {
+      answer([limited, _page]);
+      final cubit = build();
+      await cubit.load();
+      await pastTheWait();
+      expect(asked, hasLength(1));
+      expect(cubit.state.isWaiting, isFalse);
+      await cubit.close();
+    });
+  });
+
+  group('TC-PROF-052 edge: a 429 without Retry-After', () {
+    test('no wait is made up: Try again sends at once', () async {
+      answer([
+        const Err(Failure(RateLimitedException(statusCode: 429))),
+        _page,
+      ]);
+      final cubit = build();
+      await cubit.load();
+      expect(cubit.state.status, CheckTotalsStatus.failed);
+      expect(cubit.state.retryAt, isNull);
+      expect(cubit.state.isWaiting, isFalse);
+      await cubit.load();
+      expect(asked, hasLength(2));
+      expect(cubit.state.status, CheckTotalsStatus.ready);
+      await cubit.close();
+    });
+  });
+
+  group('TC-PROF-053 worst: the wait and the screen', () {
+    test('Profile gone before the wait ends: nothing is sent', () async {
+      answer([limited, _page]);
+      final cubit = build();
+      await cubit.load();
+      await cubit.load();
+      await cubit.close();
+      await pastTheWait();
+      expect(asked, hasLength(1));
+    });
+
+    test('a second 429 after the wait starts a new wait', () async {
+      // Longer, so the check lands well inside the second wait.
+      const long = Duration(milliseconds: 300);
+      const limitedLong = Err<CheckPage>(
+        Failure(RateLimitedException(retryAfter: long, statusCode: 429)),
+      );
+      answer([limitedLong, limitedLong, _page]);
+      final cubit = build();
+      await cubit.load();
+      final first = cubit.state.retryAt!;
+      await cubit.load();
+      // The deferred load is sent at 300 ms and answered with a second
+      // 429, whose wait runs to about 600 ms.
+      await Future<void>.delayed(long * 1.5);
+      expect(asked, hasLength(2));
+      expect(cubit.state.isWaiting, isTrue);
+      expect(cubit.state.retryAt?.isAfter(first), isTrue);
+      await cubit.load();
+      expect(asked, hasLength(2), reason: 'still waiting');
+      await Future<void>.delayed(long * 1.5);
+      expect(asked, hasLength(3));
+      expect(cubit.state.status, CheckTotalsStatus.ready);
+      await cubit.close();
+    });
+
+    test('counts already shown stay through a 429 and its wait', () async {
+      answer([_page, limited, _page]);
+      final cubit = build();
+      await cubit.load();
+      await cubit.load();
+      expect(cubit.state.status, CheckTotalsStatus.failed);
+      expect(cubit.state.totals, _totals);
+      expect(cubit.state.isWaiting, isTrue);
+      await cubit.close();
+    });
+  });
 }
