@@ -4,7 +4,7 @@ The production-grade review of the app, done on the `production` branch one area
 
 | Step | Area | State |
 |---|---|---|
-| 2 | High-level architecture | Checked 2026-11-24: P-1 … P-11. Fixed: P-1 |
+| 2 | High-level architecture | Checked 2026-11-24: P-1 … P-11. Fixed: P-1, P-2 |
 | 3 | The central API | To do |
 | 4 | Low-level architecture | To do |
 | 5 | Dead code | To do |
@@ -152,6 +152,20 @@ This is the only feature-to-feature link outside the allowed profile exception (
 - **worst:** a failed or `429` totals load shows its message, and the rest of Profile still works.
 
 These run alongside the existing Profile flows, and the P-1 test no longer marks the link as known.
+
+**✅ Fixed 2026-11-24:**
+- **Tests first.** The Profile count cases had run only as screenshot tests, which CI skips. They now have CI flow tests in `test/flow/profile_totals_flow_test.dart`, all passing on the old code before the change:
+  - TC-PROF-036, -037 and -039, under their existing IDs;
+  - TC-PROF-046 … -050, new: a pull asks again; without History a pull does nothing; a 429; a failure keeps the counts; pulls and tab changes while loading send one request.
+- **The change:**
+  - the card moved to History as `CheckTotalsCard` (`features/history/presentation/widgets/check_totals_card.dart`);
+  - `ProfileScreen` takes an optional `totals: (card, refresh)` and no longer looks up a History cubit;
+  - the router builds `CheckTotalsCubit` and the card only for `history:own`, as before.
+- **Checks:**
+  - `knownBreaks` is now empty;
+  - TC-ARCH-001 guards the rule from here on;
+  - the Profile screenshots are unchanged.
+- **Found on the way, for the data-layer step:** after a 429 on the counts, **Try again** sends at once. It doesn't wait out the `Retry-After` that §13.10 asks every 429 to wait.
 
 #### P-3 (should): three verification cubits skip their use cases
 **Evidence:**

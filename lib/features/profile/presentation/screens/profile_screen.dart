@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:ziska_verify/features/history/presentation/bloc/check_totals_cubit.dart';
 import 'package:ziska_verify/features/profile/domain/entities/profile.dart';
 import 'package:ziska_verify/features/profile/presentation/bloc/profile_cubit.dart';
 import 'package:ziska_verify/l10n/generated/app_localizations.dart';
@@ -13,14 +12,10 @@ import 'package:ziska_verify/shared/design_system/tokens/app_radius.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_spacing.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_typography.dart';
 import 'package:ziska_verify/shared/widgets/label_value_row.dart';
-import 'package:ziska_verify/shared/widgets/large_text.dart';
 import 'package:ziska_verify/shared/widgets/navy_status_bar.dart';
 
-/// The Profile tab (Figma "Profile"; final.md Section 13.7). Actions that
-/// belong to other features are passed in by the router. With a
-/// [CheckTotalsCubit] above it (the profile can read History), it shows the
-/// official's check counts and asks for them again each time the tab comes
-/// back into view.
+/// The Profile tab (Figma "Profile"; final.md Section 13.7). Actions and
+/// content that belong to other features are passed in by the router.
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({
     required this.versionInfo,
@@ -28,10 +23,17 @@ class ProfileScreen extends StatefulWidget {
     required this.onChangePassword,
     required this.onContactSupport,
     required this.onLogout,
+    this.totals,
     super.key,
   });
 
   final Future<({String version, String build})> versionInfo;
+
+  /// The official's check counts: a `card` from History, and `refresh`,
+  /// called each time the tab comes into view and on a pull. Given only to
+  /// a profile that can read History; without it there are no counts and
+  /// the pull does nothing.
+  final ({Widget card, Future<void> Function() refresh})? totals;
 
   /// Applies the language `en` or `bn` at once and keeps it on the phone.
   final Future<void> Function(String languageCode) onChooseLanguage;
@@ -59,17 +61,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.didChangeDependencies();
     final shown = TickerMode.valuesOf(context).enabled;
     if (shown && _shown != true) {
-      unawaited(_totals?.load());
+      unawaited(widget.totals?.refresh());
     }
     _shown = shown;
-  }
-
-  CheckTotalsCubit? get _totals {
-    try {
-      return context.read<CheckTotalsCubit>();
-    } on ProviderNotFoundException {
-      return null;
-    }
   }
 
   Future<void> _confirmLogout(BuildContext context) async {
@@ -182,7 +176,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final supportEmail = profile.supportEmail;
     final supportPhone = profile.supportPhone;
 
-    final totals = _totals;
+    final totals = widget.totals;
 
     return NavyStatusBar(
       child: Scaffold(
@@ -190,7 +184,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         body: RefreshIndicator(
           // Pull to refresh asks for the counts again (the profile itself is
           // loaded at start).
-          onRefresh: () async => totals?.load(),
+          onRefresh: () async => totals?.refresh(),
           notificationPredicate: (_) => totals != null,
           child: ListView(
             padding: EdgeInsets.zero,
@@ -218,13 +212,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     if (totals != null) ...[
-                      BlocBuilder<CheckTotalsCubit, CheckTotalsState>(
-                        bloc: totals,
-                        builder: (context, state) => _Stats(
-                          state: state,
-                          onRetry: () => unawaited(totals.load()),
-                        ),
-                      ),
+                      totals.card,
                       const SizedBox(height: AppSpacing.xl),
                     ],
                     // What the role allows, by the SRS names (FR-ACC-15).
@@ -537,152 +525,6 @@ class _RolePill extends StatelessWidget {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-/// The three count cards: Checks, Valid (green), Not verified (red: not
-/// found + not in a batch). Skeletons while the first counts load; one
-/// line with Try again when they cannot load.
-class _Stats extends StatelessWidget {
-  const _Stats({required this.state, required this.onRetry});
-
-  final CheckTotalsState state;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final totals = state.totals;
-    if (totals == null && state.status == CheckTotalsStatus.failed) {
-      return Row(
-        key: const Key('profile.stats.failed'),
-        children: [
-          Expanded(
-            child: Text(l10n.statsFailed, style: AppTypography.caption),
-          ),
-          TextButton(onPressed: onRetry, child: Text(l10n.retry)),
-        ],
-      );
-    }
-    final cards = [
-      (l10n.statChecks, totals?.total, AppColors.textStrong),
-      (l10n.statValid, totals?.valid, AppColors.success),
-      // Everything that is not valid, so the three add up (Checks = Valid
-      // + Needs attention): warnings, not found, not in a batch.
-      (
-        l10n.statNotVerified,
-        totals == null
-            ? null
-            : totals.warning + totals.notFound + totals.unassigned,
-        AppColors.warning,
-      ),
-    ];
-    final stacked = isLargeText(context);
-    final children = [
-      for (final (label, count, color) in cards)
-        _StatCard(label: label, count: count, color: color, wide: stacked),
-    ];
-    if (stacked) {
-      return Column(
-        key: const Key('profile.stats'),
-        children: [
-          for (final (i, card) in children.indexed) ...[
-            if (i > 0) const SizedBox(height: AppSpacing.xs),
-            card,
-          ],
-        ],
-      );
-    }
-    return IntrinsicHeight(
-      key: const Key('profile.stats'),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          for (final (i, card) in children.indexed) ...[
-            if (i > 0) const SizedBox(width: AppSpacing.sm),
-            Expanded(child: card),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _StatCard extends StatelessWidget {
-  const _StatCard({
-    required this.label,
-    required this.count,
-    required this.color,
-    required this.wide,
-  });
-
-  final String label;
-
-  /// `null` while loading: a grey bar takes its place.
-  final int? count;
-  final Color color;
-
-  /// At a large font: the label on the left, the count on the right.
-  final bool wide;
-
-  @override
-  Widget build(BuildContext context) {
-    final count = this.count;
-    final number = count == null
-        ? DecoratedBox(
-            decoration: const BoxDecoration(
-              color: AppColors.surfaceMuted,
-              borderRadius: BorderRadius.all(Radius.circular(AppRadius.sm)),
-            ),
-            child: SizedBox.fromSize(size: const Size(40, 28)),
-          )
-        : FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              '$count',
-              style: AppTypography.title.copyWith(color: color),
-            ),
-          );
-    final text = Text(
-      label,
-      textAlign: wide ? TextAlign.start : TextAlign.center,
-      style: AppTypography.caption.copyWith(
-        color: AppColors.textStrong,
-        fontWeight: FontWeight.w500,
-      ),
-    );
-    return Semantics(
-      label: count == null ? label : '$label, $count',
-      excludeSemantics: true,
-      child: DecoratedBox(
-        decoration: const BoxDecoration(
-          color: AppColors.background,
-          borderRadius: AppRadius.card,
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.sm,
-            vertical: AppSpacing.md,
-          ),
-          child: wide
-              ? Row(
-                  children: [
-                    Expanded(child: text),
-                    const SizedBox(width: AppSpacing.sm),
-                    number,
-                  ],
-                )
-              : Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    number,
-                    const SizedBox(height: AppSpacing.xxs),
-                    text,
-                  ],
-                ),
         ),
       ),
     );

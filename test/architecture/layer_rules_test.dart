@@ -307,9 +307,7 @@ void main() {
   });
 }
 
-/// Breaks that are known and planned, each with the finding that fixes it.
-const knownBreaks = <String, String>{
-  'R4 features/profile/presentation/screens/profile_screen.dart -> '
-          'features/history/presentation/bloc/check_totals_cubit.dart':
-      'P-2',
-};
+/// Breaks that are known and planned, each with the finding that fixes it,
+/// as `'<rule> <file> -> <import>': '<finding>'`. Empty: P-2 (Profile →
+/// History's `CheckTotalsCubit`) was fixed on 2026-11-24.
+const knownBreaks = <String, String>{};

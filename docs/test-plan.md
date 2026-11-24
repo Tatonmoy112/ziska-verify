@@ -142,7 +142,7 @@ The cases live in one file per area in [`docs/test-cases/`](test-cases/README.md
 | HIST | [06-history.md](test-cases/06-history.md) | 57 | 17 | 30 | 10 | 54 | 0 | 3 | 0 |
 | REP | [07-reports.md](test-cases/07-reports.md) | 69 | 19 | 38 | 12 | 57 | 0 | 12 | 0 |
 | RTL | [08-retail-users.md](test-cases/08-retail-users.md) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| PROF | [09-profile.md](test-cases/09-profile.md) | 45 | 3 | 25 | 17 | 38 | 0 | 7 | 0 |
+| PROF | [09-profile.md](test-cases/09-profile.md) | 50 | 3 | 28 | 19 | 43 | 0 | 7 | 0 |
 | ERR | [10-errors-network.md](test-cases/10-errors-network.md) | 51 | 10 | 27 | 14 | 46 | 0 | 5 | 0 |
 | SEC | [11-security.md](test-cases/11-security.md) | 28 | 18 | 8 | 2 | 21 | 0 | 7 | 0 |
 | NFR | [12-device-a11y-perf.md](test-cases/12-device-a11y-perf.md) | 27 | 0 | 17 | 10 | 8 | 0 | 19 | 0 |
@@ -152,7 +152,7 @@ The cases live in one file per area in [`docs/test-cases/`](test-cases/README.md
 | MIG | [16-mobile-migration.md](test-cases/16-mobile-migration.md) | 73 | 46 | 25 | 2 | 72 | 0 | 1 | 0 |
 | STG | [17-test-server.md](test-cases/17-test-server.md) | 58 | 44 | 11 | 3 | 47 | 0 | 11 | 0 |
 | ARCH | [18-architecture.md](test-cases/18-architecture.md) | 11 | 0 | 3 | 8 | 11 | 0 | 0 | 0 |
-| **Total** | | **916** | 308 | 423 | 185 | 788 | 0 | 128 | 0 |
+| **Total** | | **921** | 308 | 426 | 187 | 793 | 0 | 128 | 0 |
 
 ---
 

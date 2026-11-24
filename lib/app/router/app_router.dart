@@ -45,6 +45,7 @@ import 'package:ziska_verify/features/history/presentation/bloc/check_totals_cub
 import 'package:ziska_verify/features/history/presentation/bloc/history_bloc.dart';
 import 'package:ziska_verify/features/history/presentation/screens/history_screen.dart';
 import 'package:ziska_verify/features/history/presentation/widgets/check_picker_sheet.dart';
+import 'package:ziska_verify/features/history/presentation/widgets/check_totals_card.dart';
 import 'package:ziska_verify/features/incidents/domain/usecases/incident_usecases.dart';
 import 'package:ziska_verify/features/incidents/presentation/bloc/my_reports_bloc.dart';
 import 'package:ziska_verify/features/incidents/presentation/bloc/report_incident_bloc.dart';
@@ -472,7 +473,10 @@ GoRouter buildRouter({
                 name: RouteNames.profile,
                 path: RoutePaths.profile,
                 builder: (context, _) {
-                  final screen = ProfileScreen(
+                  ProfileScreen screen({
+                    ({Widget card, Future<void> Function() refresh})? totals,
+                  }) => ProfileScreen(
+                    totals: totals,
                     versionInfo: locator<AppInfoService>().versionInfo(),
                     onChooseLanguage: (code) =>
                         locator<LocaleCubit>().choose(Locale(code)),
@@ -500,11 +504,18 @@ GoRouter buildRouter({
                       .state
                       .permissions;
                   if (!permissions.contains('history:own')) {
-                    return screen;
+                    return screen();
                   }
                   return BlocProvider(
                     create: (_) => CheckTotalsCubit(locator<GetChecks>()),
-                    child: screen,
+                    child: Builder(
+                      builder: (context) => screen(
+                        totals: (
+                          card: const CheckTotalsCard(),
+                          refresh: context.read<CheckTotalsCubit>().load,
+                        ),
+                      ),
+                    ),
                   );
                 },
               ),

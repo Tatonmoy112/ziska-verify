@@ -22,7 +22,7 @@ All of them run in `test/architecture/layer_rules_test.dart`, in CI with the oth
 | R12 | `dio` is imported outside `core`, a feature's `data` and `app` |
 | R13 | a feature file is outside `data`, `domain` and `presentation` |
 
-**A known break** that has a planned fix is listed in `knownBreaks` in the test, with its finding. A fixed one must be taken off the list (TC-ARCH-002). Today the list holds one: P-2, Profile → History's `CheckTotalsCubit`.
+**A known break** that has a planned fix is listed in `knownBreaks` in the test, with its finding. A fixed one must be taken off the list (TC-ARCH-002). The list is empty: its one entry, P-2 (Profile → History's `CheckTotalsCubit`), was fixed on 2026-11-24.
 
 ## Cases
 
