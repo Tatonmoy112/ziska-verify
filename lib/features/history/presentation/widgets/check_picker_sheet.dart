@@ -12,7 +12,7 @@ import 'package:ziska_verify/shared/widgets/app_paginated_list.dart';
 
 /// Picks one of the official's own checks for a report (SRS UC-08: the
 /// official "optionally picks one of own checks"; app API guide §5 and
-/// §6.1 `check_ref`). Returns the check's reference number, or `null`.
+/// §6 `check_ref`). Returns the check's reference number, or `null`.
 Future<String?> showCheckPicker(
   BuildContext context, {
   required GetChecks getChecks,

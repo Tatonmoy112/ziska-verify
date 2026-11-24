@@ -51,7 +51,7 @@ class AppOtpField extends StatelessWidget {
   }
 }
 
-/// The 6-digit code as typed or pasted (final.md Section 6.2):
+/// The 6-digit code as typed or pasted (final.md §6):
 /// - Bangla and other digits read as `0`–`9` (a Bangla keyboard);
 /// - a pasted message holding exactly one group of 6 digits ("Your code for
 ///   2026: 123456") gives that group;

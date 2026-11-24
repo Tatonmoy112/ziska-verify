@@ -100,7 +100,7 @@ class VerificationRepositoryImpl implements VerificationRepository {
             ],
           );
           // A 200 whose fields cannot be read is recorded too, never sent
-          // again (final.md Section 13.3); the parsers report a wrong
+          // again (final.md §13.3); the parsers report a wrong
           // field this way.
           // ignore: avoid_catching_errors
         } on TypeError {

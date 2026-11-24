@@ -1,13 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:ziska_verify/core/services/monitoring/crash_reporting_service.dart';
 
-/// The build flavors (final.md Section 17).
+/// The build flavors (final.md §17).
 /// `staging` builds connect to the backend's test server.
 enum AppFlavor { mock, staging, live }
 
 /// Values fixed per build, read from `--dart-define-from-file`
 /// (`config/<flavor>.json`). Nothing else is hard-coded: formats and limits
-/// come from the API (final.md Section 11.1).
+/// come from the API (final.md §11).
 class AppConfig {
   const AppConfig({
     required this.flavor,
@@ -97,7 +97,8 @@ class AppConfig {
   /// The client's short name in every path (`/v1/clients/{slug}/…`).
   final String clientSlug;
 
-  /// The client office's contact for Sign up (final.md Section 13.9).
+  /// The client office's contact for Request access, when no role can be
+  /// asked for (final.md §13.8).
   final String officeEmail;
   final String officePhone;
 
@@ -206,7 +207,7 @@ class AppConfig {
 
   /// Returns the host part of [url] (`https://host[:port]`, lower case, no
   /// trailing `/`); throws unless it is an HTTPS host alone (final.md
-  /// Section 12.1). A whole API address (`…/v1/clients/<slug>`) is refused
+  /// §12). A whole API address (`…/v1/clients/<slug>`) is refused
   /// with the host to use, as every request would otherwise miss.
   static String validateBaseUrl(String url) {
     final uri = Uri.tryParse(url.trim());

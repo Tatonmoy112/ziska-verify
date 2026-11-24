@@ -21,8 +21,8 @@ import 'package:ziska_verify/shared/widgets/failure_banner.dart';
 import 'package:ziska_verify/shared/widgets/retry_countdown.dart';
 
 /// Login (Figma "Login"). The router moves on by itself once the session
-/// changes (final.md Section 9.4). The copyright and the app version sit at
-/// the bottom of the page (final.md Section 13.10).
+/// changes (final.md §9). The copyright and the app version sit at
+/// the bottom of the page (final.md §13.10).
 class LoginScreen extends StatefulWidget {
   const LoginScreen({this.versionInfo, super.key});
 
@@ -62,7 +62,7 @@ class _LoginScreenState extends State<LoginScreen> {
   String _errorText(AppLocalizations l10n, SubmitState state) {
     final failure = state.failure!;
     return switch (failure.exception) {
-      // One message for every failed login, on purpose (Section 6.2).
+      // One message for every failed login, on purpose (§6).
       UnauthenticatedException() => l10n.loginFailed,
       _ => failure.message(l10n),
     };

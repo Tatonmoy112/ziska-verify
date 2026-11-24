@@ -15,8 +15,8 @@ final class LoginSubmitted extends LoginEvent {
 }
 
 /// Login. `droppable`: a second press while a login is in flight is ignored
-/// (final.md Section 8.3). On success the session state moves the official
-/// to Verify code, Change password, or Home (Section 9.4).
+/// (final.md §8). On success the session state moves the official
+/// to Verify code, Change password, or Home (§9).
 class LoginBloc extends Bloc<LoginEvent, SubmitState> {
   LoginBloc(this._login) : super(const SubmitState()) {
     on<LoginSubmitted>(_onSubmitted, transformer: droppable());

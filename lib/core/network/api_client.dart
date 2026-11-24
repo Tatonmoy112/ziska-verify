@@ -7,7 +7,7 @@ import 'package:ziska_verify/core/network/auth_interceptor.dart';
 import 'package:ziska_verify/core/network/error_mapper.dart';
 
 /// Every API service calls the backend through this client
-/// (final.md Section 4.3). It returns the envelope's `data` and throws one
+/// (final.md §4). It returns the envelope's `data` and throws one
 /// typed [AppException] on failure.
 class ApiClient {
   ApiClient(this._dio);
@@ -22,7 +22,7 @@ class ApiClient {
   }) => _send(
     () => _dio.get<Object?>(
       path,
-      // Empty filters are never sent (final.md Section 10.2).
+      // Empty filters are never sent (final.md §10).
       queryParameters: _withoutEmpty(query),
       options: Options(extra: {RequestFlags.skipAuth: skipAuth}),
       cancelToken: cancelToken,
@@ -90,7 +90,7 @@ class ApiClient {
 }
 
 /// Builds the two Dio instances: the main one with interceptors, and the
-/// renewal one without them (final.md Section 5.5).
+/// renewal one without them (final.md §6).
 abstract final class DioFactory {
   static BaseOptions options(String apiRoot) => BaseOptions(
     baseUrl: apiRoot,

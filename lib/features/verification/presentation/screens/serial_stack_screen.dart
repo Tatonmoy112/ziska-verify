@@ -68,7 +68,7 @@ class _SerialStackScreenState extends State<SerialStackScreen>
 
   /// The answer was lost: the stack may already be recorded (a session of
   /// kind `serial`, guide §4.7), and sending it again checks every serial
-  /// again. Sent only once the official says so (audit 6.2).
+  /// again. Sent only once the official says so (UI audit 2026-11-22, 6.2).
   Future<void> _resend() async {
     final l = AppLocalizations.of(context);
     final send = await showDialog<bool>(

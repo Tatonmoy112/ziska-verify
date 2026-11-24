@@ -27,7 +27,7 @@ class PreparedPhoto {
   String get contentType => 'image/jpeg';
 }
 
-/// Picks and prepares a report photo (final.md Sections 5.6, 13.5.2):
+/// Picks and prepares a report photo (final.md §5, §13.5):
 /// 2048 px on the longer side, JPEG quality 85, HEIC converted, orientation
 /// applied, all metadata (location, time, phone model) removed, at most
 /// 1 MB.

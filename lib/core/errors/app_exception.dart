@@ -1,4 +1,4 @@
-/// One typed exception per API `error.code` (final.md Section 15.4).
+/// One typed exception per API `error.code` (final.md §15).
 ///
 /// Thrown by the network layer and API services; caught in repositories and
 /// turned into a `Failure`. Decisions are made on the type, never on
@@ -17,7 +17,7 @@ sealed class AppException implements Exception {
   /// The API's `error.code`, `null` when no envelope arrived.
   final String? code;
 
-  /// The server's message, shown only as a fallback (final.md Section 16).
+  /// The server's message, shown only as a fallback (final.md §16).
   final String? message;
 
   /// Shown on every error screen as "Reference: {requestId}".

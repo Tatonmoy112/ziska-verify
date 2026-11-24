@@ -45,7 +45,7 @@ class SessionsView extends StatelessWidget {
     final l = AppLocalizations.of(context);
     final cubit = context.read<SessionsCubit>();
     // The shared list: skeleton, empty and error states, the next page as
-    // the end comes into view (final.md Sections 10, 14.2).
+    // the end comes into view (final.md §10, §14.2).
     return BlocBuilder<SessionsCubit, SessionsState>(
       builder: (context, state) => KeyedSubtree(
         key: const Key('sessions.list'),

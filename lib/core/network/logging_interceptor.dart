@@ -2,7 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:ziska_verify/core/services/logging/logger_service.dart';
 
 /// Logs the method, the route, the status, and `request_id` only. Bodies,
-/// headers, and query values are never logged (final.md Section 12.2).
+/// headers, and query values are never logged (final.md §12).
 class LoggingInterceptor extends Interceptor {
   LoggingInterceptor(this._logger);
 

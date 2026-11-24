@@ -10,7 +10,7 @@ import 'package:ziska_verify/shared/design_system/tokens/app_typography.dart';
 
 /// Shows the check loader over the whole app (above the bottom bar)
 /// when a lookup is still running after [delay], and takes it away when
-/// the lookup ends (final.md Section 13.1.2, decision 48). A faster answer
+/// the lookup ends (final.md §13.1, decision 48). A faster answer
 /// never shows it; nothing is delayed to show it.
 class VerifyingLoader {
   VerifyingLoader({this.delay = const Duration(milliseconds: 300)});
@@ -42,7 +42,7 @@ class VerifyingLoader {
   }
 }
 
-/// The check loader (final.md Section 13.1.2): a shield in a
+/// The check loader (final.md §13.1): a shield in a
 /// progress ring, "Checking the item…", and three steps. **Code format** is
 /// ticked: the input was checked on the phone against `GET formats` before
 /// it was sent. **Item record** and **Check count** wait for the answer.

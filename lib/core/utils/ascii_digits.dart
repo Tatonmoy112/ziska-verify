@@ -1,7 +1,7 @@
 /// Digits of other scripts read as `0`–`9`: Bangla (`০`–`৯`), Arabic-Indic
 /// (`٠`–`٩`), Extended Arabic-Indic (`۰`–`۹`), and Devanagari (`०`–`९`). A
 /// Bangla keyboard types Bangla digits; the backend reads ASCII only
-/// (final.md Section 16).
+/// (final.md §16).
 String toAsciiDigits(String input) {
   final out = StringBuffer();
   for (final rune in input.runes) {

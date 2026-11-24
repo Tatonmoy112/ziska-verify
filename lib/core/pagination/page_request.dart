@@ -1,4 +1,4 @@
-/// One page request (final.md Section 10.2). Pure Dart.
+/// One page request (final.md §10). Pure Dart.
 class PageRequest {
   const PageRequest({this.limit = defaultLimit, this.cursor});
 

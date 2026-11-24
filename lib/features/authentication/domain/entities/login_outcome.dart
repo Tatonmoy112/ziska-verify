@@ -1,4 +1,4 @@
-/// What a login or a verified code leads to (final.md Section 6.2).
+/// What a login or a verified code leads to (final.md §6).
 sealed class LoginOutcome {
   const LoginOutcome();
 }

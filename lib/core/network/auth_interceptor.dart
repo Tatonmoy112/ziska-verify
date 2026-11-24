@@ -20,7 +20,7 @@ abstract final class RequestFlags {
 }
 
 /// Adds the access pass and renews it on `401 token_expired` only, then
-/// retries the request once (final.md Section 6.4).
+/// retries the request once (final.md §6).
 class AuthInterceptor extends Interceptor {
   AuthInterceptor({
     required SessionService session,
@@ -33,7 +33,7 @@ class AuthInterceptor extends Interceptor {
   final SessionService _session;
   final Dio _dio;
 
-  /// Called on every `403 forbidden` (final.md Section 7.2).
+  /// Called on every `403 forbidden` (final.md §7).
   final void Function()? _onForbidden;
 
   @override
@@ -96,7 +96,7 @@ class AuthInterceptor extends Interceptor {
     }
 
     // Every route except me, me/password and logout answers this until the
-    // password is changed (final.md Section 6.6).
+    // password is changed (final.md §6).
     // An answer to an older login's pass says nothing about the login of
     // now (the same rule as a 401 below).
     if (response?.statusCode == 403 &&

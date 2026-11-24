@@ -4,7 +4,7 @@ import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
 enum InputProblem { empty, wrongFormat }
 
 /// Checks a normalized value against the client's formats from
-/// `GET formats` (final.md Section 13.1.3). Nothing is hard-coded.
+/// `GET formats` (final.md §13.1). Nothing is hard-coded.
 class InputFormatValidator {
   const InputFormatValidator();
 

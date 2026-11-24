@@ -3,7 +3,7 @@ import 'dart:math';
 
 import 'package:ziska_verify/core/services/storage/secure_storage_service.dart';
 
-/// The phone ID sent with every login and code (final.md Section 6.1).
+/// The phone ID sent with every login and code (final.md §6).
 abstract interface class PhoneIdService {
   /// Returns the stored phone ID, making it on the very first call only.
   Future<String> getOrCreate();

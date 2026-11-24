@@ -25,7 +25,7 @@ abstract class ProfileState with _$ProfileState {
   Set<Permission> get permissions => profile?.permissions ?? const {};
 }
 
-/// App-scoped profile (final.md Section 5.9). Loads when the official is
+/// App-scoped profile (final.md §11). Loads when the official is
 /// logged in, clears on logout. Read by the router guard and
 /// `PermissionGate`.
 class ProfileCubit extends Cubit<ProfileState> {
@@ -58,7 +58,7 @@ class ProfileCubit extends Cubit<ProfileState> {
   }
 
   /// Loads at start, after login, and after any `403 forbidden`
-  /// (final.md Section 7.2).
+  /// (final.md §7).
   Future<void> load() async {
     emit(state.copyWith(status: ProfileStatus.loading, failure: null));
     final result = await _getProfile();
@@ -73,10 +73,10 @@ class ProfileCubit extends Cubit<ProfileState> {
     );
   }
 
-  /// After a `403 forbidden` (final.md Section 7.2): the profile is loaded
+  /// After a `403 forbidden` (final.md §7): the profile is loaded
   /// again in the background. The current one stays until the new one
   /// arrives, so the official is moved only when a permission is gone
-  /// (Section 9.4). One reload at a time; a failure keeps the current one.
+  /// (§9). One reload at a time; a failure keeps the current one.
   Future<void> refresh() async {
     if (_refreshing || state.status != ProfileStatus.loaded) return;
     _refreshing = true;

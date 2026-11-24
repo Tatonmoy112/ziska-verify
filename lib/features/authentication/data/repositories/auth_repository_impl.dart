@@ -131,7 +131,7 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
-  /// Decided by `data.status`, never by the message (Section 6.2).
+  /// Decided by `data.status`, never by the message (§6).
   Future<LoginOutcome> _apply(
     LoginResponseDto dto, {
     required String email,

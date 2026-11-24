@@ -3,7 +3,7 @@ import 'package:flutter/painting.dart';
 /// The product picture's address when it may be loaded: an `https://`
 /// address with a host. Anything else (`null`, `http://`, a broken
 /// address) is treated as no picture and never requested (final.md
-/// Sections 12.1, 13.1.4).
+/// §12, §13.1).
 Uri? pictureAddress(String? url) {
   if (url == null) return null;
   final uri = Uri.tryParse(url.trim());
@@ -11,7 +11,7 @@ Uri? pictureAddress(String? url) {
   return uri;
 }
 
-/// Loads product pictures (final.md Section 13.1.4). Never through the API
+/// Loads product pictures (final.md §13.1). Never through the API
 /// client, so the picture host never receives the access pass; kept only in
 /// Flutter's memory image cache, never on the phone's storage (Section
 /// 12.1, backend D21).

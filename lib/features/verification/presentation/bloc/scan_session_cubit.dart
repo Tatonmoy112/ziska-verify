@@ -41,7 +41,7 @@ abstract class ScanSessionState with _$ScanSessionState {
     /// The session was full or had ended (`409 session_full`,
     /// `session_ended`): a new one started by itself and the scan went in
     /// it (guide section 4.3). The list starts again, and the screen says
-    /// why until the next scan (audit 5.2).
+    /// why until the next scan (UI audit 2026-11-22, 5.2).
     @Default(false) bool renewed,
 
     /// A resumed session's scans could not be read: Try again reloads them
@@ -559,7 +559,8 @@ class ScanSessionCubit extends Cubit<ScanSessionState> {
   }
 
   /// The next page of the session's scans: while scanning, and on the
-  /// summary, which shows every product (final.md §13.2; audit 5.3).
+  /// summary, which shows every product (final.md §13.2;
+  /// UI audit 2026-11-22, 5.3).
   /// Reading an ended session's checks is read only.
   Future<void> more() async {
     final cursor = state.nextCursor;

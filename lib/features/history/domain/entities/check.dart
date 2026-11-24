@@ -27,7 +27,7 @@ enum CheckResult {
   final String wire;
 }
 
-/// One check in History (final.md Section 13.4).
+/// One check in History (final.md §13.4).
 class CheckRecord {
   const CheckRecord({
     required this.ref,
@@ -77,7 +77,7 @@ class CheckTotals {
   final int unassigned;
 }
 
-/// The filters of `GET checks` (final.md Section 13.4).
+/// The filters of `GET checks` (final.md §13.4).
 @freezed
 abstract class CheckQuery with _$CheckQuery {
   const factory CheckQuery({

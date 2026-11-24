@@ -33,7 +33,7 @@ enum Permission {
   };
 }
 
-/// The logged-in official (`GET me`, final.md Section 13.7).
+/// The logged-in official (`GET me`, final.md §13.7).
 @freezed
 abstract class Profile with _$Profile {
   const factory Profile({

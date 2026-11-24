@@ -1,7 +1,7 @@
 import 'package:flutter/painting.dart';
 
 /// Colour tokens taken from the Figma exports (`figma/`). The only place
-/// colours are defined (final.md Section 14).
+/// colours are defined (final.md §14).
 abstract final class AppColors {
   // Brand
   static const primary = Color(0xFF1E3A8A);

@@ -1,4 +1,4 @@
-/// A retail user in the picker (final.md Section 13.6).
+/// A retail user in the picker (final.md §13.6).
 class RetailUser {
   const RetailUser({
     required this.id,

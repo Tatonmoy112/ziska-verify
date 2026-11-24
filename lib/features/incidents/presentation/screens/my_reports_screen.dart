@@ -17,7 +17,7 @@ import 'package:ziska_verify/shared/design_system/tokens/app_typography.dart';
 import 'package:ziska_verify/shared/widgets/app_paginated_list.dart';
 import 'package:ziska_verify/shared/widgets/navy_app_bar.dart';
 
-/// My reports (final.md Section 13.5.4): the official's own reports, newest
+/// My reports (final.md §13.5): the official's own reports, newest
 /// first, with their photo counts. Photos cannot be downloaded.
 class MyReportsScreen extends StatelessWidget {
   const MyReportsScreen({super.key});

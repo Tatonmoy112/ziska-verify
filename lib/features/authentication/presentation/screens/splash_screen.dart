@@ -19,7 +19,7 @@ import 'package:ziska_verify/shared/widgets/reference_text.dart';
 import 'package:ziska_verify/shared/widgets/retry_countdown.dart';
 
 /// Shown while the session is restored and the profile loads
-/// (final.md Section 9.4). The router leaves it by itself.
+/// (final.md §9). The router leaves it by itself.
 ///
 /// The look follows the Figma Landing Page: a dot pattern at the top, the
 /// logo on a white card with the app's name, and a navy glow at the bottom

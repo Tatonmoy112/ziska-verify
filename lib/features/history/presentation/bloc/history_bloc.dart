@@ -27,7 +27,7 @@ final class HistoryResultPicked extends HistoryEvent {
   final CheckResult? result;
 }
 
-/// The search text changed; debounced (final.md Section 8.3).
+/// The search text changed; debounced (final.md §8).
 final class HistorySearchTyped extends HistoryEvent {
   const HistorySearchTyped(this.text);
   final String text;
@@ -63,7 +63,7 @@ class HistoryState {
   final bool searchRefused;
   final PaginatedState<CheckRecord> list;
 
-  /// From the first page; kept while later pages load (Section 10.6).
+  /// From the first page; kept while later pages load (§10).
   final CheckTotals? totals;
 
   /// The counts on the result chips: every check matching the search and
@@ -86,7 +86,7 @@ class HistoryState {
   );
 }
 
-/// History (final.md Sections 10, 13.4). A filter or search change starts
+/// History (final.md §10, §13.4). A filter or search change starts
 /// again from the first page and drops the cursor; one next page at a time.
 class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
   HistoryBloc(this._getChecks, {CheckQuery initialQuery = const CheckQuery()})
@@ -128,7 +128,8 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
     on<HistoryRetried>((_, emit) {
       if (state.list.isWaiting) return null;
       // The failed next page is asked again only for the list it belongs
-      // to; a filter changed meanwhile starts its own list (audit 7.1).
+      // to; a filter changed meanwhile starts its own list
+      // (UI audit 2026-11-22, 7.1).
       if (state.list.status == PaginationStatus.failureMore &&
           state.query == _listQuery) {
         return _loadNext(emit);
@@ -253,7 +254,8 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
 
   Future<void> _loadNext(Emitter<HistoryState> emit) async {
     // The filters changed since the list loaded (during a 429 wait): its
-    // cursor is not theirs, so their own first page loads (audit 7.1).
+    // cursor is not theirs, so their own first page loads
+    // (UI audit 2026-11-22, 7.1).
     if (_listQuery != null && state.query != _listQuery) {
       return _loadFirst(state.query, emit);
     }

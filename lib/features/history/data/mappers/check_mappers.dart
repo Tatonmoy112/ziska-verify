@@ -25,7 +25,7 @@ extension CheckMapper on CheckDto {
     ref: ref,
     at: DateTime.parse(at).toUtc(),
     way: CheckWay.values.where((w) => w.wire == way).firstOrNull,
-    // Unknown values fail safe: never valid (final.md Section 13.1.5).
+    // Unknown values fail safe: never valid (final.md §13.1).
     result:
         CheckResult.values
             .where((r) => r.wire == result && r != CheckResult.unknown)

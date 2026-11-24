@@ -21,7 +21,7 @@ abstract class _SubmitCubit extends Cubit<SubmitState> {
   }
 }
 
-/// `me/password`, forced or voluntary (final.md Section 6.6).
+/// `me/password`, forced or voluntary (final.md §6).
 class ChangePasswordCubit extends _SubmitCubit {
   ChangePasswordCubit(this._changePassword, this._logout);
 

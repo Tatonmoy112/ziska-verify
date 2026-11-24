@@ -10,7 +10,7 @@ import 'package:ziska_verify/shared/design_system/tokens/app_radius.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_spacing.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_typography.dart';
 
-/// The product picture on a genuine result (final.md Section 13.1.4,
+/// The product picture on a genuine result (final.md §13.1,
 /// decision 47): loading, the picture whole, a failure with Try again, or a
 /// placeholder when there is none. A tap opens it full screen.
 class ProductPictureCard extends StatefulWidget {
@@ -139,7 +139,7 @@ class _ProductPictureCardState extends State<ProductPictureCard> {
       );
 }
 
-/// The picture full screen, with pinch zoom (final.md Section 13.1.4).
+/// The picture full screen, with pinch zoom (final.md §13.1).
 class PictureViewer extends StatelessWidget {
   const PictureViewer({required this.image, required this.label, super.key});
 

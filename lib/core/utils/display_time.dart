@@ -2,7 +2,7 @@ import 'package:intl/intl.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 /// Times are shown in Bangladesh time whatever the phone's time zone
-/// (ProtectB DEC-205; final.md Section 16). `timezone` data is loaded in
+/// (ProtectB DEC-205; final.md §16). `timezone` data is loaded in
 /// `bootstrap`.
 abstract final class DisplayTime {
   static const zone = 'Asia/Dhaka';

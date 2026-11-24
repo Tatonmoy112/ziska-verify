@@ -1,5 +1,5 @@
 /// Keychain / Keystore storage for the phone ID and the two passes
-/// (final.md Sections 5.6, 12.1). Never plain storage, never logs.
+/// (final.md §5, §12). Never plain storage, never logs.
 abstract interface class SecureStorageService {
   Future<String?> read(String key);
   Future<void> write(String key, String value);

@@ -19,7 +19,7 @@ import 'package:ziska_verify/shared/widgets/navy_status_bar.dart';
 import 'package:ziska_verify/shared/widgets/retry_countdown.dart';
 
 /// `auth/password/reset`: ends every login and forgets every trusted phone;
-/// the official logs in again (final.md Section 6.6).
+/// the official logs in again (final.md §6).
 class ResetPasswordScreen extends StatefulWidget {
   const ResetPasswordScreen({required this.email, super.key});
 

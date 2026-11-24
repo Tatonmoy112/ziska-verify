@@ -77,7 +77,7 @@ List<RouteBase> authRoutes(RouteDeps d) {
           name: RouteNames.resetPassword,
           path: 'reset',
           // A missing `extra` (the system restored the app) goes back to
-          // the parent route (final.md Section 9.5).
+          // the parent route (final.md §9).
           redirect: (_, state) =>
               state.extra is String ? null : RoutePaths.forgotPassword,
           builder: (_, state) => BlocProvider(

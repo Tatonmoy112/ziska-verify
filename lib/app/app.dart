@@ -21,9 +21,9 @@ import 'package:ziska_verify/l10n/generated/app_localizations.dart';
 import 'package:ziska_verify/shared/design_system/theme/app_theme.dart';
 import 'package:ziska_verify/shared/widgets/network_status_banner.dart';
 
-/// The root widget: the app-scoped profile (final.md Section 5.9), the
-/// router (Section 9), the theme (Section 14), and the chosen language
-/// (Section 16), applied at once.
+/// The root widget: the app-scoped profile (final.md §11), the
+/// router (§9), the theme (§14), and the chosen language
+/// (§16), applied at once.
 class App extends StatefulWidget {
   const App({required this.locator, super.key});
 
@@ -104,7 +104,7 @@ class _AppState extends State<App> {
             GlobalCupertinoLocalizations.delegate,
           ],
           supportedLocales: AppLocalizations.supportedLocales,
-          // The offline banner above every screen (final.md Section 14.2).
+          // The offline banner above every screen (final.md §14.2).
           // Dark status bar icons where a screen says nothing (a white
           // top); navy screens and app bars set their own (finding F-7).
           builder: (context, child) => AnnotatedRegion<SystemUiOverlayStyle>(

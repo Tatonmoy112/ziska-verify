@@ -3,7 +3,7 @@ import 'package:ziska_verify/core/errors/app_exception.dart';
 import 'package:ziska_verify/core/errors/result.dart';
 import 'package:ziska_verify/core/pagination/cursor_page.dart';
 
-/// The status of a paged list (final.md Section 10.4).
+/// The status of a paged list (final.md §10).
 enum PaginationStatus {
   initial,
   loadingFirst,
@@ -14,7 +14,7 @@ enum PaginationStatus {
   failureMore,
 }
 
-/// A paged list in a BLoC state (final.md Section 10.3). Pure Dart.
+/// A paged list in a BLoC state (final.md §10). Pure Dart.
 class PaginatedState<T> {
   const PaginatedState({
     this.items = const [],

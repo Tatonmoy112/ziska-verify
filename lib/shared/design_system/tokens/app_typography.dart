@@ -2,7 +2,7 @@ import 'package:flutter/painting.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_colors.dart';
 
 /// Type scale from the Figma. The bundled font with Bangla support is added
-/// when the client supplies it (final.md Section 2.2); until then the
+/// when the client supplies it (final.md §2); until then the
 /// platform font is used.
 abstract final class AppTypography {
   /// Where Bangla letters come from when the main font has none. A phone

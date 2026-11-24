@@ -4,7 +4,7 @@ import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 
 /// Rebuilds every second with the seconds left until [until]; once it has
-/// passed, builds with 0 (final.md Section 14.1). Used for `Retry-After` and
+/// passed, builds with 0 (final.md §14.1). Used for `Retry-After` and
 /// the resend-code wait.
 class RetryCountdown extends StatefulWidget {
   const RetryCountdown({

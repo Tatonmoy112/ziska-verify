@@ -15,7 +15,7 @@ import 'package:ziska_verify/shared/widgets/gradient_header.dart';
 import 'package:ziska_verify/shared/widgets/navy_status_bar.dart';
 import 'package:ziska_verify/shared/widgets/retry_countdown.dart';
 
-/// The emailed code for a new phone (final.md Section 6.2).
+/// The emailed code for a new phone (final.md §6).
 class VerifyCodeScreen extends StatefulWidget {
   const VerifyCodeScreen({required this.email, super.key});
 

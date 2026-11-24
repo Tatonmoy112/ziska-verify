@@ -4,7 +4,7 @@ import 'package:flutter/widgets.dart';
 enum ScannerProblem { permissionDenied, unsupported, other }
 
 /// One scanning session: a camera preview that reports QR codes only
-/// (final.md Sections 1.3, 5.6). Barcodes are never read.
+/// (final.md §1, §5). Barcodes are never read.
 abstract interface class ScannerSession {
   /// The camera preview. [onCode] receives the raw text of each QR code.
   Widget preview({

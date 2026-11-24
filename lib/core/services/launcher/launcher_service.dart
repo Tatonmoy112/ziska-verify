@@ -1,5 +1,5 @@
 /// Opens the mail app or the dialler, and nothing else: QR links and other
-/// links are never opened (final.md Section 12.1).
+/// links are never opened (final.md §12).
 abstract interface class LauncherService {
   /// Returns `false` when no app can handle it.
   Future<bool> email({

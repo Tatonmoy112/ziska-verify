@@ -1,7 +1,7 @@
 import 'package:ziska_verify/core/errors/app_exception.dart';
 
 /// What a repository returns: repositories never throw
-/// (final.md Section 5.4).
+/// (final.md §3).
 sealed class Result<T> {
   const Result();
 
@@ -26,7 +26,7 @@ final class Err<T> extends Result<T> {
 }
 
 /// A failure the presentation layer turns into a localized message
-/// (final.md Section 16). [exception] keeps the type, `request_id`, and
+/// (final.md §16). [exception] keeps the type, `request_id`, and
 /// `Retry-After`.
 final class Failure {
   const Failure(this.exception);
@@ -41,7 +41,7 @@ final class Failure {
   };
 
   /// For a `429`: when a new request may be sent, counted from [now]
-  /// (final.md Section 15.4). `null` for any other failure.
+  /// (final.md §15). `null` for any other failure.
   DateTime? retryAtFrom(DateTime now) => exception is RateLimitedException
       ? (retryAfter == null ? null : now.add(retryAfter!))
       : null;
@@ -51,7 +51,7 @@ final class Failure {
 /// the wrong shape (a field of the wrong type or missing, which the parsers
 /// report as a `TypeError` or a `FormatException`) is an
 /// [InternalErrorException] too, so a screen never waits forever (final.md
-/// Section 6.2).
+/// §6).
 Future<Result<T>> guard<T>(Future<T> Function() action) async {
   try {
     return Success(await action());

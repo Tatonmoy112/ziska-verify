@@ -42,7 +42,7 @@ extension LookupResultMapper on LookupResultDto {
   );
 }
 
-/// Unknown values fail safe: never valid (final.md Section 13.1.5).
+/// Unknown values fail safe: never valid (final.md §13.1).
 LookupOutcome outcomeFrom(String value) => switch (value) {
   'valid' => LookupOutcome.valid,
   'warning' => LookupOutcome.warning,

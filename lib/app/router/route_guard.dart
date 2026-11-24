@@ -2,7 +2,7 @@ import 'package:ziska_verify/app/router/route_paths.dart';
 import 'package:ziska_verify/core/services/session/session_state.dart';
 import 'package:ziska_verify/features/profile/domain/entities/profile.dart';
 
-/// The redirect decision of final.md Section 9.4, as a pure function.
+/// The redirect decision of final.md §9, as a pure function.
 class RouteGuard {
   const RouteGuard({this.permissionByPath = const {}});
 
@@ -27,7 +27,7 @@ class RouteGuard {
             ? null
             : _to(RoutePaths.login, path);
       case SessionAwaitingCode():
-        // "Back to login" cancels the code first (Section 6.7).
+        // "Back to login" cancels the code first (§6).
         return _to(RoutePaths.verifyCode, path);
       case SessionPasswordChangeRequired():
         return _to(RoutePaths.changePassword, path);

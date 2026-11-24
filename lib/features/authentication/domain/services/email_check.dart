@@ -1,4 +1,4 @@
-/// Whether a typed email is worth sending (final.md Section 6.2): after
+/// Whether a typed email is worth sending (final.md §6): after
 /// trimming, exactly one `@` with something on both sides, and no spaces,
 /// control characters, or invisible (zero-width) characters. A full-width
 /// `＠` is not `@`. The server decides the rest.

@@ -1,4 +1,4 @@
-/// The four session states that drive routing (final.md Section 6.7).
+/// The four session states that drive routing (final.md §6).
 sealed class SessionState {
   const SessionState();
 }
@@ -18,8 +18,8 @@ final class SessionAwaitingCode extends SessionState {
 }
 
 /// Logged in with `must_change_password: true`: only Change password (and
-/// Log out) until it is changed. There is no "Not now" (backend D65, guide
-/// §3.2).
+/// Log out) until it is changed. There is no "Not now" (backend D65,
+/// guide §3.2).
 final class SessionPasswordChangeRequired extends SessionState {
   const SessionPasswordChangeRequired();
 }
@@ -29,7 +29,7 @@ final class SessionAuthenticated extends SessionState {
   const SessionAuthenticated();
 }
 
-/// The outcome of one renewal (final.md Section 6.4).
+/// The outcome of one renewal (final.md §6).
 sealed class RenewalResult {
   const RenewalResult();
 }

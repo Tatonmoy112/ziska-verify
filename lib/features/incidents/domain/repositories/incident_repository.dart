@@ -7,7 +7,7 @@ import 'package:ziska_verify/features/incidents/domain/entities/report.dart';
 
 abstract interface class IncidentRepository {
   /// `POST incidents`: returns the report's `id`. Never called twice for one
-  /// report (final.md Section 13.5.2).
+  /// report (final.md §13.5).
   Future<Result<int>> fileReport({
     required String note,
     String? checkRef,

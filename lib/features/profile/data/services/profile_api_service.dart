@@ -2,7 +2,7 @@ import 'package:ziska_verify/core/errors/app_exception.dart';
 import 'package:ziska_verify/core/network/api_client.dart';
 import 'package:ziska_verify/features/profile/data/models/profile_dto.dart';
 
-/// `GET me` (final.md Section 5.7).
+/// `GET me` (final.md §15).
 abstract interface class ProfileApiService {
   Future<ProfileDto> getMe();
 }

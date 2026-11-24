@@ -11,7 +11,7 @@ import 'package:ziska_verify/shared/design_system/tokens/app_spacing.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_typography.dart';
 import 'package:ziska_verify/shared/widgets/app_paginated_list.dart';
 
-/// Opens the retail user picker (final.md Section 13.6) and returns the
+/// Opens the retail user picker (final.md §13.6) and returns the
 /// chosen one, or `null`.
 Future<({String id, String name})?> showRetailUserPicker(
   BuildContext context, {

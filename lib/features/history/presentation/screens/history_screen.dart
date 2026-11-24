@@ -20,8 +20,8 @@ import 'package:ziska_verify/shared/widgets/app_paginated_list.dart';
 import 'package:ziska_verify/shared/widgets/label_value_row.dart';
 import 'package:ziska_verify/shared/widgets/navy_app_bar.dart';
 
-/// The History tab (final.md Section 13.4). A serial search shows the
-/// item's tracking log (Section 13.4).
+/// The History tab (final.md §13.4). A serial search shows the
+/// item's tracking log (§13.4).
 ///
 /// With [sessions], a **Checks | Sessions** switch sits under the title and
 /// **Sessions** shows that view (the official's own sessions, Section
@@ -37,7 +37,7 @@ class HistoryScreen extends StatefulWidget {
   });
 
   /// Called when the tab comes back with the Sessions view open, so the
-  /// list is fresh (final.md Section 13.4).
+  /// list is fresh (final.md §13.4).
   final void Function(BuildContext context)? onSessionsShown;
 
   final Widget? sessions;
@@ -228,7 +228,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 }
 
-/// The serial a digits-only search tracks (Section 13.4); `null` for no
+/// The serial a digits-only search tracks (§13.4); `null` for no
 /// search or a reference number.
 String? _trackedSerial(CheckQuery query) {
   final searched = query.search?.trim();

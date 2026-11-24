@@ -42,7 +42,7 @@ class RetailUserPickerState {
   final PaginatedState<RetailUser> list;
 }
 
-/// The retail user picker (final.md Sections 10, 13.6).
+/// The retail user picker (final.md §10, §13.6).
 class RetailUserPickerBloc
     extends Bloc<RetailUserPickerEvent, RetailUserPickerState> {
   RetailUserPickerBloc(this._search) : super(const RetailUserPickerState()) {

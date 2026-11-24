@@ -3,7 +3,7 @@ import 'package:ziska_verify/core/network/api_client.dart';
 import 'package:ziska_verify/core/pagination/page_request.dart';
 import 'package:ziska_verify/features/retail_users/data/models/retail_user_dtos.dart';
 
-/// Retail user routes (final.md Sections 5.7, 13.6).
+/// Retail user routes (final.md §15, §13.6).
 abstract interface class RetailUserApiService {
   Future<RetailUsersPageDto> search(String? search, PageRequest page);
 }

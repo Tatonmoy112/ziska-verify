@@ -45,7 +45,7 @@ abstract class VerifyCodeState with _$VerifyCodeState {
   }) = _VerifyCodeState;
 }
 
-/// The emailed 6-digit code (final.md Section 6.2). Resending is allowed
+/// The emailed 6-digit code (final.md §6). Resending is allowed
 /// once a minute, 3 times in all; the wait follows `Retry-After`.
 class VerifyCodeBloc extends Bloc<VerifyCodeEvent, VerifyCodeState> {
   VerifyCodeBloc({

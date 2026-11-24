@@ -1,4 +1,4 @@
-/// Route paths (final.md Section 9.2). Used only inside `app/router/`;
+/// Route paths (final.md §9). Used only inside `app/router/`;
 /// features navigate by `RouteNames`.
 abstract final class RoutePaths {
   static const splash = '/splash';
@@ -12,7 +12,7 @@ abstract final class RoutePaths {
   static const history = '/history';
   static const profile = '/profile';
 
-  // Full-screen flows above the bottom bar (final.md Section 9.2).
+  // Full-screen flows above the bottom bar (final.md §9).
   static const lookupResult = '/home/result';
   static const scannerMode = '/home/scanner-mode';
   static const serialStack = '/home/serial-stack';
@@ -20,7 +20,7 @@ abstract final class RoutePaths {
   static const myReports = '/home/reports';
   static const reportIncident = '/home/reports/new';
 
-  /// Open without login (final.md Section 9.4).
+  /// Open without login (final.md §9).
   static const Set<String> preLogin = {
     login,
     forgotPassword,

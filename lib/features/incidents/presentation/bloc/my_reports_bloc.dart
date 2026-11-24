@@ -25,7 +25,7 @@ final class MyReportsRetried extends MyReportsEvent {
   const MyReportsRetried();
 }
 
-/// My reports (final.md Sections 10, 13.5.4).
+/// My reports (final.md §10, §13.5).
 class MyReportsBloc extends Bloc<MyReportsEvent, PaginatedState<Report>> {
   MyReportsBloc(this._getReports) : super(const PaginatedState<Report>()) {
     on<MyReportsStarted>(

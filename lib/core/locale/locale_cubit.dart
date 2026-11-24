@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ziska_verify/core/services/logging/logger_service.dart';
 import 'package:ziska_verify/core/services/storage/preferences_service.dart';
 
-/// The app language (final.md Section 16): English or Bangla, chosen on
+/// The app language (final.md §16): English or Bangla, chosen on
 /// Profile, applied at once, and kept on the phone across restarts and
 /// logouts. English until a choice is made.
 class LocaleCubit extends Cubit<Locale> {

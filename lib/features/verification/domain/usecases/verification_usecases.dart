@@ -36,7 +36,7 @@ final class RefusedInput extends PreparedInput {
   bool get notProductQr => way == LookupWay.qr;
 }
 
-/// Steps 2 to 4 of the lookup flow (final.md Section 13.1.2): parse a QR
+/// Steps 2 to 4 of the lookup flow (final.md §13.1): parse a QR
 /// link, normalize, and check against the client's formats.
 class PrepareInput {
   const PrepareInput({
@@ -149,8 +149,8 @@ class LookupItem {
       _repository.lookup(input.way, input.value);
 }
 
-/// One session of the official (`GET lookups/sessions/{id}`, app API guide
-/// §4.5): the header of its checks.
+/// One session of the official (`GET lookups/sessions/{id}`,
+/// app API guide §4.5): the header of its checks.
 class GetSession {
   const GetSession(this._repository);
   final VerificationRepository _repository;
@@ -178,8 +178,8 @@ class CheckSerials {
       _repository.serials(serials);
 }
 
-/// Ends a scanner session (`POST lookups/sessions/{id}/end`, app API guide
-/// §4.4).
+/// Ends a scanner session (`POST lookups/sessions/{id}/end`,
+/// app API guide §4.4).
 class EndSession {
   const EndSession(this._repository);
   final VerificationRepository _repository;

@@ -2,7 +2,7 @@ import 'package:ziska_verify/core/errors/result.dart';
 import 'package:ziska_verify/features/authentication/domain/entities/login_outcome.dart';
 import 'package:ziska_verify/features/authentication/domain/repositories/auth_repository.dart';
 
-/// One use case per action (final.md Section 3).
+/// One use case per action (final.md §3).
 class Login {
   const Login(this._repository);
   final AuthRepository _repository;

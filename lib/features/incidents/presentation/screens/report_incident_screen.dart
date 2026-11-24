@@ -22,7 +22,7 @@ import 'package:ziska_verify/shared/widgets/failure_banner.dart';
 import 'package:ziska_verify/shared/widgets/navy_app_bar.dart';
 import 'package:ziska_verify/shared/widgets/retry_countdown.dart';
 
-/// Report incident (final.md Section 13.5).
+/// Report incident (final.md §13.5).
 class ReportIncidentScreen extends StatefulWidget {
   const ReportIncidentScreen({
     required this.pickRetailUser,
@@ -34,7 +34,7 @@ class ReportIncidentScreen extends StatefulWidget {
   /// (the picker reads the history).
   final Future<String?> Function(BuildContext context)? pickCheck;
 
-  /// Opens the retail user picker; wired by the router (Section 4.2).
+  /// Opens the retail user picker; wired by the router (§4).
   final Future<({String id, String name})?> Function(BuildContext context)
   pickRetailUser;
 
@@ -228,8 +228,8 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
         final filing = state.filing == FilingStatus.filing;
         // Back (the app bar's and the phone's) asks what Done asks; while
         // the report is filing it waits, so a filed report always goes on
-        // to its photos (audit 8.1). A report not filed yet with something
-        // entered asks before dropping it (F-5).
+        // to its photos (UI audit 2026-11-22, 8.1). A report not filed yet
+        // with something entered asks before dropping it (F-5).
         return PopScope(
           canPop: !filing && !_photosPending(state) && !_unfiled(state),
           onPopInvokedWithResult: (didPop, _) {

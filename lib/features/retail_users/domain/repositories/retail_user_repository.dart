@@ -5,7 +5,7 @@ import 'package:ziska_verify/features/retail_users/domain/entities/retail_user.d
 
 abstract interface class RetailUserRepository {
   /// `GET retail-users`: active retail users by name; [search] is part of a
-  /// name or a whole email, up to 100 characters (final.md Section 13.6).
+  /// name or a whole email, up to 100 characters (final.md §13.6).
   Future<Result<CursorPage<RetailUser>>> search(
     String? search,
     PageRequest page,

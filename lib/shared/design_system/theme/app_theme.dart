@@ -5,7 +5,7 @@ import 'package:ziska_verify/shared/design_system/tokens/app_radius.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_spacing.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_typography.dart';
 
-/// The Material 3 theme built from the tokens (final.md Section 14).
+/// The Material 3 theme built from the tokens (final.md §14).
 abstract final class AppTheme {
   static ThemeData light() {
     // Every role a widget draws with is a token. A chosen segment or chip

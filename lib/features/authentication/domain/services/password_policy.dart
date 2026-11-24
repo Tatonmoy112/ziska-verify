@@ -22,7 +22,7 @@ class PasswordCheck {
   bool get isValid => hasLength && hasLetter && hasNumber && hasNoControl;
 }
 
-/// The password rule of backend D54 (final.md Section 6.6). Checked before
+/// The password rule of backend D54 (final.md §6). Checked before
 /// sending; the server is final.
 class PasswordPolicy {
   const PasswordPolicy();

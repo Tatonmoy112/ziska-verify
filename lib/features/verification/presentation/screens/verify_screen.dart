@@ -33,7 +33,7 @@ import 'package:ziska_verify/shared/widgets/navy_status_bar.dart';
 import 'package:ziska_verify/shared/widgets/pattern_background.dart';
 import 'package:ziska_verify/shared/widgets/retry_countdown.dart';
 
-/// The Check tab (final.md Sections 13.1.2, 13.7). With `item:lookup` it
+/// The Check tab (final.md §13.1, §13.7). With `item:lookup` it
 /// opens on the camera: a read QR is the trigger, sent at once as
 /// `POST lookups` with no button. A serial is typed under the camera.
 ///
@@ -149,7 +149,7 @@ class _VerifyScreenState extends State<VerifyScreen>
     _sync();
   }
 
-  /// The check loader follows the lookup (Section 13.1.2).
+  /// The check loader follows the lookup (§13.1).
   void _onStatus(LookupState state) {
     switch (state.status) {
       case LookupStatus.inProgress:
@@ -297,7 +297,7 @@ class _VerifyScreenState extends State<VerifyScreen>
     final l10n = AppLocalizations.of(context);
     final profile = context.watch<ProfileCubit>().state.profile;
     final canLookup = profile?.canLookup ?? false;
-    // Entry points to the other features the role allows (Section 13.7).
+    // Entry points to the other features the role allows (§13.7).
     final tools = <Widget>[
       if (profile?.canBulkLookup ?? false)
         _ToolTile(
@@ -456,7 +456,7 @@ class _LookupForm extends StatelessWidget {
     final formats = state.formats;
 
     // Without the formats only the serial form waits: the tools need no
-    // formats, so they stay (final.md Section 13.7).
+    // formats, so they stay (final.md §13.7).
     Widget formsUnavailable() {
       final formatsFailure = state.formatsFailure;
       if (formatsFailure == null) {

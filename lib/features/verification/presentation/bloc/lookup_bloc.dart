@@ -47,7 +47,7 @@ abstract class LookupState with _$LookupState {
     @Default(LookupStatus.idle) LookupStatus status,
     LookupResult? result,
 
-    /// The serial/QR value and response time (final.md Section 13.1).
+    /// The serial/QR value and response time (final.md §13.1).
     CheckedInput? checked,
     Failure? failure,
     RefusedInput? refused,
@@ -61,9 +61,9 @@ abstract class LookupState with _$LookupState {
   bool get isBusy => status == LookupStatus.inProgress;
 }
 
-/// The single lookup (final.md Sections 8.4, 13.1). `droppable`: every
+/// The single lookup (final.md §8, §13.1). `droppable`: every
 /// lookup is a recorded check, so a second request while one is in flight
-/// is never sent (Section 8.3).
+/// is never sent (§8).
 class LookupBloc extends Bloc<LookupEvent, LookupState> {
   LookupBloc({
     required GetFormats getFormats,
@@ -124,7 +124,7 @@ class LookupBloc extends Bloc<LookupEvent, LookupState> {
     final formats = state.formats;
     if (formats == null) return;
     // A `429` countdown is running: nothing is sent before it ends
-    // (final.md Sections 13.1.6, 15.4).
+    // (final.md §13.1, §15).
     final wait = state.retryAt;
     if (wait != null && _now().isBefore(wait)) return;
 

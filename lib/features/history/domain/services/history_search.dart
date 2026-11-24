@@ -20,7 +20,7 @@ enum SearchStatus {
 ///   capitals, however it was typed.
 ///
 /// Other digits, such as Bangla `১২৩`, read as `0`–`9` first, as the app
-/// does in every field (final.md Section 16). Pure Dart.
+/// does in every field (final.md §16). Pure Dart.
 class HistorySearch {
   const HistorySearch._(this.status, [this.value]);
 

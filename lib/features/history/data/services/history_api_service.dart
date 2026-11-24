@@ -4,7 +4,7 @@ import 'package:ziska_verify/core/pagination/page_request.dart';
 import 'package:ziska_verify/features/history/data/models/checks_page_dto.dart';
 import 'package:ziska_verify/features/history/domain/entities/check.dart';
 
-/// `GET checks` (final.md Section 5.7).
+/// `GET checks` (final.md §15).
 abstract interface class HistoryApiService {
   Future<ChecksPageDto> getChecks(CheckQuery query, PageRequest page);
 }

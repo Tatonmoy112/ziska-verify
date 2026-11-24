@@ -43,7 +43,7 @@ String checkSentence(CheckRecord check, AppLocalizations l10n) =>
       CheckResult.unknown => l10n.resultUnknownBody,
     };
 
-/// One check in History (final.md Section 13.4), in the Figma "product
+/// One check in History (final.md §13.4), in the Figma "product
 /// history" layout: the serial and the result badge; batch, day, and time;
 /// who checked it; a grey box saying what the result means; the way, the
 /// session when the check belongs to one, and the reference (SRS

@@ -14,7 +14,7 @@ import 'package:ziska_verify/shared/design_system/tokens/app_typography.dart';
 import 'package:ziska_verify/shared/widgets/label_value_row.dart';
 import 'package:ziska_verify/shared/widgets/navy_status_bar.dart';
 
-/// The Profile tab (Figma "Profile"; final.md Section 13.7). Actions and
+/// The Profile tab (Figma "Profile"; final.md §13.7). Actions and
 /// content that belong to other features are passed in by the router.
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({
@@ -102,7 +102,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       .firstWhere((l) => l.$1 == code, orElse: () => _languages.first)
       .$2;
 
-  /// English or Bangla, the current one marked (final.md Section 13.7).
+  /// English or Bangla, the current one marked (final.md §13.7).
   Future<void> _chooseLanguage(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
     final current = Localizations.localeOf(context).languageCode;

@@ -9,7 +9,7 @@ import 'package:ziska_verify/shared/design_system/tokens/app_spacing.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_typography.dart';
 import 'package:ziska_verify/shared/widgets/label_value_row.dart';
 
-/// The item's details (final.md Section 13.1, SRS FR-LKP-06): every field
+/// The item's details (final.md §13.1, SRS FR-LKP-06): every field
 /// of a found item — the product (name, generic, short), the batch and its
 /// dates, the serial, and the masked hidden code — and, with [count], a
 /// "Check N" pill and the previous check time. A missing field shows as a

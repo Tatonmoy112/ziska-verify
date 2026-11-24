@@ -1,8 +1,8 @@
-/// Takes the QR value from a scanned QR link (final.md Section 13.1.2).
+/// Takes the QR value from a scanned QR link (final.md §13.1).
 ///
 /// The QR holds the client's verification site address, then `/q/`, then
 /// the value, for example `https://www.ziskaverify.com/q/Q8F2KD91XA7M`. Any
-/// host is accepted; the link is never opened (Section 12.1).
+/// host is accepted; the link is never opened (§12).
 class QrLinkParser {
   const QrLinkParser();
 

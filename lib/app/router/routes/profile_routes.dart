@@ -39,7 +39,7 @@ StatefulShellBranch profileBranch(RouteDeps d) {
                 RouteNames.changePassword,
               );
               // After a change the profile is asked for again, so
-              // the Profile reminder goes (final.md Section 13.7).
+              // the Profile reminder goes (final.md §13.7).
               if (changed ?? false) unawaited(profiles.refresh());
             },
             onContactSupport: ({email, phone}) {
@@ -51,7 +51,7 @@ StatefulShellBranch profileBranch(RouteDeps d) {
             onLogout: locator<Logout>().call,
           );
           // The check counts come from History: only for a profile
-          // that can read it (final.md Section 13.7).
+          // that can read it (final.md §13.7).
           final permissions = context.read<ProfileCubit>().state.permissions;
           if (!permissions.contains(Permission.ownHistory)) {
             return screen();

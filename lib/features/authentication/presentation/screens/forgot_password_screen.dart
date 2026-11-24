@@ -19,7 +19,7 @@ import 'package:ziska_verify/shared/widgets/navy_status_bar.dart';
 import 'package:ziska_verify/shared/widgets/retry_countdown.dart';
 
 /// `auth/password/forgot`. The answer is always the same, whether or not the
-/// email has an account (final.md Section 6.6).
+/// email has an account (final.md §6).
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({this.initialEmail, super.key});
 

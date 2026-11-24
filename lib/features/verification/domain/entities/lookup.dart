@@ -1,4 +1,4 @@
-/// The ways to look an item up: serial or QR (final.md Section 13.1;
+/// The ways to look an item up: serial or QR (final.md §13.1;
 /// backend D62: never the hidden code).
 enum LookupWay {
   serial('serial'),
@@ -11,8 +11,8 @@ enum LookupWay {
   final String wire;
 }
 
-/// `data.result` (final.md Section 13.1.4). [unknown] is any value this app
-/// does not know yet: it is never shown as valid (Section 13.1.5).
+/// `data.result` (final.md §13.1). [unknown] is any value this app
+/// does not know yet: it is never shown as valid (§13.1).
 enum LookupOutcome { valid, warning, notFound, unassigned, unknown }
 
 /// `data.reasons` entries. [unknown] is shown as a generic "Needs attention".
@@ -25,7 +25,7 @@ enum LookupReason {
   unknown,
 }
 
-/// One input format of the client (`GET formats`, final.md Section 13.1.3).
+/// One input format of the client (`GET formats`, final.md §13.1).
 class CodeFormat {
   const CodeFormat({required this.length, required this.characters});
 

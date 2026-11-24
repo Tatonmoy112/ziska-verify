@@ -2,7 +2,7 @@ import 'package:ziska_verify/core/errors/app_exception.dart';
 import 'package:ziska_verify/core/network/api_client.dart';
 import 'package:ziska_verify/features/authentication/data/models/auth_dtos.dart';
 
-/// The authentication routes (final.md Section 5.7). `auth/refresh` is
+/// The authentication routes (final.md §15). `auth/refresh` is
 /// called only by `SessionService`.
 abstract interface class AuthApiService {
   Future<LoginResponseDto> login({

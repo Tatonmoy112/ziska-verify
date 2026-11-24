@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 
 /// Tells the router to run its guard again whenever the session state or
-/// the profile changes (final.md Section 9.4).
+/// the profile changes (final.md §9).
 class RouterRefresh extends ChangeNotifier {
   RouterRefresh(List<Stream<Object?>> streams) {
     _subscriptions = [

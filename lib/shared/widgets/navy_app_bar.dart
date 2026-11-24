@@ -5,7 +5,7 @@ import 'package:ziska_verify/shared/design_system/tokens/app_colors.dart';
 /// The app bar of the History tab and of the screens opened above the tabs
 /// (Result, Stack of serials, Report incident, My reports, Session checks):
 /// the navy gradient of the Check and Profile headers, white title and
-/// icons, light status bar (final.md Section 14.1, decision N1). One row, so
+/// icons, light status bar (final.md §14.1, decision N1). One row, so
 /// the content keeps the room; the sign-in screens keep the tall
 /// `GradientHeader` with its subtitle.
 class NavyAppBar extends StatelessWidget implements PreferredSizeWidget {

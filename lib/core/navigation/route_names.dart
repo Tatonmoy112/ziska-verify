@@ -1,4 +1,4 @@
-/// Route names used by features to navigate (final.md Section 9.3). Paths
+/// Route names used by features to navigate (final.md §9). Paths
 /// live in `app/router/` only.
 abstract final class RouteNames {
   static const splash = 'splash';

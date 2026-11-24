@@ -4,7 +4,7 @@ import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Waits until events stop for [duration], then handles only the last one,
-/// cancelling any earlier handler still running (final.md Section 8.3:
+/// cancelling any earlier handler still running (final.md §8:
 /// "debounce 400 ms + restartable").
 EventTransformer<E> debounceRestartable<E>(Duration duration) =>
     (events, mapper) =>

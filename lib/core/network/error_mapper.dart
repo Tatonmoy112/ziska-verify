@@ -5,7 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:ziska_verify/core/errors/app_exception.dart';
 
 /// Turns a failed HTTP exchange into one typed [AppException]
-/// (final.md Section 15.4). Decided by `error.code`, then by status.
+/// (final.md §15). Decided by `error.code`, then by status.
 class ErrorMapper {
   const ErrorMapper._();
 

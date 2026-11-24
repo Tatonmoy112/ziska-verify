@@ -19,7 +19,7 @@ import 'package:ziska_verify/shared/widgets/gradient_header.dart';
 import 'package:ziska_verify/shared/widgets/navy_status_bar.dart';
 import 'package:ziska_verify/shared/widgets/retry_countdown.dart';
 
-/// `me/password` (final.md Section 6.6). When [forced], it is the only
+/// `me/password` (final.md §6). When [forced], it is the only
 /// screen allowed and back is blocked; Log out is the only other way out.
 /// There is no "Not now" (backend D65, guide §3.2).
 class ChangePasswordScreen extends StatefulWidget {
@@ -64,7 +64,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         if (state.status != SubmitStatus.success) return;
         if (widget.forced) {
           // Continues to Home; the guard shows Splash until the profile has
-          // loaded (final.md Section 9.4).
+          // loaded (final.md §9).
           context.goNamed(RouteNames.home);
         } else {
           ScaffoldMessenger.of(context).showSnackBar(

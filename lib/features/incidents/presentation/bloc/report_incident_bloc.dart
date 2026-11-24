@@ -82,7 +82,7 @@ class ReportPhoto {
   Uint8List get bytes => photo.bytes;
 
   /// A lost connection or a busy service: the same file may be sent again
-  /// (final.md Section 13.5.1). Refused photos are not retried.
+  /// (final.md §13.5). Refused photos are not retried.
   bool get canRetry =>
       status == PhotoStatus.failed &&
       switch (failure?.exception) {
@@ -155,7 +155,7 @@ class ReportIncidentState {
   final MissingLink? missing;
 
   /// After a `429` on filing: no new filing before this time (final.md
-  /// Sections 13.5.2, 15.4).
+  /// §13.5, §15).
   final DateTime? retryAt;
 
   bool get isFiled => filing == FilingStatus.filed;
@@ -191,7 +191,7 @@ class ReportIncidentState {
   );
 }
 
-/// Report incident (final.md Section 13.5). The report is filed once and
+/// Report incident (final.md §13.5). The report is filed once and
 /// never filed again; photos are sent one at a time after it, within an
 /// hour, at most 3.
 class ReportIncidentBloc
@@ -273,8 +273,8 @@ class ReportIncidentBloc
   }
 
   /// Sends the waiting photos, unless the screen is already closed: after
-  /// an awaited answer the bloc may be gone (audit 8.1), and adding to a
-  /// closed bloc throws.
+  /// an awaited answer the bloc may be gone (UI audit 2026-11-22, 8.1),
+  /// and adding to a closed bloc throws.
   void _upload() {
     if (!isClosed) add(const _UploadRequested());
   }

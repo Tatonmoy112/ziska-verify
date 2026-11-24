@@ -15,7 +15,7 @@ import 'package:ziska_verify/shared/widgets/error_banner.dart';
 import 'package:ziska_verify/shared/widgets/pattern_background.dart';
 import 'package:ziska_verify/shared/widgets/retry_countdown.dart';
 
-/// The camera at the top of the Check tab (final.md Sections 13.1.2, 13.7):
+/// The camera at the top of the Check tab (final.md §13.1, §13.7):
 /// a read QR is the trigger, sent at once with no button.
 ///
 /// It only draws; the tab starts and stops [session] and sends the codes.

@@ -9,7 +9,7 @@ import 'package:ziska_verify/shared/design_system/tokens/app_spacing.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_typography.dart';
 
 /// Puts the offline banner above every screen, login screens included
-/// (final.md Section 14.2).
+/// (final.md §14.2).
 ///
 /// - It follows [ConnectivityService] only; a request that fails still says
 ///   so itself, and nothing is sent again when the link is back.

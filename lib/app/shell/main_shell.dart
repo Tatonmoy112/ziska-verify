@@ -8,7 +8,7 @@ import 'package:ziska_verify/l10n/generated/app_localizations.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_colors.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_typography.dart';
 
-/// One bottom-navigation tab (final.md Section 9.3.1).
+/// One bottom-navigation tab (final.md §9).
 class ShellTab {
   const ShellTab({
     required this.branch,
@@ -28,7 +28,7 @@ class ShellTab {
 
 bool _canSeeHistory(Set<Permission> p) => p.contains(Permission.ownHistory);
 
-/// The three tabs, in order (final.md Section 9.3.1).
+/// The three tabs, in order (final.md §9).
 final List<ShellTab> shellTabs = [
   ShellTab(branch: 0, icon: LucideIcons.shieldCheck, label: (l) => l.tabVerify),
   ShellTab(
@@ -60,7 +60,7 @@ bool _canLookup(Set<Permission> p) => p.contains(Permission.lookup);
 bool _canBulkLookup(Set<Permission> p) => p.contains(Permission.bulkLookup);
 
 /// The bottom navigation bar around the four tabs. Tabs the role cannot use
-/// are not shown (final.md Section 9.3.1).
+/// are not shown (final.md §9).
 class MainShell extends StatelessWidget {
   const MainShell({required this.navigationShell, super.key});
 

@@ -10,7 +10,7 @@ import 'package:ziska_verify/core/services/session/session_state.dart';
 import 'package:ziska_verify/core/services/storage/secure_storage_service.dart';
 
 /// [SessionService] that renews on its own Dio instance, which has no auth
-/// interceptor and sends no `Authorization` header (final.md Section 6.4).
+/// interceptor and sends no `Authorization` header (final.md §6).
 class DioSessionService implements SessionService {
   DioSessionService({
     required SecureStorageService storage,
@@ -31,7 +31,7 @@ class DioSessionService implements SessionService {
   Future<RenewalResult>? _renewing;
 
   /// Bumped by every login and every end: a renewal that finishes after its
-  /// login ended stores nothing (final.md Section 6.4).
+  /// login ended stores nothing (final.md §6).
   int _generation = 0;
 
   @override
@@ -55,7 +55,7 @@ class DioSessionService implements SessionService {
       _refreshToken = await _storage.read(SecureKeys.refreshToken);
     } on Object catch (e) {
       // Unreadable storage (a broken keystore): start again from Login
-      // rather than not starting at all (final.md Section 6.1).
+      // rather than not starting at all (final.md §6).
       _logger.warning('stored passes unreadable: ${e.runtimeType}');
       return end();
     }
@@ -67,7 +67,7 @@ class DioSessionService implements SessionService {
     }
     // A login needs both passes. With only one left (an interrupted write),
     // requests would go out without a pass: start again from Login. The
-    // phone stays trusted (final.md Sections 6.1, 6.7).
+    // phone stays trusted (final.md §6).
     if (hasAccess || hasRefresh) return end();
     _emit(const SessionUnauthenticated());
   }
@@ -156,7 +156,7 @@ class DioSessionService implements SessionService {
       // Logged out (or in again) meanwhile: these passes belong to a login
       // that is over.
       if (generation != _generation) return const SessionEnded();
-      // Both new passes are stored before anything else (Section 6.4). If
+      // Both new passes are stored before anything else (§6). If
       // the phone cannot store them, they still work from memory: the old
       // refresh pass is spent and must never be sent again (guide §3.4).
       try {
@@ -182,7 +182,8 @@ class DioSessionService implements SessionService {
     }
   }
 
-  /// Keeps the new passes in memory first, then on the phone (audit 1.1).
+  /// Keeps the new passes in memory first, then on the phone
+  /// (UI audit 2026-11-22, 1.1).
   /// A renewal has already spent the old refresh pass, and "sending one
   /// that was already used ends the login" on every phone (guide §3.4), so
   /// it must never be sent again. When they cannot be stored, the old pair
@@ -227,9 +228,9 @@ class DioSessionService implements SessionService {
     _accessToken = null;
     _refreshToken = null;
     // Login is reached even when the passes cannot be deleted; the next
-    // start finds no usable pair and starts again (Section 6.5).
+    // start finds no usable pair and starts again (§6).
     await _deleteStored();
-    // The phone ID is kept on purpose (Section 6.1).
+    // The phone ID is kept on purpose (§6).
     if (_current is! SessionUnauthenticated) {
       _emit(const SessionUnauthenticated());
     }

@@ -25,7 +25,7 @@ class ProfileDto {
   final String role;
 
   /// Missing or `null` reads as no permission at all: the official sees no
-  /// feature rather than a crash (final.md Sections 7.2, 13.1.5).
+  /// feature rather than a crash (final.md §7, §13.1).
   @JsonKey(defaultValue: <String>[])
   final List<String> permissions;
   final bool mustChangePassword;

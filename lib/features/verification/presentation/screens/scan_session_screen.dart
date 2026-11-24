@@ -118,7 +118,8 @@ class _ScanSessionScreenState extends State<ScanSessionScreen>
     if (scanning && !_cubit.state.done) {
       // The line goes on in any case: during Finish the reads already taken
       // are still sent and answered (final.md §13.2), or Finish never ends
-      // (audit 5.1). The camera starts again only while scanning.
+      // (UI audit 2026-11-22, 5.1). The camera starts again only while
+      // scanning.
       _cubit.resume();
       if (!_cubit.state.finishing) await _camera.start();
     }
@@ -869,7 +870,7 @@ class _SessionSummary extends StatelessWidget {
   final ScanSessionState state;
   final ValueChanged<ScanAnswer> onOpen;
 
-  /// The next page of a resumed session's scans (audit 5.3).
+  /// The next page of a resumed session's scans (UI audit 2026-11-22, 5.3).
   final VoidCallback onMore;
 
   @override

@@ -6,7 +6,7 @@ import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
 enum ResultOrigin { verify, scanner, manyItems }
 
 /// Everything the result screen shows, passed as the route's `extra`
-/// (final.md Sections 9, 13.1). Contains serial/QR input and server results.
+/// (final.md §9, §13.1). Contains serial/QR input and server results.
 class ResultView {
   const ResultView({
     required this.result,

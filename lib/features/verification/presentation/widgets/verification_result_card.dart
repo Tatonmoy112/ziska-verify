@@ -9,7 +9,7 @@ import 'package:ziska_verify/shared/design_system/tokens/app_radius.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_spacing.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_typography.dart';
 
-/// The look of each result (final.md Sections 13.1.4, 13.1.5). An unknown
+/// The look of each result (final.md §13.1). An unknown
 /// result is never shown as valid.
 ({Color color, Color background, IconData icon, String title, String body})
 outcomeStyle(LookupOutcome outcome, AppLocalizations l10n) => switch (outcome) {
@@ -50,7 +50,7 @@ outcomeStyle(LookupOutcome outcome, AppLocalizations l10n) => switch (outcome) {
   ),
 };
 
-/// The top card of the result screen (final.md Section 13.1.4, decision
+/// The top card of the result screen (final.md §13.1, decision
 /// 46): a round icon, the title, a badge, what the result means, any
 /// further reasons, and the reference number.
 class VerificationResultCard extends StatelessWidget {

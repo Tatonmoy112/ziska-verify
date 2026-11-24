@@ -68,7 +68,7 @@ import 'package:ziska_verify/features/verification/domain/repositories/verificat
 import 'package:ziska_verify/features/verification/domain/usecases/verification_usecases.dart';
 
 /// The service locator. Used only here, in the composition root
-/// (final.md Sections 4.2, 5.9).
+/// (final.md §4, §11).
 final GetIt locator = GetIt.instance;
 
 /// Wires every implementation to its interface, restores the session, and
@@ -116,7 +116,7 @@ Future<void> bootstrap() async {
 
 /// Makes the phone ID and restores the login before the first screen. The
 /// app always starts: a phone ID that cannot be made now is made at the
-/// login, and unreadable passes start at Login (final.md Section 6.1).
+/// login, and unreadable passes start at Login (final.md §6).
 Future<void> prepareSession() async {
   try {
     await locator<PhoneIdService>().getOrCreate();
@@ -127,7 +127,7 @@ Future<void> prepareSession() async {
 }
 
 /// Reads the chosen language before the first screen, so the app never
-/// starts in one language and turns to another (final.md Section 16).
+/// starts in one language and turns to another (final.md §16).
 Future<void> prepareLanguage() async {
   final initial = await LocaleCubit.stored(locator(), locator());
   locator.registerSingleton<LocaleCubit>(
@@ -136,8 +136,8 @@ Future<void> prepareLanguage() async {
   );
 }
 
-/// Registers the core services. Feature registrations are added per build
-/// step (app build guide §5).
+/// Registers the core services, each against its interface: storage, the
+/// session, the API client and the plugin wrappers (final.md §11).
 void registerCore({
   required AppConfig config,
   required CrashReportingService crash,
@@ -199,8 +199,8 @@ void registerCore({
     ..registerLazySingleton<PictureImages>(NetworkPictureImages.new);
 }
 
-/// Registers the features built so far (app build guide §5). Lifetimes
-/// follow final.md Section 5.9; BLoCs are created in the route builders.
+/// Registers each feature's API service, repository and use cases.
+/// Lifetimes follow final.md §11; BLoCs are created in the route builders.
 void registerFeatures() {
   locator
     // Profile

@@ -7,7 +7,7 @@ import 'package:ziska_verify/shared/design_system/tokens/app_typography.dart';
 
 /// A password field with "Show password" (app build guide §4.9). A pasted
 /// control character is kept, never removed without telling: the screen's
-/// own rule then refuses the password (final.md Section 6.6).
+/// own rule then refuses the password (final.md §6).
 class AppPasswordField extends StatefulWidget {
   const AppPasswordField({
     required this.label,
@@ -90,7 +90,7 @@ class _AppPasswordFieldState extends State<AppPasswordField> {
 /// is cut at a whole character.
 ///
 /// With [outerSpaceFree], the spaces and line breaks around the text do not
-/// count: the backend removes them before counting (a report's note, §6.1).
+/// count: the backend removes them before counting (a report's note, §6).
 class CodePointLimit extends TextInputFormatter {
   const CodePointLimit(this.max, {this.outerSpaceFree = false});
 

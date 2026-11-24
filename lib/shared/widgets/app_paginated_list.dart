@@ -10,7 +10,7 @@ import 'package:ziska_verify/shared/widgets/app_empty_state.dart';
 import 'package:ziska_verify/shared/widgets/failure_banner.dart';
 import 'package:ziska_verify/shared/widgets/retry_countdown.dart';
 
-/// A cursor-paged list (final.md Sections 10.4, 14.1). Builds every status
+/// A cursor-paged list (final.md §10, §14.1). Builds every status
 /// and asks for the next page when the list is scrolled to within 5 items
 /// of the end. Feature screens never build pagination UI themselves.
 class AppPaginatedList<T> extends StatelessWidget {
@@ -122,9 +122,9 @@ class AppPaginatedList<T> extends StatelessWidget {
           }
           if (i < items.length) {
             // The next page is asked for near the end; the BLoC drops
-            // repeats while one is in flight (Section 10.5). Only after a
+            // repeats while one is in flight (§10). Only after a
             // page that arrived: a failed page waits for Retry, never
-            // asked again by itself (Section 10.6).
+            // asked again by itself (§10).
             if (i >= items.length - _prefetchDistance &&
                 state.status == PaginationStatus.success &&
                 state.canLoadMore) {

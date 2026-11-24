@@ -21,7 +21,7 @@ import 'package:ziska_verify/l10n/generated/app_localizations.dart';
 import 'package:ziska_verify/shared/design_system/components/buttons/app_button.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_spacing.dart';
 
-/// Builds the app's single `GoRouter` (final.md Section 9): the guard, the
+/// Builds the app's single `GoRouter` (final.md §9): the guard, the
 /// check of pushed pages, and the route groups. Each area's routes, the
 /// only code that imports feature screens, are in `routes/`.
 GoRouter buildRouter({
@@ -63,7 +63,7 @@ GoRouter buildRouter({
       ...checkRoutes(deps),
       ...historyRoutes(deps),
       ...reportRoutes(deps),
-      // The three tabs of the bottom navigation (final.md Section 9.3.1).
+      // The three tabs of the bottom navigation (final.md §9).
       StatefulShellRoute.indexedStack(
         builder: (_, _, shell) => MainShell(navigationShell: shell),
         branches: [
@@ -77,7 +77,7 @@ GoRouter buildRouter({
 
   // go_router runs the redirect on the base location only, so a pushed
   // screen whose permission was just lost (a `403 forbidden` reload,
-  // final.md Sections 7.2, 9.4) is checked here: the official goes Home.
+  // final.md §7, §9) is checked here: the official goes Home.
   profileCubit.stream.listen((profile) {
     if (profile.status != ProfileStatus.loaded) return;
     final denied =

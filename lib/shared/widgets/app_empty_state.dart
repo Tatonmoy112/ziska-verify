@@ -3,7 +3,7 @@ import 'package:ziska_verify/shared/design_system/tokens/app_colors.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_spacing.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_typography.dart';
 
-/// An empty or "nothing here" state (final.md Section 14.2).
+/// An empty or "nothing here" state (final.md §14.2).
 class AppEmptyState extends StatelessWidget {
   const AppEmptyState({
     required this.icon,

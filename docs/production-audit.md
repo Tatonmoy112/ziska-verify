@@ -4,7 +4,7 @@ The production-grade review of the app, done on the `production` branch one area
 
 | Step | Area | State |
 |---|---|---|
-| 2 | High-level architecture | Checked 2026-11-24: P-1 … P-12. Fixed: P-1 … P-9, P-12; P-10 ready, waits for the Firebase project |
+| 2 | High-level architecture | Checked 2026-11-24: P-1 … P-15. Fixed: P-1 … P-9, P-11, P-12; P-10 ready, waits for the Firebase project |
 | 3 | The central API | To do |
 | 4 | Low-level architecture | To do |
 | 5 | Dead code | To do |
@@ -453,6 +453,35 @@ No change is needed where they already comply.
 - the trace from the code to the spec is broken.
 
 **Proposal:** handled in the **comments step**. Each reference is pointed at the current section, or replaced with the backend decision (`D17`, guide §) it really follows.
+
+**✅ Fixed 2026-11-24 (brought forward from the comments step):**
+- **Measured:**
+  - 217 citations of `final.md` in 117 files, 144 of them (in 86 files) to sections of `final.md` v1.6's numbering (`docs/archive/app-architecture-1.6.md`);
+  - 11 audit findings cited without their audit;
+  - 2 comments still describing "registrations added per build step";
+  - all 55 citations of the app API guide were valid.
+- **Test first:** TC-ARCH-019 … -021 (`test/architecture/doc_references_test.dart`, with `doc_references.dart`), red before. They read every comment in `lib/`: `final.md §N` and `Section N`, the API guide, the build guide and the UI audit; bare `§`, lists and ranges.
+- **The change:**
+  - a script mapped every old number by topic: for example 5.4 Error Flow → §3, 5.7 Feature services → §15, 5.9 Registration → §11, 9.4 Route Guard → §9, 13.1.6 → §13.1, 13.9 Request access → §13.8;
+  - it wrote all as `§N` (206 comment lines in 121 files) and named the audit (`UI audit 2026-11-22, N.N`);
+  - by hand: three citations split by a line break, 8 lines made too long, the old "Sign up" name in `app_config.dart`, and `bootstrap.dart`'s two build-step comments;
+  - 13.3 (now Serial stacks) was checked and is right.
+- **Checked:** only comment lines changed (no code line in the diff).
+
+#### P-13 (should, found while fixing P-2): the Profile counts' Try again does not wait out a 429
+**Evidence:** after a 429 on `GET checks?limit=1`, **Try again** (and a pull, and the tab coming back) send again at once (`CheckTotalsCubit.load`). final.md §13.10: every 429 waits its own `Retry-After`.
+
+**Proposal:** wait as the lists do (`core/pagination/wait_timer.dart`): nothing is sent during the wait, and it loads once when the wait ends. Without `Retry-After`, a manual retry, with no made-up wait.
+
+#### P-14 (should, found while fixing P-5): `AccessRequestApiService` has no interface
+**Evidence:** every other API service is an `abstract interface class` with a `Dio…` implementation; this one is a concrete class.
+
+**Proposal:** the same pattern, guarded by a new architecture rule.
+
+#### P-15 (should, found while fixing P-4): the tab guard still names `/home/scan`
+**Evidence:** `tabPermissionByPath` in `app/shell/main_shell.dart` guards `/home/scan`, a route removed on 2026-11-18.
+
+**Proposal:** remove it; a test checks every guarded path is a real route.
 
 ### Noticed for later steps (not architecture)
 - `config/live.json` still holds placeholders. The app correctly refuses to start with them, but the live host and slug are needed from the backend (**build and release** step).

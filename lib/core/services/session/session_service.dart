@@ -1,7 +1,7 @@
 import 'package:ziska_verify/core/services/session/session_state.dart';
 
 /// Owns the login: the two passes, renewal, and the session state stream
-/// read by the router guard (final.md Sections 5.5, 6).
+/// read by the router guard (final.md §6).
 abstract interface class SessionService {
   /// The current state; `null` until [restore] completes.
   SessionState? get current;
@@ -40,7 +40,7 @@ abstract interface class SessionService {
   void requirePasswordChange();
 
   /// One renewal at a time, app-wide: concurrent callers share it
-  /// (final.md Section 6.4).
+  /// (final.md §6).
   Future<RenewalResult> renew();
 
   /// Clears both passes, keeps the phone ID, and emits

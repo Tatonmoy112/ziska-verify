@@ -23,7 +23,7 @@ class Report {
   final String? retailUserName;
 }
 
-/// The rules of a report (final.md Section 13.5.2).
+/// The rules of a report (final.md §13.5).
 abstract final class ReportRules {
   static const noteMaxLength = 1000;
   static const maxPhotos = 3;

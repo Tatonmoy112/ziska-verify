@@ -2,7 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:ziska_verify/core/services/logging/logger_service.dart';
 
 /// Logs route names only, never parameters or `extra`
-/// (final.md Section 9.5).
+/// (final.md §9).
 class AppNavigationObserver extends NavigatorObserver {
   AppNavigationObserver(this._logger);
 

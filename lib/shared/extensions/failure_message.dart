@@ -2,7 +2,7 @@ import 'package:ziska_verify/core/errors/app_exception.dart';
 import 'package:ziska_verify/core/errors/result.dart';
 import 'package:ziska_verify/l10n/generated/app_localizations.dart';
 
-/// The general message for a failure (final.md Section 16). Screens handle
+/// The general message for a failure (final.md §16). Screens handle
 /// their own cases first (for example `401` on Login) and fall back to this.
 /// An `error.code` this app does not know shows the server's message,
 /// whatever the status (a new busy or wait reason included), and so does a
@@ -24,7 +24,7 @@ extension FailureMessage on Failure {
 
   /// The server's message is used for a `409 conflict` (it says what
   /// conflicts, guide §1) and for an `error.code` this app does not know
-  /// (final.md Section 16); other known codes show the app's text.
+  /// (final.md §16); other known codes show the app's text.
   String? get _serverFallback {
     final code = exception.code;
     final text = exception.message?.trim();

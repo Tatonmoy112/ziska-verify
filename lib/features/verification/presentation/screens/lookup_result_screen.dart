@@ -22,7 +22,7 @@ import 'package:ziska_verify/shared/design_system/tokens/app_colors.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_spacing.dart';
 import 'package:ziska_verify/shared/widgets/navy_app_bar.dart';
 
-/// The lookup result (final.md Section 13.1.4, decisions 46, 47, 49),
+/// The lookup result (final.md §13.1, decisions 46, 47, 49),
 /// shown unaltered from the backend. A genuine result: the top card, the
 /// item's details, and its picture. A result without an item (`not_found`,
 /// `unassigned`, unknown): the top card, what was entered, hints for
@@ -94,7 +94,7 @@ class LookupResultScreen extends StatelessWidget {
                 label: l10n.reportFromResult,
                 icon: LucideIcons.flag,
                 variant: AppButtonVariant.outlined,
-                // The report carries this check's reference (Section 13.5).
+                // The report carries this check's reference (§13.5).
                 onPressed: () => onReport(result.ref),
               ),
               const SizedBox(height: AppSpacing.sm),

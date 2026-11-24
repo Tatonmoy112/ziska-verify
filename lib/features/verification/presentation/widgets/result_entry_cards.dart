@@ -70,7 +70,7 @@ class EnteredCard extends StatelessWidget {
 }
 
 /// **HINTS** for a `not_found` result, built from `GET formats` (final.md
-/// Section 13.1.4; backend D41: no fixed lengths): the serial's digits and
+/// §13.1; backend D41: no fixed lengths): the serial's digits and
 /// length, and
 /// scanning the QR code when it was not scanned.
 class HintsCard extends StatelessWidget {

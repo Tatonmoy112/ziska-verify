@@ -1,7 +1,7 @@
 import 'package:ziska_verify/core/errors/app_exception.dart';
 
 /// Logging that never carries passes, passwords, emailed codes, hidden
-/// codes, or the phone ID (final.md Section 12.2). Callers log the route,
+/// codes, or the phone ID (final.md §12). Callers log the route,
 /// the status, and `request_id` instead.
 abstract interface class LoggerService {
   void debug(String message);

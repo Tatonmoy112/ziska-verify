@@ -34,7 +34,7 @@ import 'package:ziska_verify/features/verification/presentation/screens/serial_s
 import 'package:ziska_verify/features/verification/presentation/screens/verify_screen.dart';
 
 /// The result page, scanner mode and the serial stack: lookup flows that
-/// open above the bottom bar (final.md Section 9.2).
+/// open above the bottom bar (final.md §9).
 List<RouteBase> checkRoutes(RouteDeps d) {
   final locator = d.locator;
   final profileCubit = d.profileCubit;
@@ -92,7 +92,7 @@ List<RouteBase> checkRoutes(RouteDeps d) {
       name: RouteNames.lookupResult,
       path: RoutePaths.lookupResult,
       // Without its result (the system restored the app) it goes back to
-      // the Check tab (final.md Section 9.5).
+      // the Check tab (final.md §9).
       redirect: (_, state) {
         final view = state.extra;
         return view is ResultView &&
@@ -114,7 +114,7 @@ List<RouteBase> checkRoutes(RouteDeps d) {
           view: view,
           pictures: locator<PictureImages>(),
           launcher: locator<LauncherService>(),
-          // The report carries this check's reference (Section 13.5).
+          // The report carries this check's reference (§13.5).
           onReport: (checkRef) => context.pushNamed<void>(
             RouteNames.reportIncident,
             queryParameters: {'check_ref': checkRef},
@@ -192,7 +192,7 @@ StatefulShellBranch checkBranch(RouteDeps d) {
         path: RoutePaths.home,
         builder: (context, _) => BlocProvider(
           create: (_) => _lookupBloc(locator),
-          // The tab opens on the camera (final.md Section 13.7).
+          // The tab opens on the camera (final.md §13.7).
           child: VerifyScreen(
             onOpenProfile: () => context.goNamed(RouteNames.profile),
             onNewReport: () =>
