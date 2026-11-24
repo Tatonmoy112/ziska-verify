@@ -97,10 +97,10 @@ void main() {
             file.readAsStringSync().contains('package:shared_preferences/'))
           file.uri.pathSegments.last,
     ];
-    expect(users, ['preferences_service.dart']);
+    expect(users, ['shared_preferences_service.dart']);
     final writes = RegExp(r'\.set\w*\(').allMatches(
       File(
-        'lib/core/services/storage/preferences_service.dart',
+        'lib/core/services/storage/shared_preferences_service.dart',
       ).readAsStringSync(),
     );
     expect(writes.map((m) => m.group(0)), ['.setString(']);
@@ -169,13 +169,15 @@ void main() {
     for (final file in Directory('lib').listSync(recursive: true)) {
       if (file is! File || !file.path.endsWith('.dart')) continue;
       final text = file.readAsStringSync();
-      if (text.contains('launchUrl') || text.contains('url_launcher')) {
+      // The plugin itself, not a file whose name mentions it.
+      if (text.contains('launchUrl') ||
+          text.contains('package:url_launcher/')) {
         users.add(file.uri.pathSegments.last);
       }
     }
-    expect(users, ['launcher_service.dart']);
+    expect(users, ['url_launcher_service.dart']);
     final launcher = File(
-      'lib/core/services/launcher/launcher_service.dart',
+      'lib/core/services/launcher/url_launcher_service.dart',
     ).readAsStringSync();
     final schemes = RegExp(
       r"scheme: '(\w+)'",

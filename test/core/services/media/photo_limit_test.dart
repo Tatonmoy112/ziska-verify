@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ziska_verify/core/services/media/image_picker_photo_service.dart';
 import 'package:ziska_verify/core/services/media/photo_service.dart';
 
 /// The 1 MB photo limit (docs/test-cases/07-reports.md, final.md 13.5.2).

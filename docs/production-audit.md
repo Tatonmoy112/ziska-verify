@@ -4,7 +4,7 @@ The production-grade review of the app, done on the `production` branch one area
 
 | Step | Area | State |
 |---|---|---|
-| 2 | High-level architecture | Checked 2026-11-24: P-1 … P-11. Fixed: P-1 … P-6 |
+| 2 | High-level architecture | Checked 2026-11-24: P-1 … P-11. Fixed: P-1 … P-7 |
 | 3 | The central API | To do |
 | 4 | Low-level architecture | To do |
 | 5 | Dead code | To do |
@@ -310,6 +310,30 @@ That makes it the largest file in `app/`.
 **Tests:**
 - a P-1 rule, "presentation and shared import no file that imports a plugin", fails before the split and passes after;
 - analyze and all tests pass.
+
+**✅ Fixed 2026-11-24:**
+- **Tests first: two architecture rules, red before the change.**
+  - **R16:** a `core` file that declares an interface imports no plugin. It found the seven wrappers.
+  - **R15:** a `presentation`, `data` or `shared` file reaches no plugin through its imports. It found seven: the report bloc and screen, the result screen, scanner mode, the Check tab, the live camera and `shared/widgets/network_status_banner.dart`.
+  - Each rule has a sample break in TC-ARCH-008, the allowed pattern in TC-ARCH-007, and TC-ARCH-016 for its edges: chains, the domain left to R9, `main` and `app`, an interface named only in a comment.
+- **The change:** a script split each wrapper, moving the implementation verbatim.
+
+  | Interface (kept) | Implementation (new file) |
+  |---|---|
+  | `connectivity/connectivity_service.dart` | `plus_connectivity_service.dart` |
+  | `device/app_info_service.dart` | `package_info_app_info_service.dart` |
+  | `launcher/launcher_service.dart` | `url_launcher_service.dart` |
+  | `media/photo_service.dart` (with `PhotoSource`, `PhotoProblem`, `PhotoException`, `PreparedPhoto`) | `image_picker_photo_service.dart` |
+  | `permission/permission_service.dart` | `permission_handler_service.dart` |
+  | `scanner/scanner_service.dart` (with `ScannerProblem`, `ScannerSession`) | `mobile_scanner_service.dart` |
+  | `storage/preferences_service.dart` | `shared_preferences_service.dart` |
+
+  Only `app/bootstrap.dart` and `photo_limit_test` (which tests `ImagePickerPhotoService`'s own helpers) import the implementations. `final.md` §2 states the pattern.
+- **Two security tests followed the plugins.** Their rules are unchanged:
+  - TC-SEC-009: one file uses `shared_preferences`, and it writes only the language with `setString`;
+  - TC-SEC-015: one file uses `url_launcher`, and it opens only `mailto:` and `tel:`.
+
+  They name the new files, and TC-SEC-015 now matches the plugin itself (`package:url_launcher/`, `launchUrl`), not any file whose name mentions it. `bootstrap.dart`'s import of `url_launcher_service.dart` had made it look like a second user. The first full run caught both, 2 failures; the second passed all 1,472.
 
 #### P-8 (nice): `core/network` and `core/services/session` depend on each other
 **Evidence:**

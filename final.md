@@ -24,7 +24,7 @@ Track & Trace serves a single client's officials. The backend decides authentici
 
 ## 2. Toolchain
 
-Flutter 3.41.9 and Dart 3.11.5 are pinned through `.fvmrc`; Android uses JDK 17. Use the locked dependency versions. Existing packages provide BLoC/Cubit, Dio, go_router, GetIt, Freezed/JSON generation, secure storage, QR scanning, photos, and localization. Every plugin remains behind a core wrapper.
+Flutter 3.41.9 and Dart 3.11.5 are pinned through `.fvmrc`; Android uses JDK 17. Use the locked dependency versions. Existing packages provide BLoC/Cubit, Dio, go_router, GetIt, Freezed/JSON generation, secure storage, QR scanning, photos, and localization. Every plugin remains behind a core wrapper: the interface in `core/services/<area>/<name>_service.dart`, the plugin in its own file named after its class (for example `mobile_scanner_service.dart`), which only `app/bootstrap.dart` imports (2026-11-24, production audit P-7; checked by rules R15 and R16).
 
 PDF and image dependencies are development-only for the manual QR-sheet generator. Printing and certificate sharing are not application dependencies.
 

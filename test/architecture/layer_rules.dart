@@ -21,7 +21,12 @@ enum Rule {
   presentationImportsRepository(
     'R14',
     'presentation imports a repository, not a use case',
-  )
+  ),
+  pluginReachedOutsideCore(
+    'R15',
+    'a file outside core and app reaches a plugin through its imports',
+  ),
+  interfaceWithPlugin('R16', 'an interface file in core also uses a plugin')
   ;
 
   const Rule(this.id, this.text);
@@ -111,6 +116,21 @@ class LayerRules {
       }
       if (from.layer == _Layer.domain) {
         _checkReach(file, imports, add);
+      }
+      // The domain is R9's; main and app compose the app (P-7).
+      if (from.area == _Area.shared ||
+          from.layer == _Layer.presentation ||
+          from.layer == _Layer.data) {
+        _checkPluginReach(file, imports, add);
+      }
+      if (from.area == _Area.core &&
+          _interface.hasMatch(sources[file]!.replaceAll(_comment, ''))) {
+        for (final target in imports[file]!) {
+          if (target.startsWith('package:') &&
+              plugins.contains(target.substring(8))) {
+            add(Rule.interfaceWithPlugin, file, target);
+          }
+        }
       }
     }
     return found.values.toList()..sort(_order);
@@ -214,6 +234,41 @@ class LayerRules {
     }
   }
 
+  /// Reports each plugin [file] reaches through at least one file of
+  /// `lib/` (a direct import is R10's), with the shortest chain.
+  void _checkPluginReach(
+    String file,
+    Map<String, List<String>> imports,
+    void Function(Rule, String, String) add,
+  ) {
+    final path = <String, List<String>>{file: const []};
+    final queue = Queue.of([file]);
+    final seen = <String>{};
+    while (queue.isNotEmpty) {
+      final current = queue.removeFirst();
+      final via = path[current]!;
+      for (final target in imports[current] ?? const <String>[]) {
+        if (target.startsWith('dart:')) continue;
+        if (!target.startsWith('package:')) {
+          if (!path.containsKey(target)) {
+            path[target] = [...via, target];
+            queue.add(target);
+          }
+          continue;
+        }
+        if (via.isNotEmpty &&
+            plugins.contains(target.substring(8)) &&
+            seen.add(target)) {
+          add(
+            Rule.pluginReachedOutsideCore,
+            file,
+            [...via, target].join(' -> '),
+          );
+        }
+      }
+    }
+  }
+
   bool _isImpure(String target) => target.startsWith('dart:')
       ? _impureDart.contains(target)
       : !purePackages.contains(target.substring(8));
@@ -233,6 +288,9 @@ bool isGenerated(String path) =>
     path.startsWith('l10n/generated/');
 
 final _comment = RegExp(r'//[^\n]*|/\*[\s\S]*?\*/');
+
+/// A file that declares an interface (the plugin wrappers of `core`).
+final _interface = RegExp('^abstract interface class ', multiLine: true);
 final _directive = RegExp(
   r'''^\s*(?:import|export)\s+['"]([^'"]+)['"]''',
   multiLine: true,

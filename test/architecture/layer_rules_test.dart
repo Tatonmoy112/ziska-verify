@@ -200,6 +200,19 @@ void main() {
             "import 'package:ziska_verify/features/a/domain/repositories/r.dart';",
         'app/router.dart':
             "import 'package:ziska_verify/features/a/domain/repositories/r.dart';",
+        // A plugin wrapper as P-7 splits it: the interface alone, the
+        // plugin in its own file, which only the composition root imports.
+        'core/services/camera/camera_service.dart':
+            "import 'package:flutter/widgets.dart';\n"
+            'abstract interface class CameraService {}',
+        'core/services/camera/plugin_camera_service.dart':
+            "import 'package:mobile_scanner/mobile_scanner.dart';\n"
+            "import 'package:ziska_verify/core/services/camera/camera_service.dart';\n"
+            'class PluginCameraService implements CameraService {}',
+        'app/bootstrap.dart':
+            "import 'package:ziska_verify/core/services/camera/plugin_camera_service.dart';",
+        'features/a/presentation/camera_screen.dart':
+            "import 'package:ziska_verify/core/services/camera/camera_service.dart';",
       });
       expect(found, isEmpty);
     });
@@ -264,6 +277,17 @@ void main() {
       Rule.outsideLayers: {
         'features/a/helpers.dart': '',
       },
+      Rule.pluginReachedOutsideCore: {
+        'features/a/presentation/x.dart':
+            "import 'package:ziska_verify/core/services/s.dart';",
+        'core/services/s.dart':
+            "import 'package:mobile_scanner/mobile_scanner.dart';",
+      },
+      Rule.interfaceWithPlugin: {
+        'core/services/x.dart':
+            "import 'package:mobile_scanner/mobile_scanner.dart';\n"
+            'abstract interface class X {}',
+      },
       Rule.presentationImportsRepository: {
         'features/a/presentation/bloc/x_cubit.dart':
             "import 'package:ziska_verify/features/a/domain/repositories/r.dart';",
@@ -271,7 +295,7 @@ void main() {
       },
     };
 
-    test('TC-ARCH-008 each rule R1 … R14 is reported, with its file', () {
+    test('TC-ARCH-008 each rule R1 … R16 is reported, with its file', () {
       expect(cases.keys, unorderedEquals(Rule.values));
       for (final MapEntry(key: rule, value: files) in cases.entries) {
         final found = check(files);
@@ -279,6 +303,36 @@ void main() {
         expect(found.single.file, files.keys.first, reason: rule.id);
         expect('${found.single}', startsWith('${rule.id} '), reason: rule.id);
       }
+    });
+
+    test('TC-ARCH-016 plugins stay behind core interfaces', () {
+      final found = check({
+        // shared reaches a plugin through two core files: R15, with the
+        // chain.
+        'shared/widgets/w.dart': "import 'package:ziska_verify/core/a.dart';",
+        'core/a.dart': "import 'package:ziska_verify/core/b.dart';",
+        'core/b.dart': "import 'package:mobile_scanner/mobile_scanner.dart';",
+        // data too.
+        'features/a/data/d.dart': "import 'package:ziska_verify/core/b.dart';",
+        // The domain is R9's (not pure Dart), never twice.
+        'features/a/domain/u.dart':
+            "import 'package:ziska_verify/core/b.dart';",
+        // main and app may reach plugins: they compose the app.
+        'main.dart': "import 'package:ziska_verify/app/app.dart';",
+        'app/app.dart': "import 'package:ziska_verify/core/b.dart';",
+        // An interface named only in a comment is not one.
+        'core/c.dart':
+            "import 'package:mobile_scanner/mobile_scanner.dart';\n"
+            '// Not an abstract interface class.\n'
+            '/* abstract interface class Old {} */\n'
+            'class Plain {}',
+      });
+      const plugin = 'package:mobile_scanner';
+      expect(found.map((v) => '${v.rule.id} ${v.file} -> ${v.detail}'), [
+        'R15 features/a/data/d.dart -> core/b.dart -> $plugin',
+        'R9 features/a/domain/u.dart -> core/b.dart -> $plugin',
+        'R15 shared/widgets/w.dart -> core/a.dart -> core/b.dart -> $plugin',
+      ]);
     });
 
     test('TC-ARCH-009 one file breaking several rules: every break', () {
