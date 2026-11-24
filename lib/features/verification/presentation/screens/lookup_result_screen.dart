@@ -32,6 +32,7 @@ class LookupResultScreen extends StatelessWidget {
     required this.view,
     required this.pictures,
     required this.launcher,
+    required this.onReport,
     super.key,
   });
 
@@ -39,6 +40,10 @@ class LookupResultScreen extends StatelessWidget {
   final ResultView view;
   final PictureImages pictures;
   final LauncherService launcher;
+
+  /// Opens New report, a page of the reports feature, for the check
+  /// `checkRef`; wired by the router (final.md §9).
+  final Future<void> Function(String checkRef) onReport;
 
   @override
   Widget build(BuildContext context) {
@@ -90,10 +95,7 @@ class LookupResultScreen extends StatelessWidget {
                 icon: LucideIcons.flag,
                 variant: AppButtonVariant.outlined,
                 // The report carries this check's reference (Section 13.5).
-                onPressed: () => context.pushNamed(
-                  RouteNames.reportIncident,
-                  queryParameters: {'check_ref': result.ref},
-                ),
+                onPressed: () => onReport(result.ref),
               ),
               const SizedBox(height: AppSpacing.sm),
             ],

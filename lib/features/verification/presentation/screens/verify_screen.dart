@@ -43,6 +43,8 @@ import 'package:ziska_verify/shared/widgets/retry_countdown.dart';
 class VerifyScreen extends StatefulWidget {
   const VerifyScreen({
     required this.onOpenProfile,
+    required this.onNewReport,
+    required this.onMyReports,
     required this.scanner,
     required this.onOpenSettings,
     super.key,
@@ -50,6 +52,12 @@ class VerifyScreen extends StatefulWidget {
 
   /// Switches to the Profile tab; wired by the router.
   final VoidCallback onOpenProfile;
+
+  /// Open New report and My reports, pages of the reports feature, and
+  /// finish when they close (the camera waits meanwhile); wired by the
+  /// router (final.md §9: a screen opens only its own feature's routes).
+  final Future<void> Function() onNewReport;
+  final Future<void> Function() onMyReports;
   final ScannerService scanner;
 
   /// Opens the phone's settings, when the camera was refused.
@@ -207,12 +215,14 @@ class _VerifyScreenState extends State<VerifyScreen>
   }
 
   /// A tool opened from here: the camera waits until it is closed.
-  Future<void> _open(String route) async {
+  Future<void> _open(Future<void> Function() open) async {
     _hold(true);
-    await context.pushNamed(route);
+    await open();
     if (!mounted) return;
     _hold(false);
   }
+
+  Future<void> _push(String route) => context.pushNamed<void>(route);
 
   Future<void> _onCompleted(LookupState state) async {
     final view = ResultView(
@@ -294,27 +304,27 @@ class _VerifyScreenState extends State<VerifyScreen>
           key: const Key('verify.tool.bulk'),
           icon: LucideIcons.layers,
           title: l10n.scannerModeTitle,
-          onTap: () => unawaited(_open(RouteNames.scannerMode)),
+          onTap: () => unawaited(_open(() => _push(RouteNames.scannerMode))),
         ),
       if (profile?.canBulkLookup ?? false)
         _ToolTile(
           key: const Key('verify.tool.serials'),
           icon: LucideIcons.listOrdered,
           title: l10n.serialStackTitle,
-          onTap: () => unawaited(_open(RouteNames.serialStack)),
+          onTap: () => unawaited(_open(() => _push(RouteNames.serialStack))),
         ),
       if (profile?.canReport ?? false) ...[
         _ToolTile(
           key: const Key('verify.tool.report'),
           icon: LucideIcons.flag,
           title: l10n.toolReport,
-          onTap: () => unawaited(_open(RouteNames.reportIncident)),
+          onTap: () => unawaited(_open(widget.onNewReport)),
         ),
         _ToolTile(
           key: const Key('verify.tool.myReports'),
           icon: LucideIcons.fileText,
           title: l10n.toolMyReports,
-          onTap: () => unawaited(_open(RouteNames.myReports)),
+          onTap: () => unawaited(_open(widget.onMyReports)),
         ),
       ],
     ];

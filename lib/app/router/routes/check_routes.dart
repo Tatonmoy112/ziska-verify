@@ -100,7 +100,7 @@ List<RouteBase> checkRoutes(RouteDeps d) {
             ? null
             : RoutePaths.home;
       },
-      builder: (_, state) {
+      builder: (context, state) {
         final view = state.extra;
         if (view is! ResultView ||
             !allowsResult(view, profileCubit.state.permissions)) {
@@ -114,6 +114,11 @@ List<RouteBase> checkRoutes(RouteDeps d) {
           view: view,
           pictures: locator<PictureImages>(),
           launcher: locator<LauncherService>(),
+          // The report carries this check's reference (Section 13.5).
+          onReport: (checkRef) => context.pushNamed<void>(
+            RouteNames.reportIncident,
+            queryParameters: {'check_ref': checkRef},
+          ),
         );
       },
     ),
@@ -190,6 +195,9 @@ StatefulShellBranch checkBranch(RouteDeps d) {
           // The tab opens on the camera (final.md Section 13.7).
           child: VerifyScreen(
             onOpenProfile: () => context.goNamed(RouteNames.profile),
+            onNewReport: () =>
+                context.pushNamed<void>(RouteNames.reportIncident),
+            onMyReports: () => context.pushNamed<void>(RouteNames.myReports),
             scanner: locator<ScannerService>(),
             onOpenSettings: locator<PermissionService>().openSettings,
           ),

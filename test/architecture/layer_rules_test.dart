@@ -18,7 +18,8 @@ void main() {
       plugins = pluginPackages('.dart_tool/package_config.json');
     });
 
-    List<Violation> check() => LayerRules(plugins: plugins).check(sources);
+    List<Violation> check() =>
+        LayerRules(plugins: plugins, routeOwners: routeOwners).check(sources);
 
     test('TC-ARCH-001 keeps every layer rule (only known breaks)', () {
       final unknown = check().where((v) => !knownBreaks.containsKey(v.key));
@@ -38,6 +39,27 @@ void main() {
         fixed,
         isEmpty,
         reason: 'Fixed: take these off knownBreaks.',
+      );
+    });
+
+    test('TC-ARCH-018 the route table names every route once', () {
+      final names = RegExp(r'static const (\w+) =')
+          .allMatches(sources['core/navigation/route_names.dart']!)
+          .map((m) => m.group(1))
+          .toSet();
+      expect(names, isNotEmpty);
+      expect(routeOwners.keys.toSet(), names);
+      expect(
+        routeOwners.values.toSet(),
+        everyElement(
+          isIn({
+            'authentication',
+            'verification',
+            'history',
+            'incidents',
+            'profile',
+          }),
+        ),
       );
     });
 
@@ -106,8 +128,14 @@ void main() {
   });
 
   group('edge cases', () {
-    List<Violation> check(Map<String, String> files) =>
-        const LayerRules(plugins: {'mobile_scanner'}).check(files);
+    List<Violation> check(Map<String, String> files) => const LayerRules(
+      plugins: {'mobile_scanner'},
+      routeOwners: {
+        'home': 'verification',
+        'scannerMode': 'verification',
+        'reportIncident': 'incidents',
+      },
+    ).check(files);
 
     test('TC-ARCH-004 generated code: not reported itself, but Flutter '
         'reached through it is', () {
@@ -228,8 +256,14 @@ void main() {
   });
 
   group('worst cases', () {
-    List<Violation> check(Map<String, String> files) =>
-        const LayerRules(plugins: {'mobile_scanner'}).check(files);
+    List<Violation> check(Map<String, String> files) => const LayerRules(
+      plugins: {'mobile_scanner'},
+      routeOwners: {
+        'home': 'verification',
+        'scannerMode': 'verification',
+        'reportIncident': 'incidents',
+      },
+    ).check(files);
 
     /// One file breaking one rule, and the rule it must be reported under.
     final cases = <Rule, Map<String, String>>{
@@ -297,6 +331,10 @@ void main() {
             "import 'package:mobile_scanner/mobile_scanner.dart';\n"
             'abstract interface class X {}',
       },
+      Rule.foreignRoute: {
+        'features/verification/presentation/x.dart':
+            'void open() => go(RouteNames.reportIncident);',
+      },
       Rule.coreFolderCycle: {
         'core/a/x.dart': "import 'package:ziska_verify/core/b/y.dart';",
         'core/b/y.dart': "import 'package:ziska_verify/core/a/z.dart';",
@@ -309,7 +347,7 @@ void main() {
       },
     };
 
-    test('TC-ARCH-008 each rule R1 … R17 is reported, with its file', () {
+    test('TC-ARCH-008 each rule R1 … R18 is reported, with its file', () {
       expect(cases.keys, unorderedEquals(Rule.values));
       for (final MapEntry(key: rule, value: files) in cases.entries) {
         final found = check(files);
@@ -346,6 +384,35 @@ void main() {
         'R15 features/a/data/d.dart -> core/b.dart -> $plugin',
         'R9 features/a/domain/u.dart -> core/b.dart -> $plugin',
         'R15 shared/widgets/w.dart -> core/a.dart -> core/b.dart -> $plugin',
+      ]);
+    });
+
+    test('TC-ARCH-018 a screen opens only its own routes, and Home', () {
+      final found = check({
+        // Its own route, and Home from anywhere: allowed.
+        'features/verification/presentation/a.dart':
+            'void a() => go(RouteNames.scannerMode);',
+        'features/incidents/presentation/b.dart':
+            'void b() => go(RouteNames.home);',
+        // Another feature's route, in code: R18, once per name.
+        'features/verification/presentation/c.dart':
+            'void c() => go(RouteNames.reportIncident);\n'
+            'void d() => push(RouteNames.reportIncident);',
+        // In a comment or a doc comment: not navigation.
+        'features/verification/presentation/e.dart':
+            '// Opens RouteNames.reportIncident through the router.\n'
+            '/// See [RouteNames.reportIncident].\n'
+            'void e() {}',
+        // A name the table does not know: R18 too, so nothing slips by.
+        'features/verification/presentation/f.dart':
+            'void f() => go(RouteNames.somewhereNew);',
+        // app (the router) opens every route.
+        'app/router.dart': 'void r() => go(RouteNames.reportIncident);',
+      });
+      const screens = 'features/verification/presentation';
+      expect(found.map((v) => '${v.rule.id} ${v.file} -> ${v.detail}'), [
+        'R18 $screens/c.dart -> RouteNames.reportIncident (incidents)',
+        'R18 $screens/f.dart -> RouteNames.somewhereNew (no owner)',
       ]);
     });
 
@@ -445,6 +512,28 @@ void main() {
     });
   });
 }
+
+/// The feature that owns each route of `RouteNames` (final.md §9). A
+/// screen opens only its own feature's routes and Home; any other route is
+/// reached through a callback the router passes in (P-9).
+const routeOwners = <String, String>{
+  'splash': 'authentication',
+  'login': 'authentication',
+  'verifyCode': 'authentication',
+  'forgotPassword': 'authentication',
+  'resetPassword': 'authentication',
+  'requestAccess': 'authentication',
+  'changePassword': 'authentication',
+  'home': 'verification',
+  'lookupResult': 'verification',
+  'scannerMode': 'verification',
+  'serialStack': 'verification',
+  'history': 'history',
+  'sessionChecks': 'history',
+  'myReports': 'incidents',
+  'reportIncident': 'incidents',
+  'profile': 'profile',
+};
 
 /// The one file that writes the permission keys of `GET me`.
 const permissionsHome = 'features/profile/domain/entities/profile.dart';

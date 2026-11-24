@@ -27,7 +27,8 @@ enum Rule {
     'a file outside core and app reaches a plugin through its imports',
   ),
   interfaceWithPlugin('R16', 'an interface file in core also uses a plugin'),
-  coreFolderCycle('R17', 'core folders depend on each other in a circle')
+  coreFolderCycle('R17', 'core folders depend on each other in a circle'),
+  foreignRoute('R18', "a feature opens another feature's route itself")
   ;
 
   const Rule(this.id, this.text);
@@ -54,10 +55,17 @@ class Violation {
 
 /// Checks a set of sources, keyed by their path relative to `lib/`.
 class LayerRules {
-  const LayerRules({required this.plugins});
+  const LayerRules({required this.plugins, this.routeOwners = const {}});
 
   /// Packages with platform code (`flutter: plugin:` in their pubspec).
   final Set<String> plugins;
+
+  /// The feature that owns each name of `RouteNames` (R18). Empty: the rule
+  /// is not checked.
+  final Map<String, String> routeOwners;
+
+  /// Routes every screen may open: Home, the app's root.
+  static const openToAll = {'home'};
 
   /// Every feature may import the app-wide profile entity and Cubit
   /// (final.md §4).
@@ -105,6 +113,21 @@ class LayerRules {
     for (final file in sources.keys) {
       if (isGenerated(file)) continue;
       final from = _Place.of(file);
+      if (from.area == _Area.feature && routeOwners.isNotEmpty) {
+        final code = sources[file]!.replaceAll(_comment, '');
+        for (final m in _routeName.allMatches(code)) {
+          final name = m.group(1)!;
+          if (openToAll.contains(name)) continue;
+          final owner = routeOwners[name];
+          if (owner != from.feature) {
+            add(
+              Rule.foreignRoute,
+              file,
+              'RouteNames.$name (${owner ?? 'no owner'})',
+            );
+          }
+        }
+      }
       if (from.area == _Area.feature && from.layer == null) {
         add(Rule.outsideLayers, file, 'not in a layer');
       }
@@ -349,6 +372,9 @@ bool isGenerated(String path) =>
     path.startsWith('l10n/generated/');
 
 final _comment = RegExp(r'//[^\n]*|/\*[\s\S]*?\*/');
+
+/// A route a screen names (`RouteNames.scannerMode`).
+final _routeName = RegExp(r'\bRouteNames\.(\w+)');
 
 /// A file that declares an interface (the plugin wrappers of `core`).
 final _interface = RegExp('^abstract interface class ', multiLine: true);

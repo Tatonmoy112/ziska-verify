@@ -4,7 +4,7 @@ The production-grade review of the app, done on the `production` branch one area
 
 | Step | Area | State |
 |---|---|---|
-| 2 | High-level architecture | Checked 2026-11-24: P-1 … P-11. Fixed: P-1 … P-8 |
+| 2 | High-level architecture | Checked 2026-11-24: P-1 … P-11. Fixed: P-1 … P-9 |
 | 3 | The central API | To do |
 | 4 | Low-level architecture | To do |
 | 5 | Dead code | To do |
@@ -366,6 +366,23 @@ That makes it the largest file in `app/`.
 - check the 8 screens against it.
 
 No change is needed where they already comply.
+
+**✅ Fixed 2026-11-24 (the recommendation, on "fix P-9"):**
+- **The rule,** now in `final.md` §9:
+  - a screen opens its own feature's routes itself, and Home (the app's root) from anywhere;
+  - a route of another feature comes through a router callback.
+- **Checking the 8 screens found 3 jumps into another feature:**
+  - the Check tab's **New report** and **My reports**;
+  - the result's **Report a problem**.
+
+  The rest stayed inside their feature. Change password's "go Home" is allowed as Home.
+- **Tests first:**
+  - TC-NAV-019 … -021 (`test/flow/cross_feature_navigation_flow_test.dart`) passed on the old code: each page opens at its path, the camera waits and resumes after Back, the result's report carries its `check_ref`, there are no report buttons without `incident:report`, and opening and closing in turn ends on Check with its camera;
+  - architecture rule **R18** was red with exactly the 3 jumps; TC-ARCH-018 checks that its route table names every route and covers its edges.
+- **The change:**
+  - `VerifyScreen` takes `onNewReport` and `onMyReports`, beside its existing `onOpenProfile`; the camera still waits for the page to close, since the callbacks return its `Future`;
+  - `LookupResultScreen` takes `onReport(checkRef)`;
+  - `check_routes.dart` wires them.
 
 #### P-10 (must, your decision): no crash reporting in a release build
 **Evidence:**
