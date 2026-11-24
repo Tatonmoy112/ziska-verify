@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:ziska_verify/core/errors/result.dart';
 import 'package:ziska_verify/core/pagination/cursor_page.dart';
 import 'package:ziska_verify/core/pagination/page_request.dart';
+import 'package:ziska_verify/features/incidents/data/mappers/incident_mappers.dart';
 import 'package:ziska_verify/features/incidents/data/services/incident_api_service.dart';
 import 'package:ziska_verify/features/incidents/domain/entities/report.dart';
 import 'package:ziska_verify/features/incidents/domain/repositories/incident_repository.dart';
@@ -35,21 +36,5 @@ class IncidentRepositoryImpl implements IncidentRepository {
 
   @override
   Future<Result<CursorPage<Report>>> myReports(PageRequest page) =>
-      guard(() async {
-        final dto = await _api.myReports(page);
-        return CursorPage(
-          items: [
-            for (final r in dto.reports)
-              Report(
-                id: r.id,
-                at: DateTime.parse(r.at).toUtc(),
-                note: r.note,
-                photos: r.photos,
-                checkRef: r.checkRef,
-                retailUserName: r.retailUser?.name,
-              ),
-          ],
-          nextCursor: dto.nextCursor,
-        );
-      });
+      guard(() async => (await _api.myReports(page)).toEntity());
 }

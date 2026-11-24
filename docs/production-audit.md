@@ -4,7 +4,7 @@ The production-grade review of the app, done on the `production` branch one area
 
 | Step | Area | State |
 |---|---|---|
-| 2 | High-level architecture | Checked 2026-11-24: P-1 … P-11. Fixed: P-1 … P-4 |
+| 2 | High-level architecture | Checked 2026-11-24: P-1 … P-11. Fixed: P-1 … P-5 |
 | 3 | The central API | To do |
 | 4 | Low-level architecture | To do |
 | 5 | Dead code | To do |
@@ -245,6 +245,20 @@ These run alongside the existing Profile flows, and the P-1 test no longer marks
 - **edge:** optional fields missing or `null`;
 - **worst:** an unknown status or role value is never shown as a valid one (§3);
 - the repository tests pass unchanged.
+
+**✅ Fixed 2026-11-24:**
+- **Tests first.**
+  - The mapper tests were red before the change, since the mappers did not exist:
+    - TC-REP-070 and -071 (`features/incidents/data/incident_mappers_test`): every field; the time in UTC, an offset and fractions; the note exactly as written; optional fields; an empty last page;
+    - TC-REP-073 (`features/retail_users/data/retail_user_mappers_test`): the email as masked, order, names and cursor;
+    - TC-AUTH-119 (`features/authentication/data/access_request_mappers_test`): order, names and repeats.
+  - TC-REP-072, -074 and TC-AUTH-120 go through the real API service and repository. A time that isn't one, a field of the wrong type, a missing field or a missing list each give a failure, never a wait.
+- **The change:**
+  - `incidents/data/mappers/incident_mappers.dart`, `retail_users/data/mappers/retail_user_mappers.dart` and `authentication/data/mappers/access_request_mappers.dart`;
+  - the three repositories now only call, guard and convert;
+  - all six features turn models into entities in `data/mappers/`.
+- **Deliberately not moved:** the login answer (`AuthRepositoryImpl._apply`). It isn't a conversion: by `status` it either waits for the emailed code or stores both passes in the session (§6), so it stays in the repository, which owns the session.
+- **For step 4 (low level):** `AccessRequestApiService` is a concrete class. Every other API service has an interface and a `Dio…` implementation.
 
 #### P-6 (should): `app_router.dart` does too much (641 lines)
 **Evidence:** one file holds:
