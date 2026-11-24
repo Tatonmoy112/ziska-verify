@@ -1,0 +1,315 @@
+import 'package:flutter_test/flutter_test.dart';
+
+import 'layer_rules.dart';
+
+/// TC-ARCH-001 … -011 (docs/test-cases/18-architecture.md): the layer rules
+/// of final.md §3, §4 and §11 hold for every hand-written file in `lib/`.
+///
+/// A break that is known and planned is listed in [knownBreaks] with the
+/// finding that fixes it (docs/production-audit.md); a fixed one must be
+/// taken off the list.
+void main() {
+  group('lib/ (the real code)', () {
+    late Map<String, String> sources;
+    late Set<String> plugins;
+
+    setUpAll(() {
+      sources = readLib('lib');
+      plugins = pluginPackages('.dart_tool/package_config.json');
+    });
+
+    List<Violation> check() => LayerRules(plugins: plugins).check(sources);
+
+    test('TC-ARCH-001 keeps every layer rule (only known breaks)', () {
+      final unknown = check().where((v) => !knownBreaks.containsKey(v.key));
+      expect(
+        unknown.map((v) => '$v'),
+        isEmpty,
+        reason:
+            'Fix the import, or (only with a planned fix) list it in '
+            'knownBreaks with its finding.',
+      );
+    });
+
+    test('TC-ARCH-002 every known break still exists', () {
+      final found = check().map((v) => v.key).toSet();
+      final fixed = knownBreaks.keys.where((k) => !found.contains(k));
+      expect(
+        fixed,
+        isEmpty,
+        reason: 'Fixed: take these off knownBreaks.',
+      );
+    });
+
+    test('TC-ARCH-003 reads the code and finds the plugins', () {
+      expect(sources.length, greaterThan(150));
+      expect(sources.keys, contains('main.dart'));
+      expect(
+        sources.keys.where((p) => p.endsWith('.g.dart')),
+        isEmpty,
+      );
+      expect(
+        sources.keys.where((p) => p.endsWith('.freezed.dart')),
+        isEmpty,
+      );
+      // Read for what it imports, never reported.
+      expect(
+        sources.keys,
+        contains('l10n/generated/app_localizations.dart'),
+      );
+      expect(
+        plugins,
+        containsAll([
+          'mobile_scanner',
+          'image_picker',
+          'url_launcher',
+          'flutter_secure_storage',
+          'shared_preferences',
+          'permission_handler',
+          'connectivity_plus',
+          'package_info_plus',
+          'flutter_image_compress',
+        ]),
+      );
+      for (final pure in ['dio', 'logger', 'intl', 'get_it', 'flutter_bloc']) {
+        expect(plugins, isNot(contains(pure)), reason: pure);
+      }
+    });
+  });
+
+  group('edge cases', () {
+    List<Violation> check(Map<String, String> files) =>
+        const LayerRules(plugins: {'mobile_scanner'}).check(files);
+
+    test('TC-ARCH-004 generated code: not reported itself, but Flutter '
+        'reached through it is', () {
+      final found = check({
+        // Breaks R1, but generated: not reported.
+        'l10n/generated/app_localizations.dart':
+            "import 'package:flutter/widgets.dart';\n"
+            "import 'package:ziska_verify/features/a/data/x.dart';",
+        'features/a/data/x.dart': '',
+        'features/a/domain/entities/e.dart':
+            "import 'package:ziska_verify/l10n/generated/app_localizations.dart';",
+      });
+      expect(found.map((v) => v.rule), [Rule.domainReachesFlutter]);
+      expect(found.single.file, 'features/a/domain/entities/e.dart');
+      expect(
+        found.single.detail,
+        'l10n/generated/app_localizations.dart -> package:flutter',
+      );
+    });
+
+    test('TC-ARCH-005 an export and a relative import count as imports', () {
+      final found = check({
+        'features/a/data/x.dart': '',
+        'features/a/presentation/screens/s.dart':
+            "export 'package:ziska_verify/features/a/data/x.dart';",
+        'features/a/presentation/widgets/w.dart': "import '../../data/x.dart';",
+      });
+      expect(found.map((v) => '${v.rule.id} ${v.file} -> ${v.detail}'), [
+        'R5 features/a/presentation/screens/s.dart -> features/a/data/x.dart',
+        'R5 features/a/presentation/widgets/w.dart -> features/a/data/x.dart',
+      ]);
+    });
+
+    test('TC-ARCH-006 comments, quotes and show / as / hide clauses', () {
+      final found = check({
+        'features/a/data/x.dart': '',
+        'features/a/domain/y.dart': '',
+        'features/a/presentation/s.dart':
+            "// import 'package:ziska_verify/features/a/data/x.dart';\n"
+            '/* an old one:\n'
+            "import 'package:ziska_verify/features/a/data/x.dart';\n"
+            '*/\n'
+            'import "package:ziska_verify/features/a/domain/y.dart"\n'
+            '    show Y,\n'
+            '        Z;\n'
+            "import 'package:ziska_verify/features/a/domain/y.dart' as y;\n"
+            "import 'package:ziska_verify/features/a/data/x.dart' hide X;",
+      });
+      expect(found.map((v) => '${v.rule.id} ${v.detail}'), [
+        'R5 features/a/data/x.dart',
+      ]);
+    });
+
+    test('TC-ARCH-007 allowed links are not reported', () {
+      final found = check({
+        'main.dart': "import 'package:ziska_verify/app/app.dart';",
+        'app/app.dart':
+            "import 'package:get_it/get_it.dart';\n"
+            "import 'package:dio/dio.dart';\n"
+            "import 'package:ziska_verify/features/a/data/x.dart';\n"
+            "import 'package:ziska_verify/features/a/presentation/s.dart';",
+        'core/services/scanner.dart':
+            "import 'package:mobile_scanner/mobile_scanner.dart';\n"
+            "import 'package:ziska_verify/core/errors/result.dart';",
+        'core/errors/result.dart': "import 'dart:async';",
+        'shared/widgets/w.dart':
+            "import 'package:flutter/widgets.dart';\n"
+            "import 'package:ziska_verify/core/errors/result.dart';",
+        // The app-wide profile entity and Cubit (final.md §4).
+        'features/profile/domain/entities/profile.dart': '',
+        'features/profile/presentation/bloc/profile_cubit.dart': '',
+        'features/a/presentation/s.dart':
+            "import 'package:ziska_verify/features/profile/domain/entities/profile.dart';\n"
+            "import 'package:ziska_verify/features/profile/presentation/bloc/profile_cubit.dart';\n"
+            "import 'package:ziska_verify/features/a/domain/u.dart';\n"
+            "import 'package:ziska_verify/shared/widgets/w.dart';",
+        'features/a/domain/u.dart':
+            "import 'dart:async';\n"
+            "import 'package:meta/meta.dart';\n"
+            "import 'package:collection/collection.dart';\n"
+            "import 'package:ziska_verify/core/errors/result.dart';",
+        'features/a/data/x.dart':
+            "import 'package:dio/dio.dart';\n"
+            "import 'package:ziska_verify/features/a/domain/u.dart';",
+      });
+      expect(found, isEmpty);
+    });
+  });
+
+  group('worst cases', () {
+    List<Violation> check(Map<String, String> files) =>
+        const LayerRules(plugins: {'mobile_scanner'}).check(files);
+
+    /// One file breaking one rule, and the rule it must be reported under.
+    final cases = <Rule, Map<String, String>>{
+      Rule.coreImportsFeature: {
+        'core/x.dart':
+            "import 'package:ziska_verify/features/a/domain/u.dart';",
+        'features/a/domain/u.dart': '',
+      },
+      Rule.sharedImportsFeature: {
+        'shared/x.dart': "import 'package:ziska_verify/app/app.dart';",
+        'app/app.dart': '',
+      },
+      Rule.featureImportsApp: {
+        'features/a/presentation/x.dart':
+            "import 'package:ziska_verify/app/app.dart';",
+        'app/app.dart': '',
+      },
+      Rule.crossFeature: {
+        'features/a/presentation/x.dart':
+            "import 'package:ziska_verify/features/b/presentation/y.dart';",
+        'features/b/presentation/y.dart': '',
+      },
+      Rule.presentationImportsData: {
+        'features/a/presentation/x.dart':
+            "import 'package:ziska_verify/features/a/data/y.dart';",
+        'features/a/data/y.dart': '',
+      },
+      Rule.domainImportsOuterLayer: {
+        'features/a/domain/x.dart':
+            "import 'package:ziska_verify/features/a/presentation/y.dart';",
+        'features/a/presentation/y.dart': '',
+      },
+      Rule.dataImportsPresentation: {
+        'features/a/data/x.dart':
+            "import 'package:ziska_verify/features/a/presentation/y.dart';",
+        'features/a/presentation/y.dart': '',
+      },
+      Rule.domainReachesFlutter: {
+        'features/a/domain/x.dart': "import 'package:flutter/foundation.dart';",
+      },
+      Rule.domainReachesImpure: {
+        'features/a/domain/x.dart': "import 'dart:io';",
+      },
+      Rule.pluginOutsideCore: {
+        'features/a/presentation/x.dart':
+            "import 'package:mobile_scanner/mobile_scanner.dart';",
+      },
+      Rule.getItOutsideApp: {
+        'core/x.dart': "import 'package:get_it/get_it.dart';",
+      },
+      Rule.dioOutsideNetwork: {
+        'features/a/presentation/x.dart': "import 'package:dio/dio.dart';",
+      },
+      Rule.outsideLayers: {
+        'features/a/helpers.dart': '',
+      },
+    };
+
+    test('TC-ARCH-008 each rule R1 … R13 is reported, with its file', () {
+      expect(cases.keys, unorderedEquals(Rule.values));
+      for (final MapEntry(key: rule, value: files) in cases.entries) {
+        final found = check(files);
+        expect(found.map((v) => v.rule), [rule], reason: rule.id);
+        expect(found.single.file, files.keys.first, reason: rule.id);
+        expect('${found.single}', startsWith('${rule.id} '), reason: rule.id);
+      }
+    });
+
+    test('TC-ARCH-009 one file breaking several rules: every break', () {
+      final found = check({
+        'features/a/domain/x.dart':
+            "import 'package:get_it/get_it.dart';\n"
+            "import 'package:dio/dio.dart';\n"
+            "import 'package:mobile_scanner/mobile_scanner.dart';\n"
+            "import 'package:ziska_verify/features/a/data/y.dart';\n"
+            "import 'package:ziska_verify/features/b/domain/z.dart';",
+        'features/a/data/y.dart': '',
+        'features/b/domain/z.dart': '',
+      });
+      expect(
+        found.map((v) => v.rule),
+        unorderedEquals([
+          Rule.crossFeature,
+          Rule.domainImportsOuterLayer,
+          Rule.domainReachesImpure, // get_it
+          Rule.domainReachesImpure, // dio
+          Rule.domainReachesImpure, // mobile_scanner
+          Rule.pluginOutsideCore,
+          Rule.getItOutsideApp,
+          Rule.dioOutsideNetwork,
+        ]),
+      );
+    });
+
+    test('TC-ARCH-010 Flutter reached through core is shown with its '
+        'chain; an import cycle ends', () {
+      final found = check({
+        'features/a/domain/x.dart':
+            "import 'package:ziska_verify/core/a.dart';",
+        'core/a.dart': "import 'package:ziska_verify/core/b.dart';",
+        'core/b.dart':
+            "import 'package:ziska_verify/core/a.dart';\n"
+            "import 'package:flutter/widgets.dart';",
+      });
+      const chain =
+          'R8 (domain reaches Flutter): features/a/domain/x.dart -> '
+          'core/a.dart -> core/b.dart -> package:flutter';
+      expect(found.map((v) => '$v'), [chain]);
+    });
+
+    test('TC-ARCH-011 missing code or package list: a clear error', () {
+      expect(
+        () => readLib('no-such-folder'),
+        throwsA(
+          isA<StateError>().having(
+            (e) => e.message,
+            'message',
+            contains('no-such-folder'),
+          ),
+        ),
+      );
+      expect(
+        () => pluginPackages('no-such-folder/package_config.json'),
+        throwsA(
+          isA<StateError>().having(
+            (e) => e.message,
+            'message',
+            contains('flutter pub get'),
+          ),
+        ),
+      );
+    });
+  });
+}
+
+/// Breaks that are known and planned, each with the finding that fixes it.
+const knownBreaks = <String, String>{
+  'R4 features/profile/presentation/screens/profile_screen.dart -> '
+          'features/history/presentation/bloc/check_totals_cubit.dart':
+      'P-2',
+};

@@ -4,7 +4,7 @@ The production-grade review of the app, done on the `production` branch one area
 
 | Step | Area | State |
 |---|---|---|
-| 2 | High-level architecture | Checked 2026-11-24: P-1 … P-11 |
+| 2 | High-level architecture | Checked 2026-11-24: P-1 … P-11. Fixed: P-1 |
 | 3 | The central API | To do |
 | 4 | Low-level architecture | To do |
 | 5 | Dead code | To do |
@@ -127,6 +127,14 @@ Error:   DioException → error_mapper → AppException (sealed, 15 kinds)
 - **normal:** the current tree passes, except the P-2 link, which is marked as known until P-2 is fixed;
 - **edge:** a generated file or an `export` line is handled correctly;
 - **worst:** sample files that break each rule are each reported with the file and the rule.
+
+**✅ Fixed 2026-11-24:**
+- `test/architecture/layer_rules.dart` (the checker) and `layer_rules_test.dart`, as TC-ARCH-001 … -011 (`docs/test-cases/18-architecture.md`), run in CI with the other tests.
+- Beyond the proposal:
+  - R8 and R9 follow imports through every file, so a domain file cannot reach Flutter through `core` either;
+  - R10 finds plugins from each package's own pubspec, so a new plugin is covered without editing the test;
+  - a known break that gets fixed fails TC-ARCH-002 until it is taken off the list.
+- **Checked:** a data import planted in `history_bloc.dart` failed TC-ARCH-001, naming the rule, the file and the import.
 
 #### P-2 (should): Profile imports History's `CheckTotalsCubit`
 **Evidence:**
