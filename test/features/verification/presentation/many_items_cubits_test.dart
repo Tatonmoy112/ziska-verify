@@ -69,7 +69,10 @@ void main() {
   });
   ScanSessionCubit scanner({LoadRecoveredScans? checks}) {
     final cubit = ScanSessionCubit(
-      repository: repo,
+      getFormats: GetFormats(repo),
+      getSession: GetSession(repo),
+      scan: ScanItem(repo),
+      endSession: EndSession(repo),
       store: store,
       authStates: auth.states,
       loadChecks: checks,
@@ -79,7 +82,10 @@ void main() {
   }
 
   SerialStackCubit stack() {
-    final cubit = SerialStackCubit(repo);
+    final cubit = SerialStackCubit(
+      getFormats: GetFormats(repo),
+      checkSerials: CheckSerials(repo),
+    );
     addTearDown(cubit.close);
     return cubit;
   }
@@ -131,7 +137,10 @@ void main() {
       expect(cubit.state.totals, isNotNull);
 
       final fresh = ScanSessionCubit(
-        repository: repo,
+        getFormats: GetFormats(repo),
+        getSession: GetSession(repo),
+        scan: ScanItem(repo),
+        endSession: EndSession(repo),
         store: ActiveScanStore(storage, client: 'x', official: 'new'),
         authStates: auth.states,
       );

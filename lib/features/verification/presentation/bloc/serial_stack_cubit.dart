@@ -7,7 +7,6 @@ import 'package:ziska_verify/core/errors/app_exception.dart';
 import 'package:ziska_verify/core/errors/result.dart';
 import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
 import 'package:ziska_verify/features/verification/domain/entities/serial_stack.dart';
-import 'package:ziska_verify/features/verification/domain/repositories/verification_repository.dart';
 import 'package:ziska_verify/features/verification/domain/usecases/verification_usecases.dart';
 part 'serial_stack_cubit.freezed.dart';
 
@@ -36,14 +35,20 @@ abstract class SerialStackState with _$SerialStackState {
 }
 
 class SerialStackCubit extends Cubit<SerialStackState> {
-  SerialStackCubit(this._repository) : super(const SerialStackState());
-  final VerificationRepository _repository;
+  SerialStackCubit({
+    required GetFormats getFormats,
+    required CheckSerials checkSerials,
+  }) : _getFormats = getFormats,
+       _checkSerials = checkSerials,
+       super(const SerialStackState());
+  final GetFormats _getFormats;
+  final CheckSerials _checkSerials;
   Timer? _retry;
   bool _loading = false;
   Future<void> load() async {
     if (_loading) return;
     _loading = true;
-    final result = await _repository.getFormats();
+    final result = await _getFormats();
     _loading = false;
     if (isClosed) return;
     switch (result) {
@@ -123,7 +128,7 @@ class SerialStackCubit extends Cubit<SerialStackState> {
         retryAt: null,
       ),
     );
-    final result = await _repository.serials(values);
+    final result = await _checkSerials(values);
     if (isClosed) return;
     switch (result) {
       case Success(:final value):

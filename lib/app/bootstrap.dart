@@ -230,6 +230,10 @@ void registerFeatures() {
     ..registerFactory(() => GetFormats(locator()))
     ..registerFactory(() => LookupItem(locator()))
     ..registerFactory(() => GetSession(locator()))
+    ..registerFactory(() => ScanItem(locator()))
+    ..registerFactory(() => CheckSerials(locator()))
+    ..registerFactory(() => EndSession(locator()))
+    ..registerFactory(() => GetSessions(locator()))
     // History
     ..registerLazySingleton<HistoryApiService>(
       () => DioHistoryApiService(locator()),

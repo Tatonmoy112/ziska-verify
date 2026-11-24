@@ -163,7 +163,15 @@ void main() {
             "import 'package:ziska_verify/core/errors/result.dart';",
         'features/a/data/x.dart':
             "import 'package:dio/dio.dart';\n"
-            "import 'package:ziska_verify/features/a/domain/u.dart';",
+            "import 'package:ziska_verify/features/a/domain/u.dart';\n"
+            "import 'package:ziska_verify/features/a/domain/repositories/r.dart';",
+        // A use case and the composition root use repositories (R14 is
+        // about presentation only).
+        'features/a/domain/repositories/r.dart': '',
+        'features/a/domain/usecases/get_x.dart':
+            "import 'package:ziska_verify/features/a/domain/repositories/r.dart';",
+        'app/router.dart':
+            "import 'package:ziska_verify/features/a/domain/repositories/r.dart';",
       });
       expect(found, isEmpty);
     });
@@ -228,9 +236,14 @@ void main() {
       Rule.outsideLayers: {
         'features/a/helpers.dart': '',
       },
+      Rule.presentationImportsRepository: {
+        'features/a/presentation/bloc/x_cubit.dart':
+            "import 'package:ziska_verify/features/a/domain/repositories/r.dart';",
+        'features/a/domain/repositories/r.dart': '',
+      },
     };
 
-    test('TC-ARCH-008 each rule R1 … R13 is reported, with its file', () {
+    test('TC-ARCH-008 each rule R1 … R14 is reported, with its file', () {
       expect(cases.keys, unorderedEquals(Rule.values));
       for (final MapEntry(key: rule, value: files) in cases.entries) {
         final found = check(files);

@@ -4,7 +4,7 @@ The production-grade review of the app, done on the `production` branch one area
 
 | Step | Area | State |
 |---|---|---|
-| 2 | High-level architecture | Checked 2026-11-24: P-1 … P-11. Fixed: P-1, P-2 |
+| 2 | High-level architecture | Checked 2026-11-24: P-1 … P-11. Fixed: P-1, P-2, P-3 |
 | 3 | The central API | To do |
 | 4 | Low-level architecture | To do |
 | 5 | Dead code | To do |
@@ -183,6 +183,20 @@ These run alongside the existing Profile flows, and the P-1 test no longer marks
 - **edge:** each one passes its arguments unchanged, including a session ID;
 - **worst:** each passes a failure through untouched (a `429` with `Retry-After`, a network loss);
 - the existing cubit tests and the scanner, stack and sessions flows pass unchanged.
+
+**✅ Fixed 2026-11-24:**
+- **Tests first, both red before the change:**
+  - TC-ARCH-012 … -014 (`test/features/verification/domain/verification_usecases_test.dart`), 22 tests:
+    - each of the six use cases the cubits use makes its one repository call and returns the answer itself;
+    - the arguments pass unchanged: the QR value as read, the session ID, the serial list (same object, order and leading zeros kept), the query and page;
+    - a 429 or a lost answer comes back as the same failure, with its reference and wait.
+  - A new architecture rule, **R14**, "presentation never imports a repository". It found exactly the three cubits.
+- **The change:**
+  - `ScanItem`, `CheckSerials`, `EndSession` and `GetSessions` were added to `verification_usecases.dart` and registered in `bootstrap.dart`;
+  - `ScanSessionCubit`, `SerialStackCubit` and `SessionsCubit` take only use cases (`GetFormats`, `GetSession` and the four new ones);
+  - the router wires them.
+- **All 14 blocs now follow one pattern.** `final.md` §4 says so ("use cases only") and points to the architecture test.
+- **The existing cubit tests** (`many_items_cubits_test`, `list_waits_test`) changed only how they build the cubits. Their assertions are untouched and they pass.
 
 #### P-4 (should): permission keys are plain text in 25 places
 **Evidence:**

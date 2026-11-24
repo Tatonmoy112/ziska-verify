@@ -10,7 +10,6 @@ import 'package:ziska_verify/core/services/session/session_state.dart';
 import 'package:ziska_verify/features/verification/domain/entities/checked_input.dart';
 import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
 import 'package:ziska_verify/features/verification/domain/entities/scan_session.dart';
-import 'package:ziska_verify/features/verification/domain/repositories/verification_repository.dart';
 import 'package:ziska_verify/features/verification/domain/usecases/verification_usecases.dart';
 
 part 'scan_session_cubit.freezed.dart';
@@ -90,11 +89,17 @@ abstract class ScanSessionState with _$ScanSessionState {
 
 class ScanSessionCubit extends Cubit<ScanSessionState> {
   ScanSessionCubit({
-    required VerificationRepository repository,
+    required GetFormats getFormats,
+    required GetSession getSession,
+    required ScanItem scan,
+    required EndSession endSession,
     required ActiveScanStore store,
     required Stream<SessionState> authStates,
     LoadRecoveredScans? loadChecks,
-  }) : _repository = repository,
+  }) : _getFormats = getFormats,
+       _getSession = getSession,
+       _scan = scan,
+       _endSession = endSession,
        _store = store,
        _loadChecks = loadChecks,
        super(const ScanSessionState()) {
@@ -102,7 +107,10 @@ class ScanSessionCubit extends Cubit<ScanSessionState> {
       if (s is SessionUnauthenticated) unawaited(finish());
     });
   }
-  final VerificationRepository _repository;
+  final GetFormats _getFormats;
+  final GetSession _getSession;
+  final ScanItem _scan;
+  final EndSession _endSession;
   final ActiveScanStore _store;
   final LoadRecoveredScans? _loadChecks;
 
@@ -149,7 +157,7 @@ class ScanSessionCubit extends Cubit<ScanSessionState> {
     final generation = ++_generation;
     emit(state.copyWith(loading: true, failure: null));
     try {
-      final formats = await _repository.getFormats();
+      final formats = await _getFormats();
       if (!_active(generation)) return;
       if (formats case Err(:final failure)) {
         emit(
@@ -167,7 +175,7 @@ class ScanSessionCubit extends Cubit<ScanSessionState> {
       SessionTotals? totals;
       RecoveredScans? checks;
       if (id != null && _loadChecks != null) {
-        final saved = await _repository.session(id);
+        final saved = await _getSession(id);
         if (!_active(generation)) return;
         switch (saved) {
           case Success(:final value):
@@ -318,7 +326,7 @@ class ScanSessionCubit extends Cubit<ScanSessionState> {
         pending: _waiting,
       ),
     );
-    var result = await _repository.scan(sent, state.id!);
+    var result = await _scan(sent, sessionId: state.id!);
     // Whether this scan went into a new session because the last one was
     // full or had ended.
     var rolledOver = false;
@@ -366,7 +374,7 @@ class ScanSessionCubit extends Cubit<ScanSessionState> {
       }
       rolledOver = true;
       emit(state.copyWith(renewed: true));
-      result = await _repository.scan(sent, id);
+      result = await _scan(sent, sessionId: id);
       if (!_active(generation)) return _drop(read);
     }
     switch (result) {
@@ -476,7 +484,7 @@ class ScanSessionCubit extends Cubit<ScanSessionState> {
     emit(
       state.copyWith(finishing: false, done: true, busy: false, pending: 0),
     );
-    unawaited(_repository.endSession(id));
+    unawaited(_endSession(id));
     try {
       await _persist(_store.clear);
     } on Object {
@@ -600,7 +608,7 @@ class ScanSessionCubit extends Cubit<ScanSessionState> {
     _letGoAll(_inFlight);
     final id = state.id;
     if (!isClosed) emit(const ScanSessionState(loading: false));
-    if (id != null) unawaited(_repository.endSession(id));
+    if (id != null) unawaited(_endSession(id));
     try {
       await _persist(_store.clear);
     } on Object {

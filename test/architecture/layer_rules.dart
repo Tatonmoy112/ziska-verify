@@ -17,7 +17,11 @@ enum Rule {
   pluginOutsideCore('R10', 'a plugin is used outside core'),
   getItOutsideApp('R11', 'get_it is used outside app'),
   dioOutsideNetwork('R12', 'dio is used outside core, data and app'),
-  outsideLayers('R13', 'a feature file is outside data, domain, presentation')
+  outsideLayers('R13', 'a feature file is outside data, domain, presentation'),
+  presentationImportsRepository(
+    'R14',
+    'presentation imports a repository, not a use case',
+  )
   ;
 
   const Rule(this.id, this.text);
@@ -136,6 +140,12 @@ class LayerRules {
     if (to.area != _Area.feature) return;
     if (from.layer == _Layer.presentation && to.layer == _Layer.data) {
       add(Rule.presentationImportsData, file, target);
+    }
+    // Blocs reach data through use cases only (production audit P-3).
+    if (from.layer == _Layer.presentation &&
+        to.layer == _Layer.domain &&
+        target.contains('/domain/repositories/')) {
+      add(Rule.presentationImportsRepository, file, target);
     }
     if (from.layer == _Layer.domain &&
         (to.layer == _Layer.data || to.layer == _Layer.presentation)) {

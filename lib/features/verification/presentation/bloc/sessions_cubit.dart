@@ -6,7 +6,7 @@ import 'package:ziska_verify/core/pagination/page_request.dart';
 import 'package:ziska_verify/core/pagination/paginated_state.dart';
 import 'package:ziska_verify/core/pagination/wait_timer.dart';
 import 'package:ziska_verify/features/verification/domain/entities/scan_session.dart';
-import 'package:ziska_verify/features/verification/domain/repositories/verification_repository.dart';
+import 'package:ziska_verify/features/verification/domain/usecases/verification_usecases.dart';
 
 class SessionsState {
   const SessionsState({
@@ -18,8 +18,8 @@ class SessionsState {
 }
 
 class SessionsCubit extends Cubit<SessionsState> {
-  SessionsCubit(this._repository) : super(const SessionsState());
-  final VerificationRepository _repository;
+  SessionsCubit(this._getSessions) : super(const SessionsState());
+  final GetSessions _getSessions;
   int _generation = 0;
 
   /// A load asked for during a `429` wait, sent when the wait ends.
@@ -45,7 +45,7 @@ class SessionsCubit extends Cubit<SessionsState> {
     }
     final generation = ++_generation;
     emit(SessionsState(query: selected, list: state.list.loadingFirst()));
-    final result = await _repository.sessions(selected, const PageRequest());
+    final result = await _getSessions(selected, const PageRequest());
     if (isClosed || generation != _generation) return;
     emit(
       SessionsState(
@@ -63,7 +63,7 @@ class SessionsCubit extends Cubit<SessionsState> {
     final generation = _generation;
     final cursor = state.list.nextCursor;
     emit(SessionsState(query: state.query, list: state.list.loadingMore()));
-    final result = await _repository.sessions(
+    final result = await _getSessions(
       state.query,
       PageRequest(cursor: cursor),
     );

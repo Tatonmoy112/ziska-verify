@@ -58,7 +58,6 @@ import 'package:ziska_verify/features/retail_users/presentation/widgets/retail_u
 import 'package:ziska_verify/features/verification/domain/entities/checked_input.dart';
 import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
 import 'package:ziska_verify/features/verification/domain/entities/scan_session.dart';
-import 'package:ziska_verify/features/verification/domain/repositories/verification_repository.dart';
 import 'package:ziska_verify/features/verification/domain/usecases/verification_usecases.dart';
 import 'package:ziska_verify/features/verification/presentation/bloc/lookup_bloc.dart';
 import 'package:ziska_verify/features/verification/presentation/bloc/scan_session_cubit.dart';
@@ -307,7 +306,10 @@ GoRouter buildRouter({
         builder: (context, _) => BlocProvider(
           create: (_) {
             final cubit = ScanSessionCubit(
-              repository: locator<VerificationRepository>(),
+              getFormats: locator(),
+              getSession: locator(),
+              scan: locator(),
+              endSession: locator(),
               store: ActiveScanStore(
                 locator<SecureStorageService>(),
                 client: locator<AppConfig>().clientSlug,
@@ -334,7 +336,10 @@ GoRouter buildRouter({
         path: RoutePaths.serialStack,
         builder: (context, _) => BlocProvider(
           create: (_) {
-            final cubit = SerialStackCubit(locator<VerificationRepository>());
+            final cubit = SerialStackCubit(
+              getFormats: locator(),
+              checkSerials: locator(),
+            );
             unawaited(cubit.load());
             return cubit;
           },
@@ -444,9 +449,7 @@ GoRouter buildRouter({
                       // Loaded when the Sessions view first shows.
                       BlocProvider(
                         create: (_) {
-                          final cubit = SessionsCubit(
-                            locator<VerificationRepository>(),
-                          );
+                          final cubit = SessionsCubit(locator());
                           unawaited(cubit.load());
                           return cubit;
                         },

@@ -36,7 +36,7 @@ Generated JSON, Freezed, and localization files are regenerated and committed, n
 
 ## 4. Architecture and data flow
 
-Presentation calls domain use cases or repository interfaces. Data implements those interfaces, calls API services, parses DTOs, and maps them into domain entities. API services use the shared API client and its envelope/error handling.
+Presentation calls domain use cases only, never a repository interface (2026-11-24, production audit P-3). Data implements those interfaces, calls API services, parses DTOs, and maps them into domain entities. API services use the shared API client and its envelope/error handling.
 
 - `lib/app/` owns composition, session/profile wiring, route guards, and cross-feature callbacks.
 - `lib/features/authentication/` owns login/password and public access requests.
@@ -45,6 +45,7 @@ Presentation calls domain use cases or repository interfaces. Data implements th
 - Incidents own report filing/uploading; retail users expose only the incident picker.
 - `lib/core/` contains infrastructure and plugin interfaces, and never imports a feature.
 - Features do not import one another's internals. The app-wide profile entity/Cubit is the existing exception.
+- These rules are checked on every import by `test/architecture/layer_rules_test.dart` (R1–R14, `docs/test-cases/18-architecture.md`).
 - The router maps history records into verification-owned recovered row summaries through a callback. It also composes report/picker and session/history navigation.
 
 ## 5. Core and data services

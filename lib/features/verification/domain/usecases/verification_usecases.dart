@@ -1,6 +1,9 @@
 import 'package:ziska_verify/core/errors/result.dart';
+import 'package:ziska_verify/core/pagination/cursor_page.dart';
+import 'package:ziska_verify/core/pagination/page_request.dart';
 import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
 import 'package:ziska_verify/features/verification/domain/entities/scan_session.dart';
+import 'package:ziska_verify/features/verification/domain/entities/serial_stack.dart';
 import 'package:ziska_verify/features/verification/domain/repositories/verification_repository.dart';
 import 'package:ziska_verify/features/verification/domain/services/code_normalizer.dart';
 import 'package:ziska_verify/features/verification/domain/services/input_format_validator.dart';
@@ -153,4 +156,45 @@ class GetSession {
   final VerificationRepository _repository;
 
   Future<Result<ScanSessionSummary>> call(String id) => _repository.session(id);
+}
+
+/// One read of scanner mode, inside its session (`POST lookups` with
+/// `session_id`, app API guide §4.3). The value is sent as read.
+class ScanItem {
+  const ScanItem(this._repository);
+  final VerificationRepository _repository;
+
+  Future<Result<ScanResult>> call(String value, {required String sessionId}) =>
+      _repository.scan(value, sessionId);
+}
+
+/// A serial stack, sent as one request (`POST lookups/serials`, app API
+/// guide §4.7). [ParseStack] prepares the list; it is sent unchanged.
+class CheckSerials {
+  const CheckSerials(this._repository);
+  final VerificationRepository _repository;
+
+  Future<Result<SerialStackResult>> call(List<String> serials) =>
+      _repository.serials(serials);
+}
+
+/// Ends a scanner session (`POST lookups/sessions/{id}/end`, app API guide
+/// §4.4).
+class EndSession {
+  const EndSession(this._repository);
+  final VerificationRepository _repository;
+
+  Future<Result<void>> call(String id) => _repository.endSession(id);
+}
+
+/// One page of the official's sessions (`GET lookups/sessions`, app API
+/// guide §4.5).
+class GetSessions {
+  const GetSessions(this._repository);
+  final VerificationRepository _repository;
+
+  Future<Result<CursorPage<ScanSessionSummary>>> call(
+    SessionQuery query,
+    PageRequest page,
+  ) => _repository.sessions(query, page);
 }

@@ -18,6 +18,7 @@ import 'package:ziska_verify/features/retail_users/domain/usecases/search_retail
 import 'package:ziska_verify/features/retail_users/presentation/bloc/retail_user_picker_bloc.dart';
 import 'package:ziska_verify/features/verification/domain/entities/scan_session.dart';
 import 'package:ziska_verify/features/verification/domain/repositories/verification_repository.dart';
+import 'package:ziska_verify/features/verification/domain/usecases/verification_usecases.dart';
 import 'package:ziska_verify/features/verification/presentation/bloc/sessions_cubit.dart';
 
 class _History extends Mock implements HistoryRepository {}
@@ -139,7 +140,7 @@ void main() {
             ? _limited
             : const Success(CursorPage<ScanSessionSummary>(items: []));
       });
-      final cubit = SessionsCubit(repo);
+      final cubit = SessionsCubit(GetSessions(repo));
       await cubit.load();
       expect(cubit.state.list.isWaiting, isTrue);
 
