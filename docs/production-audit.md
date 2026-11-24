@@ -5,7 +5,7 @@ The production-grade review of the app, done on the `production` branch one area
 | Step | Area | State |
 |---|---|---|
 | 2 | High-level architecture | Checked 2026-11-24: P-1 … P-15. **All fixed**; P-10 on for staging, live waits for its production project |
-| 3 | The central API | To do |
+| 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11) |
 | 4 | Low-level architecture | To do |
 | 5 | Dead code | To do |
 | 6+ | Comments, data layer, UI components, state and lifecycle, security, build and release, monitoring, tests, localisation, performance, docs | To do |
@@ -547,3 +547,85 @@ No change is needed where they already comply.
 - `config/live.json` still holds placeholders. The app correctly refuses to start with them, but the live host and slug are needed from the backend (**build and release** step).
 - There are empty folders in the working tree, not in git: `features/incidents/data/mappers`, `features/incidents/presentation/widgets` and `features/retail_users/presentation/screens` (**dead code** step).
 - The release build is signed with the debug key (**build and release** step).
+
+---
+
+## Step 3: the central API (2026-11-24)
+
+### How it was checked
+Read only.
+- **Every request the app makes** was taken from the seven `features/*/data/services/*_api_service.dart` files and from `core/network/dio_session_service.dart` (the renewal).
+- **The comparison:** with the backend's Postman collection (`docs/protectb-api/ProtectB-mobile-app.postman_collection.json`, parsed by a script: method, path, query and body keys) and with the app API guide (`docs/protectb-api/app-api-guide.md` §1, §3–§7).
+- **Also read:** `core/network` (`api_client.dart`, `api_envelope.dart`, `error_mapper.dart`, the interceptors), the wiring in `app/bootstrap.dart`, and `android/app/src/main/res/xml/network_security_config.xml`.
+
+### What is already right (keep)
+
+| Check | Result |
+|---|---|
+| A. One way to the server | Only the seven API services use `ApiClient`. No `Dio(`, `HttpClient`, `package:http`, server URL or `Uri.parse` of the API exists outside `core/network` and `app/`; rules R10, R12 and R15 guard it. The two other network paths are by design: product pictures (`core/services/picture/picture_images.dart`, `https://` with a host only, never through `ApiClient`, so the picture host never gets the pass) and the mail/phone launcher. The renewal uses a second Dio without interceptors (`dio_session_service.dart`), as it must not pass through the auth interceptor it serves; it uses the same envelope and error mapper. |
+| B. Routes against the contract | All **23** routes of the collection are the app's, with the same methods, paths and body keys, and the app calls no other. The nine public routes (login, code, resend, forgot, reset, roles, access code, access request; the renewal separately) go without a pass (`skipAuth`). Query parameters match the guide: `checks` (§5), `lookups/sessions` (§4.5), `incidents` (§6.3), `retail-users` (§7.1). `scope` is never sent (a 400 since 2026-11-15); `kind` is an answer field. |
+| E. Error mapping | Every `error.code` of guide §1's table has its exception (`error_mapper.dart`). An unknown code or a page without the envelope is decided by status (400/413/415, 403, 404, 429, 503). `Retry-After` is read in seconds and as an HTTP date; a missing or past one gives no made-up wait. |
+| F. Timeouts | Connect 15 s, send 60 s, receive 30 s (`api_client.dart`, `DioFactory`): enough for a 1 MB photo and a slow lookup. A connect timeout is "not sent"; a send or receive timeout is "may be recorded" (`NetworkException`), which the screens tell apart (§13.1). |
+| G. Retries | Only two: the request after a renewal (once, `auth_interceptor.dart`) and the serial stack's confirmed 503 (once, after one second). A lookup is never sent twice by itself. |
+| I. Interceptors | In order: bodiless → Postman mock routing (mock build only, refused elsewhere by `AppConfig`) → auth → logging. `me/password` alone keeps the login on a 401 (`keepSessionOn401`, guide §3.6). |
+| J. Logging | Method, path, status and `request_id` only. Query values sit in `queryParameters`, not the path, and are never logged; bodies and headers never are. A release build prints nothing (P-12). |
+| K. Headers | JSON `Content-Type` by default. A GET or a bodiless POST sends no `Content-Type` (`BodilessRequestInterceptor`, guide §1); a photo is sent raw with its type and `Content-Length` (guide §6.2). |
+| L. Transport | HTTPS only: `AppConfig` refuses any other address, and Android forbids cleartext and trusts the system's certificates. Certificate pinning is for the security step. |
+
+### Findings
+
+#### P-16 (should, follows up P-11): the citation check misses two cases
+**Evidence:**
+- TC-ARCH-019 reads one line at a time, so a citation split by a line break escapes it. There are 8 in `lib/`, and 6 of them still name an old section:
+  - `core/pagination/paginated_state.dart:34` (10.4, 10.6);
+  - `core/services/picture/picture_images.dart:16` (12.1);
+  - `features/authentication/presentation/bloc/submit_state.dart:17` (15.4);
+  - `features/authentication/presentation/screens/request_access_screen.dart:28` (13.9);
+  - `features/verification/presentation/models/result_view.dart:4` and `widgets/result_entry_cards.dart:20` (13.1.4);
+  - `shared/widgets/failure_banner.dart:9` (15.4).
+
+  `history_screen.dart:27` (13.4) is right.
+- It reads only `lib/`. 39 citations of the old numbering remain in `test/`, `tool/` and the Android XML (for example `AndroidManifest.xml:5`, `network_security_config.xml:2`).
+
+**Proposal:** the checker reads a comment block as one text, and checks `test/`, `tool/`, `android/` and `ios/` too. Then the same mapping fixes those citations.
+
+**Tests:**
+- **normal:** a citation within one line;
+- **edge:** a citation split across two or three comment lines; XML `<!-- -->` comments;
+- **worst:** a split citation of a removed section, reported at its first line.
+
+#### P-17 (should): route paths are text in eight files
+**Evidence:**
+- The paths are typed where they are used: `'auth/login'`, `'lookups/sessions/${Uri.encodeComponent(id)}/end'`, `'incidents/$reportId/photos'` … in the seven services and `dio_session_service.dart`.
+- Nothing checks them against the contract. A typo is caught only by the flow tests that reach that route.
+- Path IDs are encoded in two ways: a session ID with `Uri.encodeComponent`, a report ID by interpolation (an `int`, so safe today).
+
+**Proposal:**
+- one `ApiRoutes` in `core/network/`: each route a constant or a function that encodes its IDs, and the services use it;
+- a contract test compares `ApiRoutes` with the Postman collection's 23 routes, both ways: methods and paths.
+
+**Tests:**
+- **normal:** every route of the collection is in `ApiRoutes` and the reverse;
+- **edge:** an ID with `/`, a space or `%` is encoded once;
+- **worst:** a route the backend does not have, or a method changed, fails with its name.
+
+#### P-18 (nice): `ApiClient`'s `cancelToken` is never used
+**Evidence:** `get`, `post` and `postBytes` take a `CancelToken` (`api_client.dart:20, 37, 57`), and no caller passes one. Answers that arrive after a screen closes are dropped by the blocs instead (`isClosed`, final.md §8).
+
+**Proposal:** remove the three parameters (dead code). `RequestCancelledException` stays: the login uses it for a given-up code (`auth_repository_impl.dart`) and Dio may still report a cancel.
+
+**Tests:** analyze and every test unchanged; an architecture check that `CancelToken` is not part of `ApiClient`'s interface, if wanted.
+
+#### P-19 (nice): the "is the answer a map?" check is written 8 times
+**Evidence:** `if (data is! Map<String, dynamic>) throw InternalErrorException(message: '…_shape')` appears in:
+- `profile`, `history`, `incidents`, `retail_users` and `access_request`;
+- two identical private `_map` helpers (`auth_api_service.dart:117`, `verification_api_service.dart:72`);
+- a list check for the roles.
+
+**Proposal:** one helper beside the envelope (for example `ApiData.map(data, 'me')` and `ApiData.list(data, 'roles')`), keeping each route's diagnostic name.
+
+**Tests:**
+- **normal:** a map and a list pass through;
+- **edge:** an empty map or list;
+- **worst:** `null`, a string or a list where a map is expected gives `InternalErrorException('<route>_shape')`;
+- the services' contract tests pass unchanged.
