@@ -136,7 +136,7 @@ The cases live in one file per area in [`docs/test-cases/`](test-cases/README.md
 |---|---|---|---|---|---|---|---|---|---|
 | AUTH | [01-auth.md](test-cases/01-auth.md) | 109 | 39 | 49 | 21 | 96 | 0 | 13 | 0 |
 | SESS | [02-session.md](test-cases/02-session.md) | 45 | 21 | 19 | 5 | 40 | 0 | 5 | 0 |
-| ROLE and NAV | [03-roles-nav.md](test-cases/03-roles-nav.md) | 38 | 16 | 16 | 6 | 35 | 0 | 3 | 0 |
+| ROLE and NAV | [03-roles-nav.md](test-cases/03-roles-nav.md) | 41 | 17 | 18 | 6 | 38 | 0 | 3 | 0 |
 | LOOK | [04-lookup.md](test-cases/04-lookup.md) | 102 | 42 | 43 | 17 | 89 | 0 | 13 | 0 |
 | BULK | [05-bulk.md](test-cases/05-bulk.md) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 | HIST | [06-history.md](test-cases/06-history.md) | 57 | 17 | 30 | 10 | 54 | 0 | 3 | 0 |
@@ -152,7 +152,7 @@ The cases live in one file per area in [`docs/test-cases/`](test-cases/README.md
 | MIG | [16-mobile-migration.md](test-cases/16-mobile-migration.md) | 73 | 46 | 25 | 2 | 72 | 0 | 1 | 0 |
 | STG | [17-test-server.md](test-cases/17-test-server.md) | 58 | 44 | 11 | 3 | 47 | 0 | 11 | 0 |
 | ARCH | [18-architecture.md](test-cases/18-architecture.md) | 15 | 0 | 6 | 9 | 15 | 0 | 0 | 0 |
-| **Total** | | **935** | 311 | 435 | 189 | 807 | 0 | 128 | 0 |
+| **Total** | | **938** | 312 | 437 | 189 | 810 | 0 | 128 | 0 |
 
 ---
 

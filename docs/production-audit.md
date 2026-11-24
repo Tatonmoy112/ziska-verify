@@ -4,7 +4,7 @@ The production-grade review of the app, done on the `production` branch one area
 
 | Step | Area | State |
 |---|---|---|
-| 2 | High-level architecture | Checked 2026-11-24: P-1 … P-11. Fixed: P-1 … P-5 |
+| 2 | High-level architecture | Checked 2026-11-24: P-1 … P-11. Fixed: P-1 … P-6 |
 | 3 | The central API | To do |
 | 4 | Low-level architecture | To do |
 | 5 | Dead code | To do |
@@ -279,6 +279,25 @@ That makes it the largest file in `app/`.
 - **edge:** the parameterised `/history/sessions/:id`;
 - **worst:** a deep link to a gated route without the permission goes Home;
 - all router, guard and flow tests pass unchanged.
+
+**✅ Fixed 2026-11-24:**
+- **Tests first.** TC-NAV-016 … -018 (`test/flow/route_table_flow_test.dart`), 13 tests, all passing on the old router before anything moved:
+  - **the table:** exactly the 16 named routes with their full paths, the top-level order, then the three tabs;
+  - **edge:** a session's path with an encoded ID; Reset password without its email; a result without its result;
+  - **worst:** gated deep links for an auditor and for a role without History; a logged-out link; an unknown address and its **Try again**.
+- **The change:** a script moved each block verbatim into `lib/app/router/routes/`:
+
+  | File | Lines | Holds |
+  |---|---|---|
+  | `auth_routes.dart` | 152 | splash, login and code, forgot and reset password, request access, change password |
+  | `check_routes.dart` | 234 | result, scanner mode, serial stack, the Check tab; the many-items result and the History mapping of a resumed session; `allowsResult` |
+  | `history_routes.dart` | 89 | a session's checks, the History tab |
+  | `report_routes.dart` | 58 | My reports, a new report |
+  | `profile_routes.dart` | 74 | the Profile tab |
+  | `route_deps.dart` | 17 | the locator, the profile and the session the groups share |
+
+  `app_router.dart` went from 641 to 170 lines: the `GoRouter`, the guard and its refresh, the check of pushed pages, the "Not available" page and the list of groups.
+- **Checked:** no behaviour changed. `final.md` §9 says where the routes live.
 
 #### P-7 (nice): seven plugin wrappers keep the interface and the plugin in one file
 **Evidence:**

@@ -57,6 +57,9 @@
 | TC-NAV-013 | Pre-login routes after login | STATE | P2 | AUTO | ✅ `flow/roles_edge_flow_test` | Fake backend; logged in | Go to `/login`, `/forgot-password`, `/request-access`, `/splash` | Home each time | §9.4 |
 | TC-NAV-014 | Feature route while logged out | STATE | P2 | AUTO | ✅ `flow/roles_edge_flow_test` | Fake backend; logged out | Go to `/home/bulk-lookup` and `/history` | Login each time | §9.4 |
 | TC-NAV-015 | Navigation log holds route names only | SEC | P1 | AUTO | ✅ `flow/roles_edge_flow_test` | Fake backend | Open a result (with `extra`), then Report incident with `check_ref`; read the logs | Route names only; no `check_ref`, no `extra` values | §9.5 Observer |
+| TC-NAV-016 | The route table | POS | P2 | AUTO | ✅ `flow/route_table_flow_test` | The running app | Read the router's routes | Exactly the 16 named routes with their full paths (nested ones too), the flows above the tabs in their order, then the three tabs Check, History, Profile | §9; production audit P-6 |
+| TC-NAV-017 | Parameters and a missing extra | EDGE | P2 | AUTO | ✅ `flow/route_table_flow_test` | The running app | Build a session's path; open Reset password logged out without its email; open the result page without a result | `/history/sessions/S-1`, an ID with a space or `/` encoded; Reset password goes back to Forgot password; the result page goes to Check | §9 |
+| TC-NAV-018 | Links the role cannot open, or that are none | WORST | P1 | AUTO | ✅ `flow/route_table_flow_test` | Auditor (no bulk, no reports); retail seller without History; logged out | Open scanner mode, the stack, My reports, a new report, History, a session's checks; Profile logged out; an address the app does not have | Each gated link lands on Check; logged out lands on Login; an unknown address shows "Not available." and **Try again** leads back in | §7, §9 |
 
 ## Spec gaps in this file
 

@@ -123,7 +123,7 @@ Three persistent tabs remain: Check, History (permission-gated), Profile. New fl
 | `/history` (Checks and Sessions views), `/history/sessions/:id` (one session's checks) | `history:own` |
 | `/home/reports`, `/home/reports/new` | `incident:report` |
 
-A result route restored without its in-memory extra returns to Check. A session-check route can rebuild from its session ID and the backend. Secrets never enter URLs, navigation logs, or route extras. Retired retail routes are unavailable.
+The routes are built in `lib/app/router/routes/`, one file per area (auth, check, history, reports, profile); `app_router.dart` holds the `GoRouter`, the guard and the check of pushed pages (2026-11-24, production audit P-6). A result route restored without its in-memory extra returns to Check. A session-check route can rebuild from its session ID and the backend. Secrets never enter URLs, navigation logs, or route extras. Retired retail routes are unavailable.
 
 ## 10. Pagination and time
 
