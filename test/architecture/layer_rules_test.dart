@@ -213,6 +213,15 @@ void main() {
             "import 'package:ziska_verify/core/services/camera/plugin_camera_service.dart';",
         'features/a/presentation/camera_screen.dart':
             "import 'package:ziska_verify/core/services/camera/camera_service.dart';",
+        // core folders depending one way only (P-8): the network's session
+        // implementation uses the session interface, never the reverse.
+        'core/network/dio_session.dart':
+            "import 'package:ziska_verify/core/services/session/session.dart';\n"
+            "import 'package:ziska_verify/core/network/envelope.dart';",
+        'core/network/envelope.dart': '',
+        'core/services/session/session.dart':
+            "import 'package:ziska_verify/core/services/session/state.dart';",
+        'core/services/session/state.dart': '',
       });
       expect(found, isEmpty);
     });
@@ -288,6 +297,11 @@ void main() {
             "import 'package:mobile_scanner/mobile_scanner.dart';\n"
             'abstract interface class X {}',
       },
+      Rule.coreFolderCycle: {
+        'core/a/x.dart': "import 'package:ziska_verify/core/b/y.dart';",
+        'core/b/y.dart': "import 'package:ziska_verify/core/a/z.dart';",
+        'core/a/z.dart': '',
+      },
       Rule.presentationImportsRepository: {
         'features/a/presentation/bloc/x_cubit.dart':
             "import 'package:ziska_verify/features/a/domain/repositories/r.dart';",
@@ -295,7 +309,7 @@ void main() {
       },
     };
 
-    test('TC-ARCH-008 each rule R1 … R16 is reported, with its file', () {
+    test('TC-ARCH-008 each rule R1 … R17 is reported, with its file', () {
       expect(cases.keys, unorderedEquals(Rule.values));
       for (final MapEntry(key: rule, value: files) in cases.entries) {
         final found = check(files);
@@ -332,6 +346,36 @@ void main() {
         'R15 features/a/data/d.dart -> core/b.dart -> $plugin',
         'R9 features/a/domain/u.dart -> core/b.dart -> $plugin',
         'R15 shared/widgets/w.dart -> core/a.dart -> core/b.dart -> $plugin',
+      ]);
+    });
+
+    test('TC-ARCH-017 core folders never depend on each other in a circle', () {
+      String imp(String path) => "import 'package:ziska_verify/$path';\n";
+      final found = check({
+        // Three folders in a circle: one break, the whole circle shown.
+        'core/a/x.dart': imp('core/b/y.dart'),
+        'core/b/y.dart': imp('core/c/z.dart'),
+        'core/c/z.dart': imp('core/a/w.dart'),
+        'core/a/w.dart': '',
+        // A file of the same folder is no circle; one way is no circle.
+        'core/d/one.dart': imp('core/d/two.dart') + imp('core/e/three.dart'),
+        'core/d/two.dart': imp('core/d/one.dart'),
+        'core/e/three.dart': '',
+        // A folder and its subfolder count as two folders.
+        'core/net/client.dart': imp('core/net/demo/mock.dart'),
+        'core/net/demo/mock.dart': imp('core/net/client.dart'),
+        // Outside core, folders may depend on each other (screens and
+        // their widgets).
+        'features/f/presentation/screens/s.dart': imp(
+          'features/f/presentation/widgets/w.dart',
+        ),
+        'features/f/presentation/widgets/w.dart': imp(
+          'features/f/presentation/screens/s.dart',
+        ),
+      });
+      expect(found.map((v) => '${v.rule.id} ${v.file} -> ${v.detail}'), [
+        'R17 core/a/x.dart -> core/b -> core/c -> core/a',
+        'R17 core/net/client.dart -> core/net/demo -> core/net',
       ]);
     });
 

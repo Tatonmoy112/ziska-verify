@@ -26,7 +26,8 @@ enum Rule {
     'R15',
     'a file outside core and app reaches a plugin through its imports',
   ),
-  interfaceWithPlugin('R16', 'an interface file in core also uses a plugin')
+  interfaceWithPlugin('R16', 'an interface file in core also uses a plugin'),
+  coreFolderCycle('R17', 'core folders depend on each other in a circle')
   ;
 
   const Rule(this.id, this.text);
@@ -133,6 +134,7 @@ class LayerRules {
         }
       }
     }
+    _checkFolderCycles(sources.keys, imports, add);
     return found.values.toList()..sort(_order);
   }
 
@@ -231,6 +233,65 @@ class LayerRules {
           add(Rule.domainReachesImpure, file, chain);
         }
       }
+    }
+  }
+
+  /// Reports each circle of `core` folders once (P-8): the first file of
+  /// the first folder that starts it, then the folders that lead back. A
+  /// subfolder is a folder of its own.
+  void _checkFolderCycles(
+    Iterable<String> files,
+    Map<String, List<String>> imports,
+    void Function(Rule, String, String) add,
+  ) {
+    String folderOf(String path) => path.substring(0, path.lastIndexOf('/'));
+    // Folder → next folder → the files that import into it, all sorted.
+    final edges =
+        SplayTreeMap<String, SplayTreeMap<String, SplayTreeSet<String>>>();
+    for (final file in files) {
+      if (isGenerated(file) || !file.startsWith('core/')) continue;
+      for (final target in imports[file]!) {
+        if (!target.startsWith('core/')) continue;
+        final from = folderOf(file);
+        final to = folderOf(target);
+        if (from == to) continue;
+        edges
+            .putIfAbsent(from, SplayTreeMap.new)
+            .putIfAbsent(to, SplayTreeSet.new)
+            .add(file);
+      }
+    }
+    final inCircle = <String>{};
+    for (final start in edges.keys) {
+      if (inCircle.contains(start)) continue;
+      // The shortest way from [start] back to itself.
+      final previous = <String, String>{};
+      final queue = Queue.of([start]);
+      List<String>? circle;
+      while (queue.isNotEmpty && circle == null) {
+        final current = queue.removeFirst();
+        for (final next in edges[current]?.keys ?? const <String>[]) {
+          if (next == start) {
+            final way = [current];
+            while (way.last != start) {
+              way.add(previous[way.last]!);
+            }
+            circle = [...way.reversed, start];
+            break;
+          }
+          if (next != start && !previous.containsKey(next)) {
+            previous[next] = current;
+            queue.add(next);
+          }
+        }
+      }
+      if (circle == null) continue;
+      inCircle.addAll(circle);
+      add(
+        Rule.coreFolderCycle,
+        edges[start]![circle[1]]!.first,
+        circle.skip(1).join(' -> '),
+      );
     }
   }
 

@@ -5,7 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ziska_verify/core/network/api_client.dart';
 import 'package:ziska_verify/core/network/auth_interceptor.dart';
-import 'package:ziska_verify/core/services/session/dio_session_service.dart';
+import 'package:ziska_verify/core/network/dio_session_service.dart';
 
 import '../../fakes/fake_logger_service.dart';
 import '../../fakes/fake_secure_storage_service.dart';

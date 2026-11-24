@@ -4,7 +4,7 @@ The production-grade review of the app, done on the `production` branch one area
 
 | Step | Area | State |
 |---|---|---|
-| 2 | High-level architecture | Checked 2026-11-24: P-1 … P-11. Fixed: P-1 … P-7 |
+| 2 | High-level architecture | Checked 2026-11-24: P-1 … P-11. Fixed: P-1 … P-8 |
 | 3 | The central API | To do |
 | 4 | Low-level architecture | To do |
 | 5 | Dead code | To do |
@@ -346,6 +346,14 @@ That makes it the largest file in `app/`.
 **Tests:**
 - a P-1 rule, "no folder cycle inside `core`", fails before and passes after;
 - the session tests (renewal, one renewal for many requests, logout) pass unchanged.
+
+**✅ Fixed 2026-11-24:**
+- **Tests first.** A new architecture rule, **R17**, "`core` folders depend on each other in a circle", was red before the change with exactly this circle: `core/network/auth_interceptor.dart` → `core/services/session` → `core/network`.
+  - Its sample break is in TC-ARCH-008, and the allowed one-way shape in TC-ARCH-007.
+  - TC-ARCH-017 covers its edges: a three-folder circle shown in order, a folder with its subfolder, files of one folder, one way, folders outside `core`.
+- **The change:** `dio_session_service.dart` moved (with `git mv`, so it keeps its history) to `core/network/`, beside the envelope and the error mapper it uses. `bootstrap.dart` and three network tests import it from there.
+  - `core/network` now depends on `core/services/session` (the interface and the state), never the reverse.
+  - `final.md` §4 says so.
 
 #### P-9 (nice): screens navigate in two ways
 **Evidence:**
