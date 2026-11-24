@@ -3,5 +3,9 @@
   "API_BASE_URL": "https://testapp.protecb.com",
   "CLIENT_SLUG": "ziska-test",
   "OFFICE_EMAIL": "office@example.com",
-  "OFFICE_PHONE": "+8800000000000"
+  "OFFICE_PHONE": "+8800000000000",
+  "FIREBASE_PROJECT_ID": "ziska-verify",
+  "FIREBASE_SENDER_ID": "283804037634",
+  "FIREBASE_ANDROID_API_KEY": "AIzaSyBIMARkFhemDujUuckNr-eCObxwr1C1EHA",
+  "FIREBASE_ANDROID_APP_ID": "1:283804037634:android:b5a5a0bd22d0bb93472d1b"
 }

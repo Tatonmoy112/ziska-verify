@@ -4,7 +4,7 @@ The production-grade review of the app, done on the `production` branch one area
 
 | Step | Area | State |
 |---|---|---|
-| 2 | High-level architecture | Checked 2026-11-24: P-1 … P-15. Fixed: P-1 … P-9, P-11 … P-15; P-10: code ready, Crashlytics for staging next |
+| 2 | High-level architecture | Checked 2026-11-24: P-1 … P-15. **All fixed**; P-10 on for staging, live waits for its production project |
 | 3 | The central API | To do |
 | 4 | Low-level architecture | To do |
 | 5 | Dead code | To do |
@@ -417,6 +417,26 @@ No change is needed where they already comply.
   - logcat shows no crash, only Firebase's own "initialization unsuccessful" for the app, as no Firebase app is set.
   - The build log shows the Kotlin daemon failing to close its caches for `firebase_core`. That is a known Windows issue when the pub cache (C:) and the project (D:) are on different drives; Gradle compiles without the daemon instead, and the build succeeds.
 - **What needs the project:** in `docs/release-backlog.md`: the values, the Crashlytics Gradle plugin (the Android build ID), symbol upload, iOS, the privacy notice.
+
+**✅ On for staging, 2026-11-24** (the user's Firebase project `ziska-verify`, its staging Android app; Crashlytics only):
+- **Tests first:** TC-SEC-037 … -039 (`test/app/config/flavor_configs_test.dart`) read the real config files.
+  - TC-SEC-037 was red until `config/staging.json` held the values: staging's Android target has the right shapes.
+  - -038 and -039 pin the rest: mock and live report nothing; only `firebase_core` and `firebase_crashlytics`; no Google Services plugin or file; `/firebase/` ignored by git.
+- **The change:**
+  - the four staging values were copied by a script from `firebase/google-services.json`, which is git-ignored (commit `d9cac13`), without printing the key;
+  - live and iOS stay empty.
+- **No Gradle plugin:**
+  - the Crashlytics Gradle plugin 3.0.8 was tried. With its mapping upload off (that upload needs the Google Services file), it added only an all-zeros mapping ID;
+  - FlutterFire itself sets `com.crashlytics.RequireBuildId` to false;
+  - so the plugin was reverted, and the test crash proved Crashlytics works without it.
+- **The test crash, from a one-off build never committed:** behind `--dart-define=CRASH_TEST=true` it recorded a non-fatal test error, then called `FirebaseCrashlytics.instance.crash()` after 8 s. On the emulator:
+  - "Initializing Firebase Crashlytics 21.0.1 for com.ziskapharma.trackandtrace.staging";
+  - the server's settings fetched (`collect_reports: true`);
+  - `FATAL EXCEPTION … FirebaseCrashlyticsTestCrash`;
+  - the report upload to `crashlyticsreports-pa.googleapis.com` answered **Status Code: 200**.
+
+  The normal staging release was then reinstalled: it starts logged in, with Crashlytics initialised and no crash.
+- **The Firebase API key in `config/staging.json`:** it is an identifier Google builds into every app, not a secret. Restrict it in Google Cloud to `com.ziskapharma.trackandtrace.staging` and the signing SHA-1; the debug key for now is `63:52:27:0C:56:7C:A9:BA:55:E4:67:6D:60:07:7A:33:A4:0D:66:88`.
 
 #### P-12 (must, found 2026-11-24 while fixing P-10): the console log prints errors as they are
 **Evidence:**
