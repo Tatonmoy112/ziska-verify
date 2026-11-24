@@ -149,7 +149,7 @@ Register implementations in `app/bootstrap.dart`; feature widgets receive interf
 
 ## 12. Security and privacy
 
-Never log passwords, emailed codes, phone IDs, passes, lookup values, request bodies, query values, or photos. Do not cache products/pictures on disk. No cookies or CSRF machinery is added to the mobile API.
+Never log passwords, emailed codes, phone IDs, passes, lookup values, request bodies, query values, or photos. A release build prints nothing to the phone's log, by the app's own switch (`ConsoleLoggerService` `printing`, on in debug builds only), never by a package default (2026-11-24, production audit P-12); a debug build prints redacted lines. Do not cache products/pictures on disk. No cookies or CSRF machinery is added to the mobile API.
 
 Only the active scanner UUID is persisted for a session, under a client/official-specific storage key. Lists, results, serial drafts, access passwords and codes remain in memory. Logout/account changes remove recovery state; late responses cannot repopulate it.
 

@@ -5,14 +5,23 @@ import 'package:ziska_verify/core/services/monitoring/crash_reporting_service.da
 /// [LoggerService] on the `logger` package. Every line is redacted; warnings
 /// and errors are also sent to crash reporting, an error as a
 /// [ReportedError].
+///
+/// Lines are printed to the phone's log only when `printing` is on, which
+/// `bootstrap` sets for debug builds alone: a release build prints nothing
+/// (final.md §12; production audit P-12). The switch is the app's own, not
+/// the package's global default filter, which any code could change.
 class ConsoleLoggerService implements LoggerService {
-  ConsoleLoggerService(this._crash, {Logger? logger, bool verbose = false})
-    : _logger =
-          logger ??
-          Logger(
-            level: verbose ? Level.debug : Level.info,
-            printer: SimplePrinter(printTime: true),
-          );
+  ConsoleLoggerService(
+    this._crash, {
+    LogOutput? output,
+    bool printing = false,
+    bool verbose = false,
+  }) : _logger = Logger(
+         filter: _Switch(on: printing),
+         level: verbose ? Level.debug : Level.info,
+         printer: SimplePrinter(printTime: true),
+         output: output,
+       );
 
   final CrashReportingService _crash;
   final Logger _logger;
@@ -59,4 +68,14 @@ class ConsoleLoggerService implements LoggerService {
       withoutError();
     }
   }
+}
+
+/// Prints when [on], at the logger's level; never otherwise.
+class _Switch extends LogFilter {
+  _Switch({required this.on});
+
+  final bool on;
+
+  @override
+  bool shouldLog(LogEvent event) => on && event.level >= level!;
 }

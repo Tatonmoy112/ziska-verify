@@ -89,7 +89,11 @@ Future<void> bootstrap() async {
       ? const NoOpCrashReportingService()
       : FirebaseCrashReportingService(target);
   await crash.initialize();
-  final logger = ConsoleLoggerService(crash, verbose: kDebugMode);
+  final logger = ConsoleLoggerService(
+    crash,
+    printing: kDebugMode,
+    verbose: kDebugMode,
+  );
 
   FlutterError.onError = (details) => logger.error(
     'flutter error',

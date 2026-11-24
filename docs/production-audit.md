@@ -4,7 +4,7 @@ The production-grade review of the app, done on the `production` branch one area
 
 | Step | Area | State |
 |---|---|---|
-| 2 | High-level architecture | Checked 2026-11-24: P-1 … P-12. Fixed: P-1 … P-9; P-10 ready, waits for the Firebase project |
+| 2 | High-level architecture | Checked 2026-11-24: P-1 … P-12. Fixed: P-1 … P-9, P-12; P-10 ready, waits for the Firebase project |
 | 3 | The central API | To do |
 | 4 | Low-level architecture | To do |
 | 5 | Dead code | To do |
@@ -428,6 +428,23 @@ No change is needed where they already comply.
 **Proposal:** for the security step: print an error as a `ReportedError` too (or not at all in release); keep the full error only in debug builds.
 
 **Tests:** normal, edge and worst cases like TC-SEC-032's, on what is printed.
+
+**✅ Fixed 2026-11-24, with a correction:**
+- **The evidence above was wrong about release builds.** The `logger` package's default filter (`DevelopmentFilter`) prints only when asserts are on, so a release build printed nothing.
+  - This was confirmed twice: by the package source (`logger` 2.8.0) and by P-10's emulator run, where the release app's process wrote no line to logcat.
+  - TC-SEC-032 had shown the raw errors in a test, where asserts are on.
+- **What was really at risk:**
+  1. Release silence rested on that default alone. `Logger.defaultFilter` is a global that any code may change, and one line setting `ProductionFilter` would have printed raw errors in release.
+  2. Debug builds, which developers also run against the test server, print errors with their text. That is kept on purpose: developers need it, and it never leaves their machine. Lines stay redacted.
+- **Tests first, red before:** TC-SEC-034 … -036 (`test/core/services/logging/console_printing_test.dart`), 7 tests:
+  - release prints nothing, while crash reporting still gets its line and type;
+  - the package's global default set to print everywhere still prints nothing;
+  - debug prints redacted lines, debug lines only when verbose, and never throws.
+- **Mutation check:** without the app's switch, the 3 release tests fail and show the raw `FormatException`.
+- **The change:**
+  - `ConsoleLoggerService` takes `printing` (and an `output` for tests, in place of the unused `logger` parameter) and filters with its own `_Switch`;
+  - `bootstrap.dart` passes `printing: kDebugMode`;
+  - `final.md` §12 states it.
 
 #### P-11 (should, later): comments point to sections of `final.md` that no longer exist
 **Evidence:**
