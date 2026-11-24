@@ -437,6 +437,19 @@ No change is needed where they already comply.
 
   The normal staging release was then reinstalled: it starts logged in, with Crashlytics initialised and no crash.
 - **The Firebase API key in `config/staging.json`:** it is an identifier Google builds into every app, not a secret. Restrict it in Google Cloud to `com.ziskapharma.trackandtrace.staging` and the signing SHA-1; the debug key for now is `63:52:27:0C:56:7C:A9:BA:55:E4:67:6D:60:07:7A:33:A4:0D:66:88`.
+- **The key restricted and verified (2026-11-24).** The user restricted it in Google Cloud: "Android apps, 25 APIs", the staging package and the debug key's SHA-1.
+  - **The app:** the saved one-off crash-test APK (no code change) ran on the emulator. It recorded a non-fatal error and crashed twice (two launches). Each report was sent through DataTransport with **Status Code 200**, the second by the reinstalled normal build at its start. Logcat shows no 403, `PERMISSION_DENIED`, key or "blocked" error from any Firebase or transport tag.
+  - **The key itself:** that run used Firebase Installations' cached ID and Crashlytics' cached settings (made before the restriction), so the restricted call was made directly, as the Android SDK makes it (`POST firebaseinstallations.googleapis.com/v1/projects/ziska-verify/installations`, a fresh random installation ID, the key never printed):
+
+    | Identity sent | Answer |
+    |---|---|
+    | the staging package and its SHA-1 | **200**, installation registered, token issued |
+    | a wrong package | **403** `PERMISSION_DENIED` |
+    | no app identity | **403** `PERMISSION_DENIED` |
+
+    The restriction works for the staging app and refuses anyone else. One extra test installation was left in the project; it is harmless.
+  - **Afterwards:** the normal staging release reinstalled: Crashlytics initialised, no crash.
+  - **For release:** when the real upload key exists, its SHA-1 must be added to this restriction (and to live's own key), or release builds will be refused.
 
 #### P-12 (must, found 2026-11-24 while fixing P-10): the console log prints errors as they are
 **Evidence:**
