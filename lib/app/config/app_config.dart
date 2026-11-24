@@ -1,3 +1,6 @@
+import 'package:flutter/foundation.dart';
+import 'package:ziska_verify/core/services/monitoring/crash_reporting_service.dart';
+
 /// The build flavors (final.md Section 17).
 /// `staging` builds connect to the backend's test server.
 enum AppFlavor { mock, staging, live }
@@ -13,6 +16,7 @@ class AppConfig {
     required this.officeEmail,
     required this.officePhone,
     this.postmanMockRouting = false,
+    this.crashReporting,
   });
 
   /// Reads the values passed with `--dart-define-from-file`.
@@ -29,6 +33,16 @@ class AppConfig {
     // the analyzer sees the default.
     // ignore: avoid_redundant_argument_values
     postmanMockRouting: const bool.fromEnvironment('POSTMAN_MOCK_ROUTING'),
+    firebaseProjectId: const String.fromEnvironment('FIREBASE_PROJECT_ID'),
+    firebaseSenderId: const String.fromEnvironment('FIREBASE_SENDER_ID'),
+    firebaseAndroidApiKey: const String.fromEnvironment(
+      'FIREBASE_ANDROID_API_KEY',
+    ),
+    firebaseAndroidAppId: const String.fromEnvironment(
+      'FIREBASE_ANDROID_APP_ID',
+    ),
+    firebaseIosApiKey: const String.fromEnvironment('FIREBASE_IOS_API_KEY'),
+    firebaseIosAppId: const String.fromEnvironment('FIREBASE_IOS_APP_ID'),
   );
 
   /// [AppConfig.fromEnvironment] on given values (for tests).
@@ -39,6 +53,12 @@ class AppConfig {
     required String officeEmail,
     required String officePhone,
     bool postmanMockRouting = false,
+    String? firebaseProjectId,
+    String? firebaseSenderId,
+    String? firebaseAndroidApiKey,
+    String? firebaseAndroidAppId,
+    String? firebaseIosApiKey,
+    String? firebaseIosAppId,
   }) {
     final flavor = AppFlavor.values.where((f) => f.name == flavorName);
     if (flavor.isEmpty) {
@@ -57,6 +77,15 @@ class AppConfig {
       officeEmail: officeEmail,
       officePhone: officePhone,
       postmanMockRouting: postmanMockRouting,
+      crashReporting: crashReportingFrom(
+        flavor.single,
+        projectId: firebaseProjectId ?? '',
+        senderId: firebaseSenderId ?? '',
+        androidApiKey: firebaseAndroidApiKey ?? '',
+        androidAppId: firebaseAndroidAppId ?? '',
+        iosApiKey: firebaseIosApiKey ?? '',
+        iosAppId: firebaseIosAppId ?? '',
+      ),
     );
   }
 
@@ -76,8 +105,104 @@ class AppConfig {
   /// by itself (`PostmanMockRouting`, docs/postman-mock-setup.md).
   final bool postmanMockRouting;
 
+  /// The Firebase app crash reports go to; `null` (no `FIREBASE_*` value):
+  /// crash reporting stays off (production audit P-10).
+  final CrashReportingConfig? crashReporting;
+
   /// The base of every app route: `{base}/v1/clients/{slug}/`.
   String get apiRoot => '$baseUrl/v1/clients/$clientSlug/';
+
+  /// Where this phone reports crashes, or `null`: no Firebase app for
+  /// [platform], or a [debug] build (a developer's crashes are not the
+  /// officials').
+  CrashTarget? crashTargetFor(TargetPlatform platform, {required bool debug}) {
+    final config = crashReporting;
+    if (config == null || debug) return null;
+    final app = switch (platform) {
+      TargetPlatform.android => config.android,
+      TargetPlatform.iOS => config.ios,
+      _ => null,
+    };
+    if (app == null) return null;
+    return CrashTarget(
+      projectId: config.projectId,
+      senderId: config.senderId,
+      apiKey: app.apiKey,
+      appId: app.appId,
+    );
+  }
+
+  /// The `FIREBASE_*` values as a [CrashReportingConfig]: `null` when all
+  /// are empty. Throws [StateError] for a half-filled set, naming the
+  /// missing keys (never a value), or for any value in the mock build,
+  /// which never sends anything off the phone.
+  static CrashReportingConfig? crashReportingFrom(
+    AppFlavor flavor, {
+    required String projectId,
+    required String senderId,
+    required String androidApiKey,
+    required String androidAppId,
+    required String iosApiKey,
+    required String iosAppId,
+  }) {
+    final values = {
+      'FIREBASE_PROJECT_ID': projectId.trim(),
+      'FIREBASE_SENDER_ID': senderId.trim(),
+      'FIREBASE_ANDROID_API_KEY': androidApiKey.trim(),
+      'FIREBASE_ANDROID_APP_ID': androidAppId.trim(),
+      'FIREBASE_IOS_API_KEY': iosApiKey.trim(),
+      'FIREBASE_IOS_APP_ID': iosAppId.trim(),
+    };
+    if (values.values.every((v) => v.isEmpty)) return null;
+    if (flavor == AppFlavor.mock) {
+      throw StateError(
+        'FIREBASE_* values are for the staging and live builds only.',
+      );
+    }
+    bool given(String key) => values[key]!.isNotEmpty;
+    final android =
+        given('FIREBASE_ANDROID_API_KEY') || given('FIREBASE_ANDROID_APP_ID');
+    final ios = given('FIREBASE_IOS_API_KEY') || given('FIREBASE_IOS_APP_ID');
+    final missing = [
+      for (final key in ['FIREBASE_PROJECT_ID', 'FIREBASE_SENDER_ID'])
+        if (!given(key)) key,
+      if (android)
+        for (final key in [
+          'FIREBASE_ANDROID_API_KEY',
+          'FIREBASE_ANDROID_APP_ID',
+        ])
+          if (!given(key)) key,
+      if (ios)
+        for (final key in ['FIREBASE_IOS_API_KEY', 'FIREBASE_IOS_APP_ID'])
+          if (!given(key)) key,
+      if (!android && !ios) ...[
+        'FIREBASE_ANDROID_APP_ID',
+        'FIREBASE_IOS_APP_ID',
+      ],
+    ];
+    if (missing.isNotEmpty) {
+      throw StateError(
+        'Crash reporting needs every Firebase value of its app; missing: '
+        '${missing.join(', ')}.',
+      );
+    }
+    return CrashReportingConfig(
+      projectId: values['FIREBASE_PROJECT_ID']!,
+      senderId: values['FIREBASE_SENDER_ID']!,
+      android: android
+          ? (
+              apiKey: values['FIREBASE_ANDROID_API_KEY']!,
+              appId: values['FIREBASE_ANDROID_APP_ID']!,
+            )
+          : null,
+      ios: ios
+          ? (
+              apiKey: values['FIREBASE_IOS_API_KEY']!,
+              appId: values['FIREBASE_IOS_APP_ID']!,
+            )
+          : null,
+    );
+  }
 
   /// Returns the host part of [url] (`https://host[:port]`, lower case, no
   /// trailing `/`); throws unless it is an HTTPS host alone (final.md

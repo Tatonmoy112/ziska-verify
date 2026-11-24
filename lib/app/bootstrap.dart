@@ -26,6 +26,7 @@ import 'package:ziska_verify/core/services/logging/logger_service.dart';
 import 'package:ziska_verify/core/services/media/image_picker_photo_service.dart';
 import 'package:ziska_verify/core/services/media/photo_service.dart';
 import 'package:ziska_verify/core/services/monitoring/crash_reporting_service.dart';
+import 'package:ziska_verify/core/services/monitoring/firebase_crash_reporting_service.dart';
 import 'package:ziska_verify/core/services/permission/permission_handler_service.dart';
 import 'package:ziska_verify/core/services/permission/permission_service.dart';
 import 'package:ziska_verify/core/services/picture/picture_images.dart';
@@ -78,7 +79,15 @@ Future<void> bootstrap() async {
   final config = AppConfig.fromEnvironment();
   tz_data.initializeTimeZones();
 
-  const crash = NoOpCrashReportingService();
+  // Crashlytics only for a staging or live release build given a Firebase
+  // app for this platform; otherwise nothing leaves the phone (P-10).
+  final target = config.crashTargetFor(
+    defaultTargetPlatform,
+    debug: kDebugMode,
+  );
+  final crash = target == null
+      ? const NoOpCrashReportingService()
+      : FirebaseCrashReportingService(target);
   await crash.initialize();
   final logger = ConsoleLoggerService(crash, verbose: kDebugMode);
 

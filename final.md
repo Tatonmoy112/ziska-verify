@@ -153,7 +153,7 @@ Never log passwords, emailed codes, phone IDs, passes, lookup values, request bo
 
 Only the active scanner UUID is persisted for a session, under a client/official-specific storage key. Lists, results, serial drafts, access passwords and codes remain in memory. Logout/account changes remove recovery state; late responses cannot repopulate it.
 
-Show backend request references on API errors. Never open QR links. Show `item.code` already masked by the backend, without reconstructing a hidden code. Reports and photos retain their existing raw-upload and metadata-removal rules. Preserve native backup exclusions and dependency scanning in CI.
+**Crash reports** (2026-11-24, production audit P-10): Firebase Crashlytics, only in a staging or live release build given a Firebase app for its platform (Section 17); otherwise nothing leaves the phone. A report holds the stack trace, the redacted log line and the error as its type only (an app error adds its code, status and request reference), never an error's own text, which can quote an answer or the screen. Crash reporting that cannot start never stops the app. Show backend request references on API errors. Never open QR links. Show `item.code` already masked by the backend, without reconstructing a hidden code. Reports and photos retain their existing raw-upload and metadata-removal rules. Preserve native backup exclusions and dependency scanning in CI.
 
 ## 13. Feature behavior
 
@@ -322,7 +322,7 @@ English and Bangla ARBs with generated accessors. Every English text has a Bangl
 
 ## 17. Environments
 
-Mock builds use the updated Postman snapshot and require its current mock server. Staging/live retain HTTPS and fixed client identity. The mock build has no other demo flag than `POSTMAN_MOCK_ROUTING` (Section 20.2); `DEMO_PASSWORD_LATER` was removed with "Not now" (2026-11-23).
+**Crash reporting** (2026-11-24): six optional values in `config/staging.json` and `config/live.json`, all or none for a platform: `FIREBASE_PROJECT_ID`, `FIREBASE_SENDER_ID`, `FIREBASE_ANDROID_API_KEY`, `FIREBASE_ANDROID_APP_ID`, `FIREBASE_IOS_API_KEY`, `FIREBASE_IOS_APP_ID`. A half-filled set, or any of them in the mock build, stops the app at start (Section 12). Mock builds use the updated Postman snapshot and require its current mock server. Staging/live retain HTTPS and fixed client identity. The mock build has no other demo flag than `POSTMAN_MOCK_ROUTING` (Section 20.2); `DEMO_PASSWORD_LATER` was removed with "Not now" (2026-11-23).
 
 The backend's test server (2026-11-22) is the staging environment: `https://testapp.protecb.com`, client `ziska-test`. The app was checked against it in 11 steps (`docs/staging-integration-2026-11-22.md`); the server's answers are fixtures replayed in `test/staging/`. Do not test recorded checks against a live client.
 

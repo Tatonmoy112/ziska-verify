@@ -4,7 +4,7 @@ The production-grade review of the app, done on the `production` branch one area
 
 | Step | Area | State |
 |---|---|---|
-| 2 | High-level architecture | Checked 2026-11-24: P-1 … P-11. Fixed: P-1 … P-9 |
+| 2 | High-level architecture | Checked 2026-11-24: P-1 … P-12. Fixed: P-1 … P-9; P-10 ready, waits for the Firebase project |
 | 3 | The central API | To do |
 | 4 | Low-level architecture | To do |
 | 5 | Dead code | To do |
@@ -391,6 +391,43 @@ No change is needed where they already comply.
 - its comment points to "final.md Section 2.2 / 20.3", which no longer exist.
 
 **Proposal:** choose a service (the comment names Firebase Crashlytics, which needs a Firebase project from Ziska), then implement it behind the existing interface for `staging` and `live`, keeping the no-op one for `mock`. It's handled with the monitoring step, after your choice.
+
+**✅ Code ready 2026-11-24 (your choice: "prepare Crashlytics, off"); switching it on waits for Ziska's Firebase project:**
+- **Tests first, all red before the change.** 5 cases, 40 tests:
+
+  | Case | What it checks |
+  |---|---|
+  | TC-SEC-029 … -031 (`test/app/config/crash_reporting_config_test.dart`) | on only for a complete Firebase app in a staging or live release build; off without values, in debug, or on a platform without its app; a half-filled set or any value in the mock build stops the app at start, naming the missing keys, never a value |
+  | TC-SEC-032 (`test/core/services/logging/reported_error_test.dart`) | only an error's type leaves the phone, plus an app error's code, status and reference, never its text |
+  | TC-SEC-033 (`test/core/services/monitoring/firebase_crash_reporting_test.dart`) | if Firebase cannot start, the service stays silent and tries once |
+
+  TC-SEC-032 failed on the old code. It sent `Bearer eyJ… raw`, `Text("1000001") overflowed…` and a `FormatException` quoting an answer as they were, which would have broken §12 the day crash reporting went on.
+- **The change:**
+  - `CrashReportingConfig` and `CrashTarget` in the core interface file;
+  - `AppConfig` reads the six `FIREBASE_*` values and offers `crashTargetFor(platform, debug:)`;
+  - `ReportedError` in the logging interface;
+  - `ConsoleLoggerService` sends a `ReportedError`, first, and its console printing can no longer throw: an error whose text cannot be read is printed without it, a bug the worst-case test found;
+  - `FirebaseCrashReportingService`, a plugin file of its own (rules R15 and R16 hold);
+  - `bootstrap.dart` picks it only for a target;
+  - `firebase_core` 5.1.0 and `firebase_crashlytics` 6.0.1.
+- **Checked on 2026-11-24:**
+  - the full suite passes, 1,504 tests;
+  - the staging release APKs build (arm64 28.1 MB, from 27.9 MB);
+  - on the emulator, the x86_64 release APK, without any Firebase value, starts logged in onto the Check tab with its camera;
+  - logcat shows no crash, only Firebase's own "initialization unsuccessful" for the app, as no Firebase app is set.
+  - The build log shows the Kotlin daemon failing to close its caches for `firebase_core`. That is a known Windows issue when the pub cache (C:) and the project (D:) are on different drives; Gradle compiles without the daemon instead, and the build succeeds.
+- **What needs the project:** in `docs/release-backlog.md`: the values, the Crashlytics Gradle plugin (the Android build ID), symbol upload, iOS, the privacy notice.
+
+#### P-12 (must, found 2026-11-24 while fixing P-10): the console log prints errors as they are
+**Evidence:**
+- `ConsoleLoggerService.warning` and `.error` pass the error object itself to the `logger` package;
+- in a release build (level info) it is printed to the phone's log (logcat on Android) with its own text;
+- TC-SEC-032's run showed `Bearer eyJ… raw`, `Text("1000001") overflowed…` and a `FormatException` quoting an answer;
+- final.md §12: "Never log passwords, emailed codes, phone IDs, passes, lookup values, request bodies, query values".
+
+**Proposal:** for the security step: print an error as a `ReportedError` too (or not at all in release); keep the full error only in debug builds.
+
+**Tests:** normal, edge and worst cases like TC-SEC-032's, on what is printed.
 
 #### P-11 (should, later): comments point to sections of `final.md` that no longer exist
 **Evidence:**
