@@ -5,7 +5,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:ziska_verify/app/bootstrap.dart';
+import 'package:ziska_verify/app/di/platform_services.dart';
+import 'package:ziska_verify/app/di/register.dart';
 import 'package:ziska_verify/app/router/app_router.dart';
 import 'package:ziska_verify/core/network/api_client.dart';
 import 'package:ziska_verify/core/services/monitoring/crash_reporting_service.dart';
@@ -57,20 +58,18 @@ void main() {
       config: testConfig,
       crash: const NoOpCrashReportingService(),
       logger: FakeLoggerService(),
-      storage: FakeSecureStorageService(),
+      platform: PlatformServices(storage: FakeSecureStorageService()),
       httpAdapter: transport,
     );
     registerFeatures();
     if (!fakeSession) return;
-    locator
-      ..allowReassignment = true
-      ..registerSingleton<SessionService>(session);
+    // Swapped out in the open: the real session is released, then the
+    // fake is registered (no registration is replaced, P-35).
+    await locator.unregister<SessionService>();
+    locator.registerSingleton<SessionService>(session);
   }
 
-  tearDown(() async {
-    await locator.reset();
-    locator.allowReassignment = false;
-  });
+  tearDown(locator.reset);
 
   group('TC-ARCH-047 normal: the app releases what it opened', () {
     test('the verification repository stops listening', () async {

@@ -10,15 +10,15 @@ import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:ziska_verify/app/app.dart';
 import 'package:ziska_verify/app/bootstrap.dart';
 import 'package:ziska_verify/app/config/app_config.dart';
+import 'package:ziska_verify/app/di/platform_services.dart';
+import 'package:ziska_verify/app/di/register.dart';
 import 'package:ziska_verify/core/services/connectivity/connectivity_service.dart';
 import 'package:ziska_verify/core/services/device/app_info_service.dart';
 import 'package:ziska_verify/core/services/launcher/launcher_service.dart';
 import 'package:ziska_verify/core/services/media/photo_service.dart';
 import 'package:ziska_verify/core/services/monitoring/crash_reporting_service.dart';
 import 'package:ziska_verify/core/services/permission/permission_service.dart';
-import 'package:ziska_verify/core/services/picture/picture_images.dart';
 import 'package:ziska_verify/core/services/scanner/scanner_service.dart';
-import 'package:ziska_verify/core/services/storage/preferences_service.dart';
 import 'package:ziska_verify/core/services/storage/secure_storage_service.dart';
 import 'package:ziska_verify/shared/design_system/components/chips/count_chip.dart';
 
@@ -601,7 +601,6 @@ Future<FlowApp> startApp(
 
   final locator = GetIt.instance;
   await locator.reset();
-  locator.allowReassignment = true;
 
   final backend = FakeBackend(profile: profile ?? Roles.fieldInspector);
   backend.overrides.addAll(overrides);
@@ -622,19 +621,21 @@ Future<FlowApp> startApp(
     config: testConfig,
     crash: const NoOpCrashReportingService(),
     logger: logger,
-    storage: store,
+    // The fakes are handed in; no registration is replaced (P-35).
+    platform: PlatformServices(
+      storage: store,
+      launcher: launcher,
+      scanner: scanner,
+      photos: photos,
+      pictures: pictures,
+      appInfo: _FakeAppInfo(),
+      connectivity: connectivity,
+      preferences: prefs,
+      permission: _FakePermission(),
+    ),
     httpAdapter: ScriptedAdapter(backend.answer),
   );
   registerFeatures();
-  locator
-    ..registerSingleton<LauncherService>(launcher)
-    ..registerSingleton<ScannerService>(scanner)
-    ..registerSingleton<PhotoService>(photos)
-    ..registerSingleton<PictureImages>(pictures)
-    ..registerSingleton<AppInfoService>(_FakeAppInfo())
-    ..registerSingleton<ConnectivityService>(connectivity)
-    ..registerSingleton<PreferencesService>(prefs)
-    ..registerSingleton<PermissionService>(_FakePermission());
 
   // The app's own start: the phone ID and the stored login.
   await prepareSession();

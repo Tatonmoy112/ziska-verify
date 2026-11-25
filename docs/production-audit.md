@@ -6,7 +6,7 @@ The production-grade review of the app, done on the `production` branch one area
 |---|---|---|
 | 2 | High-level architecture | Checked 2026-11-24: P-1 … P-15. **All fixed**; P-10 on for staging, live waits for its production project |
 | 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11). **All fixed** (2026-11-25) |
-| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-44. Fixed: P-20 … P-34 |
+| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-44. Fixed: P-20 … P-35 |
 | 5 | Dead code | To do |
 | 6+ | Comments, data layer, UI components, state and lifecycle, security, build and release, monitoring, tests, localisation, performance, docs | To do |
 
@@ -1151,6 +1151,25 @@ History's reasons stay raw strings (`CheckRecord.reasons`, `List<String>`), whic
 - **normal:** the flow tests pass without `allowReassignment`;
 - **edge:** a single override;
 - **worst:** registering twice fails.
+
+**✅ Fixed 2026-11-25:**
+- **Tests first:** TC-ARCH-050 … -052 (`test/app/startup_modules_test.dart`):
+  - each platform fake handed in is the one used;
+  - a single fake replaces that one service only;
+  - registering twice fails;
+  - no file in `lib/` or `test/` sets `allowReassignment`, which the harness and the release test did;
+  - `bootstrap.dart` builds no client, registers nothing and sets no error handler, all of which it did.
+- **The change:** `bootstrap.dart` went from 289 lines to 43. It now runs the steps in order:
+  - `error_handlers.dart`: `startMonitoring`, `installErrorHandlers`;
+  - `di/network_module.dart`: `buildNetwork`, the two clients and the interceptors in order;
+  - `di/register.dart`: `registerCore`, `registerFeatures`, `prepareLanguage`;
+  - `di/locator.dart`: the locator.
+
+  `PlatformServices` (`di/platform_services.dart`) takes a named override per platform service, with the real one as the default, made when first used.
+- **The tests:**
+  - the flow harness hands in its nine fakes and no longer resets with reassignment allowed;
+  - the release test swaps its session in the open (unregister, then register).
+- **Not covered by a test:** the flows start `App` through the harness, not through `bootstrap()` itself. Its steps are the tested modules, and analyze checks the whole.
 
 #### P-36 (should): the scan session's state allows impossible combinations
 **Evidence:** `ScanSessionState` (`verification/presentation/bloc/scan_session_cubit.dart:28-87`) has 27 fields, 11 of them bools: `loading`, `busy`, `paused`, `finishing`, `done`, `resumed`, `renewed`, `restarted`, `repeat`, `rowsFailed`, `loadingMore`. "Loading", "finishing", "done" and "start failed" (`id == null`) cannot hold together, but the type allows it, and the screen works out the phase itself (`scan_session_screen.dart:197-229`, `_BottomBar`).

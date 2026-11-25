@@ -143,7 +143,7 @@ Render times in Asia/Dhaka using the existing utilities and injectable clock.
 
 ## 11. Configuration and organization
 
-Use mock/staging/live flavors and matching JSON configuration. API base addresses are HTTPS; the slug is fixed per build. Office contact configuration is used for the empty-access-role fallback; authenticated support comes from `GET me`.
+The app starts from small modules in `lib/app` (2026-11-25, production audit P-35): `error_handlers.dart` (crash reporting, the error handlers), `di/network_module.dart` (the two clients and their interceptors), `di/register.dart` (every registration), `di/locator.dart`; `bootstrap.dart` only puts them in order. A test hands its platform fakes in through `PlatformServices`, never by replacing a registration. Use mock/staging/live flavors and matching JSON configuration. API base addresses are HTTPS; the slug is fixed per build. Office contact configuration is used for the empty-access-role fallback; authenticated support comes from `GET me`.
 
 **Citations in code comments** (2026-11-24, production audit P-11) name the current section: `final.md §N`, `guide §N` (the app API guide), `build guide §N`, `UI audit 2026-11-22, N.N`, `test plan §N`; a test checks that each exists, in the code, the tests, the tools and the Android and iOS projects, a citation over two lines included (P-16). Register implementations in `app/bootstrap.dart`; feature widgets receive interfaces/callbacks. Tests mirror the feature layers and use the fake backend, secure storage, camera, photo, launcher, and image wrappers. No automated tests call real services or plugins.
 
