@@ -86,7 +86,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ],
       ),
     );
-    if (!(confirmed ?? false) || _loggingOut) return;
+    // Profile may be gone by the answer (the login ended and the router
+    // moved on): there is nothing left to log out of (P-20).
+    if (!mounted || !(confirmed ?? false) || _loggingOut) return;
     setState(() => _loggingOut = true);
     try {
       await widget.onLogout();

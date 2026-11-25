@@ -19,7 +19,7 @@ Current migration acceptance: [16-mobile-migration.md](16-mobile-migration.md). 
 | Area | File | Cases | P1 | P2 | P3 | ✅ Auto | ⏳ To automate | ✋ Manual | ⛔ Blocked |
 |---|---|---|---|---|---|---|---|---|---|
 | AUTH | [01-auth.md](01-auth.md) | 109 | 39 | 49 | 21 | 96 | 0 | 13 | 0 |
-| SESS | [02-session.md](02-session.md) | 45 | 21 | 19 | 5 | 40 | 0 | 5 | 0 |
+| SESS | [02-session.md](02-session.md) | 48 | 21 | 21 | 6 | 43 | 0 | 5 | 0 |
 | ROLE and NAV | [03-roles-nav.md](03-roles-nav.md) | 47 | 17 | 24 | 6 | 44 | 0 | 3 | 0 |
 | LOOK | [04-lookup.md](04-lookup.md) | 102 | 42 | 43 | 17 | 89 | 0 | 13 | 0 |
 | BULK | [05-bulk.md](05-bulk.md) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
@@ -36,7 +36,7 @@ Current migration acceptance: [16-mobile-migration.md](16-mobile-migration.md). 
 | MIG | [16-mobile-migration.md](16-mobile-migration.md) | 73 | 46 | 25 | 2 | 72 | 0 | 1 | 0 |
 | STG | [17-test-server.md](17-test-server.md) | 58 | 44 | 11 | 3 | 47 | 0 | 11 | 0 |
 | ARCH | [18-architecture.md](18-architecture.md) | 34 | 0 | 11 | 23 | 34 | 0 | 0 | 0 |
-| **Total** | | **977** | 315 | 459 | 203 | 849 | 0 | 128 | 0 |
+| **Total** | | **980** | 315 | 461 | 204 | 852 | 0 | 128 | 0 |
 
 ## 3. Case Format
 

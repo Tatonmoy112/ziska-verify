@@ -6,7 +6,7 @@ The production-grade review of the app, done on the `production` branch one area
 |---|---|---|
 | 2 | High-level architecture | Checked 2026-11-24: P-1 … P-15. **All fixed**; P-10 on for staging, live waits for its production project |
 | 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11). **All fixed** (2026-11-25) |
-| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-43 |
+| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-43. Fixed: P-20 |
 | 5 | Dead code | To do |
 | 6+ | Comments, data layer, UI components, state and lifecycle, security, build and release, monitoring, tests, localisation, performance, docs | To do |
 
@@ -718,6 +718,13 @@ The layer rules (step 2) and the central API (step 3) are already enforced, so t
 - **normal:** logout confirmed: the busy state shows and `onLogout` runs once;
 - **edge:** cancelled, or the dialog dismissed: nothing happens;
 - **worst:** the page is removed while the dialog is open, then the dialog answers: no exception, and `onLogout` does not run.
+
+**✅ Fixed 2026-11-25:**
+- **Tests first:** TC-SESS-046 … -048 (`test/features/profile/presentation/profile_logout_test.dart`), the real Profile with its logout dialog:
+  - confirmed: the logout runs once;
+  - cancelled or dismissed: nothing happens;
+  - Profile taken away while the dialog is open, then confirmed. This was red before, with "setState() called after dispose()".
+- **The change:** `_confirmLogout` returns when `!mounted` after the dialog (`profile_screen.dart`). The login is already over then, so the logout is not sent again.
 
 #### P-21 (must): Sessions' retry reloads from page 1
 **Evidence:** `verification/presentation/widgets/sessions_view.dart:68`: `onRetry: () => unawaited(cubit.load(state.query))`. `AppPaginatedList` shows that same retry in the footer when a later page fails (`shared/widgets/app_paginated_list.dart:98, 137`). `SessionsCubit` has only `load` and `more`.

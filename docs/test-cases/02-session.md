@@ -4,7 +4,7 @@
 |---|---|
 | Spec | final.md §6.1, §6.3–6.5, §6.7, §9.4 |
 | API | `auth/refresh`, `auth/logout`, `GET me` |
-| Automated in | `test/flow/auth_flow_test.dart`, `phone_id_service_test`, `session_renewal_test`, `auth_repository_test` |
+| Automated in | `test/flow/auth_flow_test.dart`, `phone_id_service_test`, `session_renewal_test`, `auth_repository_test`, `profile_logout_test` |
 | Format | [Case format and type tags](README.md#3-case-format) |
 
 | ID | Title | Type | Pri | Run on | Auto | Pre-conditions / Data | Steps | Expected | Source |
@@ -54,6 +54,9 @@
 | TC-SESS-043 | A late 403 for an older pass | WORST | P2 | AUTO | ✅ `core/network/session_worst_test` | Fake backend; a request of the old login held | Log out and in while it waits; it answers `403 password_change_required` | The new login stays as it is; no change screen | §6.4, guide §3.2 |
 | TC-SESS-044 | Logout sent bare, with a spinner | POS | P3 | AUTO | ✅ `flow/auth_flow_test` | Fake backend; logout held | Profile; **Log out**; confirm | No body and no `Content-Type` (as in Postman); **Log out** spins; then Login | Guide §3.5 |
 | TC-SESS-045 | The new passes of a renewal cannot be stored | WORST | P1 | AUTO | ✅ `core/network/session_worst_test` | Fake backend; secure storage that fails to write after the login | Renew twice; then restart the app on the same storage | Each renewal works from memory and the next one sends the new refresh pass, never the spent one; the spent pair is deleted from the phone, so a restart opens Login instead of sending it. A first login that cannot be stored keeps no pass in memory | guide §3.4; audit 1.1 |
+| TC-SESS-046 | Logout confirmed runs once | POS | P2 | AUTO | ✅ `features/profile/presentation/profile_logout_test` | Profile loaded | **Log out**; confirm | The logout runs once; the dialog closes | §6.5; production audit P-20 |
+| TC-SESS-047 | Logout cancelled or dismissed | EDGE | P3 | AUTO | ✅ `features/profile/presentation/profile_logout_test` | Profile loaded | **Log out**; **Cancel**; **Log out**; tap outside the dialog | No logout; still on Profile | §13.7; P-20 |
+| TC-SESS-048 | Profile gone while the logout dialog is open | WORST | P2 | AUTO | ✅ `features/profile/presentation/profile_logout_test` | Profile loaded | **Log out**; while the dialog is open, Profile is taken away (the login ended); confirm | No error (`setState` after `dispose`); no second logout | §6.5; P-20 |
 
 ## Spec gaps in this file
 
