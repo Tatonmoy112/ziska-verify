@@ -3,6 +3,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:ziska_verify/core/errors/app_exception.dart';
 import 'package:ziska_verify/core/errors/result.dart';
 import 'package:ziska_verify/core/pagination/cursor_page.dart';
+import 'package:ziska_verify/core/utils/waits_until.dart';
 
 part 'paginated_state.freezed.dart';
 
@@ -36,7 +37,7 @@ abstract class PaginatedState<T> with _$PaginatedState<T> {
   const PaginatedState._();
 
   /// A `429` countdown is still running.
-  bool get isWaiting => retryAt != null && clock.now().isBefore(retryAt!);
+  bool get isWaiting => waitsUntil(retryAt);
 
   bool get isLoading =>
       status == PaginationStatus.loadingFirst ||

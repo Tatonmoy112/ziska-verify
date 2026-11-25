@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:ziska_verify/core/services/storage/secure_storage_service.dart';
+import 'package:ziska_verify/core/utils/secure_random.dart';
 
 /// The phone ID sent with every login and code (final.md §6).
 abstract interface class PhoneIdService {
@@ -13,11 +14,11 @@ abstract interface class PhoneIdService {
 /// without padding (43 characters of `A–Z a–z 0–9 _ -`). Never made again on
 /// logout, update, or error: a new phone ID is a new phone.
 class SecurePhoneIdService implements PhoneIdService {
-  SecurePhoneIdService(this._storage, {Random? random})
-    : _random = random ?? Random.secure();
+  /// [random] only in tests: the secure generator otherwise.
+  SecurePhoneIdService(this._storage, {Random? random}) : _random = random;
 
   final SecureStorageService _storage;
-  final Random _random;
+  final Random? _random;
   Future<String>? _pending;
 
   @override
@@ -39,8 +40,6 @@ class SecurePhoneIdService implements PhoneIdService {
   }
 
   /// 32 random bytes, base64url, no `=` padding.
-  static String generate(Random random) {
-    final bytes = List<int>.generate(32, (_) => random.nextInt(256));
-    return base64Url.encode(bytes).replaceAll('=', '');
-  }
+  static String generate([Random? random]) =>
+      base64Url.encode(secureBytes(32, random: random)).replaceAll('=', '');
 }

@@ -2,6 +2,7 @@ import 'package:clock/clock.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:ziska_verify/core/errors/app_exception.dart';
 import 'package:ziska_verify/core/errors/result.dart';
+import 'package:ziska_verify/core/utils/waits_until.dart';
 
 part 'submit_state.freezed.dart';
 
@@ -33,5 +34,5 @@ abstract class SubmitState with _$SubmitState {
   bool get isSubmitting => status == SubmitStatus.submitting;
 
   /// A `429` countdown is still running: a new request is not sent.
-  bool get isWaiting => retryAt != null && clock.now().isBefore(retryAt!);
+  bool get isWaiting => waitsUntil(retryAt);
 }

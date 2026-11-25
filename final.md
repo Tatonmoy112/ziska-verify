@@ -133,7 +133,7 @@ Checks support result, way, inclusive date strings, search, and `session_id`. No
 
 Session lists support status, dates, limit and cursor, with both QR and serial kinds in the returned rows. Omitted dates use the server's last-seven-days default. There is no undocumented kind query.
 
-Render times in Asia/Dhaka using the existing utilities and injectable clock.
+Render times in Asia/Dhaka using the existing utilities and injectable clock. The API's times and days are read and written by one helper, `ApiDates` (`core/network/api_dates.dart`): a time without its offset, or a day not written `YYYY-MM-DD`, is a wrong answer like any other field, `count.last_at` and a batch's days included (2026-11-25, production audit P-42).
 
 **Dates (2026-11-23).** The backend's `from`/`to` are whole UTC days, both included, and the totals count those UTC days (guide §4.5, §5). The app shows Bangladesh days, which run from 18:00 UTC the day before to 18:00 UTC, so for the Bangladesh days F to T (`LocalDays`):
 - it sends `from` = F − 1 and `to` = T, in `YYYY-MM-DD` with Latin digits; an open side stays open;

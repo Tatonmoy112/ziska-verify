@@ -6,7 +6,7 @@ The production-grade review of the app, done on the `production` branch one area
 |---|---|---|
 | 2 | High-level architecture | Checked 2026-11-24: P-1 … P-15. **All fixed**; P-10 on for staging, live waits for its production project |
 | 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11). **All fixed** (2026-11-25) |
-| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-45. Fixed: P-20 … P-41 |
+| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-45. Fixed: P-20 … P-42 |
 | 5 | Dead code | To do |
 | 6+ | Comments, data layer, UI components, state and lifecycle, security, build and release, monitoring, tests, localisation, performance, docs | To do |
 
@@ -1349,6 +1349,19 @@ History's reasons stay raw strings (`CheckRecord.reasons`, `List<String>`), whic
 - **Two secure random generators:** `active_scan_store.dart:30` calls `Random.secure()` directly, while `phone_id_service.dart:17` takes an injectable one.
 - **`SessionQuery`:** no `copyWith`, so it is rebuilt by hand (`verification_repository_impl.dart:137-141`).
 - **`lastAt`:** uses `tryParse` (`verification_mappers.dart`), so a bad value becomes `null`, where every other date fails.
+
+**✅ Fixed 2026-11-25:**
+- **Tests first:** TC-ARCH-065 … -067 (`architecture/small_duplicates_test`):
+  - each helper does what its copies did: a query day; the test server's times; a lookup's last check and batch days; a wait; seeded and secure IDs; a sessions query copied and equal by value;
+  - the limits: year 999, a time at +06:00 or to nanoseconds, 29 February, a first check, a wait at its very time;
+  - the worst: times without an offset and days not of the documented form fail, a bad `last_at` or batch day too; the sources hold each piece once.
+- **The change:**
+  - **`ApiDates`** (`core/network/api_dates.dart`) writes a query's days and reads every time and day of an answer: History's and the sessions' services, and the check, report, lookup and session mappers;
+  - **one rule for dates:** a time without its offset (it would be read in the phone's zone) and a day not written `YYYY-MM-DD` are a `FormatException`, so a wrong answer under `guard`. That now covers `last_at` and a batch's `made` and `expires`, which were silently dropped. The test server's recorded answers (`test/fixtures/staging/`) all have their offset and `YYYY-MM-DD` days, as the guide's §1 writes them;
+  - **`waitsUntil`** (`core/utils/waits_until.dart`) is the one wait check. Re-reading found 16 copies, not 7: four states (paging, a submit, the totals, a session's summary), Request access (three), the serial stack, the lookup (two), a report (two), the code's resend, and three in the scanner session. A bloc with its own clock passes `now`;
+  - **`secureBytes`** (`core/utils/secure_random.dart`) is the only `Random.secure()`: the phone ID and a scanner session's ID use it, and tests can seed both;
+  - **`SessionQuery`** is Freezed, as `CheckQuery` is: the sessions view and the repository copy it instead of rebuilding it.
+- **Every screenshot and flow test passes unchanged.**
 
 #### P-43 (nice): naming and structure drift
 - **File naming:** use-case files are one per class (`get_checks.dart`) or grouped (`*_usecases.dart`); DTO and mapper files are singular (`profile_dto.dart`, `profile_mapper.dart`) or plural (`*_dtos.dart`, `*_mappers.dart`).

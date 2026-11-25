@@ -8,6 +8,7 @@ import 'package:ziska_verify/core/errors/app_exception.dart';
 import 'package:ziska_verify/core/errors/result.dart';
 import 'package:ziska_verify/core/services/scanner/active_scan_store.dart';
 import 'package:ziska_verify/core/services/session/session_state.dart';
+import 'package:ziska_verify/core/utils/waits_until.dart';
 import 'package:ziska_verify/features/verification/domain/entities/checked_input.dart';
 import 'package:ziska_verify/features/verification/domain/entities/failure_reasons.dart';
 import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
@@ -192,7 +193,7 @@ class ScanSessionCubit extends Cubit<ScanSessionState> {
   Future<void> start() async {
     if (_starting || _ended) return;
     final wait = state.retryAt;
-    if (state.id == null && wait != null && clock.now().isBefore(wait)) {
+    if (state.id == null && waitsUntil(wait)) {
       return;
     }
     _starting = true;
@@ -342,7 +343,7 @@ class ScanSessionCubit extends Cubit<ScanSessionState> {
     final now = clock.now();
     DateTime? notBefore;
     final wait = state.retryAt;
-    if (wait != null && now.isBefore(wait)) notBefore = wait;
+    if (waitsUntil(wait, now: now)) notBefore = wait;
     final last = _lastSentAt;
     if (last != null) {
       final next = last.add(scanSpacing);
@@ -607,10 +608,7 @@ class ScanSessionCubit extends Cubit<ScanSessionState> {
     }
   }
 
-  bool get _rowsWaiting {
-    final wait = state.rowsRetryAt;
-    return wait != null && clock.now().isBefore(wait);
-  }
+  bool get _rowsWaiting => waitsUntil(state.rowsRetryAt);
 
   /// The next page of the session's scans: while scanning, and on the
   /// summary, which shows every product (final.md §13.2;

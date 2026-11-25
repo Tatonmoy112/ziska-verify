@@ -1,6 +1,9 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:ziska_verify/core/pagination/cursor_page.dart';
 import 'package:ziska_verify/core/utils/wire_value.dart';
 import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
+
+part 'scan_session.freezed.dart';
 
 /// Authoritative counters returned with a scan or serial stack.
 class SessionTotals {
@@ -78,11 +81,17 @@ class ScanSessionSummary {
   final DateTime lastScanAt;
 }
 
-class SessionQuery {
-  const SessionQuery({this.status, this.from, this.to});
-  final ScanStatus? status;
-  final DateTime? from;
-  final DateTime? to;
+/// The filters of `GET scan-sessions` (final.md §10): copied with
+/// [copyWith], equal by value (production audit P-42).
+@freezed
+abstract class SessionQuery with _$SessionQuery {
+  const factory SessionQuery({
+    ScanStatus? status,
+
+    /// Calendar days, both included.
+    DateTime? from,
+    DateTime? to,
+  }) = _SessionQuery;
 }
 
 /// The history API cannot reconstruct a full lookup response.

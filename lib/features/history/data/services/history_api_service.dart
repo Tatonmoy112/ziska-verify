@@ -1,6 +1,7 @@
 import 'package:ziska_verify/core/errors/failure_reason.dart';
 import 'package:ziska_verify/core/network/api_client.dart';
 import 'package:ziska_verify/core/network/api_data.dart';
+import 'package:ziska_verify/core/network/api_dates.dart';
 import 'package:ziska_verify/core/network/api_routes.dart';
 import 'package:ziska_verify/core/pagination/page_request.dart';
 import 'package:ziska_verify/features/history/data/models/checks_page_dto.dart';
@@ -34,15 +35,10 @@ class DioHistoryApiService implements HistoryApiService {
       'cursor': page.cursor,
       'result': query.result?.wire,
       'way': query.way?.wire,
-      'from': query.from == null ? null : _day(query.from!),
-      'to': query.to == null ? null : _day(query.to!),
+      'from': query.from == null ? null : ApiDates.dayText(query.from!),
+      'to': query.to == null ? null : ApiDates.dayText(query.to!),
       'search': search == null || search.isEmpty ? null : search,
       'session_id': query.sessionId,
     };
   }
-
-  static String _day(DateTime d) =>
-      '${d.year.toString().padLeft(4, '0')}-'
-      '${d.month.toString().padLeft(2, '0')}-'
-      '${d.day.toString().padLeft(2, '0')}';
 }

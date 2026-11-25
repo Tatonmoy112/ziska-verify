@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:ziska_verify/core/errors/app_exception.dart';
 import 'package:ziska_verify/core/errors/result.dart';
+import 'package:ziska_verify/core/utils/waits_until.dart';
 import 'package:ziska_verify/features/verification/domain/entities/checked_input.dart';
 import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
 import 'package:ziska_verify/features/verification/domain/entities/prepared_input.dart';
@@ -103,7 +104,7 @@ class LookupBloc extends Bloc<LookupEvent, LookupState> {
   ) async {
     if (state.formats != null) return;
     final wait = state.formatsRetryAt;
-    if (wait != null && _now().isBefore(wait)) return;
+    if (waitsUntil(wait, now: _now())) return;
     emit(state.copyWith(formatsLoading: true, formatsFailure: null));
     final result = await _getFormats();
     emit(switch (result) {
@@ -128,7 +129,7 @@ class LookupBloc extends Bloc<LookupEvent, LookupState> {
     // A `429` countdown is running: nothing is sent before it ends
     // (final.md §13.1, §15).
     final wait = state.retryAt;
-    if (wait != null && _now().isBefore(wait)) return;
+    if (waitsUntil(wait, now: _now())) return;
 
     final prepared = _prepare(event.way, event.raw, formats);
     if (prepared is RefusedInput) {

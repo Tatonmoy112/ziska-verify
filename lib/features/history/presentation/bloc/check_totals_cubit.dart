@@ -6,6 +6,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:ziska_verify/core/errors/result.dart';
 import 'package:ziska_verify/core/pagination/page_request.dart';
 import 'package:ziska_verify/core/pagination/wait_timer.dart';
+import 'package:ziska_verify/core/utils/waits_until.dart';
 import 'package:ziska_verify/features/history/domain/entities/check.dart';
 import 'package:ziska_verify/features/history/domain/usecases/get_checks.dart';
 
@@ -28,7 +29,7 @@ abstract class CheckTotalsState with _$CheckTotalsState {
 
   const CheckTotalsState._();
 
-  bool get isWaiting => retryAt != null && clock.now().isBefore(retryAt!);
+  bool get isWaiting => waitsUntil(retryAt);
 }
 
 /// The official's own check counts for the Profile cards (final.md §13.7):

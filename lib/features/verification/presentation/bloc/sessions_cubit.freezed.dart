@@ -49,7 +49,7 @@ $Res call({
 });
 
 
-$PaginatedStateCopyWith<ScanSessionSummary, $Res> get list;
+$SessionQueryCopyWith<$Res> get query;$PaginatedStateCopyWith<ScanSessionSummary, $Res> get list;
 
 }
 /// @nodoc
@@ -70,6 +70,15 @@ as PaginatedState<ScanSessionSummary>,
   ));
 }
 /// Create a copy of SessionsState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$SessionQueryCopyWith<$Res> get query {
+  
+  return $SessionQueryCopyWith<$Res>(_self.query, (value) {
+    return _then(_self.copyWith(query: value));
+  });
+}/// Create a copy of SessionsState
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
@@ -256,7 +265,7 @@ $Res call({
 });
 
 
-@override $PaginatedStateCopyWith<ScanSessionSummary, $Res> get list;
+@override $SessionQueryCopyWith<$Res> get query;@override $PaginatedStateCopyWith<ScanSessionSummary, $Res> get list;
 
 }
 /// @nodoc
@@ -278,6 +287,15 @@ as PaginatedState<ScanSessionSummary>,
 }
 
 /// Create a copy of SessionsState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$SessionQueryCopyWith<$Res> get query {
+  
+  return $SessionQueryCopyWith<$Res>(_self.query, (value) {
+    return _then(_self.copyWith(query: value));
+  });
+}/// Create a copy of SessionsState
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')

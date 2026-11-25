@@ -9,6 +9,7 @@ import 'package:ziska_verify/core/errors/app_exception.dart';
 import 'package:ziska_verify/core/errors/failure_reason.dart';
 import 'package:ziska_verify/core/errors/result.dart';
 import 'package:ziska_verify/core/services/media/photo_service.dart';
+import 'package:ziska_verify/core/utils/waits_until.dart';
 import 'package:ziska_verify/features/incidents/domain/entities/failure_reasons.dart';
 import 'package:ziska_verify/features/incidents/domain/entities/report.dart';
 import 'package:ziska_verify/features/incidents/domain/usecases/incident_usecases.dart';
@@ -269,7 +270,7 @@ class ReportIncidentBloc
     // Filed once: never again, whatever happens to the photos.
     if (!state.canEdit || event.note.trim().isEmpty) return;
     final wait = state.retryAt;
-    if (wait != null && _now().isBefore(wait)) return;
+    if (waitsUntil(wait, now: _now())) return;
     emit(
       state.copyWith(
         filing: FilingStatus.filing,
@@ -350,7 +351,7 @@ class ReportIncidentBloc
     final target = state.photos.where((p) => p.localId == event.localId);
     if (target.isEmpty || !target.single.canRetry) return;
     final wait = target.single.retryAt;
-    if (wait != null && _now().isBefore(wait)) return;
+    if (waitsUntil(wait, now: _now())) return;
     emit(
       state.copyWith(
         photos: [

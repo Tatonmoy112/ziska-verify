@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:ziska_verify/core/errors/app_exception.dart';
 import 'package:ziska_verify/core/errors/result.dart';
+import 'package:ziska_verify/core/utils/waits_until.dart';
 import 'package:ziska_verify/features/verification/domain/entities/failure_reasons.dart';
 import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
 import 'package:ziska_verify/features/verification/domain/entities/serial_stack.dart';
@@ -150,7 +151,7 @@ class SerialStackCubit extends Cubit<SerialStackState> {
         state.recorded ||
         state.serials.isEmpty ||
         state.result != null ||
-        (state.retryAt != null && clock.now().isBefore(state.retryAt!))) {
+        waitsUntil(state.retryAt)) {
       return;
     }
     _retry?.cancel();

@@ -115,11 +115,7 @@ class _Filters extends StatelessWidget {
                 selected: query.status == status,
                 onTap: () => unawaited(
                   cubit.load(
-                    SessionQuery(
-                      status: status,
-                      from: query.from,
-                      to: query.to,
-                    ),
+                    query.copyWith(status: status),
                   ),
                 ),
               ),
@@ -142,7 +138,7 @@ class _Filters extends StatelessWidget {
               TextButton(
                 key: const Key('sessions.clearDates'),
                 onPressed: () => unawaited(
-                  cubit.load(SessionQuery(status: query.status)),
+                  cubit.load(query.copyWith(from: null, to: null)),
                 ),
                 child: Text(l.clear),
               ),
@@ -162,11 +158,7 @@ class _Filters extends StatelessWidget {
                 );
                 if (range != null) {
                   await cubit.load(
-                    SessionQuery(
-                      status: query.status,
-                      from: range.start,
-                      to: range.end,
-                    ),
+                    query.copyWith(from: range.start, to: range.end),
                   );
                 }
               },

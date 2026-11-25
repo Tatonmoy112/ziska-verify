@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:ziska_verify/core/services/storage/secure_storage_service.dart';
+import 'package:ziska_verify/core/utils/secure_random.dart';
 
 /// Only a UUID is persisted. The key isolates clients and officials.
 class ActiveScanStore {
@@ -26,9 +27,9 @@ class ActiveScanStore {
   Future<void> save(String id) => _storage.write(_key, id);
   Future<void> clear() => _storage.delete(_key);
 
-  static String newId() {
-    final random = Random.secure();
-    final bytes = List<int>.generate(16, (_) => random.nextInt(256));
+  /// A new session ID: a version 4 UUID. [random] only in tests.
+  static String newId({Random? random}) {
+    final bytes = secureBytes(16, random: random);
     bytes[6] = (bytes[6] & 0x0f) | 0x40;
     bytes[8] = (bytes[8] & 0x3f) | 0x80;
     final hex = bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();

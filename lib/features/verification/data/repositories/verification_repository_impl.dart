@@ -126,7 +126,7 @@ class VerificationRepositoryImpl implements VerificationRepository {
       page: page,
       fetch: (from, to, page) async {
         final dto = await _api.sessions(
-          SessionQuery(status: query.status, from: from, to: to),
+          query.copyWith(from: from, to: to),
           page,
         );
         return CursorPage(

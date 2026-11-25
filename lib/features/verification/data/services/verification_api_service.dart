@@ -1,6 +1,7 @@
 import 'package:ziska_verify/core/errors/failure_reason.dart';
 import 'package:ziska_verify/core/network/api_client.dart';
 import 'package:ziska_verify/core/network/api_data.dart';
+import 'package:ziska_verify/core/network/api_dates.dart';
 import 'package:ziska_verify/core/network/api_routes.dart';
 import 'package:ziska_verify/core/pagination/page_request.dart';
 import 'package:ziska_verify/features/verification/data/models/verification_dtos.dart';
@@ -65,17 +66,12 @@ class DioVerificationApiService implements VerificationApiService {
           'limit': page.limit,
           'cursor': page.cursor,
           'status': query.status?.wire,
-          'from': _day(query.from),
-          'to': _day(query.to),
+          'from': query.from == null ? null : ApiDates.dayText(query.from!),
+          'to': query.to == null ? null : ApiDates.dayText(query.to!),
         },
       ),
     ),
   );
-  static String? _day(DateTime? date) => date == null
-      ? null
-      : '${date.year.toString().padLeft(4, '0')}-'
-            '${date.month.toString().padLeft(2, '0')}-'
-            '${date.day.toString().padLeft(2, '0')}';
 
   /// Every answer here is an object; the repository acts on this name
   /// (a serial stack recorded with an unreadable answer).

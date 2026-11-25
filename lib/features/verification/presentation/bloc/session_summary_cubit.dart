@@ -2,6 +2,7 @@ import 'package:clock/clock.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:ziska_verify/core/errors/result.dart';
+import 'package:ziska_verify/core/utils/waits_until.dart';
 import 'package:ziska_verify/features/verification/domain/entities/scan_session.dart';
 
 part 'session_summary_cubit.freezed.dart';
@@ -21,7 +22,7 @@ abstract class SessionSummaryState with _$SessionSummaryState {
 
   const SessionSummaryState._();
 
-  bool get isWaiting => retryAt != null && clock.now().isBefore(retryAt!);
+  bool get isWaiting => waitsUntil(retryAt);
 }
 
 /// One session's summary, above its checks (`GET lookups/sessions/{id}`,

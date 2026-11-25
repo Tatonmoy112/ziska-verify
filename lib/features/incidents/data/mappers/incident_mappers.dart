@@ -1,3 +1,4 @@
+import 'package:ziska_verify/core/network/api_dates.dart';
 import 'package:ziska_verify/core/pagination/cursor_page.dart';
 import 'package:ziska_verify/features/incidents/data/models/incident_dtos.dart';
 import 'package:ziska_verify/features/incidents/domain/entities/report.dart';
@@ -14,7 +15,7 @@ extension ReportMapper on ReportDto {
   /// repository's `guard` turns into a failure.
   Report toEntity() => Report(
     id: id,
-    at: DateTime.parse(at).toUtc(),
+    at: ApiDates.instant(at),
     note: note,
     photos: photos,
     checkRef: checkRef,

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:ziska_verify/core/errors/app_exception.dart';
 import 'package:ziska_verify/core/errors/result.dart';
+import 'package:ziska_verify/core/utils/waits_until.dart';
 import 'package:ziska_verify/features/authentication/domain/entities/access_request.dart';
 import 'package:ziska_verify/features/authentication/domain/usecases/access_request_usecases.dart';
 
@@ -37,11 +38,9 @@ abstract class RequestAccessState with _$RequestAccessState {
 
   const RequestAccessState._();
 
-  bool get codeWaiting =>
-      codeRetryAt != null && clock.now().isBefore(codeRetryAt!);
-  bool get submitWaiting =>
-      submitRetryAt != null && clock.now().isBefore(submitRetryAt!);
-  bool get waiting => retryAt != null && clock.now().isBefore(retryAt!);
+  bool get codeWaiting => waitsUntil(codeRetryAt);
+  bool get submitWaiting => waitsUntil(submitRetryAt);
+  bool get waiting => waitsUntil(retryAt);
 }
 
 class RequestAccessCubit extends Cubit<RequestAccessState> {

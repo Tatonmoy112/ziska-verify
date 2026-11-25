@@ -1,3 +1,4 @@
+import 'package:ziska_verify/core/network/api_dates.dart';
 import 'package:ziska_verify/features/verification/data/models/verification_dtos.dart';
 import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
 import 'package:ziska_verify/features/verification/domain/entities/scan_session.dart';
@@ -22,7 +23,7 @@ extension LookupResultMapper on LookupResultDto {
             thisCheck: count!.thisCheck,
             lastAt: count!.lastAt == null
                 ? null
-                : DateTime.tryParse(count!.lastAt!)?.toUtc(),
+                : ApiDates.instant(count!.lastAt!),
           ),
     item: item == null
         ? null
@@ -44,8 +45,7 @@ extension LookupResultMapper on LookupResultDto {
   );
 }
 
-DateTime? _date(String? value) =>
-    value == null ? null : DateTime.tryParse(value);
+DateTime? _date(String? value) => value == null ? null : ApiDates.day(value);
 
 extension SerialStackMapper on SerialStackDto {
   SerialStackResult toEntity() => SerialStackResult(
@@ -81,7 +81,7 @@ extension SessionSummaryMapper on SessionSummaryDto {
     ),
     kind: SessionKind.fromWire(kind),
     status: ScanStatus.fromWire(status),
-    startedAt: DateTime.parse(startedAt).toUtc(),
-    lastScanAt: DateTime.parse(lastScanAt).toUtc(),
+    startedAt: ApiDates.instant(startedAt),
+    lastScanAt: ApiDates.instant(lastScanAt),
   );
 }

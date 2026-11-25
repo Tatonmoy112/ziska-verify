@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:ziska_verify/core/errors/app_exception.dart';
 import 'package:ziska_verify/core/errors/result.dart';
+import 'package:ziska_verify/core/utils/waits_until.dart';
 import 'package:ziska_verify/features/authentication/domain/usecases/auth_usecases.dart';
 import 'package:ziska_verify/features/authentication/presentation/bloc/submit_state.dart';
 
@@ -102,7 +103,7 @@ class VerifyCodeBloc extends Bloc<VerifyCodeEvent, VerifyCodeState> {
     Emitter<VerifyCodeState> emit,
   ) async {
     final availableAt = state.resendAvailableAt;
-    if (availableAt != null && _now().isBefore(availableAt)) return;
+    if (waitsUntil(availableAt, now: _now())) return;
 
     emit(state.copyWith(resending: true, resendFailure: null));
     final result = await _resendCode();
