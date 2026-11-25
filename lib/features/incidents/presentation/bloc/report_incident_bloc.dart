@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:clock/clock.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:ziska_verify/core/errors/app_exception.dart';
 import 'package:ziska_verify/core/errors/failure_reason.dart';
 import 'package:ziska_verify/core/errors/result.dart';
@@ -10,6 +11,8 @@ import 'package:ziska_verify/core/services/media/photo_service.dart';
 import 'package:ziska_verify/features/incidents/domain/entities/failure_reasons.dart';
 import 'package:ziska_verify/features/incidents/domain/entities/report.dart';
 import 'package:ziska_verify/features/incidents/domain/usecases/incident_usecases.dart';
+
+part 'report_incident_bloc.freezed.dart';
 
 sealed class ReportIncidentEvent {
   const ReportIncidentEvent();
@@ -60,26 +63,22 @@ final class _UploadRequested extends ReportIncidentEvent {
 
 enum PhotoStatus { waiting, sending, sent, failed }
 
-class ReportPhoto {
-  const ReportPhoto({
-    required this.localId,
-    required this.photo,
-    this.status = PhotoStatus.waiting,
-    this.number,
-    this.failure,
-    this.retryAt,
-  });
+@freezed
+abstract class ReportPhoto with _$ReportPhoto {
+  const factory ReportPhoto({
+    required int localId,
+    required PreparedPhoto photo,
+    @Default(PhotoStatus.waiting) PhotoStatus status,
 
-  final int localId;
-  final PreparedPhoto photo;
-  final PhotoStatus status;
+    /// The photo's number on the report (`n`), once sent.
+    int? number,
+    Failure? failure,
 
-  /// The photo's number on the report (`n`), once sent.
-  final int? number;
-  final Failure? failure;
+    /// After a `429`: not sent again before this time (guide section 1).
+    DateTime? retryAt,
+  }) = _ReportPhoto;
 
-  /// After a `429`: not sent again before this time (guide section 1).
-  final DateTime? retryAt;
+  const ReportPhoto._();
 
   Uint8List get bytes => photo.bytes;
 
@@ -94,20 +93,6 @@ class ReportPhoto {
         InternalErrorException() => true,
         _ => false,
       };
-
-  ReportPhoto copyWith({
-    PhotoStatus? status,
-    int? number,
-    Failure? Function()? failure,
-    DateTime? Function()? retryAt,
-  }) => ReportPhoto(
-    localId: localId,
-    photo: photo,
-    status: status ?? this.status,
-    number: number ?? this.number,
-    retryAt: retryAt == null ? this.retryAt : retryAt(),
-    failure: failure == null ? this.failure : failure(),
-  );
 }
 
 /// [unconfirmed]: the connection dropped while filing, so the report may
@@ -119,78 +104,40 @@ enum FilingStatus { editing, filing, filed, failed, unconfirmed }
 /// check, the linked retail user, or the route itself ("Not available").
 enum MissingLink { check, retailUser, route }
 
-class ReportIncidentState {
-  const ReportIncidentState({
-    this.checkRef,
-    this.retailUser,
-    this.photos = const [],
-    this.filing = FilingStatus.editing,
-    this.reportId,
-    this.filedAt,
-    this.failure,
-    this.photoProblem,
-    this.photoProblemCount = 0,
-    this.samePhotoCount = 0,
-    this.retryAt,
-    this.missing,
-  });
+@freezed
+abstract class ReportIncidentState with _$ReportIncidentState {
+  const factory ReportIncidentState({
+    String? checkRef,
+    ({String id, String name})? retailUser,
+    @Default(<ReportPhoto>[]) List<ReportPhoto> photos,
+    @Default(FilingStatus.editing) FilingStatus filing,
+    int? reportId,
+    DateTime? filedAt,
 
-  final String? checkRef;
-  final ({String id, String name})? retailUser;
-  final List<ReportPhoto> photos;
-  final FilingStatus filing;
-  final int? reportId;
-  final DateTime? filedAt;
+    /// Why filing failed.
+    Failure? failure,
 
-  /// Why filing failed.
-  final Failure? failure;
+    /// Why the last photo could not be prepared, and a counter to show it.
+    PhotoProblem? photoProblem,
+    @Default(0) int photoProblemCount,
 
-  /// Why the last photo could not be prepared, and a counter to show it.
-  final PhotoProblem? photoProblem;
-  final int photoProblemCount;
+    /// Counts photos the server already had on this report (it answered an
+    /// `n` another tile holds); each one is shown once.
+    @Default(0) int samePhotoCount,
 
-  /// Counts photos the server already had on this report (it answered an
-  /// `n` another tile holds); each one is shown once.
-  final int samePhotoCount;
+    /// After a `429` on filing: no new filing before this time (final.md
+    /// §13.5, §15).
+    DateTime? retryAt,
 
-  /// After a `404` on filing: what was not found.
-  final MissingLink? missing;
+    /// After a `404` on filing: what was not found.
+    MissingLink? missing,
+  }) = _ReportIncidentState;
 
-  /// After a `429` on filing: no new filing before this time (final.md
-  /// §13.5, §15).
-  final DateTime? retryAt;
+  const ReportIncidentState._();
 
   bool get isFiled => filing == FilingStatus.filed;
   bool get canEdit =>
       filing == FilingStatus.editing || filing == FilingStatus.failed;
-
-  ReportIncidentState copyWith({
-    String? Function()? checkRef,
-    ({String id, String name})? Function()? retailUser,
-    List<ReportPhoto>? photos,
-    FilingStatus? filing,
-    int? reportId,
-    DateTime? filedAt,
-    Failure? Function()? failure,
-    PhotoProblem? photoProblem,
-    int? photoProblemCount,
-    int? samePhotoCount,
-    DateTime? Function()? retryAt,
-    MissingLink? Function()? missing,
-  }) => ReportIncidentState(
-    checkRef: checkRef == null ? this.checkRef : checkRef(),
-    retailUser: retailUser == null ? this.retailUser : retailUser(),
-    photos: photos ?? this.photos,
-    filing: filing ?? this.filing,
-    reportId: reportId ?? this.reportId,
-    filedAt: filedAt ?? this.filedAt,
-    failure: failure == null ? this.failure : failure(),
-    photoProblem: photoProblem ?? this.photoProblem,
-    photoProblemCount: photoProblemCount ?? this.photoProblemCount,
-    samePhotoCount: samePhotoCount ?? this.samePhotoCount,
-    retryAt: retryAt == null ? this.retryAt : retryAt(),
-    missing: missing == null ? this.missing : missing(),
-  );
 }
 
 /// Report incident (final.md §13.5). The report is filed once and
@@ -210,13 +157,13 @@ class ReportIncidentBloc
        _now = now ?? clock.now,
        super(ReportIncidentState(checkRef: checkRef)) {
     on<CheckRefChosen>((e, emit) {
-      if (state.canEdit) emit(state.copyWith(checkRef: () => e.ref));
+      if (state.canEdit) emit(state.copyWith(checkRef: e.ref));
     });
     on<CheckRefCleared>((_, emit) {
-      if (state.canEdit) emit(state.copyWith(checkRef: () => null));
+      if (state.canEdit) emit(state.copyWith(checkRef: null));
     });
     on<RetailUserChosen>((e, emit) {
-      if (state.canEdit) emit(state.copyWith(retailUser: () => e.user));
+      if (state.canEdit) emit(state.copyWith(retailUser: e.user));
     });
     on<PhotoPickRequested>(_onPick, transformer: droppable());
     on<PhotoRemoved>(_onRemove);
@@ -307,8 +254,8 @@ class ReportIncidentBloc
     emit(
       state.copyWith(
         filing: FilingStatus.filing,
-        failure: () => null,
-        missing: () => null,
+        failure: null,
+        missing: null,
       ),
     );
     final result = await _fileReport(
@@ -336,7 +283,7 @@ class ReportIncidentBloc
         emit(
           state.copyWith(
             filing: FilingStatus.unconfirmed,
-            failure: () => failure,
+            failure: failure,
           ),
         );
       case Err(:final failure):
@@ -346,14 +293,16 @@ class ReportIncidentBloc
         emit(
           state.copyWith(
             filing: FilingStatus.failed,
-            failure: () => failure,
-            retryAt: () => failure.exception is RateLimitedException
+            failure: failure,
+            retryAt: failure.exception is RateLimitedException
                 ? failure.retryAtFrom(_now())
                 : null,
-            missing: () => missing,
+            missing: missing,
             // A retail user that cannot be named any more is taken off, so
             // the picker is offered again.
-            retailUser: missing == MissingLink.retailUser ? () => null : null,
+            retailUser: missing == MissingLink.retailUser
+                ? null
+                : state.retailUser,
           ),
         );
     }
@@ -387,8 +336,8 @@ class ReportIncidentBloc
             p.localId == event.localId
                 ? p.copyWith(
                     status: PhotoStatus.waiting,
-                    failure: () => null,
-                    retryAt: () => null,
+                    failure: null,
+                    retryAt: null,
                   )
                 : p,
         ],
@@ -443,14 +392,14 @@ class ReportIncidentBloc
           Success(:final value) => current.copyWith(
             status: PhotoStatus.sent,
             number: value,
-            failure: () => null,
+            failure: null,
           ),
           Err(:final failure) => current.copyWith(
             status: PhotoStatus.failed,
-            failure: () => failure,
+            failure: failure,
             // A 429 waits its Retry-After; without one, the photo can be
             // tapped again (guide section 1: never a number in the app).
-            retryAt: () => failure.retryAtFrom(_now()),
+            retryAt: failure.retryAtFrom(_now()),
           ),
         },
       );

@@ -2,25 +2,31 @@ import 'dart:async';
 
 import 'package:clock/clock.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:ziska_verify/core/errors/result.dart';
 import 'package:ziska_verify/core/pagination/page_request.dart';
 import 'package:ziska_verify/core/pagination/wait_timer.dart';
 import 'package:ziska_verify/features/history/domain/entities/check.dart';
 import 'package:ziska_verify/features/history/domain/usecases/get_checks.dart';
 
+part 'check_totals_cubit.freezed.dart';
+
 enum CheckTotalsStatus { loading, ready, failed }
 
-class CheckTotalsState {
-  const CheckTotalsState({required this.status, this.totals, this.retryAt});
+@freezed
+abstract class CheckTotalsState with _$CheckTotalsState {
+  const factory CheckTotalsState({
+    required CheckTotalsStatus status,
 
-  final CheckTotalsStatus status;
+    /// The last counts; kept while they are asked for again.
+    CheckTotals? totals,
 
-  /// The last counts; kept while they are asked for again.
-  final CheckTotals? totals;
+    /// After a `429` with `Retry-After`: when the counts may be asked for
+    /// again (final.md §13.10). `null` without a usable `Retry-After`.
+    DateTime? retryAt,
+  }) = _CheckTotalsState;
 
-  /// After a `429` with `Retry-After`: when the counts may be asked for
-  /// again (final.md §13.10). `null` without a usable `Retry-After`.
-  final DateTime? retryAt;
+  const CheckTotalsState._();
 
   bool get isWaiting => retryAt != null && clock.now().isBefore(retryAt!);
 }

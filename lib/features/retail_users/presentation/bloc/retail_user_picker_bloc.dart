@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:ziska_verify/core/errors/result.dart';
 import 'package:ziska_verify/core/pagination/page_request.dart';
 import 'package:ziska_verify/core/pagination/paginated_state.dart';
@@ -9,6 +10,8 @@ import 'package:ziska_verify/core/pagination/wait_timer.dart';
 import 'package:ziska_verify/core/utils/event_transformers.dart';
 import 'package:ziska_verify/features/retail_users/domain/entities/retail_user.dart';
 import 'package:ziska_verify/features/retail_users/domain/usecases/search_retail_users.dart';
+
+part 'retail_user_picker_bloc.freezed.dart';
 
 sealed class RetailUserPickerEvent {
   const RetailUserPickerEvent();
@@ -32,14 +35,12 @@ final class PickerRetried extends RetailUserPickerEvent {
   const PickerRetried();
 }
 
-class RetailUserPickerState {
-  const RetailUserPickerState({
-    this.search,
-    this.list = const PaginatedState<RetailUser>(),
-  });
-
-  final String? search;
-  final PaginatedState<RetailUser> list;
+@freezed
+abstract class RetailUserPickerState with _$RetailUserPickerState {
+  const factory RetailUserPickerState({
+    String? search,
+    @Default(PaginatedState<RetailUser>()) PaginatedState<RetailUser> list,
+  }) = _RetailUserPickerState;
 }
 
 /// The retail user picker (final.md §10, §13.6).

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:ziska_verify/core/errors/result.dart';
 import 'package:ziska_verify/core/pagination/page_request.dart';
 import 'package:ziska_verify/core/pagination/paginated_state.dart';
@@ -8,13 +9,15 @@ import 'package:ziska_verify/core/pagination/wait_timer.dart';
 import 'package:ziska_verify/features/verification/domain/entities/scan_session.dart';
 import 'package:ziska_verify/features/verification/domain/usecases/verification_usecases.dart';
 
-class SessionsState {
-  const SessionsState({
-    this.query = const SessionQuery(),
-    this.list = const PaginatedState<ScanSessionSummary>(),
-  });
-  final SessionQuery query;
-  final PaginatedState<ScanSessionSummary> list;
+part 'sessions_cubit.freezed.dart';
+
+@freezed
+abstract class SessionsState with _$SessionsState {
+  const factory SessionsState({
+    @Default(SessionQuery()) SessionQuery query,
+    @Default(PaginatedState<ScanSessionSummary>())
+    PaginatedState<ScanSessionSummary> list,
+  }) = _SessionsState;
 }
 
 class SessionsCubit extends Cubit<SessionsState> {

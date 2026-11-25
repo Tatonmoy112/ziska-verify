@@ -6,7 +6,7 @@ The production-grade review of the app, done on the `production` branch one area
 |---|---|---|
 | 2 | High-level architecture | Checked 2026-11-24: P-1 … P-15. **All fixed**; P-10 on for staging, live waits for its production project |
 | 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11). **All fixed** (2026-11-25) |
-| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-43. Fixed: P-20 … P-25 |
+| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-44. Fixed: P-20 … P-26 |
 | 5 | Dead code | To do |
 | 6+ | Comments, data layer, UI components, state and lifecycle, security, build and release, monitoring, tests, localisation, performance, docs | To do |
 
@@ -876,6 +876,24 @@ The layer rules (step 2) and the central API (step 3) are already enforced, so t
 - **edge:** a list field compares by value;
 - **worst:** bloc tests compare whole states; the existing tests pass unchanged.
 
+**✅ Fixed 2026-11-25:**
+- **Tests first:** TC-ARCH-035 … -037 (`test/architecture/state_equality_test.dart`):
+  - equal states are equal;
+  - lists compare by value;
+  - `copyWith(x: null)` clears;
+  - an equal state is emitted once;
+  - every bloc state is `@freezed`.
+
+  Five were red before. "The same failure twice is two events" passed before and after, and guards what must not change.
+- **The change:**
+  - `PaginatedState`, `SessionsState`, `RetailUserPickerState`, `CheckTotalsState`, `HistoryState`, `ReportIncidentState` and `ReportPhoto` are Freezed.
+  - The report and History states' `copyWith(x: () => …)` closures became plain values. The four "keep, or clear" calls name the kept value. Every plain field was checked never to be passed a null meaning "keep".
+- **A real hang the change exposed:**
+  - A pull to refresh on a History search that is not sent emits the same state again, now dropped. The screen waited for a next state, so it spun for ever (TC-HIST-057 timed out).
+  - Refresh events now carry a `done` completer, completed in a `finally` whatever was emitted: `HistoryRefreshed` and `MyReportsStarted`, used by History, the check picker and My reports. Two tests check that a refresh that changes nothing ends.
+- **Kept on purpose:** `Failure` (and `AppException`) keep identity. Each failure is an event: two alike failures in a row must both reach the screen, so a retry that fails again says so.
+- **Moved out:** value equality for the entities that states hold is now P-44. It concerns about 25 domain classes, not the states.
+
 #### P-27 (should): paging is written five times, with different 429 behaviour
 **Evidence:** `HistoryBloc`, `MyReportsBloc`, `SessionsCubit` and `RetailUserPickerBloc` each repeat the generation counter, first and next page, retry and `WaitTimer`.
 - **A load asked for during a 429 wait:** `SessionsCubit` defers it until the wait ends (`sessions_cubit.dart:38-44`); `MyReportsBloc` drops it (`my_reports_bloc.dart:34`).
@@ -1113,6 +1131,18 @@ History's reasons stay raw strings (`CheckRecord.reasons`, `List<String>`), whic
 - **`Widget _x()` methods:** four remain among widget classes: `history_screen.dart` `_checks()`, `verify_screen.dart` `formsUnavailable()` and `_headerContent()`, `change_password_screen.dart` `_form()`.
 - **A side effect in `build`:** `verify_screen.dart:367` creates the scanner session there.
 - **Mutable lists on entities:** `CheckRecord.reasons`, `LookupResult.reasons`, `SerialStackResult.items`, `CursorPage.items`.
+
+#### P-44 (nice): entities have no value equality
+**Evidence:** of the domain entities, only `CheckQuery` and `Profile` are Freezed. `CheckRecord`, `LookupResult`, `Report`, `RetailUser`, `ScanSessionSummary`, `SessionTotals` and about 20 more compare by identity (found while fixing P-26).
+
+**Why:** a state that holds them is equal only when it holds the same instances. A reloaded page of equal entities still rebuilds, and tests compare entities field by field.
+
+**Proposal:** value equality (Freezed) for the entities, one feature at a time, with their exposed lists unmodifiable (P-43). Refreshes already wait on `done` (P-26), so an equal reload cannot hang a screen.
+
+**Tests:**
+- **normal:** each entity built twice is equal;
+- **edge:** list fields compare by value;
+- **worst:** a reload with equal data ends its refresh, and the existing tests pass unchanged.
 
 ### Noticed for step 5 (dead code)
 - `Profile.canReadHistory` is used only by tests.

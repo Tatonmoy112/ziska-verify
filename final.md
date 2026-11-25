@@ -106,7 +106,7 @@ Keep app-wide session/profile state and route-scoped feature controllers. Duplic
 - `SerialStackCubit`: validated serial draft, locked submitted payload, result, failure/cooldown, transport-uncertain state and bounded scheduled retry.
 - `SessionsCubit`: session filters and cursor pagination, guarded against stale responses.
 
-Pause camera and scheduled retries while backgrounded. Closing a controller cancels timers/subscriptions. Discard results arriving after exit/logout. Nothing is automatically submitted on connectivity restoration.
+Every bloc state is Freezed and compares by value, so an equal state is not emitted again; a `Failure` keeps identity, so a failure that repeats is still shown. A pull to refresh therefore waits on its event's `done`, never on a next state (2026-11-25, production audit P-26). Pause camera and scheduled retries while backgrounded. Closing a controller cancels timers/subscriptions. Discard results arriving after exit/logout. Nothing is automatically submitted on connectivity restoration.
 
 ## 9. Navigation
 

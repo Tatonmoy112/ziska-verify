@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:ziska_verify/core/errors/result.dart';
 import 'package:ziska_verify/core/pagination/page_request.dart';
 import 'package:ziska_verify/core/pagination/paginated_state.dart';
@@ -10,6 +11,8 @@ import 'package:ziska_verify/core/utils/event_transformers.dart';
 import 'package:ziska_verify/features/history/domain/entities/check.dart';
 import 'package:ziska_verify/features/history/domain/services/history_search.dart';
 import 'package:ziska_verify/features/history/domain/usecases/get_checks.dart';
+
+part 'history_bloc.freezed.dart';
 
 sealed class HistoryEvent {
   const HistoryEvent();
@@ -39,7 +42,12 @@ final class HistoryNextPageRequested extends HistoryEvent {
 
 /// Pull to refresh: the list stays until the new first page arrives.
 final class HistoryRefreshed extends HistoryEvent {
-  const HistoryRefreshed();
+  const HistoryRefreshed({this.done});
+
+  /// Completed once the refresh is handled, whatever it emitted: a pull to
+  /// refresh waits on this, never on a next state, which an equal state
+  /// does not bring (production audit P-26).
+  final Completer<void>? done;
 }
 
 /// Retries whichever page failed.
@@ -47,43 +55,25 @@ final class HistoryRetried extends HistoryEvent {
   const HistoryRetried();
 }
 
-class HistoryState {
-  const HistoryState({
-    this.query = const CheckQuery(),
-    this.list = const PaginatedState<CheckRecord>(),
-    this.totals,
-    this.chipTotals,
-    this.searchRefused = false,
-  });
+@freezed
+abstract class HistoryState with _$HistoryState {
+  const factory HistoryState({
+    @Default(CheckQuery()) CheckQuery query,
+    @Default(PaginatedState<CheckRecord>()) PaginatedState<CheckRecord> list,
 
-  final CheckQuery query;
+    /// From the first page; kept while later pages load (§10).
+    CheckTotals? totals,
 
-  /// The search is neither a serial nor a reference number, so nothing was
-  /// asked for (finding F-4): the list says what to type instead.
-  final bool searchRefused;
-  final PaginatedState<CheckRecord> list;
+    /// The counts on the result chips: every check matching the search and
+    /// the other filters, whatever result is picked, so picking a chip
+    /// never changes them. `null` while unknown (the chips then show no
+    /// count).
+    CheckTotals? chipTotals,
 
-  /// From the first page; kept while later pages load (§10).
-  final CheckTotals? totals;
-
-  /// The counts on the result chips: every check matching the search and
-  /// the other filters, whatever result is picked, so picking a chip never
-  /// changes them. `null` while unknown (the chips then show no count).
-  final CheckTotals? chipTotals;
-
-  HistoryState copyWith({
-    CheckQuery? query,
-    PaginatedState<CheckRecord>? list,
-    CheckTotals? Function()? totals,
-    CheckTotals? Function()? chipTotals,
-    bool? searchRefused,
-  }) => HistoryState(
-    query: query ?? this.query,
-    list: list ?? this.list,
-    totals: totals == null ? this.totals : totals(),
-    chipTotals: chipTotals == null ? this.chipTotals : chipTotals(),
-    searchRefused: searchRefused ?? this.searchRefused,
-  );
+    /// The search is neither a serial nor a reference number, so nothing
+    /// was asked for (finding F-4): the list says what to type instead.
+    @Default(false) bool searchRefused,
+  }) = _HistoryState;
 }
 
 /// History (final.md §10, §13.4). A filter or search change starts
@@ -117,10 +107,13 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
       },
       transformer: debounceRestartable(const Duration(milliseconds: 400)),
     );
-    on<HistoryRefreshed>(
-      (_, emit) => _loadFirst(state.query, emit, keepItems: true),
-      transformer: restartable(),
-    );
+    on<HistoryRefreshed>((e, emit) async {
+      try {
+        await _loadFirst(state.query, emit, keepItems: true);
+      } finally {
+        e.done?.complete();
+      }
+    }, transformer: restartable());
     on<HistoryNextPageRequested>(
       (_, emit) => _loadNext(emit),
       transformer: droppable(),
@@ -179,8 +172,8 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
             hasReachedEnd: true,
             retryAt: state.list.retryAt,
           ),
-          totals: () => null,
-          chipTotals: () => null,
+          totals: null,
+          chipTotals: null,
           searchRefused: true,
         ),
       );
@@ -212,8 +205,8 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
         query: query,
         list: state.list.loadingFirst(keepItems: keepItems),
         searchRefused: false,
-        totals: keepItems ? null : () => null,
-        chipTotals: keepChips || refreshChips ? null : () => null,
+        totals: keepItems ? state.totals : null,
+        chipTotals: keepChips || refreshChips ? state.chipTotals : null,
       ),
     );
     // With a result picked, the page's totals count that result only: the
@@ -234,10 +227,10 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
           _counted(
             state.copyWith(
               list: state.list.firstPage(value.page),
-              totals: dated ? null : () => value.totals,
+              totals: dated ? state.totals : value.totals,
               chipTotals: query.result == null && !dated
-                  ? () => value.totals
-                  : null,
+                  ? value.totals
+                  : state.chipTotals,
             ),
           ),
         );
@@ -248,7 +241,7 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
     final counts = await counting;
     if (generation != _generation || emit.isDone) return;
     if (counts case Success(:final value)) {
-      emit(state.copyWith(chipTotals: () => value.totals));
+      emit(state.copyWith(chipTotals: value.totals));
     }
   }
 
@@ -295,7 +288,7 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
       notFound: count(CheckResult.notFound),
       unassigned: count(CheckResult.unassigned),
     );
-    if (query.result != null) return state.copyWith(totals: () => counts);
-    return state.copyWith(totals: () => counts, chipTotals: () => counts);
+    if (query.result != null) return state.copyWith(totals: counts);
+    return state.copyWith(totals: counts, chipTotals: counts);
   }
 }

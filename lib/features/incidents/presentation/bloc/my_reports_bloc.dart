@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ziska_verify/core/errors/result.dart';
@@ -11,10 +13,14 @@ sealed class MyReportsEvent {
 }
 
 final class MyReportsStarted extends MyReportsEvent {
-  const MyReportsStarted({this.keepItems = false});
+  const MyReportsStarted({this.keepItems = false, this.done});
 
   /// Pull to refresh keeps the list until the new first page arrives.
   final bool keepItems;
+
+  /// Completed once the load is handled, whatever it emitted: a pull to
+  /// refresh waits on this, never on a next state (production audit P-26).
+  final Completer<void>? done;
 }
 
 final class MyReportsNextPageRequested extends MyReportsEvent {
@@ -28,12 +34,14 @@ final class MyReportsRetried extends MyReportsEvent {
 /// My reports (final.md §10, §13.5).
 class MyReportsBloc extends Bloc<MyReportsEvent, PaginatedState<Report>> {
   MyReportsBloc(this._getReports) : super(const PaginatedState<Report>()) {
-    on<MyReportsStarted>(
-      // Held while a 429 counts down (guide section 1).
-      (e, emit) =>
-          state.isWaiting ? null : _first(emit, keepItems: e.keepItems),
-      transformer: restartable(),
-    );
+    on<MyReportsStarted>((e, emit) async {
+      try {
+        // Held while a 429 counts down (guide section 1).
+        if (!state.isWaiting) await _first(emit, keepItems: e.keepItems);
+      } finally {
+        e.done?.complete();
+      }
+    }, transformer: restartable());
     on<MyReportsNextPageRequested>(
       (_, emit) => _next(emit),
       transformer: droppable(),

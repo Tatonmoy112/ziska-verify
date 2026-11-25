@@ -56,8 +56,9 @@ class MyReportsScreen extends StatelessWidget {
           onRetry: () => bloc.add(const MyReportsRetried()),
           onRefresh: () async {
             if (bloc.state.isWaiting) return;
-            bloc.add(const MyReportsStarted(keepItems: true));
-            await bloc.stream.firstWhere((s) => !s.isLoading);
+            final done = Completer<void>();
+            bloc.add(MyReportsStarted(keepItems: true, done: done));
+            await done.future;
           },
           emptyTitle: l10n.myReportsEmpty,
           emptyBody: l10n.myReportsEmptyBody,

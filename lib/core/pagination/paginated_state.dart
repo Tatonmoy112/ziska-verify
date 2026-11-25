@@ -1,7 +1,10 @@
 import 'package:clock/clock.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:ziska_verify/core/errors/app_exception.dart';
 import 'package:ziska_verify/core/errors/result.dart';
 import 'package:ziska_verify/core/pagination/cursor_page.dart';
+
+part 'paginated_state.freezed.dart';
 
 /// The status of a paged list (final.md §10).
 enum PaginationStatus {
@@ -14,26 +17,23 @@ enum PaginationStatus {
   failureMore,
 }
 
-/// A paged list in a BLoC state (final.md §10). Pure Dart.
-class PaginatedState<T> {
-  const PaginatedState({
-    this.items = const [],
-    this.nextCursor,
-    this.status = PaginationStatus.initial,
-    this.hasReachedEnd = false,
-    this.failure,
-    this.retryAt,
-  });
+/// A paged list in a BLoC state (final.md §10). Pure Dart. Compared by
+/// value, as every state is (production audit P-26).
+@freezed
+abstract class PaginatedState<T> with _$PaginatedState<T> {
+  const factory PaginatedState({
+    @Default([]) List<T> items,
+    String? nextCursor,
+    @Default(PaginationStatus.initial) PaginationStatus status,
+    @Default(false) bool hasReachedEnd,
+    Failure? failure,
 
-  final List<T> items;
-  final String? nextCursor;
-  final PaginationStatus status;
-  final bool hasReachedEnd;
-  final Failure? failure;
+    /// After a `429`: Retry sends nothing before this time (final.md
+    /// §10: a countdown, never a retry in a loop).
+    DateTime? retryAt,
+  }) = _PaginatedState<T>;
 
-  /// After a `429`: Retry sends nothing before this time (final.md
-  /// §10: a countdown, never a retry in a loop).
-  final DateTime? retryAt;
+  const PaginatedState._();
 
   /// A `429` countdown is still running.
   bool get isWaiting => retryAt != null && clock.now().isBefore(retryAt!);

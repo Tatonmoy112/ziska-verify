@@ -186,8 +186,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
           onRefresh: () async {
             // A 429 wait: nothing is asked for, so nothing to wait for.
             if (bloc.state.list.isWaiting) return;
-            bloc.add(const HistoryRefreshed());
-            await bloc.stream.firstWhere((s) => !s.list.isLoading);
+            final done = Completer<void>();
+            bloc.add(HistoryRefreshed(done: done));
+            await done.future;
           },
           // No check at all yet, or none for these filters (§14.2); or a
           // search that is not a serial or a reference number, not sent (F-4).

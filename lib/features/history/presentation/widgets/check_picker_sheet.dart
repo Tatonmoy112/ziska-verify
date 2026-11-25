@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ziska_verify/features/history/domain/entities/check.dart';
@@ -82,8 +84,9 @@ class _CheckPickerSheet extends StatelessWidget {
                   onRefresh: () async {
                     // A 429 wait: nothing is asked for, so nothing to wait for.
                     if (bloc.state.list.isWaiting) return;
-                    bloc.add(const HistoryRefreshed());
-                    await bloc.stream.firstWhere((s) => !s.list.isLoading);
+                    final done = Completer<void>();
+                    bloc.add(HistoryRefreshed(done: done));
+                    await done.future;
                   },
                   // A search that is not a serial or a reference number is
                   // not sent; the list says what to type (finding F-4).
