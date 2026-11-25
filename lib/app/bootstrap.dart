@@ -188,7 +188,7 @@ void registerCore({
       forbidden,
       dispose: (s) => s.dispose(),
     )
-    ..registerSingleton<ApiClient>(ApiClient(dio))
+    ..registerSingleton<ApiClient>(ApiClient(dio), dispose: (c) => c.close())
     ..registerLazySingleton<LauncherService>(UrlLauncherService.new)
     ..registerLazySingleton<AppInfoService>(PackageInfoAppInfoService.new)
     ..registerLazySingleton<ConnectivityService>(PlusConnectivityService.new)
@@ -246,6 +246,12 @@ void registerFeatures() {
     )
     ..registerLazySingleton<VerificationRepository>(
       () => VerificationRepositoryImpl(locator(), locator()),
+      // It listens to the session and keeps the formats (P-34). The
+      // listener stops at once; its clean-up is not waited for, as a reset
+      // must not hang on it.
+      dispose: (r) {
+        if (r is VerificationRepositoryImpl) unawaited(r.dispose());
+      },
     )
     ..registerFactory(() => GetFormats(locator()))
     ..registerFactory(() => LookupItem(locator()))

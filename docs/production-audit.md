@@ -6,7 +6,7 @@ The production-grade review of the app, done on the `production` branch one area
 |---|---|---|
 | 2 | High-level architecture | Checked 2026-11-24: P-1 … P-15. **All fixed**; P-10 on for staging, live waits for its production project |
 | 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11). **All fixed** (2026-11-25) |
-| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-44. Fixed: P-20 … P-33 |
+| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-44. Fixed: P-20 … P-34 |
 | 5 | Dead code | To do |
 | 6+ | Comments, data layer, UI components, state and lifecycle, security, build and release, monitoring, tests, localisation, performance, docs | To do |
 
@@ -1114,6 +1114,21 @@ History's reasons stay raw strings (`CheckRecord.reasons`, `List<String>`), whic
 - **normal:** `locator.reset()` disposes each of them;
 - **edge:** disposing twice is harmless;
 - **worst:** after many `App`s are pumped and disposed, the session has no listeners left.
+
+**✅ Fixed 2026-11-25:**
+- **Tests first:** TC-ARCH-047 … -049 (`test/app/releases_test.dart`), on the app's own registrations:
+  - after a reset, the verification repository no longer listens to the session, and both network clients are closed;
+  - releasing twice is harmless;
+  - five routers built and released leave the session no listener.
+
+  On the old code all three were red: the repository still listened, no client was closed, and the session kept listeners after the routers went. That last case was checked with a single dispose, since the old router cannot be disposed twice.
+- **The change:**
+  - `buildRouter` returns an `AppRouter`, which owns the `GoRouter`, the refresh helper and the check of pushed pages, and releases all three in `dispose()` (safe twice). `App` uses `_router.config`.
+  - `ApiClient.close()` is registered as its dispose.
+  - The session's dispose closes the renewal client it owns.
+  - The verification repository is registered with a dispose.
+- **A hang found on the way:** the flow suite hung once the repository's dispose was waited for. A reset in one widget test waited on the cancel of a listener made in the test before, under its fake clock, and that wait never ended. The listener stops at once, so the reset no longer waits for its clean-up (`unawaited`); the release tests and every flow pass.
+- **Noticed:** since P-30, the routes resolve `GetChecks` while the router is built, not on the first resume. This is harmless, as the features are registered first, but a router built without them fails at once.
 
 #### P-35 (should): `bootstrap.dart` does four jobs, and tests overwrite registrations
 **Evidence:** `app/bootstrap.dart`:

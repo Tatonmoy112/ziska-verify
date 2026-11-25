@@ -240,5 +240,10 @@ class DioSessionService implements SessionService {
   }
 
   @override
-  Future<void> dispose() => _controller.close();
+  /// Closes the state stream and the renewal client (production audit
+  /// P-34).
+  Future<void> dispose() {
+    _refreshDio.close();
+    return _controller.close();
+  }
 }

@@ -19,6 +19,9 @@ class FakeSessionService implements SessionService {
   @override
   Stream<SessionState> get states => _controller.stream;
 
+  /// Whether anything still listens to [states] (production audit P-34).
+  bool get hasListeners => _controller.hasListener;
+
   @override
   String? get accessToken => savedAccess;
 

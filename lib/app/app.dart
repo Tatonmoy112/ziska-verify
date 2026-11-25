@@ -5,7 +5,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:get_it/get_it.dart';
-import 'package:go_router/go_router.dart';
 import 'package:ziska_verify/app/config/app_config.dart';
 import 'package:ziska_verify/app/router/app_router.dart';
 import 'package:ziska_verify/core/locale/locale_cubit.dart';
@@ -70,7 +69,7 @@ class _AppState extends State<App> {
     widget.locator<SessionService>(),
     forbidden: widget.locator<ForbiddenSignal>().stream,
   );
-  late final GoRouter _router = buildRouter(
+  late final AppRouter _router = buildRouter(
     locator: widget.locator,
     profileCubit: _profile,
   );
@@ -96,7 +95,7 @@ class _AppState extends State<App> {
           onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
           debugShowCheckedModeBanner: flavor != AppFlavor.live,
           theme: AppTheme.light(),
-          routerConfig: _router,
+          routerConfig: _router.config,
           localizationsDelegates: const [
             AppLocalizations.delegate,
             GlobalMaterialLocalizations.delegate,

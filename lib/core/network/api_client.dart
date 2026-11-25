@@ -16,6 +16,10 @@ class ApiClient {
 
   final Dio _dio;
 
+  /// Closes the connections when the app is done with it (production
+  /// audit P-34); safe to call more than once.
+  void close() => _dio.close();
+
   Future<Object?> get(
     ApiRoute route, {
     Map<String, Object?>? query,

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
@@ -24,7 +26,7 @@ import 'package:ziska_verify/shared/design_system/tokens/app_spacing.dart';
 /// Builds the app's single `GoRouter` (final.md §9): the guard, the
 /// check of pushed pages, and the route groups. Each area's routes, the
 /// only code that imports feature screens, are in `routes/`.
-GoRouter buildRouter({
+AppRouter buildRouter({
   required GetIt locator,
   required ProfileCubit profileCubit,
   RouteGuard? guard,
@@ -78,7 +80,7 @@ GoRouter buildRouter({
   // go_router runs the redirect on the base location only, so a pushed
   // screen whose permission was just lost (a `403 forbidden` reload,
   // final.md §7, §9) is checked here: the official goes Home.
-  profileCubit.stream.listen((profile) {
+  void checkPushed(ProfileState profile) {
     if (profile.status != ProfileStatus.loaded) return;
     final denied =
         _matchedLocations(
@@ -102,8 +104,36 @@ GoRouter buildRouter({
         views.any((view) => !allowsResult(view, profile.permissions))) {
       router.go(RoutePaths.home);
     }
-  });
-  return router;
+  }
+
+  return AppRouter._(router, refresh, profileCubit.stream, checkPushed);
+}
+
+/// The app's router, and what it holds open while the app runs: the
+/// guard's refresh on the session and the profile, and the check of pushed
+/// pages. [dispose] releases them all (production audit P-34).
+class AppRouter {
+  AppRouter._(
+    this.config,
+    this._refresh,
+    Stream<ProfileState> profile,
+    void Function(ProfileState) checkPushed,
+  ) : _permissions = profile.listen(checkPushed);
+
+  /// For `MaterialApp.router`.
+  final GoRouter config;
+  final RouterRefresh _refresh;
+  final StreamSubscription<ProfileState> _permissions;
+  bool _disposed = false;
+
+  /// Safe to call more than once.
+  void dispose() {
+    if (_disposed) return;
+    _disposed = true;
+    unawaited(_permissions.cancel());
+    config.dispose();
+    _refresh.dispose();
+  }
 }
 
 class _NotAvailableScreen extends StatelessWidget {
