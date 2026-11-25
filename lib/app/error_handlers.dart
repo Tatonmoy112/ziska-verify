@@ -4,6 +4,7 @@ import 'package:ziska_verify/core/services/logging/console_logger_service.dart';
 import 'package:ziska_verify/core/services/logging/logger_service.dart';
 import 'package:ziska_verify/core/services/monitoring/crash_reporting_service.dart';
 import 'package:ziska_verify/core/services/monitoring/firebase_crash_reporting_service.dart';
+import 'package:ziska_verify/core/services/monitoring/no_op_crash_reporting_service.dart';
 
 /// Crash reporting and the logger that feeds it. Crashlytics only for a
 /// staging or live release build given a Firebase app for this platform;

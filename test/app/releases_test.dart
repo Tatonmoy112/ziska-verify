@@ -8,15 +8,17 @@ import 'package:mocktail/mocktail.dart';
 import 'package:ziska_verify/app/di/platform_services.dart';
 import 'package:ziska_verify/app/di/register.dart';
 import 'package:ziska_verify/app/router/app_router.dart';
+import 'package:ziska_verify/core/locale/locale_cubit.dart';
 import 'package:ziska_verify/core/network/api_client.dart';
-import 'package:ziska_verify/core/services/monitoring/crash_reporting_service.dart';
+import 'package:ziska_verify/core/services/monitoring/no_op_crash_reporting_service.dart';
 import 'package:ziska_verify/core/services/session/session_service.dart';
 import 'package:ziska_verify/features/profile/domain/repositories/profile_repository.dart';
-import 'package:ziska_verify/features/profile/domain/usecases/get_profile.dart';
+import 'package:ziska_verify/features/profile/domain/usecases/profile_usecases.dart';
 import 'package:ziska_verify/features/profile/presentation/bloc/profile_cubit.dart';
 import 'package:ziska_verify/features/verification/domain/repositories/verification_repository.dart';
 
 import '../fakes/fake_logger_service.dart';
+import '../fakes/fake_preferences_service.dart';
 import '../fakes/fake_secure_storage_service.dart';
 import '../fakes/fake_session_service.dart';
 import '../flow/harness.dart' show testConfig;
@@ -113,7 +115,14 @@ void main() {
       await register();
       for (var i = 0; i < 5; i++) {
         final profile = ProfileCubit(GetProfile(_Profiles()), session);
-        final router = buildRouter(locator: locator, profileCubit: profile);
+        final router = buildRouter(
+          locator: locator,
+          profileCubit: profile,
+          localeCubit: LocaleCubit(
+            FakePreferencesService(),
+            FakeLoggerService(),
+          ),
+        );
         expect(session.hasListeners, isTrue);
         router
           ..dispose()

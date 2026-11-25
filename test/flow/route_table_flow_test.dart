@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ziska_verify/app/router/route_paths.dart';
-import 'package:ziska_verify/app/shell/main_shell.dart';
+import 'package:ziska_verify/app/router/route_permissions.dart';
 import 'package:ziska_verify/core/navigation/route_names.dart';
 
 import '../fakes/roles.dart';
@@ -169,17 +169,16 @@ void main() {
 
   group('TC-NAV-022 … -024 the guard table and the routes', () {
     /// The prefix that guards `/history/sessions/{id}` (RouteGuard).
-    const sessionsPrefix = '/history/sessions';
 
     testWidgets('TC-NAV-022 the guard names real routes only', (
       tester,
     ) async {
       await startApp(tester, profile: Roles.supervisor);
       final paths = table(routerOf(tester).configuration.routes).values;
-      for (final guarded in tabPermissionByPath.keys) {
+      for (final guarded in routePermissions.keys) {
         final real =
             paths.contains(guarded) ||
-            (guarded == sessionsPrefix &&
+            (guarded == RoutePaths.sessions &&
                 paths.contains(RoutePaths.sessionChecks));
         expect(real, isTrue, reason: '$guarded is no route of the app');
       }
@@ -187,9 +186,9 @@ void main() {
 
     test('TC-NAV-023 every page that needs a permission is guarded, and '
         'no other', () {
-      expect(tabPermissionByPath.keys.toSet(), {
+      expect(routePermissions.keys.toSet(), {
         RoutePaths.history,
-        sessionsPrefix,
+        RoutePaths.sessions,
         RoutePaths.lookupResult,
         RoutePaths.scannerMode,
         RoutePaths.serialStack,

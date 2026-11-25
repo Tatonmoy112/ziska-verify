@@ -16,14 +16,14 @@ import 'package:ziska_verify/core/services/connectivity/connectivity_service.dar
 import 'package:ziska_verify/core/services/device/app_info_service.dart';
 import 'package:ziska_verify/core/services/launcher/launcher_service.dart';
 import 'package:ziska_verify/core/services/media/photo_service.dart';
-import 'package:ziska_verify/core/services/monitoring/crash_reporting_service.dart';
+import 'package:ziska_verify/core/services/monitoring/no_op_crash_reporting_service.dart';
 import 'package:ziska_verify/core/services/permission/permission_service.dart';
 import 'package:ziska_verify/core/services/scanner/scanner_service.dart';
 import 'package:ziska_verify/core/services/storage/secure_storage_service.dart';
 import 'package:ziska_verify/shared/design_system/components/chips/count_chip.dart';
 
 import '../fakes/fake_logger_service.dart';
-import '../fakes/fake_picture_images.dart';
+import '../fakes/fake_picture_image_service.dart';
 import '../fakes/fake_preferences_service.dart';
 import '../fakes/fake_secure_storage_service.dart';
 import '../fakes/postman_examples.dart';
@@ -471,7 +471,7 @@ class FlowApp {
   final FakeLauncher launcher;
   final FakeScanner scanner;
   final FakePhotos photos;
-  final FakePictureImages pictures;
+  final FakePictureImageService pictures;
   final FakeLoggerService logger;
   final FakeConnectivityService connectivity;
   final FakePreferencesService preferences;
@@ -613,7 +613,7 @@ Future<FlowApp> startApp(
   final scanner = FakeScanner();
   final photos = FakePhotos();
   final connectivity = FakeConnectivityService();
-  final pictures = FakePictureImages();
+  final pictures = FakePictureImageService();
   final logger = FakeLoggerService();
   final prefs = preferences ?? FakePreferencesService();
 
@@ -639,9 +639,9 @@ Future<FlowApp> startApp(
 
   // The app's own start: the phone ID and the stored login.
   await prepareSession();
-  await prepareLanguage();
+  final language = await readLanguage();
   // The test product picture, decoded once in real time (no network).
-  await tester.runAsync(FakePictureImages.prepare);
+  await tester.runAsync(FakePictureImageService.prepare);
 
   // A copy to the clipboard succeeds, as on a phone.
   tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
@@ -652,7 +652,9 @@ Future<FlowApp> startApp(
   );
 
   // A new key: a second start in one test is a new app, not an update.
-  await tester.pumpWidget(App(key: UniqueKey(), locator: locator));
+  await tester.pumpWidget(
+    App(key: UniqueKey(), locator: locator, initialLocale: language),
+  );
   await tester.pumpAndSettle();
 
   return FlowApp(

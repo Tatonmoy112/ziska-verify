@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:clock/clock.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ziska_verify/core/network/api_dates.dart';
-import 'package:ziska_verify/core/services/device/phone_id_service.dart';
+import 'package:ziska_verify/core/services/device/secure_phone_id_service.dart';
 import 'package:ziska_verify/core/services/scanner/active_scan_store.dart';
 import 'package:ziska_verify/core/utils/secure_random.dart';
 import 'package:ziska_verify/core/utils/waits_until.dart';

@@ -8,7 +8,7 @@ import 'package:ziska_verify/core/pagination/paged_loader.dart';
 import 'package:ziska_verify/core/pagination/paginated_state.dart';
 import 'package:ziska_verify/core/utils/event_transformers.dart';
 import 'package:ziska_verify/features/retail_users/domain/entities/retail_user.dart';
-import 'package:ziska_verify/features/retail_users/domain/usecases/search_retail_users.dart';
+import 'package:ziska_verify/features/retail_users/domain/usecases/retail_user_usecases.dart';
 
 part 'retail_user_picker_bloc.freezed.dart';
 

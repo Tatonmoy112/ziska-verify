@@ -15,14 +15,7 @@ Uri? pictureAddress(String? url) {
 /// client, so the picture host never receives the access pass; kept only in
 /// Flutter's memory image cache, never on the phone's storage (final.md
 /// §12, backend D21).
-abstract interface class PictureImages {
+abstract interface class PictureImageService {
   /// The picture at [address] (an address [pictureAddress] accepted).
   ImageProvider of(Uri address);
-}
-
-class NetworkPictureImages implements PictureImages {
-  const NetworkPictureImages();
-
-  @override
-  ImageProvider of(Uri address) => NetworkImage(address.toString());
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:ziska_verify/core/errors/result.dart';
 import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
 import 'package:ziska_verify/features/verification/presentation/bloc/lookup_bloc.dart';
 import 'package:ziska_verify/features/verification/presentation/widgets/lookup_messages.dart';
@@ -58,40 +59,6 @@ class SerialLookupForm extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final formats = state.formats;
 
-    // Without the formats only the serial form waits: the tools need no
-    // formats, so they stay (final.md §13.7).
-    Widget formsUnavailable() {
-      final formatsFailure = state.formatsFailure;
-      if (formatsFailure == null) {
-        return const Padding(
-          padding: EdgeInsets.all(AppSpacing.xl),
-          child: Center(
-            child: CircularProgressIndicator(key: Key('verify.formatsLoading')),
-          ),
-        );
-      }
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          ErrorBanner(
-            message:
-                '${l10n.formatsFailed} '
-                '${formatsFailure.message(l10n)}',
-            requestId: formatsFailure.requestId,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          RetryCountdown(
-            until: state.formatsRetryAt,
-            builder: (context, wait) => AppButton(
-              key: const Key('verify.formatsRetry'),
-              label: wait > 0 ? l10n.errorRateLimited(wait) : l10n.retry,
-              onPressed: wait > 0 ? null : onRetryFormats,
-            ),
-          ),
-        ],
-      );
-    }
-
     final failure = state.failure;
     return ListView(
       padding: EdgeInsets.zero,
@@ -104,7 +71,11 @@ class SerialLookupForm extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               if (formats == null)
-                formsUnavailable()
+                _FormsUnavailable(
+                  failure: state.formatsFailure,
+                  retryAt: state.formatsRetryAt,
+                  onRetry: onRetryFormats,
+                )
               else
                 DecoratedBox(
                   decoration: const BoxDecoration(
@@ -181,6 +152,55 @@ class SerialLookupForm extends StatelessWidget {
                 ToolsSection(tools: tools),
               ],
             ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Without the formats only the serial form waits: the tools need no
+/// formats, so they stay (final.md §13.7). A spinner while they load; what
+/// went wrong and Try again when they failed.
+class _FormsUnavailable extends StatelessWidget {
+  const _FormsUnavailable({
+    required this.failure,
+    required this.retryAt,
+    required this.onRetry,
+  });
+
+  final Failure? failure;
+  final DateTime? retryAt;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final formatsFailure = failure;
+    if (formatsFailure == null) {
+      return const Padding(
+        padding: EdgeInsets.all(AppSpacing.xl),
+        child: Center(
+          child: CircularProgressIndicator(key: Key('verify.formatsLoading')),
+        ),
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ErrorBanner(
+          message:
+              '${l10n.formatsFailed} '
+              '${formatsFailure.message(l10n)}',
+          requestId: formatsFailure.requestId,
+        ),
+        const SizedBox(height: AppSpacing.md),
+        RetryCountdown(
+          until: retryAt,
+          builder: (context, wait) => AppButton(
+            key: const Key('verify.formatsRetry'),
+            label: wait > 0 ? l10n.errorRateLimited(wait) : l10n.retry,
+            onPressed: wait > 0 ? null : onRetry,
           ),
         ),
       ],

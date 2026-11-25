@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:skeletonizer/skeletonizer.dart';
-import 'package:ziska_verify/core/services/picture/picture_images.dart';
+import 'package:ziska_verify/core/services/picture/picture_image_service.dart';
 import 'package:ziska_verify/l10n/generated/app_localizations.dart';
 import 'package:ziska_verify/shared/design_system/components/buttons/app_button.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_colors.dart';
@@ -24,7 +24,7 @@ class ProductPictureCard extends StatefulWidget {
   /// `item.product.picture_url`; `null`, or not `https://`, is no picture.
   final String? pictureUrl;
   final String productName;
-  final PictureImages pictures;
+  final PictureImageService pictures;
 
   @override
   State<ProductPictureCard> createState() => _ProductPictureCardState();

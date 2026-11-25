@@ -5,17 +5,15 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ziska_verify/app/bridges/recovered_scans.dart';
-import 'package:ziska_verify/app/config/app_config.dart';
 import 'package:ziska_verify/app/router/route_paths.dart';
 import 'package:ziska_verify/app/router/routes/route_deps.dart';
 import 'package:ziska_verify/core/navigation/route_names.dart';
 import 'package:ziska_verify/core/services/launcher/launcher_service.dart';
 import 'package:ziska_verify/core/services/permission/permission_service.dart';
-import 'package:ziska_verify/core/services/picture/picture_images.dart';
+import 'package:ziska_verify/core/services/picture/picture_image_service.dart';
 import 'package:ziska_verify/core/services/scanner/active_scan_store.dart';
 import 'package:ziska_verify/core/services/scanner/scanner_service.dart';
-import 'package:ziska_verify/core/services/storage/secure_storage_service.dart';
-import 'package:ziska_verify/features/history/domain/usecases/get_checks.dart';
+import 'package:ziska_verify/features/history/domain/usecases/check_usecases.dart';
 import 'package:ziska_verify/features/profile/domain/entities/profile.dart';
 import 'package:ziska_verify/features/verification/domain/usecases/verification_usecases.dart';
 import 'package:ziska_verify/features/verification/presentation/bloc/lookup_bloc.dart';
@@ -62,7 +60,7 @@ List<RouteBase> checkRoutes(RouteDeps d) {
         }
         return LookupResultScreen(
           view: view,
-          pictures: locator<PictureImages>(),
+          pictures: locator<PictureImageService>(),
           launcher: locator<LauncherService>(),
           // The report carries this check's reference (§13.5).
           onReport: (checkRef) => context.pushNamed<void>(
@@ -82,10 +80,8 @@ List<RouteBase> checkRoutes(RouteDeps d) {
             getSession: locator(),
             scan: locator(),
             endSession: locator(),
-            store: ActiveScanStore(
-              locator<SecureStorageService>(),
-              client: locator<AppConfig>().clientSlug,
-              official: profileCubit.state.profile!.id,
+            store: locator<ActiveScanStores>().of(
+              profileCubit.state.profile!.id,
             ),
             authStates: session.states,
             loadChecks:

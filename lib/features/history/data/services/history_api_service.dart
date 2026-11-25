@@ -4,7 +4,7 @@ import 'package:ziska_verify/core/network/api_data.dart';
 import 'package:ziska_verify/core/network/api_dates.dart';
 import 'package:ziska_verify/core/network/api_routes.dart';
 import 'package:ziska_verify/core/pagination/page_request.dart';
-import 'package:ziska_verify/features/history/data/models/checks_page_dto.dart';
+import 'package:ziska_verify/features/history/data/models/check_dtos.dart';
 import 'package:ziska_verify/features/history/domain/entities/check.dart';
 
 /// `GET checks` (final.md §15).

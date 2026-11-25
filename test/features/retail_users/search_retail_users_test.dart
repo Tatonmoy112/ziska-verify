@@ -4,7 +4,7 @@ import 'package:ziska_verify/core/pagination/cursor_page.dart';
 import 'package:ziska_verify/core/pagination/page_request.dart';
 import 'package:ziska_verify/features/retail_users/domain/entities/retail_user.dart';
 import 'package:ziska_verify/features/retail_users/domain/repositories/retail_user_repository.dart';
-import 'package:ziska_verify/features/retail_users/domain/usecases/search_retail_users.dart';
+import 'package:ziska_verify/features/retail_users/domain/usecases/retail_user_usecases.dart';
 
 class _Recording implements RetailUserRepository {
   final searches = <String?>[];

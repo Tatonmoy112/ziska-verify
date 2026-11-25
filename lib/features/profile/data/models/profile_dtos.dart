@@ -1,6 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
 
-part 'profile_dto.g.dart';
+part 'profile_dtos.g.dart';
 
 /// `GET me` → `data` (app API guide §3.8). Unknown fields are ignored.
 @JsonSerializable(fieldRename: FieldRename.snake, createToJson: false)

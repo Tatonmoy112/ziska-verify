@@ -6,7 +6,7 @@ import 'package:ziska_verify/core/pagination/cursor_page.dart';
 import 'package:ziska_verify/core/pagination/page_request.dart';
 import 'package:ziska_verify/features/history/domain/entities/check.dart';
 import 'package:ziska_verify/features/history/domain/repositories/history_repository.dart';
-import 'package:ziska_verify/features/history/domain/usecases/get_checks.dart';
+import 'package:ziska_verify/features/history/domain/usecases/check_usecases.dart';
 import 'package:ziska_verify/features/history/presentation/bloc/history_bloc.dart';
 import 'package:ziska_verify/features/incidents/domain/entities/report.dart';
 import 'package:ziska_verify/features/incidents/domain/repositories/incident_repository.dart';
@@ -14,7 +14,7 @@ import 'package:ziska_verify/features/incidents/domain/usecases/incident_usecase
 import 'package:ziska_verify/features/incidents/presentation/bloc/my_reports_bloc.dart';
 import 'package:ziska_verify/features/retail_users/domain/entities/retail_user.dart';
 import 'package:ziska_verify/features/retail_users/domain/repositories/retail_user_repository.dart';
-import 'package:ziska_verify/features/retail_users/domain/usecases/search_retail_users.dart';
+import 'package:ziska_verify/features/retail_users/domain/usecases/retail_user_usecases.dart';
 import 'package:ziska_verify/features/retail_users/presentation/bloc/retail_user_picker_bloc.dart';
 import 'package:ziska_verify/features/verification/domain/entities/scan_session.dart';
 import 'package:ziska_verify/features/verification/domain/repositories/verification_repository.dart';

@@ -1,4 +1,4 @@
-import 'package:ziska_verify/features/profile/data/models/profile_dto.dart';
+import 'package:ziska_verify/features/profile/data/models/profile_dtos.dart';
 import 'package:ziska_verify/features/profile/domain/entities/profile.dart';
 
 extension ProfileMapper on ProfileDto {

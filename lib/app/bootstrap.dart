@@ -25,9 +25,9 @@ Future<void> bootstrap() async {
   registerFeatures();
 
   await prepareSession();
-  await prepareLanguage();
+  final language = await readLanguage();
 
-  runApp(App(locator: locator));
+  runApp(App(locator: locator, initialLocale: language));
 }
 
 /// Makes the phone ID and restores the login before the first screen. The

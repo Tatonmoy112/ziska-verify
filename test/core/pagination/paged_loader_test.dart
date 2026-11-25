@@ -15,7 +15,7 @@ import 'package:ziska_verify/features/incidents/domain/usecases/incident_usecase
 import 'package:ziska_verify/features/incidents/presentation/bloc/my_reports_bloc.dart';
 import 'package:ziska_verify/features/retail_users/domain/entities/retail_user.dart';
 import 'package:ziska_verify/features/retail_users/domain/repositories/retail_user_repository.dart';
-import 'package:ziska_verify/features/retail_users/domain/usecases/search_retail_users.dart';
+import 'package:ziska_verify/features/retail_users/domain/usecases/retail_user_usecases.dart';
 import 'package:ziska_verify/features/retail_users/presentation/bloc/retail_user_picker_bloc.dart';
 
 /// The wait the server asks for; short, so the tests run in real time.

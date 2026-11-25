@@ -74,108 +74,109 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
           unawaited(Navigator.of(context).maybePop(true));
         }
       },
-      builder: (context, state) => _form(context, l10n, state),
+      // The form: it reads the fields as typed (`setState`).
+      builder: (context, state) {
+        final busy = state.isSubmitting;
+        final failed = state.status == SubmitStatus.failure ? state : null;
+        return ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            GradientHeader(
+              title: widget.forced
+                  ? l10n.changePasswordTitle
+                  : l10n.changePasswordRow,
+              subtitle: widget.forced
+                  ? l10n.changePasswordForcedSubtitle
+                  : l10n.changePasswordSubtitle,
+              onBack: widget.forced
+                  ? null
+                  : () => Navigator.of(context).maybePop(),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.screen),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  AppPasswordField(
+                    fieldKey: const Key('change.old'),
+                    label: l10n.currentPasswordLabel,
+                    showLabel: l10n.showPassword,
+                    hideLabel: l10n.hidePassword,
+                    controller: _old,
+                    textInputAction: TextInputAction.next,
+                    onChanged: (_) => setState(() {}),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  AppPasswordField(
+                    fieldKey: const Key('change.new'),
+                    label: l10n.newPasswordLabel,
+                    showLabel: l10n.showPassword,
+                    hideLabel: l10n.hidePassword,
+                    controller: _new,
+                    textInputAction: TextInputAction.next,
+                    autofillHints: const [AutofillHints.newPassword],
+                    onChanged: (_) => setState(() {}),
+                  ),
+                  PasswordRules(check: _check),
+                  const SizedBox(height: AppSpacing.md),
+                  AppPasswordField(
+                    fieldKey: const Key('change.repeat'),
+                    label: l10n.confirmPasswordLabel,
+                    showLabel: l10n.showPassword,
+                    hideLabel: l10n.hidePassword,
+                    controller: _repeat,
+                    autofillHints: const [AutofillHints.newPassword],
+                    errorText: _repeat.text.isNotEmpty && !_matches
+                        ? l10n.passwordsDoNotMatch
+                        : null,
+                    onChanged: (_) => setState(() {}),
+                  ),
+                  if (failed != null) ...[
+                    const SizedBox(height: AppSpacing.md),
+                    FailureBanner(
+                      failure: failed.failure!,
+                      retryAt: failed.retryAt,
+                      message: _errorText(l10n, failed),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                  ],
+                  RetryCountdown(
+                    until: state.retryAt,
+                    builder: (context, seconds) => AppButton(
+                      key: const Key('change.submit'),
+                      label: l10n.changePasswordButton,
+                      loading: state.isSubmitting,
+                      onPressed: _ready && !busy && seconds == 0
+                          ? () => context.read<ChangePasswordCubit>().submit(
+                              oldPassword: _old.text,
+                              newPassword: _new.text,
+                            )
+                          : null,
+                    ),
+                  ),
+                  if (widget.forced) ...[
+                    const SizedBox(height: AppSpacing.sm),
+                    AppButton(
+                      key: const Key('change.logout'),
+                      label: l10n.logout,
+                      variant: AppButtonVariant.tonal,
+                      onPressed: busy
+                          ? null
+                          : () => context.read<ChangePasswordCubit>().logout(),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        );
+      },
     );
     return PopScope(
       canPop: !widget.forced,
       child: NavyStatusBar(
         child: Scaffold(body: screen),
       ),
-    );
-  }
-
-  Widget _form(BuildContext context, AppLocalizations l10n, SubmitState state) {
-    final busy = state.isSubmitting;
-    final failed = state.status == SubmitStatus.failure ? state : null;
-    return ListView(
-      padding: EdgeInsets.zero,
-      children: [
-        GradientHeader(
-          title: widget.forced
-              ? l10n.changePasswordTitle
-              : l10n.changePasswordRow,
-          subtitle: widget.forced
-              ? l10n.changePasswordForcedSubtitle
-              : l10n.changePasswordSubtitle,
-          onBack: widget.forced ? null : () => Navigator.of(context).maybePop(),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(AppSpacing.screen),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              AppPasswordField(
-                fieldKey: const Key('change.old'),
-                label: l10n.currentPasswordLabel,
-                showLabel: l10n.showPassword,
-                hideLabel: l10n.hidePassword,
-                controller: _old,
-                textInputAction: TextInputAction.next,
-                onChanged: (_) => setState(() {}),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              AppPasswordField(
-                fieldKey: const Key('change.new'),
-                label: l10n.newPasswordLabel,
-                showLabel: l10n.showPassword,
-                hideLabel: l10n.hidePassword,
-                controller: _new,
-                textInputAction: TextInputAction.next,
-                autofillHints: const [AutofillHints.newPassword],
-                onChanged: (_) => setState(() {}),
-              ),
-              PasswordRules(check: _check),
-              const SizedBox(height: AppSpacing.md),
-              AppPasswordField(
-                fieldKey: const Key('change.repeat'),
-                label: l10n.confirmPasswordLabel,
-                showLabel: l10n.showPassword,
-                hideLabel: l10n.hidePassword,
-                controller: _repeat,
-                autofillHints: const [AutofillHints.newPassword],
-                errorText: _repeat.text.isNotEmpty && !_matches
-                    ? l10n.passwordsDoNotMatch
-                    : null,
-                onChanged: (_) => setState(() {}),
-              ),
-              if (failed != null) ...[
-                const SizedBox(height: AppSpacing.md),
-                FailureBanner(
-                  failure: failed.failure!,
-                  retryAt: failed.retryAt,
-                  message: _errorText(l10n, failed),
-                ),
-                const SizedBox(height: AppSpacing.md),
-              ],
-              RetryCountdown(
-                until: state.retryAt,
-                builder: (context, seconds) => AppButton(
-                  key: const Key('change.submit'),
-                  label: l10n.changePasswordButton,
-                  loading: state.isSubmitting,
-                  onPressed: _ready && !busy && seconds == 0
-                      ? () => context.read<ChangePasswordCubit>().submit(
-                          oldPassword: _old.text,
-                          newPassword: _new.text,
-                        )
-                      : null,
-                ),
-              ),
-              if (widget.forced) ...[
-                const SizedBox(height: AppSpacing.sm),
-                AppButton(
-                  key: const Key('change.logout'),
-                  label: l10n.logout,
-                  variant: AppButtonVariant.tonal,
-                  onPressed: busy
-                      ? null
-                      : () => context.read<ChangePasswordCubit>().logout(),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ],
     );
   }
 }

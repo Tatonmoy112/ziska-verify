@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ziska_verify/features/history/domain/entities/check.dart';
-import 'package:ziska_verify/features/history/domain/usecases/get_checks.dart';
+import 'package:ziska_verify/features/history/domain/usecases/check_usecases.dart';
 import 'package:ziska_verify/features/history/presentation/bloc/history_bloc.dart';
 import 'package:ziska_verify/features/history/presentation/widgets/check_tile.dart';
 import 'package:ziska_verify/l10n/generated/app_localizations.dart';

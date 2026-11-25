@@ -13,8 +13,7 @@ import 'package:ziska_verify/core/services/scanner/active_scan_store.dart';
 import 'package:ziska_verify/core/services/session/forbidden_signal.dart';
 import 'package:ziska_verify/core/services/session/session_service.dart';
 import 'package:ziska_verify/core/services/session/session_state.dart';
-import 'package:ziska_verify/core/services/storage/secure_storage_service.dart';
-import 'package:ziska_verify/features/profile/domain/usecases/get_profile.dart';
+import 'package:ziska_verify/features/profile/domain/usecases/profile_usecases.dart';
 import 'package:ziska_verify/features/profile/presentation/bloc/profile_cubit.dart';
 import 'package:ziska_verify/l10n/generated/app_localizations.dart';
 import 'package:ziska_verify/shared/design_system/theme/app_theme.dart';
@@ -24,9 +23,12 @@ import 'package:ziska_verify/shared/widgets/network_status_banner.dart';
 /// router (§9), the theme (§14), and the chosen language
 /// (§16), applied at once.
 class App extends StatefulWidget {
-  const App({required this.locator, super.key});
+  const App({required this.locator, required this.initialLocale, super.key});
 
   final GetIt locator;
+
+  /// The language read before the first screen (`readLanguage`).
+  final Locale initialLocale;
 
   @override
   State<App> createState() => _AppState();
@@ -37,13 +39,7 @@ class _AppState extends State<App> {
   StreamSubscription<ProfileState>? _profileChanges;
   StreamSubscription<SessionState>? _sessionChanges;
   void _clearRecovery(String official) {
-    unawaited(
-      ActiveScanStore(
-        widget.locator<SecureStorageService>(),
-        client: widget.locator<AppConfig>().clientSlug,
-        official: official,
-      ).clear().catchError((Object _) {}),
-    );
+    unawaited(widget.locator<ActiveScanStores>().clear(official));
   }
 
   @override
@@ -69,9 +65,15 @@ class _AppState extends State<App> {
     widget.locator<SessionService>(),
     forbidden: widget.locator<ForbiddenSignal>().stream,
   );
+  late final LocaleCubit _locale = LocaleCubit(
+    widget.locator(),
+    widget.locator(),
+    initial: widget.initialLocale,
+  );
   late final AppRouter _router = buildRouter(
     locator: widget.locator,
     profileCubit: _profile,
+    localeCubit: _locale,
   );
 
   @override
@@ -80,6 +82,7 @@ class _AppState extends State<App> {
     unawaited(_sessionChanges?.cancel());
     _router.dispose();
     unawaited(_profile.close());
+    unawaited(_locale.close());
     super.dispose();
   }
 
@@ -89,7 +92,7 @@ class _AppState extends State<App> {
     return BlocProvider.value(
       value: _profile,
       child: BlocBuilder<LocaleCubit, Locale>(
-        bloc: widget.locator<LocaleCubit>(),
+        bloc: _locale,
         builder: (context, locale) => MaterialApp.router(
           locale: locale,
           onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,

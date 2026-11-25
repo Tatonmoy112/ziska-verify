@@ -16,7 +16,11 @@ abstract final class RoutePaths {
   static const lookupResult = '/home/result';
   static const scannerMode = '/home/scanner-mode';
   static const serialStack = '/home/serial-stack';
-  static const sessionChecks = '/history/sessions/:id';
+
+  /// The prefix of one session's checks; the guard checks it for every
+  /// session ID.
+  static const sessions = '/history/sessions';
+  static const sessionChecks = '$sessions/:id';
   static const myReports = '/home/reports';
   static const reportIncident = '/home/reports/new';
 

@@ -40,8 +40,8 @@ class RouteGuard {
         }
         final allowed =
             permissionByPath[path] ??
-            (path.startsWith('/history/sessions/')
-                ? permissionByPath['/history/sessions']
+            (path.startsWith('${RoutePaths.sessions}/')
+                ? permissionByPath[RoutePaths.sessions]
                 : null);
         if (allowed != null && !allowed(permissions)) return RoutePaths.home;
         return null;

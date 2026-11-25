@@ -7,14 +7,14 @@ import 'package:ziska_verify/app/di/register.dart';
 import 'package:ziska_verify/core/services/connectivity/connectivity_service.dart';
 import 'package:ziska_verify/core/services/launcher/launcher_service.dart';
 import 'package:ziska_verify/core/services/media/photo_service.dart';
-import 'package:ziska_verify/core/services/monitoring/crash_reporting_service.dart';
-import 'package:ziska_verify/core/services/picture/picture_images.dart';
+import 'package:ziska_verify/core/services/monitoring/no_op_crash_reporting_service.dart';
+import 'package:ziska_verify/core/services/picture/picture_image_service.dart';
 import 'package:ziska_verify/core/services/scanner/scanner_service.dart';
 import 'package:ziska_verify/core/services/storage/preferences_service.dart';
 import 'package:ziska_verify/core/services/storage/secure_storage_service.dart';
 
 import '../fakes/fake_logger_service.dart';
-import '../fakes/fake_picture_images.dart';
+import '../fakes/fake_picture_image_service.dart';
 import '../fakes/fake_preferences_service.dart';
 import '../fakes/fake_secure_storage_service.dart';
 import '../fakes/scripted_adapter.dart';
@@ -49,7 +49,7 @@ void main() {
       final launcher = FakeLauncher();
       final scanner = FakeScanner();
       final photos = FakePhotos();
-      final pictures = FakePictureImages();
+      final pictures = FakePictureImageService();
       final connectivity = FakeConnectivityService();
       final preferences = FakePreferencesService();
       register(
@@ -68,7 +68,7 @@ void main() {
       expect(locator<LauncherService>(), same(launcher));
       expect(locator<ScannerService>(), same(scanner));
       expect(locator<PhotoService>(), same(photos));
-      expect(locator<PictureImages>(), same(pictures));
+      expect(locator<PictureImageService>(), same(pictures));
       expect(locator<ConnectivityService>(), same(connectivity));
       expect(locator<PreferencesService>(), same(preferences));
     });

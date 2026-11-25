@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:ziska_verify/features/retail_users/domain/entities/retail_user.dart';
-import 'package:ziska_verify/features/retail_users/domain/usecases/search_retail_users.dart';
+import 'package:ziska_verify/features/retail_users/domain/usecases/retail_user_usecases.dart';
 import 'package:ziska_verify/features/retail_users/presentation/bloc/retail_user_picker_bloc.dart';
 import 'package:ziska_verify/l10n/generated/app_localizations.dart';
 import 'package:ziska_verify/shared/design_system/components/inputs/app_search_field.dart';

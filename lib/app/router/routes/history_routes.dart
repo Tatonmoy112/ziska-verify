@@ -7,7 +7,7 @@ import 'package:ziska_verify/app/router/route_paths.dart';
 import 'package:ziska_verify/app/router/routes/route_deps.dart';
 import 'package:ziska_verify/core/navigation/route_names.dart';
 import 'package:ziska_verify/features/history/domain/entities/check.dart';
-import 'package:ziska_verify/features/history/domain/usecases/get_checks.dart';
+import 'package:ziska_verify/features/history/domain/usecases/check_usecases.dart';
 import 'package:ziska_verify/features/history/presentation/bloc/history_bloc.dart';
 import 'package:ziska_verify/features/history/presentation/screens/history_screen.dart';
 import 'package:ziska_verify/features/verification/domain/usecases/verification_usecases.dart';

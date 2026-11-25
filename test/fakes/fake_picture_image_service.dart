@@ -3,7 +3,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart';
-import 'package:ziska_verify/core/services/picture/picture_images.dart';
+import 'package:ziska_verify/core/services/picture/picture_image_service.dart';
 
 /// The test product picture (a drawing of a pack, 400 × 300), read once.
 final Uint8List testProductPicture = File(
@@ -14,7 +14,7 @@ final Uint8List testProductPicture = File(
 /// address it is asked for. A picture is handed out already decoded, so it
 /// shows at once on the test clock; [delay] makes it arrive later and
 /// [failures] makes the next loads fail.
-class FakePictureImages implements PictureImages {
+class FakePictureImageService implements PictureImageService {
   static ui.Image? _decoded;
 
   /// Decodes the test picture once. Needs real time: call it in `setUpAll`
@@ -58,9 +58,9 @@ class _TestPicture extends ImageProvider<_TestPicture> {
   ) {
     if (fail) return _Failed();
     ImageInfo info() {
-      final image = FakePictureImages._decoded;
+      final image = FakePictureImageService._decoded;
       if (image == null) {
-        throw StateError('Call FakePictureImages.prepare() first.');
+        throw StateError('Call FakePictureImageService.prepare() first.');
       }
       return ImageInfo(image: image.clone());
     }

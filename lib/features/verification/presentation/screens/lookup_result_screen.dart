@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:ziska_verify/core/navigation/route_names.dart';
 import 'package:ziska_verify/core/services/launcher/launcher_service.dart';
-import 'package:ziska_verify/core/services/picture/picture_images.dart';
+import 'package:ziska_verify/core/services/picture/picture_image_service.dart';
 import 'package:ziska_verify/core/utils/display_time.dart';
 import 'package:ziska_verify/features/profile/domain/entities/profile.dart';
 import 'package:ziska_verify/features/profile/presentation/bloc/profile_cubit.dart';
@@ -38,7 +38,7 @@ class LookupResultScreen extends StatelessWidget {
 
   /// The result, what was looked up, and where it started.
   final ResultView view;
-  final PictureImages pictures;
+  final PictureImageService pictures;
   final LauncherService launcher;
 
   /// Opens New report, a page of the reports feature, for the check

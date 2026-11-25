@@ -1,6 +1,7 @@
 import 'package:flutter/painting.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ziska_verify/core/services/picture/picture_images.dart';
+import 'package:ziska_verify/core/services/picture/network_picture_image_service.dart';
+import 'package:ziska_verify/core/services/picture/picture_image_service.dart';
 import 'package:ziska_verify/features/verification/domain/entities/checked_input.dart';
 import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
 
@@ -50,7 +51,7 @@ void main() {
   });
 
   test('the real service loads with no extra headers (no access pass)', () {
-    final image = const NetworkPictureImages().of(
+    final image = const NetworkPictureImageService().of(
       Uri.parse('https://pictures.example.com/53/9f2c.jpg'),
     );
     expect(image, isA<NetworkImage>());

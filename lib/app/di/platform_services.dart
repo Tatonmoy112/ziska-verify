@@ -3,7 +3,7 @@ import 'package:ziska_verify/core/services/device/app_info_service.dart';
 import 'package:ziska_verify/core/services/launcher/launcher_service.dart';
 import 'package:ziska_verify/core/services/media/photo_service.dart';
 import 'package:ziska_verify/core/services/permission/permission_service.dart';
-import 'package:ziska_verify/core/services/picture/picture_images.dart';
+import 'package:ziska_verify/core/services/picture/picture_image_service.dart';
 import 'package:ziska_verify/core/services/scanner/scanner_service.dart';
 import 'package:ziska_verify/core/services/storage/preferences_service.dart';
 import 'package:ziska_verify/core/services/storage/secure_storage_service.dart';
@@ -32,5 +32,5 @@ class PlatformServices {
   final ScannerService? scanner;
   final PermissionService? permission;
   final PhotoService? photos;
-  final PictureImages? pictures;
+  final PictureImageService? pictures;
 }

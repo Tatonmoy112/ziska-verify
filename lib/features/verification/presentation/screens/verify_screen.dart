@@ -69,6 +69,7 @@ class _VerifyScreenState extends State<VerifyScreen>
 
   /// Made when the role may check one item; the camera starts with it.
   ScannerSession? _session;
+  StreamSubscription<ProfileState>? _profiles;
   bool _running = true;
   bool _visible = true;
   bool _resumed = true;
@@ -95,6 +96,23 @@ class _VerifyScreenState extends State<VerifyScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    // The session is made here or when the permission comes, never while
+    // building (production audit P-43).
+    final profiles = context.read<ProfileCubit>();
+    _ensureSession(profiles.state);
+    _profiles = profiles.stream.listen((state) {
+      if (_session == null && _mayLookup(state)) {
+        setState(() => _ensureSession(state));
+      }
+    });
+  }
+
+  static bool _mayLookup(ProfileState state) =>
+      state.profile?.canLookup ?? false;
+
+  void _ensureSession(ProfileState state) {
+    if (_session != null || !_mayLookup(state)) return;
+    _session = widget.scanner.createSession();
   }
 
   /// The camera runs only while the tab can be seen.
@@ -120,6 +138,7 @@ class _VerifyScreenState extends State<VerifyScreen>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _loader.stop();
+    unawaited(_profiles?.cancel());
     unawaited(_session?.dispose());
     _input.dispose();
     _inputFocus.dispose();
@@ -348,9 +367,7 @@ class _VerifyScreenState extends State<VerifyScreen>
         ),
       );
     }
-    final session = canLookup
-        ? _session ??= widget.scanner.createSession()
-        : null;
+    final session = canLookup ? _session : null;
     final header = CheckHeader(
       organisation: profile?.organisation ?? l10n.appTitle,
       name: profile?.name ?? '',

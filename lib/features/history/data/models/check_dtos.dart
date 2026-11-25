@@ -1,6 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
 
-part 'checks_page_dto.g.dart';
+part 'check_dtos.g.dart';
 
 /// `GET checks` → `data` (app API guide §5). The list key is `checks`.
 @JsonSerializable(fieldRename: FieldRename.snake, createToJson: false)

@@ -21,7 +21,6 @@ class CheckHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
     return DecoratedBox(
       decoration: const BoxDecoration(gradient: AppColors.headerGradient),
       child: Stack(
@@ -36,13 +35,32 @@ class CheckHeader extends StatelessWidget {
               fade: PatternFade.towardStart,
             ),
           ),
-          _headerContent(l10n),
+          _HeaderContent(
+            organisation: organisation,
+            name: name,
+            onOpenProfile: onOpenProfile,
+          ),
         ],
       ),
     );
   }
+}
 
-  Widget _headerContent(AppLocalizations l10n) {
+/// The organisation, the Profile button, and the welcome line.
+class _HeaderContent extends StatelessWidget {
+  const _HeaderContent({
+    required this.organisation,
+    required this.name,
+    required this.onOpenProfile,
+  });
+
+  final String organisation;
+  final String name;
+  final VoidCallback onOpenProfile;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return SafeArea(
       bottom: false,
       child: Padding(

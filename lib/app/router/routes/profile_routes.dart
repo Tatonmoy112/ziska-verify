@@ -5,12 +5,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ziska_verify/app/router/route_paths.dart';
 import 'package:ziska_verify/app/router/routes/route_deps.dart';
-import 'package:ziska_verify/core/locale/locale_cubit.dart';
 import 'package:ziska_verify/core/navigation/route_names.dart';
 import 'package:ziska_verify/core/services/device/app_info_service.dart';
 import 'package:ziska_verify/core/services/launcher/launcher_service.dart';
 import 'package:ziska_verify/features/authentication/domain/usecases/auth_usecases.dart';
-import 'package:ziska_verify/features/history/domain/usecases/get_checks.dart';
+import 'package:ziska_verify/features/history/domain/usecases/check_usecases.dart';
 import 'package:ziska_verify/features/history/presentation/bloc/check_totals_cubit.dart';
 import 'package:ziska_verify/features/history/presentation/widgets/check_totals_card.dart';
 import 'package:ziska_verify/features/profile/domain/entities/profile.dart';
@@ -31,8 +30,7 @@ StatefulShellBranch profileBranch(RouteDeps d) {
           }) => ProfileScreen(
             totals: totals,
             versionInfo: locator<AppInfoService>().versionInfo(),
-            onChooseLanguage: (code) =>
-                locator<LocaleCubit>().choose(Locale(code)),
+            onChooseLanguage: (code) => d.localeCubit.choose(Locale(code)),
             onChangePassword: () async {
               final profiles = context.read<ProfileCubit>();
               final changed = await context.pushNamed<bool>(

@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ziska_verify/core/errors/app_exception.dart';
 import 'package:ziska_verify/core/services/logging/console_logger_service.dart';
-import 'package:ziska_verify/core/services/logging/logger_service.dart';
+import 'package:ziska_verify/core/services/logging/reported_error.dart';
 import 'package:ziska_verify/core/services/monitoring/crash_reporting_service.dart';
 
 /// What crash reporting records, from the phone of an official.

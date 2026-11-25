@@ -4,12 +4,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:ziska_verify/app/router/route_guard.dart';
+import 'package:ziska_verify/app/router/route_permissions.dart';
 import 'package:ziska_verify/app/shell/main_shell.dart';
 import 'package:ziska_verify/core/errors/result.dart';
 import 'package:ziska_verify/core/services/session/session_state.dart';
 import 'package:ziska_verify/features/profile/domain/entities/profile.dart';
 import 'package:ziska_verify/features/profile/domain/repositories/profile_repository.dart';
-import 'package:ziska_verify/features/profile/domain/usecases/get_profile.dart';
+import 'package:ziska_verify/features/profile/domain/usecases/profile_usecases.dart';
 import 'package:ziska_verify/features/profile/presentation/bloc/profile_cubit.dart';
 import 'package:ziska_verify/l10n/generated/app_localizations.dart';
 
@@ -96,7 +97,7 @@ void main() {
   });
 
   test('the guard sends /history to Home without permission', () {
-    final guard = RouteGuard(permissionByPath: tabPermissionByPath);
+    final guard = RouteGuard(permissionByPath: routePermissions);
     String? go(String path, Set<Permission> p) => guard.redirect(
       session: const SessionAuthenticated(),
       profileLoaded: true,

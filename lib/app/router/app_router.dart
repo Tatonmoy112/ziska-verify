@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:ziska_verify/app/router/app_navigation_observer.dart';
 import 'package:ziska_verify/app/router/route_guard.dart';
 import 'package:ziska_verify/app/router/route_paths.dart';
+import 'package:ziska_verify/app/router/route_permissions.dart';
 import 'package:ziska_verify/app/router/router_refresh.dart';
 import 'package:ziska_verify/app/router/routes/auth_routes.dart';
 import 'package:ziska_verify/app/router/routes/check_routes.dart';
@@ -14,6 +15,7 @@ import 'package:ziska_verify/app/router/routes/profile_routes.dart';
 import 'package:ziska_verify/app/router/routes/report_routes.dart';
 import 'package:ziska_verify/app/router/routes/route_deps.dart';
 import 'package:ziska_verify/app/shell/main_shell.dart';
+import 'package:ziska_verify/core/locale/locale_cubit.dart';
 import 'package:ziska_verify/core/navigation/route_names.dart';
 import 'package:ziska_verify/core/services/logging/logger_service.dart';
 import 'package:ziska_verify/core/services/session/session_service.dart';
@@ -29,10 +31,11 @@ import 'package:ziska_verify/shared/design_system/tokens/app_spacing.dart';
 AppRouter buildRouter({
   required GetIt locator,
   required ProfileCubit profileCubit,
+  required LocaleCubit localeCubit,
   RouteGuard? guard,
 }) {
   final session = locator<SessionService>();
-  final routeGuard = guard ?? RouteGuard(permissionByPath: tabPermissionByPath);
+  final routeGuard = guard ?? RouteGuard(permissionByPath: routePermissions);
   // The guard reads the session, whether the profile is loaded, and its
   // permissions: the router runs it again only when one of them changes. A
   // profile refresh that changes nothing else (the password reminder going,
@@ -46,6 +49,7 @@ AppRouter buildRouter({
   final deps = RouteDeps(
     locator: locator,
     profileCubit: profileCubit,
+    localeCubit: localeCubit,
     session: session,
   );
 

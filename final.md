@@ -34,6 +34,13 @@ Use small constructor-injected interfaces and feature-first layering. Domain ent
 
 Generated JSON, Freezed, and localization files are regenerated and committed, never edited by hand.
 
+**One name and one place for each kind of thing** (2026-11-25, production audit P-43):
+- a feature's use cases, DTOs and mappers are in `<area>_usecases.dart`, `<area>_dtos.dart` and `<area>_mappers.dart`;
+- a service interface in `core/services/` is `<name>_service.dart` and holds no implementation: each implementation has its own file (`secure_phone_id_service.dart`, `network_picture_image_service.dart`, `no_op_crash_reporting_service.dart`);
+- route paths are written only in `RoutePaths`, and the permission each guarded path needs only in `routePermissions` (`app/router/route_permissions.dart`), which cannot be changed at run time;
+- the app's two app-wide cubits, the profile's and the language's, are both made and closed by `App`; the language is read first (`readLanguage`);
+- a part of a screen is a widget class, not a method returning a `Widget`, and `build` makes nothing (the check tab's camera session is made when the role may check an item).
+
 ## 4. Architecture and data flow
 
 Presentation calls domain use cases only, never a repository interface (2026-11-24, production audit P-3). A repository never calls a use case (rule R21, 2026-11-25, P-29). What turns one feature's data into another's lives in `lib/app/bridges/`, the composition root, not in the routes (2026-11-25, P-30). A use case validates its input before the repository: invalid input is a `ValidationException` and nothing is sent; a screen may check first only to say so (2026-11-25, P-33). Data implements those interfaces, calls API services, parses DTOs, and maps them into domain entities. API services use the shared API client and its envelope/error handling.
@@ -57,10 +64,10 @@ Presentation calls domain use cases only, never a repository interface (2026-11-
 | SessionService | Login state, secure token pair, renewal, logout and stale-response protection |
 | PhoneIdService | One cryptographically random installation ID, retained on logout |
 | SecureStorageService | Keychain/Keystore for phone ID, passes, and scoped active scan UUIDs |
-| ActiveScanStore | UUID v4 creation and recovery-ID storage under a client/official-specific key |
+| ActiveScanStore / ActiveScanStores | UUID v4 creation and recovery-ID storage under a client/official-specific key, made by one recipe; a failure to clear one is logged |
 | ScannerService | QR-only preview, lifecycle, torch, permission/plugin errors |
 | PhotoService | Pick, normalize orientation, remove metadata, resize/compress, enforce upload size |
-| PictureImages | Product pictures over HTTPS without API authorization; memory only |
+| PictureImageService | Product pictures over HTTPS without API authorization; memory only |
 | LauncherService / AppInfoService | Mail/dialler and app version |
 | LoggerService | Method/path/status/request reference only; secret redaction |
 

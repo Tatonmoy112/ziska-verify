@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:ziska_verify/app/router/route_paths.dart';
+import 'package:ziska_verify/app/router/route_permissions.dart';
 import 'package:ziska_verify/features/profile/domain/entities/profile.dart';
 import 'package:ziska_verify/features/profile/presentation/bloc/profile_cubit.dart';
 import 'package:ziska_verify/l10n/generated/app_localizations.dart';
@@ -26,8 +28,6 @@ class ShellTab {
   final bool Function(Set<Permission> permissions)? isAllowed;
 }
 
-bool _canSeeHistory(Set<Permission> p) => p.contains(Permission.ownHistory);
-
 /// The three tabs, in order (final.md §9).
 final List<ShellTab> shellTabs = [
   ShellTab(branch: 0, icon: LucideIcons.shieldCheck, label: (l) => l.tabVerify),
@@ -35,30 +35,12 @@ final List<ShellTab> shellTabs = [
     branch: 1,
     icon: LucideIcons.clock,
     label: (l) => l.tabHistory,
-    isAllowed: _canSeeHistory,
+    isAllowed: routePermissions[RoutePaths.history],
   ),
   ShellTab(branch: 2, icon: LucideIcons.user, label: (l) => l.tabProfile),
 ];
 
-/// The permission each tab path needs, for the router guard.
-final Map<String, bool Function(Set<Permission>)> tabPermissionByPath = {
-  '/history': _canSeeHistory,
-  '/home/result': (p) => _canLookup(p) || _canBulkLookup(p),
-  '/home/scanner-mode': _canBulkLookup,
-  '/home/serial-stack': _canBulkLookup,
-  // The prefix of one session's checks, `/history/sessions/{id}`.
-  '/history/sessions': _canSeeHistory,
-  '/home/reports': _canReport,
-  '/home/reports/new': _canReport,
-};
-
-bool _canReport(Set<Permission> p) => p.contains(Permission.report);
-
-bool _canLookup(Set<Permission> p) => p.contains(Permission.lookup);
-
-bool _canBulkLookup(Set<Permission> p) => p.contains(Permission.bulkLookup);
-
-/// The bottom navigation bar around the four tabs. Tabs the role cannot use
+/// The bottom navigation bar around the three tabs. Tabs the role cannot use
 /// are not shown (final.md §9).
 class MainShell extends StatelessWidget {
   const MainShell({required this.navigationShell, super.key});

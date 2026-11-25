@@ -8,7 +8,7 @@ import 'package:ziska_verify/core/pagination/page_request.dart';
 import 'package:ziska_verify/core/pagination/paginated_state.dart';
 import 'package:ziska_verify/features/history/domain/entities/check.dart';
 import 'package:ziska_verify/features/history/domain/repositories/history_repository.dart';
-import 'package:ziska_verify/features/history/domain/usecases/get_checks.dart';
+import 'package:ziska_verify/features/history/domain/usecases/check_usecases.dart';
 import 'package:ziska_verify/features/history/presentation/bloc/history_bloc.dart';
 
 class _MockRepo extends Mock implements HistoryRepository {}

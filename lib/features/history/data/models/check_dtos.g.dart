@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'checks_page_dto.dart';
+part of 'check_dtos.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator

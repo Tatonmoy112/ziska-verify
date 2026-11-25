@@ -1,3 +1,5 @@
+import 'package:ziska_verify/core/errors/app_exception.dart';
+
 /// The four session states that drive routing (final.md §6).
 sealed class SessionState {
   const SessionState();
@@ -47,5 +49,5 @@ final class SessionEnded extends RenewalResult {
 /// The renewal could not complete (network, 503, 429); the passes are kept.
 final class RenewalFailed extends RenewalResult {
   const RenewalFailed(this.error);
-  final Object error;
+  final AppException error;
 }

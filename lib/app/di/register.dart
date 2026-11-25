@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:dio/dio.dart';
 import 'package:ziska_verify/app/config/app_config.dart';
@@ -12,6 +13,7 @@ import 'package:ziska_verify/core/services/connectivity/plus_connectivity_servic
 import 'package:ziska_verify/core/services/device/app_info_service.dart';
 import 'package:ziska_verify/core/services/device/package_info_app_info_service.dart';
 import 'package:ziska_verify/core/services/device/phone_id_service.dart';
+import 'package:ziska_verify/core/services/device/secure_phone_id_service.dart';
 import 'package:ziska_verify/core/services/launcher/launcher_service.dart';
 import 'package:ziska_verify/core/services/launcher/url_launcher_service.dart';
 import 'package:ziska_verify/core/services/logging/logger_service.dart';
@@ -20,7 +22,9 @@ import 'package:ziska_verify/core/services/media/photo_service.dart';
 import 'package:ziska_verify/core/services/monitoring/crash_reporting_service.dart';
 import 'package:ziska_verify/core/services/permission/permission_handler_service.dart';
 import 'package:ziska_verify/core/services/permission/permission_service.dart';
-import 'package:ziska_verify/core/services/picture/picture_images.dart';
+import 'package:ziska_verify/core/services/picture/network_picture_image_service.dart';
+import 'package:ziska_verify/core/services/picture/picture_image_service.dart';
+import 'package:ziska_verify/core/services/scanner/active_scan_store.dart';
 import 'package:ziska_verify/core/services/scanner/mobile_scanner_service.dart';
 import 'package:ziska_verify/core/services/scanner/scanner_service.dart';
 import 'package:ziska_verify/core/services/session/forbidden_signal.dart';
@@ -40,7 +44,7 @@ import 'package:ziska_verify/features/authentication/domain/usecases/auth_usecas
 import 'package:ziska_verify/features/history/data/repositories/history_repository_impl.dart';
 import 'package:ziska_verify/features/history/data/services/history_api_service.dart';
 import 'package:ziska_verify/features/history/domain/repositories/history_repository.dart';
-import 'package:ziska_verify/features/history/domain/usecases/get_checks.dart';
+import 'package:ziska_verify/features/history/domain/usecases/check_usecases.dart';
 import 'package:ziska_verify/features/incidents/data/repositories/incident_repository_impl.dart';
 import 'package:ziska_verify/features/incidents/data/services/incident_api_service.dart';
 import 'package:ziska_verify/features/incidents/domain/repositories/incident_repository.dart';
@@ -48,11 +52,11 @@ import 'package:ziska_verify/features/incidents/domain/usecases/incident_usecase
 import 'package:ziska_verify/features/profile/data/repositories/profile_repository_impl.dart';
 import 'package:ziska_verify/features/profile/data/services/profile_api_service.dart';
 import 'package:ziska_verify/features/profile/domain/repositories/profile_repository.dart';
-import 'package:ziska_verify/features/profile/domain/usecases/get_profile.dart';
+import 'package:ziska_verify/features/profile/domain/usecases/profile_usecases.dart';
 import 'package:ziska_verify/features/retail_users/data/repositories/retail_user_repository_impl.dart';
 import 'package:ziska_verify/features/retail_users/data/services/retail_user_api_service.dart';
 import 'package:ziska_verify/features/retail_users/domain/repositories/retail_user_repository.dart';
-import 'package:ziska_verify/features/retail_users/domain/usecases/search_retail_users.dart';
+import 'package:ziska_verify/features/retail_users/domain/usecases/retail_user_usecases.dart';
 import 'package:ziska_verify/features/verification/data/repositories/verification_repository_impl.dart';
 import 'package:ziska_verify/features/verification/data/services/verification_api_service.dart';
 import 'package:ziska_verify/features/verification/domain/repositories/verification_repository.dart';
@@ -83,6 +87,9 @@ void registerCore({
     ..registerSingleton<CrashReportingService>(crash)
     ..registerSingleton<LoggerService>(logger)
     ..registerSingleton<SecureStorageService>(storage)
+    ..registerSingleton(
+      ActiveScanStores(storage, client: config.clientSlug, logger: logger),
+    )
     ..registerSingleton<PhoneIdService>(SecurePhoneIdService(storage))
     ..registerSingleton<SessionService>(
       network.session,
@@ -114,8 +121,8 @@ void registerCore({
     ..registerLazySingleton<PhotoService>(
       () => platform.photos ?? ImagePickerPhotoService(),
     )
-    ..registerLazySingleton<PictureImages>(
-      () => platform.pictures ?? const NetworkPictureImages(),
+    ..registerLazySingleton<PictureImageService>(
+      () => platform.pictures ?? const NetworkPictureImageService(),
     );
 }
 
@@ -209,11 +216,6 @@ void registerFeatures() {
 }
 
 /// Reads the chosen language before the first screen, so the app never
-/// starts in one language and turns to another (final.md §16).
-Future<void> prepareLanguage() async {
-  final initial = await LocaleCubit.stored(locator(), locator());
-  locator.registerSingleton<LocaleCubit>(
-    LocaleCubit(locator(), locator(), initial: initial),
-    dispose: (c) => c.close(),
-  );
-}
+/// starts in one language and turns to another (final.md §16). The app
+/// owns its cubit, as it owns the profile's (production audit P-43).
+Future<Locale> readLanguage() => LocaleCubit.stored(locator(), locator());

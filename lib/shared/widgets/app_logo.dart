@@ -16,12 +16,21 @@ class AppLogo extends StatelessWidget {
     return Semantics(
       label: 'Ziska Pharma',
       child: MediaQuery.withNoTextScaling(
-        child: _buildMark(scale),
+        child: _LogoMark(width: width, scale: scale),
       ),
     );
   }
+}
 
-  Widget _buildMark(double scale) {
+/// The mark itself, drawn at [width] ([scale] of the Figma's 120).
+class _LogoMark extends StatelessWidget {
+  const _LogoMark({required this.width, required this.scale});
+
+  final double width;
+  final double scale;
+
+  @override
+  Widget build(BuildContext context) {
     return ExcludeSemantics(
       child: SizedBox(
         width: width,

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ziska_verify/core/services/device/phone_id_service.dart';
+import 'package:ziska_verify/core/services/device/secure_phone_id_service.dart';
 import 'package:ziska_verify/core/services/storage/secure_storage_service.dart';
 
 import '../../../fakes/fake_secure_storage_service.dart';

@@ -8,7 +8,7 @@ import 'package:ziska_verify/shared/design_system/tokens/app_colors.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_radius.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_spacing.dart';
 
-import '../fakes/fake_picture_images.dart';
+import '../fakes/fake_picture_image_service.dart';
 import 'ui_helpers.dart';
 
 /// The product picture card and the full-screen viewer (final.md
@@ -16,15 +16,15 @@ import 'ui_helpers.dart';
 void main() {
   setUpAll(() async {
     await loadUiFonts();
-    await FakePictureImages.prepare();
+    await FakePictureImageService.prepare();
   });
   final l10n = lookupAppLocalizations(const Locale('en'));
   const url = 'https://pictures.example.com/53/9f2c.png';
   const name = 'Paracetamol 500';
 
-  late FakePictureImages pictures;
+  late FakePictureImageService pictures;
   setUp(() {
-    pictures = FakePictureImages();
+    pictures = FakePictureImageService();
     // Each test starts with no decoded picture: the memory image cache is
     // shared by every test of the file.
     PaintingBinding.instance.imageCache

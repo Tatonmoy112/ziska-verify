@@ -6,7 +6,7 @@ import 'package:ziska_verify/core/errors/result.dart';
 import 'package:ziska_verify/core/services/session/session_service.dart';
 import 'package:ziska_verify/core/services/session/session_state.dart';
 import 'package:ziska_verify/features/profile/domain/entities/profile.dart';
-import 'package:ziska_verify/features/profile/domain/usecases/get_profile.dart';
+import 'package:ziska_verify/features/profile/domain/usecases/profile_usecases.dart';
 
 part 'profile_cubit.freezed.dart';
 

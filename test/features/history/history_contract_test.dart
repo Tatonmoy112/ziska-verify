@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ziska_verify/core/network/api_client.dart';
 import 'package:ziska_verify/core/pagination/page_request.dart';
 import 'package:ziska_verify/features/history/data/mappers/check_mappers.dart';
-import 'package:ziska_verify/features/history/data/models/checks_page_dto.dart';
+import 'package:ziska_verify/features/history/data/models/check_dtos.dart';
 import 'package:ziska_verify/features/history/data/services/history_api_service.dart';
 import 'package:ziska_verify/features/history/domain/entities/check.dart';
 

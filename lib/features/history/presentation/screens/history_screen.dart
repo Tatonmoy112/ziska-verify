@@ -97,7 +97,7 @@ class _HistoryScreenState extends State<HistoryScreen> with TabVisibility {
     final sessions = widget.sessions;
     final body = sessions != null && _view == _HistoryView.sessions
         ? sessions
-        : _checks(l10n);
+        : _ChecksView(search: _search, onFilters: _openFilters);
     final top = widget.top;
     return Scaffold(
       backgroundColor: AppColors.surfaceMuted,
@@ -160,8 +160,20 @@ class _HistoryScreenState extends State<HistoryScreen> with TabVisibility {
             ),
     );
   }
+}
 
-  Widget _checks(AppLocalizations l10n) {
+/// The checks: the search, the filters and the paged list.
+class _ChecksView extends StatelessWidget {
+  const _ChecksView({required this.search, required this.onFilters});
+
+  final TextEditingController search;
+
+  /// Opens the filter sheet on the current filters.
+  final Future<void> Function(CheckQuery query) onFilters;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return BlocBuilder<HistoryBloc, HistoryState>(
       builder: (context, state) {
         final bloc = context.read<HistoryBloc>();
@@ -201,16 +213,16 @@ class _HistoryScreenState extends State<HistoryScreen> with TabVisibility {
               ? l10n.historyEmptyBody
               : l10n.historyNoChecksYet,
           header: _Header(
-            search: _search,
+            search: search,
             state: state,
             tracking: tracking,
             onSearch: (text) => bloc.add(HistorySearchTyped(text)),
             onResult: (result) => bloc.add(HistoryResultPicked(result)),
             onClearSearch: () {
-              _search.clear();
+              search.clear();
               bloc.add(const HistorySearchTyped(''));
             },
-            onFilters: () => unawaited(_openFilters(state.query)),
+            onFilters: () => unawaited(onFilters(state.query)),
             onClearFilters: () => bloc.add(
               // The chips' result stays: only the sheet's filters go.
               HistoryQueryChanged(

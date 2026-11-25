@@ -8,7 +8,7 @@ import 'package:ziska_verify/core/pagination/page_request.dart';
 import 'package:ziska_verify/core/pagination/wait_timer.dart';
 import 'package:ziska_verify/core/utils/waits_until.dart';
 import 'package:ziska_verify/features/history/domain/entities/check.dart';
-import 'package:ziska_verify/features/history/domain/usecases/get_checks.dart';
+import 'package:ziska_verify/features/history/domain/usecases/check_usecases.dart';
 
 part 'check_totals_cubit.freezed.dart';
 

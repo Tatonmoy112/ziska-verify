@@ -6,7 +6,7 @@ The production-grade review of the app, done on the `production` branch one area
 |---|---|---|
 | 2 | High-level architecture | Checked 2026-11-24: P-1 … P-15. **All fixed**; P-10 on for staging, live waits for its production project |
 | 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11). **All fixed** (2026-11-25) |
-| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-45. Fixed: P-20 … P-42 |
+| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-45. Fixed: P-20 … P-43 |
 | 5 | Dead code | To do |
 | 6+ | Comments, data layer, UI components, state and lifecycle, security, build and release, monitoring, tests, localisation, performance, docs | To do |
 
@@ -1378,6 +1378,24 @@ History's reasons stay raw strings (`CheckRecord.reasons`, `List<String>`), whic
 - **`Widget _x()` methods:** four remain among widget classes: `history_screen.dart` `_checks()`, `verify_screen.dart` `formsUnavailable()` and `_headerContent()`, `change_password_screen.dart` `_form()`.
 - **A side effect in `build`:** `verify_screen.dart:367` creates the scanner session there.
 - **Mutable lists on entities:** `CheckRecord.reasons`, `LookupResult.reasons`, `SerialStackResult.items`, `CursorPage.items`.
+
+**✅ Fixed 2026-11-25** (all but the last item, moved to P-44):
+- **Tests first:** TC-ARCH-068 … -070 (`architecture/structure_drift_test`):
+  - one name and one owner each: the file names, one recipe for a stored scan, the language read before the app with no cubit registered;
+  - the guarded paths are exactly the seven `RoutePaths` and cannot be changed; a stored scan that cannot be cleared is logged, without the official's ID;
+  - the sources: no drift left in any item below.
+- **The change, item by item:**
+  - **file naming:** `get_checks.dart`, `get_profile.dart` and `search_retail_users.dart` became `check_usecases.dart`, `profile_usecases.dart` and `retail_user_usecases.dart`; `checks_page_dto.dart`, `profile_dto.dart` and `profile_mapper.dart` became `check_dtos.dart`, `profile_dtos.dart` and `profile_mappers.dart`;
+  - **one file each:** `SecurePhoneIdService`, `NetworkPictureImageService` (the interface is now `PictureImageService`, in `picture_image_service.dart`), `LogRedactor`, `ReportedError` and `NoOpCrashReportingService` have their own files. The last one was found by the new check;
+  - **`ActiveScanStores`:** one recipe for an official's store, registered once; App and the scanner route use it. Clearing logs a failure (the silent `catchError` in `app.dart` is gone);
+  - **route paths:** `routePermissions` (`app/router/route_permissions.dart`) is keyed by `RoutePaths`, with `RoutePaths.sessions` for one session's checks, and is unmodifiable; the guard and the History tab read it; "four tabs" is now three;
+  - **app-wide cubits:** `App` makes and closes both the profile's and the language's cubit; `readLanguage` reads the language first, so nothing has to run after `registerCore`;
+  - **`RenewalFailed.error`** is an `AppException`;
+  - **`Widget` methods:** the header's content, the logo's mark, the lookup form without formats and History's checks are widget classes; the password form, which reads the fields as typed, is the builder's body;
+  - **`build` makes nothing:** the check tab makes its camera session in `initState`, or when the profile gains the lookup permission.
+- **Moved to P-44:** the mutable lists on entities. Making those entities Freezed (P-44) makes their lists unmodifiable at the entity itself; a wrap in a mapper would cover only that mapper.
+- **Left as they are, on purpose:** the crash reporter's own `catchError`s (it cannot log its failures: logging reports to it) and the scanner session's storage chain (the error still reaches the caller).
+- **Every screenshot and flow test passes unchanged.**
 
 #### P-44 (nice): entities have no value equality
 **Evidence:** of the domain entities, only `CheckQuery` and `Profile` are Freezed. `CheckRecord`, `LookupResult`, `Report`, `RetailUser`, `ScanSessionSummary`, `SessionTotals` and about 20 more compare by identity (found while fixing P-26).

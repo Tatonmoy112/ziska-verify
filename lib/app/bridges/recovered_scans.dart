@@ -2,7 +2,7 @@ import 'package:ziska_verify/core/errors/result.dart';
 import 'package:ziska_verify/core/pagination/cursor_page.dart';
 import 'package:ziska_verify/core/pagination/page_request.dart';
 import 'package:ziska_verify/features/history/domain/entities/check.dart';
-import 'package:ziska_verify/features/history/domain/usecases/get_checks.dart';
+import 'package:ziska_verify/features/history/domain/usecases/check_usecases.dart';
 import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
 import 'package:ziska_verify/features/verification/domain/entities/scan_session.dart';
 

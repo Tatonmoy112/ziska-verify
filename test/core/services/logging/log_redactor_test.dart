@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ziska_verify/core/services/logging/logger_service.dart';
+import 'package:ziska_verify/core/services/logging/log_redactor.dart';
 
 void main() {
   group('LogRedactor', () {

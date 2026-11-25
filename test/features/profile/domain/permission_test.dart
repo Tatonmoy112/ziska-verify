@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ziska_verify/features/profile/data/mappers/profile_mapper.dart';
-import 'package:ziska_verify/features/profile/data/models/profile_dto.dart';
+import 'package:ziska_verify/features/profile/data/mappers/profile_mappers.dart';
+import 'package:ziska_verify/features/profile/data/models/profile_dtos.dart';
 import 'package:ziska_verify/features/profile/domain/entities/profile.dart';
 
 /// TC-ROLE-021 … -023 (docs/test-cases/03-roles-nav.md): the permissions

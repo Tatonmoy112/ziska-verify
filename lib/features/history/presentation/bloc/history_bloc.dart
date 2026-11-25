@@ -10,7 +10,7 @@ import 'package:ziska_verify/core/pagination/paginated_state.dart';
 import 'package:ziska_verify/core/utils/event_transformers.dart';
 import 'package:ziska_verify/features/history/domain/entities/check.dart';
 import 'package:ziska_verify/features/history/domain/services/history_search.dart';
-import 'package:ziska_verify/features/history/domain/usecases/get_checks.dart';
+import 'package:ziska_verify/features/history/domain/usecases/check_usecases.dart';
 
 part 'history_bloc.freezed.dart';
 
