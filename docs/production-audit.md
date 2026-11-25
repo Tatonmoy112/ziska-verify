@@ -5,7 +5,7 @@ The production-grade review of the app, done on the `production` branch one area
 | Step | Area | State |
 |---|---|---|
 | 2 | High-level architecture | Checked 2026-11-24: P-1 … P-15. **All fixed**; P-10 on for staging, live waits for its production project |
-| 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11). Fixed: P-16, P-17 |
+| 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11). Fixed: P-16, P-17, P-18 |
 | 4 | Low-level architecture | To do |
 | 5 | Dead code | To do |
 | 6+ | Comments, data layer, UI components, state and lifecycle, security, build and release, monitoring, tests, localisation, performance, docs | To do |
@@ -646,6 +646,12 @@ Read only.
 **Proposal:** remove the three parameters (dead code). `RequestCancelledException` stays: the login uses it for a given-up code (`auth_repository_impl.dart`) and Dio may still report a cancel.
 
 **Tests:** analyze and every test unchanged; an architecture check that `CancelToken` is not part of `ApiClient`'s interface, if wanted.
+
+**✅ Fixed 2026-11-25:**
+- **Tests first** (`test/core/network/api_client_test.dart`):
+  - TC-ARCH-029, red before: `ApiClient` names no `CancelToken`, and its public calls are `get`, `post` and `postBytes` only;
+  - TC-ARCH-030 and -031 guard what stays: a cancel Dio reports anyway is still `RequestCancelledException` on all three calls, tried once, with no renewal and the login kept.
+- **The change:** the `cancelToken` parameter removed from `get`, `post` and `postBytes`. `RequestCancelledException` and its mapping in `error_mapper.dart` stay.
 
 #### P-19 (nice): the "is the answer a map?" check is written 8 times
 **Evidence:** `if (data is! Map<String, dynamic>) throw InternalErrorException(message: '…_shape')` appears in:

@@ -19,7 +19,6 @@ class ApiClient {
   Future<Object?> get(
     ApiRoute route, {
     Map<String, Object?>? query,
-    CancelToken? cancelToken,
     bool skipAuth = false,
   }) => _send(
     route,
@@ -29,7 +28,6 @@ class ApiClient {
       // Empty filters are never sent (final.md §10).
       queryParameters: _withoutEmpty(query),
       options: Options(extra: {RequestFlags.skipAuth: skipAuth}),
-      cancelToken: cancelToken,
     ),
   );
 
@@ -38,14 +36,12 @@ class ApiClient {
     Object? body,
     bool skipAuth = false,
     bool keepSessionOn401 = false,
-    CancelToken? cancelToken,
   }) => _send(
     route,
     ApiMethod.post,
     () => _dio.post<Object?>(
       route.path,
       data: body,
-      cancelToken: cancelToken,
       options: Options(
         extra: {
           RequestFlags.skipAuth: skipAuth,
@@ -60,14 +56,12 @@ class ApiClient {
     ApiRoute route,
     Uint8List bytes, {
     required String contentType,
-    CancelToken? cancelToken,
   }) => _send(
     route,
     ApiMethod.post,
     () => _dio.post<Object?>(
       route.path,
       data: Stream.fromIterable([bytes]),
-      cancelToken: cancelToken,
       options: Options(
         contentType: contentType,
         headers: {Headers.contentLengthHeader: bytes.length},

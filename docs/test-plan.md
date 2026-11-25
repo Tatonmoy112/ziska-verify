@@ -151,8 +151,8 @@ The cases live in one file per area in [`docs/test-cases/`](test-cases/README.md
 | UI | [15-ui.md](test-cases/15-ui.md) | 183 | 29 | 99 | 55 | 169 | 0 | 14 | 0 |
 | MIG | [16-mobile-migration.md](test-cases/16-mobile-migration.md) | 73 | 46 | 25 | 2 | 72 | 0 | 1 | 0 |
 | STG | [17-test-server.md](test-cases/17-test-server.md) | 58 | 44 | 11 | 3 | 47 | 0 | 11 | 0 |
-| ARCH | [18-architecture.md](test-cases/18-architecture.md) | 28 | 0 | 9 | 19 | 28 | 0 | 0 | 0 |
-| **Total** | | **971** | 315 | 457 | 199 | 843 | 0 | 128 | 0 |
+| ARCH | [18-architecture.md](test-cases/18-architecture.md) | 31 | 0 | 10 | 21 | 31 | 0 | 0 | 0 |
+| **Total** | | **974** | 315 | 458 | 201 | 846 | 0 | 128 | 0 |
 
 ---
 
