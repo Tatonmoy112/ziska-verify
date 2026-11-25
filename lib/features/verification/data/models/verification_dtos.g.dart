@@ -79,6 +79,9 @@ ScanResultDto _$ScanResultDtoFromJson(Map<String, dynamic> json) =>
         json['session'] as Map<String, dynamic>,
       ),
       repeat: json['repeat'] as bool,
+      result: LookupResultDto.fromJson(
+        _whole(json, 'result') as Map<String, dynamic>,
+      ),
     );
 
 SessionSummaryDto _$SessionSummaryDtoFromJson(Map<String, dynamic> json) =>
@@ -114,4 +117,9 @@ SerialStackDto _$SerialStackDtoFromJson(Map<String, dynamic> json) =>
     );
 
 SerialStackItemDto _$SerialStackItemDtoFromJson(Map<String, dynamic> json) =>
-    SerialStackItemDto(serial: json['serial'] as String);
+    SerialStackItemDto(
+      serial: json['serial'] as String,
+      result: LookupResultDto.fromJson(
+        _whole(json, 'result') as Map<String, dynamic>,
+      ),
+    );

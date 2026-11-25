@@ -44,15 +44,14 @@ class VerificationRepositoryImpl implements VerificationRepository {
   @override
   Future<Result<ScanResult>> scan(String value, String sessionId) =>
       guard(() async {
-        final data = await _api.scan(value, sessionId);
-        final scan = ScanResultDto.fromJson(data);
+        final scan = await _api.scan(value, sessionId);
         if (scan.session.id != sessionId) {
           throw const InternalErrorException(
             reason: VerificationReason.sessionMismatch,
           );
         }
         return ScanResult(
-          result: LookupResultDto.fromJson(data).toEntity(),
+          result: scan.result.toEntity(),
           repeat: scan.repeat,
           session: scan.session.toEntity(),
         );
@@ -64,55 +63,37 @@ class VerificationRepositoryImpl implements VerificationRepository {
         // `CheckSerials` sends each item once and only a stack that fits
         // (P-29); here, the answer must match what was sent.
         final expected = List<String>.unmodifiable(values);
-        final Map<String, dynamic> data;
+        const recorded = InternalErrorException(
+          reason: VerificationReason.serialStackMismatch,
+        );
+        final SerialStackDto dto;
         try {
-          data = await _api.serials(expected);
+          dto = await _api.serials(expected);
         } on InternalErrorException catch (e) {
           // A 200 that is not the documented answer: the stack was
           // recorded all the same (guide section 4.7, "when the answer is
           // not 200, nothing was recorded").
           if (e.reason == ApiAnswer.verification || _success(e.statusCode)) {
-            throw const InternalErrorException(
-              reason: VerificationReason.serialStackMismatch,
-            );
+            throw recorded;
           }
           rethrow;
-        }
-        try {
-          final dto = SerialStackDto.fromJson(data);
-          final rawItems = (data['items'] as List).cast<Map<String, dynamic>>();
-          if (dto.items.length != expected.length ||
-              dto.session.scanned != expected.length ||
-              dto.items.indexed.any(
-                (entry) => entry.$2.serial != expected[entry.$1],
-              )) {
-            throw const InternalErrorException(
-              reason: VerificationReason.serialStackMismatch,
-            );
-          }
-          return SerialStackResult(
-            session: dto.session.toEntity(),
-            items: [
-              for (final (i, item) in dto.items.indexed)
-                SerialStackRow(
-                  serial: item.serial,
-                  result: LookupResultDto.fromJson(rawItems[i]).toEntity(),
-                ),
-            ],
-          );
           // A 200 whose fields cannot be read is recorded too, never sent
-          // again (final.md §13.3); the parsers report a wrong
-          // field this way.
+          // again (final.md §13.3): the service's parsers report a wrong
+          // field this way, and only an answer that arrived is parsed.
           // ignore: avoid_catching_errors
         } on TypeError {
-          throw const InternalErrorException(
-            reason: VerificationReason.serialStackMismatch,
-          );
+          throw recorded;
         } on FormatException {
-          throw const InternalErrorException(
-            reason: VerificationReason.serialStackMismatch,
-          );
+          throw recorded;
         }
+        if (dto.items.length != expected.length ||
+            dto.session.scanned != expected.length ||
+            dto.items.indexed.any(
+              (entry) => entry.$2.serial != expected[entry.$1],
+            )) {
+          throw recorded;
+        }
+        return dto.toEntity();
       });
 
   static bool _success(int? status) =>

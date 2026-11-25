@@ -36,7 +36,6 @@ NotFoundException _gone(String? message) => NotFoundException(
 /// never reads the server's text (production audit P-25).
 void main() {
   setUpAll(() {
-    registerFallbackValue(<String, Object?>{});
     registerFallbackValue(_request);
   });
 
@@ -53,7 +52,13 @@ void main() {
     bool check = false,
     bool retail = false,
   }) async {
-    when(() => api.fileReport(any())).thenThrow(_gone(message));
+    when(
+      () => api.fileReport(
+        note: any(named: 'note'),
+        checkRef: any(named: 'checkRef'),
+        retailUserId: any(named: 'retailUserId'),
+      ),
+    ).thenThrow(_gone(message));
     final result = await repo.fileReport(
       note: 'Seal is cut',
       checkRef: check ? 'MA-2026-000123' : null,
@@ -138,7 +143,13 @@ void main() {
     });
 
     test('a failure that is not a 404 is left as it is', () async {
-      when(() => api.fileReport(any())).thenThrow(
+      when(
+        () => api.fileReport(
+          note: any(named: 'note'),
+          checkRef: any(named: 'checkRef'),
+          retailUserId: any(named: 'retailUserId'),
+        ),
+      ).thenThrow(
         const ConflictException(statusCode: 409, message: 'Check is busy'),
       );
       final result = await repo.fileReport(note: 'n', checkRef: 'c');

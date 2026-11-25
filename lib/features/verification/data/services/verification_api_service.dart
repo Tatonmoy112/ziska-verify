@@ -9,8 +9,8 @@ import 'package:ziska_verify/features/verification/domain/entities/scan_session.
 abstract interface class VerificationApiService {
   Future<FormatsDto> getFormats();
   Future<LookupResultDto> lookup({required String way, required String value});
-  Future<Map<String, dynamic>> scan(String value, String sessionId);
-  Future<Map<String, dynamic>> serials(List<String> values);
+  Future<ScanResultDto> scan(String value, String sessionId);
+  Future<SerialStackDto> serials(List<String> values);
   Future<void> endSession(String id);
   Future<SessionsPageDto> sessions(SessionQuery query, PageRequest page);
   Future<SessionSummaryDto> session(String id);
@@ -32,16 +32,20 @@ class DioVerificationApiService implements VerificationApiService {
     ),
   );
   @override
-  Future<Map<String, dynamic>> scan(String value, String sessionId) async =>
-      _map(
-        await _api.post(
-          ApiRoutes.lookups,
-          body: {'way': 'qr', 'value': value, 'session_id': sessionId},
+  Future<ScanResultDto> scan(String value, String sessionId) async =>
+      ScanResultDto.fromJson(
+        _map(
+          await _api.post(
+            ApiRoutes.lookups,
+            body: {'way': 'qr', 'value': value, 'session_id': sessionId},
+          ),
         ),
       );
   @override
-  Future<Map<String, dynamic>> serials(List<String> values) async =>
-      _map(await _api.post(ApiRoutes.serials, body: {'serials': values}));
+  Future<SerialStackDto> serials(List<String> values) async =>
+      SerialStackDto.fromJson(
+        _map(await _api.post(ApiRoutes.serials, body: {'serials': values})),
+      );
   @override
   Future<void> endSession(String id) => _api.post(ApiRoutes.endSession(id));
   @override

@@ -1,6 +1,7 @@
 import 'package:ziska_verify/features/verification/data/models/verification_dtos.dart';
 import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
 import 'package:ziska_verify/features/verification/domain/entities/scan_session.dart';
+import 'package:ziska_verify/features/verification/domain/entities/serial_stack.dart';
 
 extension FormatsMapper on FormatsDto {
   InputFormats toEntity() => InputFormats(
@@ -62,6 +63,16 @@ LookupReason reasonFrom(String value) => switch (value) {
 
 DateTime? _date(String? value) =>
     value == null ? null : DateTime.tryParse(value);
+
+extension SerialStackMapper on SerialStackDto {
+  SerialStackResult toEntity() => SerialStackResult(
+    session: session.toEntity(),
+    items: [
+      for (final item in items)
+        SerialStackRow(serial: item.serial, result: item.result.toEntity()),
+    ],
+  );
+}
 
 extension SessionTotalsMapper on SessionTotalsDto {
   SessionTotals toEntity() => SessionTotals(

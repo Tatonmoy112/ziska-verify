@@ -6,7 +6,7 @@ The production-grade review of the app, done on the `production` branch one area
 |---|---|---|
 | 2 | High-level architecture | Checked 2026-11-24: P-1 … P-15. **All fixed**; P-10 on for staging, live waits for its production project |
 | 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11). **All fixed** (2026-11-25) |
-| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-44. Fixed: P-20 … P-30 |
+| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-44. Fixed: P-20 … P-31 |
 | 5 | Dead code | To do |
 | 6+ | Comments, data layer, UI components, state and lifecycle, security, build and release, monitoring, tests, localisation, performance, docs | To do |
 
@@ -1021,6 +1021,19 @@ Data imports this use-case file for `distinctSerials` (`verification_repository_
 - **normal:** the contract tests: the body keys of each route unchanged;
 - **edge:** optional fields left out;
 - **worst:** a wrong answer is still a failure, never a wait (TC-REP-072, the serial stack's tests).
+
+**✅ Fixed 2026-11-25:**
+- **Tests first:** TC-ARCH-038 … -040 (`test/architecture/typed_services_test.dart`):
+  - a report's documented body, built by the service;
+  - a scan's totals and lookup in one DTO, and each stack row with its lookup;
+  - the note only when there is no link, and a `not_found` row without an item;
+  - no service returns a raw map or takes a raw body, and no repository reads JSON or builds a body. On the old code these checks flagged 5 places in the verification repository, 2 in the incidents repository and 6 in the two services.
+- **The change:**
+  - `IncidentApiService.fileReport(note:, checkRef:, retailUserId:)` builds its body.
+  - `VerificationApiService.scan` and `serials` return `ScanResultDto` and `SerialStackDto`. Their lookup is read from the same object by json_serializable (`@JsonKey(readValue: …)`), so the parsing stays generated.
+  - A `SerialStackMapper` gives the stack's entity, like every other DTO's mapper.
+- **Kept on purpose:** a 200 whose fields cannot be read is still "recorded", never sent again (TC-MIG-056). The parse now happens inside the service call, so the repository catches it there.
+- **The staging tool:** uses the typed calls too. Its one raw read, a session's `kind` that the app's model leaves out, is commented as the tool's own diagnostic.
 
 #### P-32 (should): unknown values from the API are handled four ways
 **Evidence:**

@@ -165,7 +165,7 @@ void main() {
         ),
         (
           ApiAnswer.incidentId,
-          (a) => DioIncidentApiService(a).fileReport({}),
+          (a) => DioIncidentApiService(a).fileReport(note: 'n'),
         ),
         (
           ApiAnswer.incidentN,

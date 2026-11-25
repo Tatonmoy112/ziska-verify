@@ -22,12 +22,11 @@ class IncidentRepositoryImpl implements IncidentRepository {
     String? retailUserId,
   }) => guard(() async {
     try {
-      return await _api.fileReport({
-        'note': note,
-        // Optional fields are left out when not used.
-        'check_ref': ?checkRef,
-        'retail_user_id': ?retailUserId,
-      });
+      return await _api.fileReport(
+        note: note,
+        checkRef: checkRef,
+        retailUserId: retailUserId,
+      );
     } on NotFoundException catch (e) {
       throw e.withReason(
         _gone(e.message, check: checkRef != null, retail: retailUserId != null),

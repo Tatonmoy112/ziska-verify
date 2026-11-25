@@ -9,8 +9,12 @@ import 'package:ziska_verify/features/incidents/data/models/incident_dtos.dart';
 
 /// Incident routes (final.md §15).
 abstract interface class IncidentApiService {
-  /// Returns the new report's `id`.
-  Future<int> fileReport(Map<String, Object?> body);
+  /// Files a report (app API guide §6.1); returns its `id`.
+  Future<int> fileReport({
+    required String note,
+    String? checkRef,
+    String? retailUserId,
+  });
 
   /// Returns the photo's number `n` on the report.
   Future<int> addPhoto(int reportId, Uint8List bytes, String contentType);
@@ -24,8 +28,20 @@ class DioIncidentApiService implements IncidentApiService {
   final ApiClient _api;
 
   @override
-  Future<int> fileReport(Map<String, Object?> body) async => ApiData.intField(
-    await _api.post(ApiRoutes.fileReport, body: body),
+  Future<int> fileReport({
+    required String note,
+    String? checkRef,
+    String? retailUserId,
+  }) async => ApiData.intField(
+    await _api.post(
+      ApiRoutes.fileReport,
+      body: {
+        'note': note,
+        // Optional fields are left out when not used.
+        'check_ref': ?checkRef,
+        'retail_user_id': ?retailUserId,
+      },
+    ),
     'id',
     ApiAnswer.incidentId,
   );

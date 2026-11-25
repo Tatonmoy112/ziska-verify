@@ -940,15 +940,17 @@ class StagingCheck {
       try {
         // As the app's repository sends them: each item once (B5).
         final expected = distinctSerials(serials);
-        final data = await service.serials(expected);
+        // Read raw here, the tool's own diagnostic: the session's `kind`
+        // is not in the app's model.
+        final data = ApiData.map(
+          await api.post(ApiRoutes.serials, body: {'serials': expected}),
+          ApiAnswer.verification,
+        );
         final dto = SerialStackDto.fromJson(data);
         final sent = dto.items.map((i) => i.serial).toList();
-        final raw = (data['items'] as List).cast<Map<String, dynamic>>();
-        String outcome(int i) =>
-            LookupResultDto.fromJson(raw[i]).toEntity().outcome.name;
         final rows = [
-          for (final (i, item) in dto.items.indexed)
-            '${item.serial}: ${outcome(i)}',
+          for (final item in dto.items)
+            '${item.serial}: ${item.result.toEntity().outcome.name}',
         ].join(', ');
         final matches =
             sent.length == expected.length &&
@@ -985,8 +987,8 @@ class StagingCheck {
 
     // What the app never sends: a repeat, 51 serials, letters.
     try {
-      final data = await service.serials(['1000002', '1000002']);
-      final items = data['items'] as List;
+      final stack = await service.serials(['1000002', '1000002']);
+      final items = stack.items;
       (items.length == 1 ? _pass : _fail)(
         'POST lookups/serials a repeat (sent raw)',
         '${items.length} row(s): a repeat is checked once',
@@ -999,10 +1001,10 @@ class StagingCheck {
       ('a serial with letters', ['12AB']),
     ]) {
       try {
-        final data = await service.serials(serials);
+        final stack = await service.serials(serials);
         _fail(
           'POST lookups/serials $what (sent raw)',
-          '200 (${(data['items'] as List).length} rows): the guide says 400',
+          '200 (${stack.items.length} rows): the guide says 400',
         );
       } on ValidationException catch (e) {
         _pass('POST lookups/serials $what (sent raw)', '400 ${e.code}');
@@ -1083,9 +1085,8 @@ class StagingCheck {
         return null;
       }
       try {
-        final data = await service.scan(prepared.value, id);
-        final dto = ScanResultDto.fromJson(data);
-        final result = LookupResultDto.fromJson(data).toEntity();
+        final dto = await service.scan(prepared.value, id);
+        final result = dto.result.toEntity();
         final totals = dto.session.toEntity();
         final detail =
             '${result.outcome.name}, ref ${result.ref}, repeat ${dto.repeat}; '
@@ -1327,28 +1328,28 @@ class StagingCheck {
 
     // What the server refuses, filing nothing.
     final tooLong = 'x' * (ReportRules.noteMaxLength + 1);
-    for (final (what, body) in <(String, Map<String, Object?>)>[
-      ('a note of spaces only', {'note': '   '}),
-      ('a note of 1,001 characters', {'note': tooLong}),
+    for (final (what, note) in [
+      ('a note of spaces only', '   '),
+      ('a note of 1,001 characters', tooLong),
     ]) {
       await refused<ValidationException>(
         'POST incidents $what',
-        () => service.fileReport(body),
+        () => service.fileReport(note: note),
       );
     }
     await refused<NotFoundException>(
       'POST incidents with an unknown check',
-      () => service.fileReport({
-        'note': 'Test: unknown check',
-        'check_ref': 'MA-2000-999999',
-      }),
+      () => service.fileReport(
+        note: 'Test: unknown check',
+        checkRef: 'MA-2000-999999',
+      ),
     );
     await refused<NotFoundException>(
       'POST incidents with an unknown retail user',
-      () => service.fileReport({
-        'note': 'Test: unknown retail user',
-        'retail_user_id': ActiveScanStore.newId(),
-      }),
+      () => service.fileReport(
+        note: 'Test: unknown retail user',
+        retailUserId: ActiveScanStore.newId(),
+      ),
     );
 
     // The report: a note of exactly 1,000 characters, sent with spaces and
@@ -1360,10 +1361,7 @@ class StagingCheck {
     final full = '$note.';
     final int id;
     try {
-      id = await service.fileReport({
-        'note': '  $full\n',
-        'check_ref': ?ref,
-      });
+      id = await service.fileReport(note: '  $full\n', checkRef: ref);
       _pass(
         'POST incidents (1,000 characters, spaces around)',
         '201, report $id',
@@ -1553,7 +1551,7 @@ class StagingCheck {
     }
     final note = '🙂${'n' * 999}';
     try {
-      final id = await DioIncidentApiService(api).fileReport({'note': note});
+      final id = await DioIncidentApiService(api).fileReport(note: note);
       stdout.writeln(
         'INFO  note: 1,000 code points, 1,001 UTF-16 units  201 (report $id)',
       );
@@ -1801,11 +1799,10 @@ class StagingCheck {
       ('serial 1 in 20 characters', ['${'0' * 19}1']),
     ]) {
       try {
-        final data = await service.serials(serials);
+        final stack = await service.serials(serials);
         final rows = [
-          for (final item
-              in (data['items'] as List).cast<Map<String, dynamic>>())
-            '${item['serial']}: ${item['result']}',
+          for (final item in stack.items)
+            '${item.serial}: ${item.result.result}',
         ].join(', ');
         stdout.writeln('INFO  POST lookups/serials $what  200 $rows');
       } on AppException catch (e) {

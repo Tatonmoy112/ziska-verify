@@ -142,13 +142,23 @@ class SessionTotalsDto {
   final int? left;
 }
 
+/// One read of scanner mode (app API guide §4.3): the lookup and, beside
+/// it in the same object, the session's totals and `repeat`.
 @JsonSerializable(fieldRename: FieldRename.snake, createToJson: false)
 class ScanResultDto {
-  const ScanResultDto({required this.session, required this.repeat});
+  const ScanResultDto({
+    required this.session,
+    required this.repeat,
+    required this.result,
+  });
   factory ScanResultDto.fromJson(Map<String, dynamic> json) =>
       _$ScanResultDtoFromJson(json);
   final SessionTotalsDto session;
   final bool repeat;
+
+  /// The lookup, read from the whole object (production audit P-31).
+  @JsonKey(readValue: _whole)
+  final LookupResultDto result;
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake, createToJson: false)
@@ -197,10 +207,19 @@ class SerialStackDto {
   final List<SerialStackItemDto> items;
 }
 
+/// One row of a serial stack (app API guide §4.7): the serial as sent
+/// and, in the same object, its lookup.
 @JsonSerializable(fieldRename: FieldRename.snake, createToJson: false)
 class SerialStackItemDto {
-  const SerialStackItemDto({required this.serial});
+  const SerialStackItemDto({required this.serial, required this.result});
   factory SerialStackItemDto.fromJson(Map<String, dynamic> json) =>
       _$SerialStackItemDtoFromJson(json);
   final String serial;
+
+  /// The lookup, read from the whole row (production audit P-31).
+  @JsonKey(readValue: _whole)
+  final LookupResultDto result;
 }
+
+/// A field read from the whole object it sits in, not from one key.
+Object? _whole(Map<dynamic, dynamic> json, String _) => json;
