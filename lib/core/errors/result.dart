@@ -14,6 +14,13 @@ sealed class Result<T> {
     Success<T>(:final value) => onSuccess(value),
     Err<T>(:final failure) => onFailure(failure),
   };
+
+  /// The value turned by [convert]; a failure passed on as it is
+  /// (production audit P-30).
+  Result<R> map<R>(R Function(T value) convert) => switch (this) {
+    Success<T>(:final value) => Success(convert(value)),
+    Err<T>(:final failure) => Err(failure),
+  };
 }
 
 final class Success<T> extends Result<T> {

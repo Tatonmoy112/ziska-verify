@@ -4,25 +4,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ziska_verify/app/bridges/recovered_scans.dart';
 import 'package:ziska_verify/app/config/app_config.dart';
 import 'package:ziska_verify/app/router/route_paths.dart';
 import 'package:ziska_verify/app/router/routes/route_deps.dart';
-import 'package:ziska_verify/core/errors/result.dart';
 import 'package:ziska_verify/core/navigation/route_names.dart';
-import 'package:ziska_verify/core/pagination/cursor_page.dart';
-import 'package:ziska_verify/core/pagination/page_request.dart';
 import 'package:ziska_verify/core/services/launcher/launcher_service.dart';
 import 'package:ziska_verify/core/services/permission/permission_service.dart';
 import 'package:ziska_verify/core/services/picture/picture_images.dart';
 import 'package:ziska_verify/core/services/scanner/active_scan_store.dart';
 import 'package:ziska_verify/core/services/scanner/scanner_service.dart';
 import 'package:ziska_verify/core/services/storage/secure_storage_service.dart';
-import 'package:ziska_verify/features/history/domain/entities/check.dart';
 import 'package:ziska_verify/features/history/domain/usecases/get_checks.dart';
 import 'package:ziska_verify/features/profile/domain/entities/profile.dart';
 import 'package:ziska_verify/features/verification/domain/entities/checked_input.dart';
 import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
-import 'package:ziska_verify/features/verification/domain/entities/scan_session.dart';
 import 'package:ziska_verify/features/verification/domain/usecases/verification_usecases.dart';
 import 'package:ziska_verify/features/verification/presentation/bloc/lookup_bloc.dart';
 import 'package:ziska_verify/features/verification/presentation/bloc/scan_session_cubit.dart';
@@ -57,35 +53,8 @@ List<RouteBase> checkRoutes(RouteDeps d) {
     );
   }
 
-  Future<Result<RecoveredScans>> recovered(String id, String? cursor) async {
-    final result = await locator<GetChecks>()(
-      CheckQuery(sessionId: id),
-      PageRequest(limit: PageRequest.maxLimit, cursor: cursor),
-    );
-    return switch (result) {
-      Success(:final value) => Success(
-        CursorPage(
-          items: [
-            for (final c in value.page.items)
-              RecoveredScan(
-                ref: c.ref,
-                outcome: switch (c.result) {
-                  CheckResult.valid => LookupOutcome.valid,
-                  CheckResult.warning => LookupOutcome.warning,
-                  CheckResult.notFound => LookupOutcome.notFound,
-                  CheckResult.unassigned => LookupOutcome.unassigned,
-                  CheckResult.unknown => LookupOutcome.unknown,
-                },
-                serial: c.serial,
-                product: c.product,
-              ),
-          ],
-          nextCursor: value.page.nextCursor,
-        ),
-      ),
-      Err(:final failure) => Err(failure),
-    };
-  }
+  // A resumed session's scans, from History's checks of it (P-30).
+  final recovered = RecoveredScansBridge(locator<GetChecks>());
 
   return [
     GoRoute(
@@ -140,7 +109,7 @@ List<RouteBase> checkRoutes(RouteDeps d) {
             authStates: session.states,
             loadChecks:
                 profileCubit.state.permissions.contains(Permission.ownHistory)
-                ? recovered
+                ? recovered.call
                 : null,
           );
           unawaited(cubit.start());

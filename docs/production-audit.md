@@ -6,7 +6,7 @@ The production-grade review of the app, done on the `production` branch one area
 |---|---|---|
 | 2 | High-level architecture | Checked 2026-11-24: P-1 … P-15. **All fixed**; P-10 on for staging, live waits for its production project |
 | 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11). **All fixed** (2026-11-25) |
-| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-44. Fixed: P-20 … P-29 |
+| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-44. Fixed: P-20 … P-30 |
 | 5 | Dead code | To do |
 | 6+ | Comments, data layer, UI components, state and lifecycle, security, build and release, monitoring, tests, localisation, performance, docs | To do |
 
@@ -994,6 +994,21 @@ Data imports this use-case file for `distinctSerials` (`verification_repository_
 - **normal:** each result maps to its outcome;
 - **edge:** an empty page;
 - **worst:** `unknown` stays unknown, and a failure passes through unchanged.
+
+**✅ Fixed 2026-11-25:**
+- **Not a use case, as first proposed:** the mapping turns History's `CheckResult` into verification's `LookupOutcome`. A use case in either feature would have to import the other, which rule R4 forbids. Only `lib/app`, the composition root, may know both.
+- **Tests first:** TC-MIG-083 … -085 (`test/app/bridges/recovered_scans_test.dart`):
+  - each result maps to its outcome, with ref, serial and product kept;
+  - the session's own checks are asked 100 at a time, by its cursor;
+  - an empty page gives no scans and no cursor;
+  - `Result.map` maps a value and keeps a failure as it is;
+  - an unknown result stays unknown, and a 429 passes through unchanged;
+  - no route maps one feature into another itself. This check was red before, on `check_routes.dart`.
+- **The change:**
+  - `RecoveredScansBridge` (`lib/app/bridges/recovered_scans.dart`) holds the read and the mapping;
+  - `Result.map` replaces the hand re-wrapping of `Success` and `Err`;
+  - `check_routes.dart` only builds the bridge, and lost five imports, History's entities among them.
+- The scan-session resume tests and flows pass unchanged.
 
 #### P-31 (should): requests are built in different layers
 **Evidence:**
