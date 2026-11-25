@@ -4,10 +4,10 @@ import 'package:ziska_verify/core/errors/app_exception.dart';
 import 'package:ziska_verify/core/errors/failure_reason.dart';
 import 'package:ziska_verify/core/errors/result.dart';
 import 'package:ziska_verify/core/pagination/cursor_page.dart';
+import 'package:ziska_verify/core/pagination/local_day_pages.dart';
 import 'package:ziska_verify/core/pagination/page_request.dart';
 import 'package:ziska_verify/core/services/session/session_service.dart';
 import 'package:ziska_verify/core/services/session/session_state.dart';
-import 'package:ziska_verify/core/utils/local_days.dart';
 import 'package:ziska_verify/features/verification/data/mappers/verification_mappers.dart';
 import 'package:ziska_verify/features/verification/data/models/verification_dtos.dart';
 import 'package:ziska_verify/features/verification/data/services/verification_api_service.dart';
@@ -141,49 +141,27 @@ class VerificationRepositoryImpl implements VerificationRepository {
         nextCursor: dto.nextCursor,
       );
     }
-    // Bangladesh days on the backend's UTC days (guide §4.5): ask for the
-    // UTC days they overlap and keep the sessions that started inside them.
-    final days = LocalDays.utcDays(from: query.from, to: query.to);
-    final sent = SessionQuery(
-      status: query.status,
-      from: days.from,
-      to: days.to,
+    // Bangladesh days on the backend's UTC days (guide §4.5): the sessions
+    // that started inside them. The list is newest first by the last scan:
+    // a session last scanned before the first day also started before it.
+    return readLocalDayPages<ScanSessionSummary>(
+      from: query.from,
+      to: query.to,
+      page: page,
+      fetch: (from, to, page) async {
+        final dto = await _api.sessions(
+          SessionQuery(status: query.status, from: from, to: to),
+          page,
+        );
+        return CursorPage(
+          items: [for (final s in dto.sessions) s.toEntity()],
+          nextCursor: dto.nextCursor,
+        );
+      },
+      keptBy: (s) => s.startedAt,
+      sortedBy: (s) => s.lastScanAt,
     );
-    final kept = <ScanSessionSummary>[];
-    var cursor = page.cursor;
-    String? next;
-    for (var read = 0; read < _maxSkippedPages; read++) {
-      final dto = await _api.sessions(
-        sent,
-        PageRequest(limit: page.limit, cursor: cursor),
-      );
-      final sessions = [for (final s in dto.sessions) s.toEntity()];
-      kept.addAll(
-        sessions.where(
-          (s) => LocalDays.contains(
-            s.startedAt,
-            from: query.from,
-            to: query.to,
-          ),
-        ),
-      );
-      next = dto.nextCursor;
-      // Newest first: a session whose last scan is before the first day
-      // also started before it, and so do the ones after it, whichever of
-      // its times the list is sorted by.
-      if (sessions.isNotEmpty &&
-          LocalDays.beforeFirstDay(sessions.last.lastScanAt, query.from)) {
-        next = null;
-      }
-      if (kept.isNotEmpty || next == null) break;
-      cursor = next;
-    }
-    return CursorPage(items: kept, nextCursor: next);
   });
-
-  /// A safety cap on pages read in a row that keep no session (see
-  /// `HistoryRepositoryImpl`).
-  static const _maxSkippedPages = 50;
 
   Future<void> dispose() => _subscription.cancel();
 }

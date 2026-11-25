@@ -6,7 +6,7 @@ The production-grade review of the app, done on the `production` branch one area
 |---|---|---|
 | 2 | High-level architecture | Checked 2026-11-24: P-1 … P-15. **All fixed**; P-10 on for staging, live waits for its production project |
 | 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11). **All fixed** (2026-11-25) |
-| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-44. Fixed: P-20 … P-27 |
+| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-44. Fixed: P-20 … P-28 |
 | 5 | Dead code | To do |
 | 6+ | Comments, data layer, UI components, state and lifecycle, security, build and release, monitoring, tests, localisation, performance, docs | To do |
 
@@ -933,6 +933,20 @@ The layer rules (step 2) and the central API (step 3) are already enforced, so t
 - **normal:** a page within the days;
 - **edge:** empty pages are skipped to the next with items;
 - **worst:** 50 empty pages end the read, and an item before the first day stops it.
+
+**✅ Fixed 2026-11-25:**
+- **Tests first:** TC-HIST-058 … -060 (`test/core/pagination/local_day_pages_test.dart`), on plain rows:
+  - the UTC days a Bangladesh day overlaps are asked, only its rows kept, and the cursor and limit passed on;
+  - pages that keep nothing are read through;
+  - a row is kept by one time and the list stopped by another;
+  - a row before the first day ends the list;
+  - at most 50 empty pages, then the cursor to go on;
+  - no repository reads the days itself. This check was red before, in both repositories.
+- **The change:**
+  - `readLocalDayPages<T>` (`core/pagination/local_day_pages.dart`) takes the fetch, the time a row is kept by (`keptBy`) and the time the list is sorted by (`sortedBy`);
+  - the cap is one constant, `localDayPagesCap`.
+  - History keeps checks by `at`; the sessions keep by `startedAt` and stop by `lastScanAt`, as before.
+  - Both repositories lost their copies, and their tests (TC-HIST-051, -053) pass unchanged.
 
 #### P-29 (should): `verification_usecases.dart` holds four kinds of thing
 **Evidence:** `verification/domain/usecases/verification_usecases.dart` (200 lines) holds:

@@ -7,7 +7,7 @@
 |---|---|
 | Spec | final.md §8.3, §10, §13.4, §16 |
 | API | `GET checks` |
-| Automated in | `test/flow/history_flow_test.dart`, `history_bloc_test`, `history_contract_test` |
+| Automated in | `test/flow/history_flow_test.dart`, `history_bloc_test`, `history_contract_test`, `local_day_pages_test` |
 | Format | [Case format and type tags](README.md#3-case-format) |
 
 | ID | Title | Type | Pri | Run on | Auto | Pre-conditions / Data | Steps | Expected | Source |
@@ -69,6 +69,9 @@
 | TC-HIST-055 | A filter during a next-page wait starts its own list | STATE | P2 | AUTO | ✅ `features/history/list_waits_test` | Fake backend: page 1 with a cursor; the next page answers 429 with a wait | Scroll to the next page; during the wait pick **QR**; wait | The new filter's first page loads after the wait (no cursor); the old list's cursor is never sent with the new filter; only the new list shows | guide §5 (a cursor goes back to the list that gave it); audit 7.1 |
 | TC-HIST-056 | What a History search sends | EDGE | P2 | AUTO | ✅ `features/history/history_search_test` | None (pure Dart) | Read: nothing; serials (zeros kept, 64 digits); Bangla and Arabic-Indic digits; references in any case; part of a reference, other prefixes, spaces, hyphens, letters, 65 digits, symbols | Nothing: no search; a serial: sent as digits (0–9); a whole reference `MA-<year>-<6+ digits>`: sent in capitals; anything else: refused | guide §4 "Reading a serial", §5; phase 4; finding F-4 |
 | TC-HIST-057 | A search that is not a serial or a reference is not sent | NEG | P2 | AUTO | ✅ `flow/history_edge_flow_test` | Fake backend | Search `MA-2026`; then `ma-2026-000124`; search `abc`, then a result chip and a pull to refresh; search `১০০০০০১`; clear a refused search | `MA-2026`: no request, "Not a serial or a reference number" with what to type, no general error; the whole reference sent as `MA-2026-000124`; a chip or a refresh sends nothing either; Bangla digits sent as `1000001`; cleared: the whole list again | guide §5; finding F-4 |
+| TC-HIST-058 | One helper reads Bangladesh days | POS | P2 | AUTO | ✅ `core/pagination/local_day_pages_test` | 23 November in Dhaka; a page with a row of the 24th and one of the 23rd | Read a page; read with a cursor and a limit | The UTC days 22 to 23 asked; only the 23rd's row kept; the cursor and limit passed on | guide §4.5, §5; production audit P-28 |
+| TC-HIST-059 | Pages that keep nothing | EDGE | P2 | AUTO | ✅ `core/pagination/local_day_pages_test` | Two pages of rows after the day, then one inside it; a session started in the day, last scanned after it | Read a page | Read through to the page with a row, its cursor kept; kept by one time, stopped by another | guide §4.5; P-28 |
+| TC-HIST-060 | The read always ends | WORST | P1 | AUTO | ✅ `core/pagination/local_day_pages_test` | A row before the first day; 60 pages that keep nothing; every file in `lib/` | Read; read; look for the days read by hand | The list ends at the first day; at most 50 pages, then the cursor to go on; no repository reads the days itself | guide §4.5, §5; P-28 |
 
 ## Spec gaps in this file
 
