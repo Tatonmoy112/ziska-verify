@@ -11,6 +11,7 @@ import 'package:ziska_verify/features/verification/domain/entities/failure_reaso
 import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
 import 'package:ziska_verify/features/verification/domain/entities/scan_session.dart';
 import 'package:ziska_verify/features/verification/domain/entities/serial_stack.dart';
+import 'package:ziska_verify/features/verification/domain/usecases/verification_usecases.dart';
 import '../../../fakes/fake_session_service.dart';
 import '../../../fakes/postman_examples.dart';
 import '../../../fakes/scripted_adapter.dart';
@@ -79,7 +80,12 @@ void main() {
     () async {
       next = example('A stack of serials', '200 Three serials, one sent twice');
       final result =
-          await repository.serials(['1000001', '1000002', '1000001', '1000003'])
+          await CheckSerials(repository)([
+                '1000001',
+                '1000002',
+                '1000001',
+                '1000003',
+              ])
               as Success<SerialStackResult>;
       expect(result.value.items.map((r) => r.serial), [
         '1000001',
@@ -94,10 +100,13 @@ void main() {
       });
     },
   );
-  test('empty and oversized stacks never leave the repository', () async {
-    expect(await repository.serials([]), isA<Err<SerialStackResult>>());
+  // The stack's rule is the use case's (P-29): through it, as the app
+  // sends a stack.
+  test('empty and oversized stacks never leave the phone', () async {
+    final check = CheckSerials(repository);
+    expect(await check([]), isA<Err<SerialStackResult>>());
     expect(
-      await repository.serials([for (var i = 0; i < 51; i++) '$i']),
+      await check([for (var i = 0; i < 51; i++) '$i']),
       isA<Err<SerialStackResult>>(),
     );
     expect(adapter.requests, isEmpty);
@@ -164,7 +173,7 @@ void main() {
   test("TC-MIG-061 001 and 1 go as one serial; the server's real answer "
       '(one row, 001) is shown', () async {
     next = stagingScripted('stack_leading_zeros_200.json');
-    final result = await repository.serials(['001', '1']);
+    final result = await CheckSerials(repository)(['001', '1']);
     expect(adapter.requests.single.data, {
       'serials': ['001'],
     });

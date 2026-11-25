@@ -16,7 +16,6 @@ import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
 import 'package:ziska_verify/features/verification/domain/entities/scan_session.dart';
 import 'package:ziska_verify/features/verification/domain/entities/serial_stack.dart';
 import 'package:ziska_verify/features/verification/domain/repositories/verification_repository.dart';
-import 'package:ziska_verify/features/verification/domain/usecases/verification_usecases.dart';
 
 class VerificationRepositoryImpl implements VerificationRepository {
   VerificationRepositoryImpl(this._api, SessionService session) {
@@ -62,16 +61,12 @@ class VerificationRepositoryImpl implements VerificationRepository {
   @override
   Future<Result<SerialStackResult>> serials(List<String> values) =>
       guard(() async {
-        // Each item once, as the server counts them (B5).
-        final expected = distinctSerials(values);
-        if (expected.isEmpty || expected.length > serialStackLimit) {
-          throw const ValidationException(
-            reason: VerificationReason.serialStackSize,
-          );
-        }
+        // `CheckSerials` sends each item once and only a stack that fits
+        // (P-29); here, the answer must match what was sent.
+        final expected = List<String>.unmodifiable(values);
         final Map<String, dynamic> data;
         try {
-          data = await _api.serials(List.unmodifiable(expected));
+          data = await _api.serials(expected);
         } on InternalErrorException catch (e) {
           // A 200 that is not the documented answer: the stack was
           // recorded all the same (guide section 4.7, "when the answer is

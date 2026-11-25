@@ -11,7 +11,9 @@ import 'package:ziska_verify/core/services/session/session_state.dart';
 import 'package:ziska_verify/features/verification/domain/entities/checked_input.dart';
 import 'package:ziska_verify/features/verification/domain/entities/failure_reasons.dart';
 import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
+import 'package:ziska_verify/features/verification/domain/entities/prepared_input.dart';
 import 'package:ziska_verify/features/verification/domain/entities/scan_session.dart';
+import 'package:ziska_verify/features/verification/domain/services/prepare_input.dart';
 import 'package:ziska_verify/features/verification/domain/usecases/verification_usecases.dart';
 
 part 'scan_session_cubit.freezed.dart';

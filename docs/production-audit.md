@@ -6,7 +6,7 @@ The production-grade review of the app, done on the `production` branch one area
 |---|---|---|
 | 2 | High-level architecture | Checked 2026-11-24: P-1 … P-15. **All fixed**; P-10 on for staging, live waits for its production project |
 | 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11). **All fixed** (2026-11-25) |
-| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-44. Fixed: P-20 … P-28 |
+| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-44. Fixed: P-20 … P-29 |
 | 5 | Dead code | To do |
 | 6+ | Comments, data layer, UI components, state and lifecycle, security, build and release, monitoring, tests, localisation, performance, docs | To do |
 
@@ -966,6 +966,22 @@ Data imports this use-case file for `distinctSerials` (`verification_repository_
 - **normal:** a stack of 1 … 50 distinct serials is sent (`serialStackLimit`);
 - **edge:** repeats, by the serial key, are sent once;
 - **worst:** 0 or 51 serials are refused before any request.
+
+**✅ Fixed 2026-11-25:**
+- **Tests first:**
+  - TC-MIG-080 … -082 (`test/features/verification/domain/serial_stack_rule_test.dart`): 1 to 50 serials sent as typed; each item counted once, the first typed kept, so 51 typed with a repeat are 50 items and are sent; a stack of none, of 51, or of `0` and `00` (one item) and 50 more is never sent; and a source check that the limit is read only where it is defined and in the use case. The source check was red before, in the repository, the cubit and the screen.
+  - A new layer rule, **R21**: a feature's `data/` never imports its use cases. On the real code it flagged exactly this finding: the repository importing `verification_usecases.dart`.
+- **The change:**
+  - **`verification_usecases.dart` holds the seven use cases only.**
+    - `PreparedInput`, `ReadyInput` and `RefusedInput` moved to `domain/entities/prepared_input.dart`, and `ParsedStack` to `domain/entities/serial_stack.dart`.
+    - `PrepareInput`, `ParseStack` and the serial key (`sameSerial`, `distinctSerials`) moved to `domain/services/`.
+  - **The stack's rule is `CheckSerials`':** `CheckSerials.refusal(serials)` states it once. The use case enforces it before any request and sends each item once, as a read-only list. The cubit asks the same function for its early message.
+  - **The repository** keeps only its answer checks, against the list it was sent.
+  - **`ParsedStack.counted` and `tooMany`** give the screen its count and its red, without reading the limit itself.
+- **Tests changed to the new home of the rule:**
+  - three repository contract tests (de-duplication, empty and oversized stacks, `001` and `1`) now go through `CheckSerials`, as the app sends a stack;
+  - TC-ARCH-013's `CheckSerials` case now expects each item once, not the list as given.
+- **Kept:** the use cases stay in one file per feature, as in incidents and authentication; one file per use case is the naming drift of P-43.
 
 #### P-30 (should): the router builds the recovered scans
 **Evidence:** `app/router/routes/check_routes.dart:60-88` calls `locator<GetChecks>()`, maps `CheckResult` to `LookupOutcome` value by value, and re-wraps `Success`/`Err` by hand (`Result` has no `map`).

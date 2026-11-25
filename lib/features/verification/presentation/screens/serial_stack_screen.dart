@@ -6,8 +6,7 @@ import 'package:ziska_verify/core/errors/app_exception.dart';
 import 'package:ziska_verify/features/verification/domain/entities/checked_input.dart';
 import 'package:ziska_verify/features/verification/domain/entities/failure_reasons.dart';
 import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
-import 'package:ziska_verify/features/verification/domain/entities/serial_stack.dart';
-import 'package:ziska_verify/features/verification/domain/usecases/verification_usecases.dart';
+import 'package:ziska_verify/features/verification/domain/services/parse_stack.dart';
 import 'package:ziska_verify/features/verification/presentation/bloc/serial_stack_cubit.dart';
 import 'package:ziska_verify/features/verification/presentation/models/result_view.dart';
 import 'package:ziska_verify/features/verification/presentation/widgets/session_counters.dart';
@@ -222,9 +221,7 @@ class _SerialStackScreenState extends State<SerialStackScreen>
                       if (formats == null) return const SizedBox.shrink();
                       final parsed = const ParseStack()(typed.text, formats);
                       if (parsed.typed == 0) return const SizedBox.shrink();
-                      final distinct = parsed.bad == null
-                          ? parsed.serials.length
-                          : parsed.typed;
+                      final distinct = parsed.counted;
                       final repeats = parsed.repeats;
                       return Padding(
                         padding: const EdgeInsets.only(top: AppSpacing.xs),
@@ -234,7 +231,7 @@ class _SerialStackScreenState extends State<SerialStackScreen>
                               : l.serialStackCount(distinct),
                           key: const Key('serials.count'),
                           style: AppTypography.caption.copyWith(
-                            color: distinct > serialStackLimit
+                            color: parsed.tooMany
                                 ? AppColors.danger
                                 : AppColors.textBody,
                           ),

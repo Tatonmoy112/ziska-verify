@@ -8,6 +8,7 @@ import 'package:ziska_verify/core/errors/result.dart';
 import 'package:ziska_verify/features/verification/domain/entities/failure_reasons.dart';
 import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
 import 'package:ziska_verify/features/verification/domain/entities/serial_stack.dart';
+import 'package:ziska_verify/features/verification/domain/services/parse_stack.dart';
 import 'package:ziska_verify/features/verification/domain/usecases/verification_usecases.dart';
 part 'serial_stack_cubit.freezed.dart';
 
@@ -91,14 +92,10 @@ class SerialStackCubit extends Cubit<SerialStackState> {
       return false;
     }
     final serials = parsed.serials;
-    if (serials.isEmpty || serials.length > serialStackLimit) {
-      emit(
-        state.copyWith(
-          failure: const Failure(
-            ValidationException(reason: VerificationReason.serialStackSize),
-          ),
-        ),
-      );
+    // The stack's rule is the use case's (P-29): asked here only to say so
+    // before anything is sent.
+    if (CheckSerials.refusal(serials) case final refused?) {
+      emit(state.copyWith(failure: Failure(refused)));
       return false;
     }
     emit(

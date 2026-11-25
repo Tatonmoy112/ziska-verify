@@ -1,9 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
+import 'package:ziska_verify/features/verification/domain/entities/prepared_input.dart';
 import 'package:ziska_verify/features/verification/domain/services/code_normalizer.dart';
 import 'package:ziska_verify/features/verification/domain/services/input_format_validator.dart';
+import 'package:ziska_verify/features/verification/domain/services/prepare_input.dart';
 import 'package:ziska_verify/features/verification/domain/services/qr_link_parser.dart';
-import 'package:ziska_verify/features/verification/domain/usecases/verification_usecases.dart';
 
 /// The formats of the Postman example (`GET formats`).
 const formats = InputFormats(

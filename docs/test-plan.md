@@ -149,10 +149,10 @@ The cases live in one file per area in [`docs/test-cases/`](test-cases/README.md
 | E2E | [13-e2e-journeys.md](test-cases/13-e2e-journeys.md) | 16 | 7 | 9 | 0 | 10 | 0 | 6 | 0 |
 | Exploratory | [14-exploratory-charters.md](test-cases/14-exploratory-charters.md) | 9 | 0 | 6 | 3 | 0 | 0 | 9 | 0 |
 | UI | [15-ui.md](test-cases/15-ui.md) | 183 | 29 | 99 | 55 | 169 | 0 | 14 | 0 |
-| MIG | [16-mobile-migration.md](test-cases/16-mobile-migration.md) | 79 | 47 | 30 | 2 | 78 | 0 | 1 | 0 |
+| MIG | [16-mobile-migration.md](test-cases/16-mobile-migration.md) | 82 | 48 | 32 | 2 | 81 | 0 | 1 | 0 |
 | STG | [17-test-server.md](test-cases/17-test-server.md) | 58 | 44 | 11 | 3 | 47 | 0 | 11 | 0 |
 | ARCH | [18-architecture.md](test-cases/18-architecture.md) | 37 | 0 | 12 | 25 | 37 | 0 | 0 | 0 |
-| **Total** | | **1004** | 320 | 478 | 206 | 876 | 0 | 128 | 0 |
+| **Total** | | **1007** | 321 | 480 | 206 | 879 | 0 | 128 | 0 |
 
 ---
 

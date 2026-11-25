@@ -36,7 +36,8 @@ enum Rule {
   routeOutsideApiRoutes(
     'R20',
     'a route is made outside core/network/api_routes.dart',
-  )
+  ),
+  dataImportsUseCase('R21', 'data imports a use case')
   ;
 
   const Rule(this.id, this.text);
@@ -211,6 +212,13 @@ class LayerRules {
     if (from.layer == _Layer.domain &&
         (to.layer == _Layer.data || to.layer == _Layer.presentation)) {
       add(Rule.domainImportsOuterLayer, file, target);
+    }
+    // A use case calls a repository; a repository never calls a use case
+    // (production audit P-29).
+    if (from.layer == _Layer.data &&
+        to.layer == _Layer.domain &&
+        target.contains('/domain/usecases/')) {
+      add(Rule.dataImportsUseCase, file, target);
     }
     if (from.layer == _Layer.data && to.layer == _Layer.presentation) {
       add(Rule.dataImportsPresentation, file, target);

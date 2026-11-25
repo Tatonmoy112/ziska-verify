@@ -365,9 +365,14 @@ void main() {
             "import 'package:ziska_verify/features/a/domain/repositories/r.dart';",
         'features/a/domain/repositories/r.dart': '',
       },
+      Rule.dataImportsUseCase: {
+        'features/a/data/repositories/r_impl.dart':
+            "import 'package:ziska_verify/features/a/domain/usecases/u.dart';",
+        'features/a/domain/usecases/u.dart': '',
+      },
     };
 
-    test('TC-ARCH-008 each rule R1 … R20 is reported, with its file', () {
+    test('TC-ARCH-008 each rule R1 … R21 is reported, with its file', () {
       expect(cases.keys, unorderedEquals(Rule.values));
       for (final MapEntry(key: rule, value: files) in cases.entries) {
         final found = check(files);

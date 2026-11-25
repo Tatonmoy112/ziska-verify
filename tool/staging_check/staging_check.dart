@@ -62,8 +62,10 @@ import 'package:ziska_verify/features/verification/data/mappers/verification_map
 import 'package:ziska_verify/features/verification/data/models/verification_dtos.dart';
 import 'package:ziska_verify/features/verification/data/services/verification_api_service.dart';
 import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
+import 'package:ziska_verify/features/verification/domain/entities/prepared_input.dart';
 import 'package:ziska_verify/features/verification/domain/entities/scan_session.dart';
-import 'package:ziska_verify/features/verification/domain/usecases/verification_usecases.dart';
+import 'package:ziska_verify/features/verification/domain/services/prepare_input.dart';
+import 'package:ziska_verify/features/verification/domain/services/serial_key.dart';
 
 const _steps =
     'connect, login, verify <code>, session, profile, lookup, history, '

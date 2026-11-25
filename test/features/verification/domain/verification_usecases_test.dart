@@ -145,17 +145,19 @@ void main() {
       verify(() => repo.scan(read, id)).called(1);
     });
 
+    // Each item once, the first typed kept, as typed (P-29: the stack's
+    // rule is the use case's, TC-MIG-080 … -082).
     test(
-      'CheckSerials: order, leading zeros and the list itself kept',
+      'CheckSerials: order and leading zeros kept, each item once',
       () async {
         final serials = ['0001', '1', '0001', '9' * 19];
         when(
-          () => repo.serials(serials),
+          () => repo.serials(any()),
         ).thenAnswer((_) async => const Success(stack));
         await CheckSerials(repo)(serials);
         final sent = verify(() => repo.serials(captureAny())).captured.single;
-        expect(sent, same(serials));
-        expect(serials, ['0001', '1', '0001', '9' * 19]);
+        expect(sent, ['0001', '9' * 19]);
+        expect(serials, ['0001', '1', '0001', '9' * 19], reason: 'not changed');
       },
     );
 
