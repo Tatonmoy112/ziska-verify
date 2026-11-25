@@ -6,7 +6,7 @@ The production-grade review of the app, done on the `production` branch one area
 |---|---|---|
 | 2 | High-level architecture | Checked 2026-11-24: P-1 … P-15. **All fixed**; P-10 on for staging, live waits for its production project |
 | 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11). **All fixed** (2026-11-25) |
-| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-45. Fixed: P-20 … P-37 |
+| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-45. Fixed: P-20 … P-38 |
 | 5 | Dead code | To do |
 | 6+ | Comments, data layer, UI components, state and lifecycle, security, build and release, monitoring, tests, localisation, performance, docs | To do |
 
@@ -1252,6 +1252,23 @@ History's reasons stay raw strings (`CheckRecord.reasons`, `List<String>`), whic
 - **normal:** each rule unit-tested;
 - **edge:** the same QR at 2.9 s and at 3.1 s;
 - **worst:** the photo hour ends while the page is open, and adding is disabled without a tap.
+
+**✅ Fixed 2026-11-25:**
+- **Tests first:** TC-ARCH-056 … -058 (`test/architecture/widget_decisions_test.dart`):
+  - each rule on its own: the QR filter (3 s, 5 s after a result, Scan again), a session's filter, History's serial, the form;
+  - each at its limits: 2.9 s and 3.1 s; 64 and 65 digits, and Bangla digits; 100 and 101 characters;
+  - the photo hour ends with the page open, with no tap;
+  - a source check that no screen keeps these rules itself.
+- **The change:**
+  - **`QrReadFilter`** (`verification/domain/services`) is the one QR filter. The check tab gives it 3 s, and 5 s after a result; a scanner session holds a code until another. `verify_screen.dart` and `ScanSessionCubit` lost their own copies.
+  - **History tracks `HistorySearch.read(…).serial`,** the serial the domain reads: 1 to 64 digits, any script's digits read as 0-9. Its own `RegExp` is gone.
+  - **The serial stack:** `SerialStackCubit.edit` counts the typed stack in state (`draft`), as the box changes, Clear included, and again once the formats arrive. The screen no longer runs `ParseStack` in `build`. `submitText` decides what Send does.
+  - **Request access:** `SubmitAccessRequest.formReady` is the form's rule, used by the use case and to enable Send. The password's hints still show as it is typed.
+  - **The report:** `photoHourOver` is state, set by a timer at the hour's end, and `canAddPhoto` is the state's. The screen reads both from state, so it changes by itself. Each photo action still asks the clock, in case the timer comes late.
+- **Two test details:**
+  - the source check first refused the password hints, which are display, not a rule;
+  - the photo-hour widget test hung on `await bloc.close()`: in a widget test, time moves only when pumped. The close is now started, then pumped.
+- **Every screenshot test passes unchanged.**
 
 #### P-39 (should): the session summary loads data in a widget
 **Evidence:** `verification/presentation/widgets/session_summary_card.dart:31` holds `late Future<...> _session = widget.load()`, and retries with `setState(() => _session = widget.load())` (`:69`).

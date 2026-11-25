@@ -28,6 +28,10 @@ abstract class SerialStackState with _$SerialStackState {
     /// The serial that stopped the stack before sending, by its place.
     ({int position, String value})? badSerial,
     @Default(false) bool submitted,
+
+    /// The stack as typed, counted as it will be sent: shown under the box
+    /// (production audit P-38). `null` before the formats or with no text.
+    ParsedStack? draft,
     @Default(<String>[]) List<String> serials,
     SerialStackResult? result,
     DateTime? checkedAt,
@@ -47,6 +51,9 @@ class SerialStackCubit extends Cubit<SerialStackState> {
   final CheckSerials _checkSerials;
   Timer? _retry;
   bool _loading = false;
+
+  /// The text in the box, counted again once the formats arrive.
+  String _typed = '';
   Future<void> load() async {
     if (_loading) return;
     _loading = true;
@@ -55,7 +62,14 @@ class SerialStackCubit extends Cubit<SerialStackState> {
     if (isClosed) return;
     switch (result) {
       case Success(:final value):
-        emit(state.copyWith(formats: value, failure: null, retryAt: null));
+        emit(
+          state.copyWith(
+            formats: value,
+            failure: null,
+            retryAt: null,
+            draft: _parse(_typed, value),
+          ),
+        );
       case Err(:final failure):
         // A 429 counts down on the button before it reads them again.
         emit(
@@ -64,6 +78,28 @@ class SerialStackCubit extends Cubit<SerialStackState> {
             retryAt: failure.retryAtFrom(clock.now()),
           ),
         );
+    }
+  }
+
+  /// The box changed (typed, pasted or cleared): its stack is counted.
+  void edit(String text) {
+    _typed = text;
+    if (isClosed) return;
+    emit(state.copyWith(draft: _parse(text, state.formats)));
+  }
+
+  static ParsedStack? _parse(String text, InputFormats? formats) {
+    if (formats == null) return null;
+    final parsed = const ParseStack()(text, formats);
+    return parsed.typed == 0 ? null : parsed;
+  }
+
+  /// Send: the stack already composed goes again (after a wait or once
+  /// sent); otherwise [text] is composed first, and goes only if it is a
+  /// stack that can be sent.
+  Future<void> submitText(String text) async {
+    if (state.submitted || state.retryAt != null || compose(text)) {
+      await submit();
     }
   }
 

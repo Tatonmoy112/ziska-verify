@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -10,6 +9,7 @@ import 'package:ziska_verify/core/navigation/route_names.dart';
 import 'package:ziska_verify/core/services/scanner/scanner_service.dart';
 import 'package:ziska_verify/features/profile/presentation/bloc/profile_cubit.dart';
 import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
+import 'package:ziska_verify/features/verification/domain/services/qr_read_filter.dart';
 import 'package:ziska_verify/features/verification/presentation/bloc/lookup_bloc.dart';
 import 'package:ziska_verify/features/verification/presentation/models/result_view.dart';
 import 'package:ziska_verify/features/verification/presentation/screens/verifying_view.dart';
@@ -81,21 +81,14 @@ class _VerifyScreenState extends State<VerifyScreen>
   LookupWay _lastWay = LookupWay.serial;
 
   /// The same code held in front of the camera is read once.
-  String? _lastRaw;
-  DateTime _lastAt = DateTime.fromMillisecondsSinceEpoch(0);
-
-  /// Back from a scanned code's result: its window ([_afterResult]) starts
-  /// then, so a pack still in front of the camera is not checked again by
-  /// itself (guide §4.3: "Do not send the same QR twice in a row while it
-  /// stays in front of the camera").
-  bool _backFromResult = false;
-
-  /// How long the same code is not read again while scanning.
-  static const _repeat = Duration(seconds: 3);
-
-  /// How long the same code is not read again after its result closes; it
-  /// also covers a slow camera start.
-  static const _afterResult = Duration(seconds: 5);
+  /// The same code is not read again for 3 seconds while scanning, and
+  /// for 5 after its result closes, which also covers a slow camera start:
+  /// a pack still in front of the camera is not checked again by itself
+  /// (guide §4.3).
+  final _reads = QrReadFilter(
+    window: const Duration(seconds: 3),
+    afterResult: const Duration(seconds: 5),
+  );
 
   @override
   void initState() {
@@ -163,12 +156,7 @@ class _VerifyScreenState extends State<VerifyScreen>
   void _onCode(String raw) {
     final bloc = context.read<LookupBloc>();
     if (_held || bloc.state.isBusy || bloc.state.formats == null) return;
-    final now = clock.now();
-    final window = _backFromResult ? _afterResult : _repeat;
-    if (raw == _lastRaw && now.difference(_lastAt) < window) return;
-    _backFromResult = false;
-    _lastRaw = raw;
-    _lastAt = now;
+    if (!_reads.accept(raw)) return;
     _lastWay = LookupWay.qr;
     FocusScope.of(context).unfocus();
     bloc.add(LookupRequested(LookupWay.qr, raw));
@@ -176,8 +164,7 @@ class _VerifyScreenState extends State<VerifyScreen>
 
   /// After a failed scan: the camera starts again for the same QR.
   void _scanAgain() {
-    _lastRaw = null;
-    _backFromResult = false;
+    _reads.forget();
     context.read<LookupBloc>().add(const LookupCleared());
     _hold(false);
   }
@@ -237,10 +224,9 @@ class _VerifyScreenState extends State<VerifyScreen>
     // camera starts again and may still see it. After a typed serial,
     // nothing is held back.
     if (view.origin == ResultOrigin.scanner) {
-      _lastAt = clock.now();
-      _backFromResult = true;
+      _reads.resultClosed();
     } else {
-      _lastRaw = null;
+      _reads.forget();
     }
     _hold(false);
   }

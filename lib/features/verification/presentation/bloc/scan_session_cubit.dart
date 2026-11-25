@@ -14,6 +14,7 @@ import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
 import 'package:ziska_verify/features/verification/domain/entities/prepared_input.dart';
 import 'package:ziska_verify/features/verification/domain/entities/scan_session.dart';
 import 'package:ziska_verify/features/verification/domain/services/prepare_input.dart';
+import 'package:ziska_verify/features/verification/domain/services/qr_read_filter.dart';
 import 'package:ziska_verify/features/verification/domain/usecases/verification_usecases.dart';
 
 part 'scan_session_cubit.freezed.dart';
@@ -177,7 +178,9 @@ class ScanSessionCubit extends Cubit<ScanSessionState> {
   /// Completed when nothing is being checked and no read waits (Finish).
   Completer<void>? _idle;
   int _generation = 0;
-  String? _lastRaw;
+
+  /// The same QR is one read until another is read (guide §4.3).
+  final _reads = QrReadFilter();
   Future<void> _persist(Future<void> Function() action) {
     final next = _storageTask.then((_) => action());
     _storageTask = next.catchError((Object _) {});
@@ -298,7 +301,7 @@ class ScanSessionCubit extends Cubit<ScanSessionState> {
         state.id == null) {
       return Future<void>.value();
     }
-    if (raw == _lastRaw) return Future<void>.value();
+    if (_reads.isRepeat(raw)) return Future<void>.value();
     final prepared = const PrepareInput()(LookupWay.qr, raw, formats);
     if (prepared is! ReadyInput) {
       emit(
@@ -310,7 +313,7 @@ class ScanSessionCubit extends Cubit<ScanSessionState> {
       );
       return Future<void>.value();
     }
-    _lastRaw = raw;
+    _reads.take(raw);
     final value = prepared.value;
     if (_inFlight?.value == value || _line.any((r) => r.value == value)) {
       return Future<void>.value();
@@ -410,7 +413,7 @@ class ScanSessionCubit extends Cubit<ScanSessionState> {
         ),
       );
       if (code == ApiErrorCodes.sessionNotYours) {
-        _lastRaw = null;
+        _reads.forget();
         emit(state.copyWith(busy: false, notice: ScanNotice.restarted));
         read.letGo();
         _inFlight = null;
@@ -461,7 +464,7 @@ class ScanSessionCubit extends Cubit<ScanSessionState> {
         read.letGo();
         _pump();
       case Err(:final failure):
-        _lastRaw = null;
+        _reads.forget();
         final retryAt = failure.retryAtFrom(clock.now());
         _inFlight = null;
         if (retryAt != null) {
@@ -547,7 +550,7 @@ class ScanSessionCubit extends Cubit<ScanSessionState> {
   Future<void> restart() async {
     if (!state.done || isClosed) return;
     _ended = false;
-    _lastRaw = null;
+    _reads.forget();
     _lastSentAt = null;
     ++_generation;
     emit(const ScanSessionState());
@@ -562,7 +565,7 @@ class ScanSessionCubit extends Cubit<ScanSessionState> {
   }
 
   void resume() {
-    _lastRaw = null;
+    _reads.forget();
     if (isClosed) return;
     emit(state.copyWith(paused: false));
     _pump();

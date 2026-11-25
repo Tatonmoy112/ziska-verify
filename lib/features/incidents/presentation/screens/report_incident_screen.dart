@@ -323,7 +323,8 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
                         onRetry: () => bloc.add(PhotoRetried(photo.localId)),
                         onRemove: () => bloc.add(PhotoRemoved(photo.localId)),
                       ),
-                    if (bloc.canAddPhoto && state.filing != FilingStatus.filing)
+                    if (state.canAddPhoto &&
+                        state.filing != FilingStatus.filing)
                       _AddPhotoTile(
                         label: l10n.reportAddPhoto,
                         onTap: () => unawaited(_addPhoto()),
@@ -342,7 +343,7 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
                 ],
                 // The hour is over: a photo still waiting or failed is not
                 // sent.
-                if (bloc.photoHourOver &&
+                if (state.photoHourOver &&
                     state.photos.any(
                       (p) => p.canRetry || p.status == PhotoStatus.waiting,
                     )) ...[

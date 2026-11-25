@@ -18,7 +18,9 @@ mixin _$SerialStackState {
 /// match what was sent). Never sent again: all or nothing applies only
 /// to an answer that is not 200 (app API guide §4.7).
  bool get recorded;/// The serial that stopped the stack before sending, by its place.
- ({int position, String value})? get badSerial; bool get submitted; List<String> get serials; SerialStackResult? get result; DateTime? get checkedAt; Failure? get failure; DateTime? get retryAt;
+ ({int position, String value})? get badSerial; bool get submitted;/// The stack as typed, counted as it will be sent: shown under the box
+/// (production audit P-38). `null` before the formats or with no text.
+ ParsedStack? get draft; List<String> get serials; SerialStackResult? get result; DateTime? get checkedAt; Failure? get failure; DateTime? get retryAt;
 /// Create a copy of SerialStackState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -29,16 +31,16 @@ $SerialStackStateCopyWith<SerialStackState> get copyWith => _$SerialStackStateCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SerialStackState&&(identical(other.formats, formats) || other.formats == formats)&&(identical(other.busy, busy) || other.busy == busy)&&(identical(other.paused, paused) || other.paused == paused)&&(identical(other.uncertain, uncertain) || other.uncertain == uncertain)&&(identical(other.recorded, recorded) || other.recorded == recorded)&&(identical(other.badSerial, badSerial) || other.badSerial == badSerial)&&(identical(other.submitted, submitted) || other.submitted == submitted)&&const DeepCollectionEquality().equals(other.serials, serials)&&(identical(other.result, result) || other.result == result)&&(identical(other.checkedAt, checkedAt) || other.checkedAt == checkedAt)&&(identical(other.failure, failure) || other.failure == failure)&&(identical(other.retryAt, retryAt) || other.retryAt == retryAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SerialStackState&&(identical(other.formats, formats) || other.formats == formats)&&(identical(other.busy, busy) || other.busy == busy)&&(identical(other.paused, paused) || other.paused == paused)&&(identical(other.uncertain, uncertain) || other.uncertain == uncertain)&&(identical(other.recorded, recorded) || other.recorded == recorded)&&(identical(other.badSerial, badSerial) || other.badSerial == badSerial)&&(identical(other.submitted, submitted) || other.submitted == submitted)&&(identical(other.draft, draft) || other.draft == draft)&&const DeepCollectionEquality().equals(other.serials, serials)&&(identical(other.result, result) || other.result == result)&&(identical(other.checkedAt, checkedAt) || other.checkedAt == checkedAt)&&(identical(other.failure, failure) || other.failure == failure)&&(identical(other.retryAt, retryAt) || other.retryAt == retryAt));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,formats,busy,paused,uncertain,recorded,badSerial,submitted,const DeepCollectionEquality().hash(serials),result,checkedAt,failure,retryAt);
+int get hashCode => Object.hash(runtimeType,formats,busy,paused,uncertain,recorded,badSerial,submitted,draft,const DeepCollectionEquality().hash(serials),result,checkedAt,failure,retryAt);
 
 @override
 String toString() {
-  return 'SerialStackState(formats: $formats, busy: $busy, paused: $paused, uncertain: $uncertain, recorded: $recorded, badSerial: $badSerial, submitted: $submitted, serials: $serials, result: $result, checkedAt: $checkedAt, failure: $failure, retryAt: $retryAt)';
+  return 'SerialStackState(formats: $formats, busy: $busy, paused: $paused, uncertain: $uncertain, recorded: $recorded, badSerial: $badSerial, submitted: $submitted, draft: $draft, serials: $serials, result: $result, checkedAt: $checkedAt, failure: $failure, retryAt: $retryAt)';
 }
 
 
@@ -49,7 +51,7 @@ abstract mixin class $SerialStackStateCopyWith<$Res>  {
   factory $SerialStackStateCopyWith(SerialStackState value, $Res Function(SerialStackState) _then) = _$SerialStackStateCopyWithImpl;
 @useResult
 $Res call({
- InputFormats? formats, bool busy, bool paused, bool uncertain, bool recorded, ({int position, String value})? badSerial, bool submitted, List<String> serials, SerialStackResult? result, DateTime? checkedAt, Failure? failure, DateTime? retryAt
+ InputFormats? formats, bool busy, bool paused, bool uncertain, bool recorded, ({int position, String value})? badSerial, bool submitted, ParsedStack? draft, List<String> serials, SerialStackResult? result, DateTime? checkedAt, Failure? failure, DateTime? retryAt
 });
 
 
@@ -66,7 +68,7 @@ class _$SerialStackStateCopyWithImpl<$Res>
 
 /// Create a copy of SerialStackState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? formats = freezed,Object? busy = null,Object? paused = null,Object? uncertain = null,Object? recorded = null,Object? badSerial = freezed,Object? submitted = null,Object? serials = null,Object? result = freezed,Object? checkedAt = freezed,Object? failure = freezed,Object? retryAt = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? formats = freezed,Object? busy = null,Object? paused = null,Object? uncertain = null,Object? recorded = null,Object? badSerial = freezed,Object? submitted = null,Object? draft = freezed,Object? serials = null,Object? result = freezed,Object? checkedAt = freezed,Object? failure = freezed,Object? retryAt = freezed,}) {
   return _then(_self.copyWith(
 formats: freezed == formats ? _self.formats : formats // ignore: cast_nullable_to_non_nullable
 as InputFormats?,busy: null == busy ? _self.busy : busy // ignore: cast_nullable_to_non_nullable
@@ -75,7 +77,8 @@ as bool,uncertain: null == uncertain ? _self.uncertain : uncertain // ignore: ca
 as bool,recorded: null == recorded ? _self.recorded : recorded // ignore: cast_nullable_to_non_nullable
 as bool,badSerial: freezed == badSerial ? _self.badSerial : badSerial // ignore: cast_nullable_to_non_nullable
 as ({int position, String value})?,submitted: null == submitted ? _self.submitted : submitted // ignore: cast_nullable_to_non_nullable
-as bool,serials: null == serials ? _self.serials : serials // ignore: cast_nullable_to_non_nullable
+as bool,draft: freezed == draft ? _self.draft : draft // ignore: cast_nullable_to_non_nullable
+as ParsedStack?,serials: null == serials ? _self.serials : serials // ignore: cast_nullable_to_non_nullable
 as List<String>,result: freezed == result ? _self.result : result // ignore: cast_nullable_to_non_nullable
 as SerialStackResult?,checkedAt: freezed == checkedAt ? _self.checkedAt : checkedAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,failure: freezed == failure ? _self.failure : failure // ignore: cast_nullable_to_non_nullable
@@ -165,10 +168,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( InputFormats? formats,  bool busy,  bool paused,  bool uncertain,  bool recorded,  ({int position, String value})? badSerial,  bool submitted,  List<String> serials,  SerialStackResult? result,  DateTime? checkedAt,  Failure? failure,  DateTime? retryAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( InputFormats? formats,  bool busy,  bool paused,  bool uncertain,  bool recorded,  ({int position, String value})? badSerial,  bool submitted,  ParsedStack? draft,  List<String> serials,  SerialStackResult? result,  DateTime? checkedAt,  Failure? failure,  DateTime? retryAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SerialStackState() when $default != null:
-return $default(_that.formats,_that.busy,_that.paused,_that.uncertain,_that.recorded,_that.badSerial,_that.submitted,_that.serials,_that.result,_that.checkedAt,_that.failure,_that.retryAt);case _:
+return $default(_that.formats,_that.busy,_that.paused,_that.uncertain,_that.recorded,_that.badSerial,_that.submitted,_that.draft,_that.serials,_that.result,_that.checkedAt,_that.failure,_that.retryAt);case _:
   return orElse();
 
 }
@@ -186,10 +189,10 @@ return $default(_that.formats,_that.busy,_that.paused,_that.uncertain,_that.reco
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( InputFormats? formats,  bool busy,  bool paused,  bool uncertain,  bool recorded,  ({int position, String value})? badSerial,  bool submitted,  List<String> serials,  SerialStackResult? result,  DateTime? checkedAt,  Failure? failure,  DateTime? retryAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( InputFormats? formats,  bool busy,  bool paused,  bool uncertain,  bool recorded,  ({int position, String value})? badSerial,  bool submitted,  ParsedStack? draft,  List<String> serials,  SerialStackResult? result,  DateTime? checkedAt,  Failure? failure,  DateTime? retryAt)  $default,) {final _that = this;
 switch (_that) {
 case _SerialStackState():
-return $default(_that.formats,_that.busy,_that.paused,_that.uncertain,_that.recorded,_that.badSerial,_that.submitted,_that.serials,_that.result,_that.checkedAt,_that.failure,_that.retryAt);case _:
+return $default(_that.formats,_that.busy,_that.paused,_that.uncertain,_that.recorded,_that.badSerial,_that.submitted,_that.draft,_that.serials,_that.result,_that.checkedAt,_that.failure,_that.retryAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -206,10 +209,10 @@ return $default(_that.formats,_that.busy,_that.paused,_that.uncertain,_that.reco
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( InputFormats? formats,  bool busy,  bool paused,  bool uncertain,  bool recorded,  ({int position, String value})? badSerial,  bool submitted,  List<String> serials,  SerialStackResult? result,  DateTime? checkedAt,  Failure? failure,  DateTime? retryAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( InputFormats? formats,  bool busy,  bool paused,  bool uncertain,  bool recorded,  ({int position, String value})? badSerial,  bool submitted,  ParsedStack? draft,  List<String> serials,  SerialStackResult? result,  DateTime? checkedAt,  Failure? failure,  DateTime? retryAt)?  $default,) {final _that = this;
 switch (_that) {
 case _SerialStackState() when $default != null:
-return $default(_that.formats,_that.busy,_that.paused,_that.uncertain,_that.recorded,_that.badSerial,_that.submitted,_that.serials,_that.result,_that.checkedAt,_that.failure,_that.retryAt);case _:
+return $default(_that.formats,_that.busy,_that.paused,_that.uncertain,_that.recorded,_that.badSerial,_that.submitted,_that.draft,_that.serials,_that.result,_that.checkedAt,_that.failure,_that.retryAt);case _:
   return null;
 
 }
@@ -221,7 +224,7 @@ return $default(_that.formats,_that.busy,_that.paused,_that.uncertain,_that.reco
 
 
 class _SerialStackState implements SerialStackState {
-  const _SerialStackState({this.formats, this.busy = false, this.paused = false, this.uncertain = false, this.recorded = false, this.badSerial, this.submitted = false, final  List<String> serials = const <String>[], this.result, this.checkedAt, this.failure, this.retryAt}): _serials = serials;
+  const _SerialStackState({this.formats, this.busy = false, this.paused = false, this.uncertain = false, this.recorded = false, this.badSerial, this.submitted = false, this.draft, final  List<String> serials = const <String>[], this.result, this.checkedAt, this.failure, this.retryAt}): _serials = serials;
   
 
 @override final  InputFormats? formats;
@@ -235,6 +238,9 @@ class _SerialStackState implements SerialStackState {
 /// The serial that stopped the stack before sending, by its place.
 @override final  ({int position, String value})? badSerial;
 @override@JsonKey() final  bool submitted;
+/// The stack as typed, counted as it will be sent: shown under the box
+/// (production audit P-38). `null` before the formats or with no text.
+@override final  ParsedStack? draft;
  final  List<String> _serials;
 @override@JsonKey() List<String> get serials {
   if (_serials is EqualUnmodifiableListView) return _serials;
@@ -257,16 +263,16 @@ _$SerialStackStateCopyWith<_SerialStackState> get copyWith => __$SerialStackStat
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SerialStackState&&(identical(other.formats, formats) || other.formats == formats)&&(identical(other.busy, busy) || other.busy == busy)&&(identical(other.paused, paused) || other.paused == paused)&&(identical(other.uncertain, uncertain) || other.uncertain == uncertain)&&(identical(other.recorded, recorded) || other.recorded == recorded)&&(identical(other.badSerial, badSerial) || other.badSerial == badSerial)&&(identical(other.submitted, submitted) || other.submitted == submitted)&&const DeepCollectionEquality().equals(other._serials, _serials)&&(identical(other.result, result) || other.result == result)&&(identical(other.checkedAt, checkedAt) || other.checkedAt == checkedAt)&&(identical(other.failure, failure) || other.failure == failure)&&(identical(other.retryAt, retryAt) || other.retryAt == retryAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SerialStackState&&(identical(other.formats, formats) || other.formats == formats)&&(identical(other.busy, busy) || other.busy == busy)&&(identical(other.paused, paused) || other.paused == paused)&&(identical(other.uncertain, uncertain) || other.uncertain == uncertain)&&(identical(other.recorded, recorded) || other.recorded == recorded)&&(identical(other.badSerial, badSerial) || other.badSerial == badSerial)&&(identical(other.submitted, submitted) || other.submitted == submitted)&&(identical(other.draft, draft) || other.draft == draft)&&const DeepCollectionEquality().equals(other._serials, _serials)&&(identical(other.result, result) || other.result == result)&&(identical(other.checkedAt, checkedAt) || other.checkedAt == checkedAt)&&(identical(other.failure, failure) || other.failure == failure)&&(identical(other.retryAt, retryAt) || other.retryAt == retryAt));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,formats,busy,paused,uncertain,recorded,badSerial,submitted,const DeepCollectionEquality().hash(_serials),result,checkedAt,failure,retryAt);
+int get hashCode => Object.hash(runtimeType,formats,busy,paused,uncertain,recorded,badSerial,submitted,draft,const DeepCollectionEquality().hash(_serials),result,checkedAt,failure,retryAt);
 
 @override
 String toString() {
-  return 'SerialStackState(formats: $formats, busy: $busy, paused: $paused, uncertain: $uncertain, recorded: $recorded, badSerial: $badSerial, submitted: $submitted, serials: $serials, result: $result, checkedAt: $checkedAt, failure: $failure, retryAt: $retryAt)';
+  return 'SerialStackState(formats: $formats, busy: $busy, paused: $paused, uncertain: $uncertain, recorded: $recorded, badSerial: $badSerial, submitted: $submitted, draft: $draft, serials: $serials, result: $result, checkedAt: $checkedAt, failure: $failure, retryAt: $retryAt)';
 }
 
 
@@ -277,7 +283,7 @@ abstract mixin class _$SerialStackStateCopyWith<$Res> implements $SerialStackSta
   factory _$SerialStackStateCopyWith(_SerialStackState value, $Res Function(_SerialStackState) _then) = __$SerialStackStateCopyWithImpl;
 @override @useResult
 $Res call({
- InputFormats? formats, bool busy, bool paused, bool uncertain, bool recorded, ({int position, String value})? badSerial, bool submitted, List<String> serials, SerialStackResult? result, DateTime? checkedAt, Failure? failure, DateTime? retryAt
+ InputFormats? formats, bool busy, bool paused, bool uncertain, bool recorded, ({int position, String value})? badSerial, bool submitted, ParsedStack? draft, List<String> serials, SerialStackResult? result, DateTime? checkedAt, Failure? failure, DateTime? retryAt
 });
 
 
@@ -294,7 +300,7 @@ class __$SerialStackStateCopyWithImpl<$Res>
 
 /// Create a copy of SerialStackState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? formats = freezed,Object? busy = null,Object? paused = null,Object? uncertain = null,Object? recorded = null,Object? badSerial = freezed,Object? submitted = null,Object? serials = null,Object? result = freezed,Object? checkedAt = freezed,Object? failure = freezed,Object? retryAt = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? formats = freezed,Object? busy = null,Object? paused = null,Object? uncertain = null,Object? recorded = null,Object? badSerial = freezed,Object? submitted = null,Object? draft = freezed,Object? serials = null,Object? result = freezed,Object? checkedAt = freezed,Object? failure = freezed,Object? retryAt = freezed,}) {
   return _then(_SerialStackState(
 formats: freezed == formats ? _self.formats : formats // ignore: cast_nullable_to_non_nullable
 as InputFormats?,busy: null == busy ? _self.busy : busy // ignore: cast_nullable_to_non_nullable
@@ -303,7 +309,8 @@ as bool,uncertain: null == uncertain ? _self.uncertain : uncertain // ignore: ca
 as bool,recorded: null == recorded ? _self.recorded : recorded // ignore: cast_nullable_to_non_nullable
 as bool,badSerial: freezed == badSerial ? _self.badSerial : badSerial // ignore: cast_nullable_to_non_nullable
 as ({int position, String value})?,submitted: null == submitted ? _self.submitted : submitted // ignore: cast_nullable_to_non_nullable
-as bool,serials: null == serials ? _self._serials : serials // ignore: cast_nullable_to_non_nullable
+as bool,draft: freezed == draft ? _self.draft : draft // ignore: cast_nullable_to_non_nullable
+as ParsedStack?,serials: null == serials ? _self._serials : serials // ignore: cast_nullable_to_non_nullable
 as List<String>,result: freezed == result ? _self.result : result // ignore: cast_nullable_to_non_nullable
 as SerialStackResult?,checkedAt: freezed == checkedAt ? _self.checkedAt : checkedAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,failure: freezed == failure ? _self.failure : failure // ignore: cast_nullable_to_non_nullable

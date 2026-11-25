@@ -6,7 +6,6 @@ import 'package:ziska_verify/core/errors/app_exception.dart';
 import 'package:ziska_verify/features/verification/domain/entities/checked_input.dart';
 import 'package:ziska_verify/features/verification/domain/entities/failure_reasons.dart';
 import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
-import 'package:ziska_verify/features/verification/domain/services/parse_stack.dart';
 import 'package:ziska_verify/features/verification/presentation/bloc/serial_stack_cubit.dart';
 import 'package:ziska_verify/features/verification/presentation/models/result_view.dart';
 import 'package:ziska_verify/features/verification/presentation/widgets/session_counters.dart';
@@ -41,6 +40,7 @@ class _SerialStackScreenState extends State<SerialStackScreen>
   @override
   void initState() {
     super.initState();
+    _input.addListener(() => _cubit.edit(_input.text));
     WidgetsBinding.instance.addObserver(this);
   }
 
@@ -209,36 +209,29 @@ class _SerialStackScreenState extends State<SerialStackScreen>
                     enabled: !state.busy && !state.submitted,
                     onChanged: (_) => setState(() {}),
                   ),
-                  // How many go, before sending (SRS FR-STK-01: 1 to 50).
+                  // How many go, before sending (SRS FR-STK-01: 1 to 50),
+                  // counted by the cubit as the stack is sent: each value
+                  // prepared, so "1000-001" and "1000001" are one serial.
                   // It follows the box itself, so Clear takes it away too
                   // (finding F-3).
-                  ValueListenableBuilder<TextEditingValue>(
-                    valueListenable: _input,
-                    builder: (context, typed, _) {
-                      // Counted as the stack is sent: each value prepared,
-                      // so "1000-001" and "1000001" are one serial.
-                      final formats = state.formats;
-                      if (formats == null) return const SizedBox.shrink();
-                      final parsed = const ParseStack()(typed.text, formats);
-                      if (parsed.typed == 0) return const SizedBox.shrink();
-                      final distinct = parsed.counted;
-                      final repeats = parsed.repeats;
-                      return Padding(
-                        padding: const EdgeInsets.only(top: AppSpacing.xs),
-                        child: Text(
-                          repeats > 0
-                              ? l.serialStackCountRepeats(distinct, repeats)
-                              : l.serialStackCount(distinct),
-                          key: const Key('serials.count'),
-                          style: AppTypography.caption.copyWith(
-                            color: parsed.tooMany
-                                ? AppColors.danger
-                                : AppColors.textBody,
-                          ),
+                  if (state.draft case final parsed?)
+                    Padding(
+                      padding: const EdgeInsets.only(top: AppSpacing.xs),
+                      child: Text(
+                        parsed.repeats > 0
+                            ? l.serialStackCountRepeats(
+                                parsed.counted,
+                                parsed.repeats,
+                              )
+                            : l.serialStackCount(parsed.counted),
+                        key: const Key('serials.count'),
+                        style: AppTypography.caption.copyWith(
+                          color: parsed.tooMany
+                              ? AppColors.danger
+                              : AppColors.textBody,
                         ),
-                      );
-                    },
-                  ),
+                      ),
+                    ),
                   if (state.failure != null) ...[
                     const SizedBox(height: AppSpacing.md),
                     FailureBanner(
@@ -292,11 +285,7 @@ class _SerialStackScreenState extends State<SerialStackScreen>
                                 unawaited(_resend());
                                 return;
                               }
-                              if (state.submitted ||
-                                  state.retryAt != null ||
-                                  _cubit.compose(_input.text)) {
-                                unawaited(_cubit.submit());
-                              }
+                              unawaited(_cubit.submitText(_input.text));
                             },
                     ),
                   TextButton(

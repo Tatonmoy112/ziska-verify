@@ -45,4 +45,11 @@ class HistorySearch {
 
   /// What is sent, when [status] is [SearchStatus.ok].
   final String? value;
+
+  /// The serial searched for, when it is one (not a reference number): its
+  /// tracking log is shown (final.md §13.4; production audit P-38).
+  String? get serial {
+    final v = value;
+    return v != null && _serial.hasMatch(v) ? v : null;
+  }
 }

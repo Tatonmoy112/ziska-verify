@@ -297,7 +297,9 @@ mixin _$ReportIncidentState {
  int get samePhotoCount;/// After a `429` on filing: no new filing before this time (final.md
 /// §13.5, §15).
  DateTime? get retryAt;/// After a `404` on filing: what was not found.
- MissingLink? get missing;
+ MissingLink? get missing;/// The hour for photos after filing is over (guide section 6.2): set
+/// when it ends, so the page changes without a tap (P-38).
+ bool get photoHourOver;
 /// Create a copy of ReportIncidentState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -308,16 +310,16 @@ $ReportIncidentStateCopyWith<ReportIncidentState> get copyWith => _$ReportIncide
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReportIncidentState&&(identical(other.checkRef, checkRef) || other.checkRef == checkRef)&&(identical(other.retailUser, retailUser) || other.retailUser == retailUser)&&const DeepCollectionEquality().equals(other.photos, photos)&&(identical(other.filing, filing) || other.filing == filing)&&(identical(other.reportId, reportId) || other.reportId == reportId)&&(identical(other.filedAt, filedAt) || other.filedAt == filedAt)&&(identical(other.failure, failure) || other.failure == failure)&&(identical(other.photoProblem, photoProblem) || other.photoProblem == photoProblem)&&(identical(other.photoProblemCount, photoProblemCount) || other.photoProblemCount == photoProblemCount)&&(identical(other.samePhotoCount, samePhotoCount) || other.samePhotoCount == samePhotoCount)&&(identical(other.retryAt, retryAt) || other.retryAt == retryAt)&&(identical(other.missing, missing) || other.missing == missing));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReportIncidentState&&(identical(other.checkRef, checkRef) || other.checkRef == checkRef)&&(identical(other.retailUser, retailUser) || other.retailUser == retailUser)&&const DeepCollectionEquality().equals(other.photos, photos)&&(identical(other.filing, filing) || other.filing == filing)&&(identical(other.reportId, reportId) || other.reportId == reportId)&&(identical(other.filedAt, filedAt) || other.filedAt == filedAt)&&(identical(other.failure, failure) || other.failure == failure)&&(identical(other.photoProblem, photoProblem) || other.photoProblem == photoProblem)&&(identical(other.photoProblemCount, photoProblemCount) || other.photoProblemCount == photoProblemCount)&&(identical(other.samePhotoCount, samePhotoCount) || other.samePhotoCount == samePhotoCount)&&(identical(other.retryAt, retryAt) || other.retryAt == retryAt)&&(identical(other.missing, missing) || other.missing == missing)&&(identical(other.photoHourOver, photoHourOver) || other.photoHourOver == photoHourOver));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,checkRef,retailUser,const DeepCollectionEquality().hash(photos),filing,reportId,filedAt,failure,photoProblem,photoProblemCount,samePhotoCount,retryAt,missing);
+int get hashCode => Object.hash(runtimeType,checkRef,retailUser,const DeepCollectionEquality().hash(photos),filing,reportId,filedAt,failure,photoProblem,photoProblemCount,samePhotoCount,retryAt,missing,photoHourOver);
 
 @override
 String toString() {
-  return 'ReportIncidentState(checkRef: $checkRef, retailUser: $retailUser, photos: $photos, filing: $filing, reportId: $reportId, filedAt: $filedAt, failure: $failure, photoProblem: $photoProblem, photoProblemCount: $photoProblemCount, samePhotoCount: $samePhotoCount, retryAt: $retryAt, missing: $missing)';
+  return 'ReportIncidentState(checkRef: $checkRef, retailUser: $retailUser, photos: $photos, filing: $filing, reportId: $reportId, filedAt: $filedAt, failure: $failure, photoProblem: $photoProblem, photoProblemCount: $photoProblemCount, samePhotoCount: $samePhotoCount, retryAt: $retryAt, missing: $missing, photoHourOver: $photoHourOver)';
 }
 
 
@@ -328,7 +330,7 @@ abstract mixin class $ReportIncidentStateCopyWith<$Res>  {
   factory $ReportIncidentStateCopyWith(ReportIncidentState value, $Res Function(ReportIncidentState) _then) = _$ReportIncidentStateCopyWithImpl;
 @useResult
 $Res call({
- String? checkRef, ({String id, String name})? retailUser, List<ReportPhoto> photos, FilingStatus filing, int? reportId, DateTime? filedAt, Failure? failure, PhotoProblem? photoProblem, int photoProblemCount, int samePhotoCount, DateTime? retryAt, MissingLink? missing
+ String? checkRef, ({String id, String name})? retailUser, List<ReportPhoto> photos, FilingStatus filing, int? reportId, DateTime? filedAt, Failure? failure, PhotoProblem? photoProblem, int photoProblemCount, int samePhotoCount, DateTime? retryAt, MissingLink? missing, bool photoHourOver
 });
 
 
@@ -345,7 +347,7 @@ class _$ReportIncidentStateCopyWithImpl<$Res>
 
 /// Create a copy of ReportIncidentState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? checkRef = freezed,Object? retailUser = freezed,Object? photos = null,Object? filing = null,Object? reportId = freezed,Object? filedAt = freezed,Object? failure = freezed,Object? photoProblem = freezed,Object? photoProblemCount = null,Object? samePhotoCount = null,Object? retryAt = freezed,Object? missing = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? checkRef = freezed,Object? retailUser = freezed,Object? photos = null,Object? filing = null,Object? reportId = freezed,Object? filedAt = freezed,Object? failure = freezed,Object? photoProblem = freezed,Object? photoProblemCount = null,Object? samePhotoCount = null,Object? retryAt = freezed,Object? missing = freezed,Object? photoHourOver = null,}) {
   return _then(_self.copyWith(
 checkRef: freezed == checkRef ? _self.checkRef : checkRef // ignore: cast_nullable_to_non_nullable
 as String?,retailUser: freezed == retailUser ? _self.retailUser : retailUser // ignore: cast_nullable_to_non_nullable
@@ -359,7 +361,8 @@ as PhotoProblem?,photoProblemCount: null == photoProblemCount ? _self.photoProbl
 as int,samePhotoCount: null == samePhotoCount ? _self.samePhotoCount : samePhotoCount // ignore: cast_nullable_to_non_nullable
 as int,retryAt: freezed == retryAt ? _self.retryAt : retryAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,missing: freezed == missing ? _self.missing : missing // ignore: cast_nullable_to_non_nullable
-as MissingLink?,
+as MissingLink?,photoHourOver: null == photoHourOver ? _self.photoHourOver : photoHourOver // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 
@@ -444,10 +447,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String? checkRef,  ({String id, String name})? retailUser,  List<ReportPhoto> photos,  FilingStatus filing,  int? reportId,  DateTime? filedAt,  Failure? failure,  PhotoProblem? photoProblem,  int photoProblemCount,  int samePhotoCount,  DateTime? retryAt,  MissingLink? missing)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String? checkRef,  ({String id, String name})? retailUser,  List<ReportPhoto> photos,  FilingStatus filing,  int? reportId,  DateTime? filedAt,  Failure? failure,  PhotoProblem? photoProblem,  int photoProblemCount,  int samePhotoCount,  DateTime? retryAt,  MissingLink? missing,  bool photoHourOver)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ReportIncidentState() when $default != null:
-return $default(_that.checkRef,_that.retailUser,_that.photos,_that.filing,_that.reportId,_that.filedAt,_that.failure,_that.photoProblem,_that.photoProblemCount,_that.samePhotoCount,_that.retryAt,_that.missing);case _:
+return $default(_that.checkRef,_that.retailUser,_that.photos,_that.filing,_that.reportId,_that.filedAt,_that.failure,_that.photoProblem,_that.photoProblemCount,_that.samePhotoCount,_that.retryAt,_that.missing,_that.photoHourOver);case _:
   return orElse();
 
 }
@@ -465,10 +468,10 @@ return $default(_that.checkRef,_that.retailUser,_that.photos,_that.filing,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String? checkRef,  ({String id, String name})? retailUser,  List<ReportPhoto> photos,  FilingStatus filing,  int? reportId,  DateTime? filedAt,  Failure? failure,  PhotoProblem? photoProblem,  int photoProblemCount,  int samePhotoCount,  DateTime? retryAt,  MissingLink? missing)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String? checkRef,  ({String id, String name})? retailUser,  List<ReportPhoto> photos,  FilingStatus filing,  int? reportId,  DateTime? filedAt,  Failure? failure,  PhotoProblem? photoProblem,  int photoProblemCount,  int samePhotoCount,  DateTime? retryAt,  MissingLink? missing,  bool photoHourOver)  $default,) {final _that = this;
 switch (_that) {
 case _ReportIncidentState():
-return $default(_that.checkRef,_that.retailUser,_that.photos,_that.filing,_that.reportId,_that.filedAt,_that.failure,_that.photoProblem,_that.photoProblemCount,_that.samePhotoCount,_that.retryAt,_that.missing);case _:
+return $default(_that.checkRef,_that.retailUser,_that.photos,_that.filing,_that.reportId,_that.filedAt,_that.failure,_that.photoProblem,_that.photoProblemCount,_that.samePhotoCount,_that.retryAt,_that.missing,_that.photoHourOver);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -485,10 +488,10 @@ return $default(_that.checkRef,_that.retailUser,_that.photos,_that.filing,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String? checkRef,  ({String id, String name})? retailUser,  List<ReportPhoto> photos,  FilingStatus filing,  int? reportId,  DateTime? filedAt,  Failure? failure,  PhotoProblem? photoProblem,  int photoProblemCount,  int samePhotoCount,  DateTime? retryAt,  MissingLink? missing)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String? checkRef,  ({String id, String name})? retailUser,  List<ReportPhoto> photos,  FilingStatus filing,  int? reportId,  DateTime? filedAt,  Failure? failure,  PhotoProblem? photoProblem,  int photoProblemCount,  int samePhotoCount,  DateTime? retryAt,  MissingLink? missing,  bool photoHourOver)?  $default,) {final _that = this;
 switch (_that) {
 case _ReportIncidentState() when $default != null:
-return $default(_that.checkRef,_that.retailUser,_that.photos,_that.filing,_that.reportId,_that.filedAt,_that.failure,_that.photoProblem,_that.photoProblemCount,_that.samePhotoCount,_that.retryAt,_that.missing);case _:
+return $default(_that.checkRef,_that.retailUser,_that.photos,_that.filing,_that.reportId,_that.filedAt,_that.failure,_that.photoProblem,_that.photoProblemCount,_that.samePhotoCount,_that.retryAt,_that.missing,_that.photoHourOver);case _:
   return null;
 
 }
@@ -500,7 +503,7 @@ return $default(_that.checkRef,_that.retailUser,_that.photos,_that.filing,_that.
 
 
 class _ReportIncidentState extends ReportIncidentState {
-  const _ReportIncidentState({this.checkRef, this.retailUser, final  List<ReportPhoto> photos = const <ReportPhoto>[], this.filing = FilingStatus.editing, this.reportId, this.filedAt, this.failure, this.photoProblem, this.photoProblemCount = 0, this.samePhotoCount = 0, this.retryAt, this.missing}): _photos = photos,super._();
+  const _ReportIncidentState({this.checkRef, this.retailUser, final  List<ReportPhoto> photos = const <ReportPhoto>[], this.filing = FilingStatus.editing, this.reportId, this.filedAt, this.failure, this.photoProblem, this.photoProblemCount = 0, this.samePhotoCount = 0, this.retryAt, this.missing, this.photoHourOver = false}): _photos = photos,super._();
   
 
 @override final  String? checkRef;
@@ -528,6 +531,9 @@ class _ReportIncidentState extends ReportIncidentState {
 @override final  DateTime? retryAt;
 /// After a `404` on filing: what was not found.
 @override final  MissingLink? missing;
+/// The hour for photos after filing is over (guide section 6.2): set
+/// when it ends, so the page changes without a tap (P-38).
+@override@JsonKey() final  bool photoHourOver;
 
 /// Create a copy of ReportIncidentState
 /// with the given fields replaced by the non-null parameter values.
@@ -539,16 +545,16 @@ _$ReportIncidentStateCopyWith<_ReportIncidentState> get copyWith => __$ReportInc
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ReportIncidentState&&(identical(other.checkRef, checkRef) || other.checkRef == checkRef)&&(identical(other.retailUser, retailUser) || other.retailUser == retailUser)&&const DeepCollectionEquality().equals(other._photos, _photos)&&(identical(other.filing, filing) || other.filing == filing)&&(identical(other.reportId, reportId) || other.reportId == reportId)&&(identical(other.filedAt, filedAt) || other.filedAt == filedAt)&&(identical(other.failure, failure) || other.failure == failure)&&(identical(other.photoProblem, photoProblem) || other.photoProblem == photoProblem)&&(identical(other.photoProblemCount, photoProblemCount) || other.photoProblemCount == photoProblemCount)&&(identical(other.samePhotoCount, samePhotoCount) || other.samePhotoCount == samePhotoCount)&&(identical(other.retryAt, retryAt) || other.retryAt == retryAt)&&(identical(other.missing, missing) || other.missing == missing));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ReportIncidentState&&(identical(other.checkRef, checkRef) || other.checkRef == checkRef)&&(identical(other.retailUser, retailUser) || other.retailUser == retailUser)&&const DeepCollectionEquality().equals(other._photos, _photos)&&(identical(other.filing, filing) || other.filing == filing)&&(identical(other.reportId, reportId) || other.reportId == reportId)&&(identical(other.filedAt, filedAt) || other.filedAt == filedAt)&&(identical(other.failure, failure) || other.failure == failure)&&(identical(other.photoProblem, photoProblem) || other.photoProblem == photoProblem)&&(identical(other.photoProblemCount, photoProblemCount) || other.photoProblemCount == photoProblemCount)&&(identical(other.samePhotoCount, samePhotoCount) || other.samePhotoCount == samePhotoCount)&&(identical(other.retryAt, retryAt) || other.retryAt == retryAt)&&(identical(other.missing, missing) || other.missing == missing)&&(identical(other.photoHourOver, photoHourOver) || other.photoHourOver == photoHourOver));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,checkRef,retailUser,const DeepCollectionEquality().hash(_photos),filing,reportId,filedAt,failure,photoProblem,photoProblemCount,samePhotoCount,retryAt,missing);
+int get hashCode => Object.hash(runtimeType,checkRef,retailUser,const DeepCollectionEquality().hash(_photos),filing,reportId,filedAt,failure,photoProblem,photoProblemCount,samePhotoCount,retryAt,missing,photoHourOver);
 
 @override
 String toString() {
-  return 'ReportIncidentState(checkRef: $checkRef, retailUser: $retailUser, photos: $photos, filing: $filing, reportId: $reportId, filedAt: $filedAt, failure: $failure, photoProblem: $photoProblem, photoProblemCount: $photoProblemCount, samePhotoCount: $samePhotoCount, retryAt: $retryAt, missing: $missing)';
+  return 'ReportIncidentState(checkRef: $checkRef, retailUser: $retailUser, photos: $photos, filing: $filing, reportId: $reportId, filedAt: $filedAt, failure: $failure, photoProblem: $photoProblem, photoProblemCount: $photoProblemCount, samePhotoCount: $samePhotoCount, retryAt: $retryAt, missing: $missing, photoHourOver: $photoHourOver)';
 }
 
 
@@ -559,7 +565,7 @@ abstract mixin class _$ReportIncidentStateCopyWith<$Res> implements $ReportIncid
   factory _$ReportIncidentStateCopyWith(_ReportIncidentState value, $Res Function(_ReportIncidentState) _then) = __$ReportIncidentStateCopyWithImpl;
 @override @useResult
 $Res call({
- String? checkRef, ({String id, String name})? retailUser, List<ReportPhoto> photos, FilingStatus filing, int? reportId, DateTime? filedAt, Failure? failure, PhotoProblem? photoProblem, int photoProblemCount, int samePhotoCount, DateTime? retryAt, MissingLink? missing
+ String? checkRef, ({String id, String name})? retailUser, List<ReportPhoto> photos, FilingStatus filing, int? reportId, DateTime? filedAt, Failure? failure, PhotoProblem? photoProblem, int photoProblemCount, int samePhotoCount, DateTime? retryAt, MissingLink? missing, bool photoHourOver
 });
 
 
@@ -576,7 +582,7 @@ class __$ReportIncidentStateCopyWithImpl<$Res>
 
 /// Create a copy of ReportIncidentState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? checkRef = freezed,Object? retailUser = freezed,Object? photos = null,Object? filing = null,Object? reportId = freezed,Object? filedAt = freezed,Object? failure = freezed,Object? photoProblem = freezed,Object? photoProblemCount = null,Object? samePhotoCount = null,Object? retryAt = freezed,Object? missing = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? checkRef = freezed,Object? retailUser = freezed,Object? photos = null,Object? filing = null,Object? reportId = freezed,Object? filedAt = freezed,Object? failure = freezed,Object? photoProblem = freezed,Object? photoProblemCount = null,Object? samePhotoCount = null,Object? retryAt = freezed,Object? missing = freezed,Object? photoHourOver = null,}) {
   return _then(_ReportIncidentState(
 checkRef: freezed == checkRef ? _self.checkRef : checkRef // ignore: cast_nullable_to_non_nullable
 as String?,retailUser: freezed == retailUser ? _self.retailUser : retailUser // ignore: cast_nullable_to_non_nullable
@@ -590,7 +596,8 @@ as PhotoProblem?,photoProblemCount: null == photoProblemCount ? _self.photoProbl
 as int,samePhotoCount: null == samePhotoCount ? _self.samePhotoCount : samePhotoCount // ignore: cast_nullable_to_non_nullable
 as int,retryAt: freezed == retryAt ? _self.retryAt : retryAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,missing: freezed == missing ? _self.missing : missing // ignore: cast_nullable_to_non_nullable
-as MissingLink?,
+as MissingLink?,photoHourOver: null == photoHourOver ? _self.photoHourOver : photoHourOver // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:bloc_concurrency/bloc_concurrency.dart';
@@ -59,6 +60,11 @@ final class PhotoRetried extends ReportIncidentEvent {
 
 final class _UploadRequested extends ReportIncidentEvent {
   const _UploadRequested();
+}
+
+/// The hour for photos after filing has passed.
+final class _PhotoHourEnded extends ReportIncidentEvent {
+  const _PhotoHourEnded();
 }
 
 enum PhotoStatus { waiting, sending, sent, failed }
@@ -131,11 +137,20 @@ abstract class ReportIncidentState with _$ReportIncidentState {
 
     /// After a `404` on filing: what was not found.
     MissingLink? missing,
+
+    /// The hour for photos after filing is over (guide section 6.2): set
+    /// when it ends, so the page changes without a tap (P-38).
+    @Default(false) bool photoHourOver,
   }) = _ReportIncidentState;
 
   const ReportIncidentState._();
 
   bool get isFiled => filing == FilingStatus.filed;
+
+  /// Photos may be added or sent again: before filing, or within the hour,
+  /// at most [ReportRules.maxPhotos].
+  bool get canAddPhoto =>
+      photos.length < ReportRules.maxPhotos && !photoHourOver;
   bool get canEdit =>
       filing == FilingStatus.editing || filing == FilingStatus.failed;
 }
@@ -171,6 +186,16 @@ class ReportIncidentBloc
     on<PhotoRetried>(_onRetry);
     // One upload at a time, in order (app API guide §6.2).
     on<_UploadRequested>(_onUpload, transformer: sequential());
+    on<_PhotoHourEnded>((_, emit) => emit(state.copyWith(photoHourOver: true)));
+  }
+
+  /// Ends the photo hour on the page when it passes (guide section 6.2).
+  Timer? _hour;
+
+  @override
+  Future<void> close() {
+    _hour?.cancel();
+    return super.close();
   }
 
   final FileReport _fileReport;
@@ -179,21 +204,18 @@ class ReportIncidentBloc
   final DateTime Function() _now;
   int _nextId = 0;
 
-  /// Photos may be added or sent again: before filing, or within the hour.
-  bool get canAddPhoto =>
-      state.photos.length < ReportRules.maxPhotos && _withinWindow;
-
-  /// The hour for photos after filing is over (guide section 6.2).
-  bool get photoHourOver => state.isFiled && !_withinWindow;
-
+  /// Within the hour by the clock, which each photo action asks too: the
+  /// timer may come a little late.
   bool get _withinWindow =>
       ReportRules.withinPhotoWindow(state.filedAt, _now());
+
+  bool get _canAddPhoto => state.canAddPhoto && _withinWindow;
 
   Future<void> _onPick(
     PhotoPickRequested event,
     Emitter<ReportIncidentState> emit,
   ) async {
-    if (!canAddPhoto) return;
+    if (!_canAddPhoto) return;
     final PreparedPhoto? photo;
     try {
       photo = await _photos.pick(event.source);
@@ -206,7 +228,7 @@ class ReportIncidentBloc
       );
       return;
     }
-    if (photo == null || !canAddPhoto) return;
+    if (photo == null || !_canAddPhoto) return;
     emit(
       state.copyWith(
         photos: [
@@ -269,6 +291,9 @@ class ReportIncidentBloc
             filedAt: _now(),
           ),
         );
+        _hour = Timer(ReportRules.photoWindow, () {
+          if (!isClosed) add(const _PhotoHourEnded());
+        });
         _upload();
       // Sent and lost: it may be filed. Never sent: filing again is safe.
       // Answered 2xx but unreadable: the server took it, so it may be

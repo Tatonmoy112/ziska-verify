@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:ziska_verify/core/utils/display_time.dart';
 import 'package:ziska_verify/features/history/domain/entities/check.dart';
+import 'package:ziska_verify/features/history/domain/services/history_search.dart';
 import 'package:ziska_verify/features/history/presentation/bloc/history_bloc.dart';
 import 'package:ziska_verify/features/history/presentation/widgets/check_tile.dart';
 import 'package:ziska_verify/l10n/generated/app_localizations.dart';
@@ -231,11 +232,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
 /// The serial a digits-only search tracks (§13.4); `null` for no
 /// search or a reference number.
-String? _trackedSerial(CheckQuery query) {
-  final searched = query.search?.trim();
-  if (searched == null || !RegExp(r'^\d+$').hasMatch(searched)) return null;
-  return searched;
-}
+String? _trackedSerial(CheckQuery query) =>
+    HistorySearch.read(query.search ?? '').serial;
 
 final _placeholder = CheckRecord(
   ref: 'MA-2026-000000',

@@ -22,14 +22,32 @@ class SendAccessCode {
 class SubmitAccessRequest {
   const SubmitAccessRequest(this._repository);
   final AccessRequestRepository _repository;
+
+  /// Whether the form can be sent, the code aside: a name of 1 to
+  /// [AccessRequest.nameMaxLength] (UTF-16 units, as the server counts a
+  /// name, B5), an email, a password the rule takes, and a role. The screen
+  /// asks it to enable Send (production audit P-38).
+  static bool formReady({
+    required String name,
+    required String email,
+    required String password,
+    required int? roleId,
+  }) =>
+      name.trim().isNotEmpty &&
+      name.trim().length <= AccessRequest.nameMaxLength &&
+      looksLikeEmail(email) &&
+      const PasswordPolicy().check(password).isValid &&
+      roleId != null &&
+      roleId >= 1;
+
   Future<Result<void>> call(AccessRequest request) async {
-    if (!looksLikeEmail(request.email) ||
-        request.name.trim().isEmpty ||
-        // UTF-16 units, as the server counts a name (B5).
-        request.name.trim().length > AccessRequest.nameMaxLength ||
-        request.roleId < 1 ||
-        !RegExp(r'^[0-9]{6}$').hasMatch(request.code) ||
-        !const PasswordPolicy().check(request.password).isValid) {
+    if (!formReady(
+          name: request.name,
+          email: request.email,
+          password: request.password,
+          roleId: request.roleId,
+        ) ||
+        !RegExp(r'^[0-9]{6}$').hasMatch(request.code)) {
       return const Err(Failure(ValidationException()));
     }
     return _repository.submit(
