@@ -7,6 +7,7 @@ import 'package:ziska_verify/core/errors/app_exception.dart';
 import 'package:ziska_verify/core/errors/failure_reason.dart';
 import 'package:ziska_verify/core/errors/result.dart';
 import 'package:ziska_verify/core/services/media/photo_service.dart';
+import 'package:ziska_verify/features/incidents/domain/entities/failure_reasons.dart';
 import 'package:ziska_verify/features/incidents/domain/entities/report.dart';
 import 'package:ziska_verify/features/incidents/domain/usecases/incident_usecases.dart';
 
@@ -358,18 +359,12 @@ class ReportIncidentBloc
     }
   }
 
-  /// By the server's message ("Check not found.", "Retail user not
-  /// found."), else by the one link sent; else the route itself.
-  MissingLink _missing(AppException e) {
-    final text = e.message?.toLowerCase() ?? '';
-    if (text.contains('retail user')) return MissingLink.retailUser;
-    if (text.contains('check')) return MissingLink.check;
-    final check = state.checkRef != null;
-    final retail = state.retailUser != null;
-    if (check && !retail) return MissingLink.check;
-    if (retail && !check) return MissingLink.retailUser;
-    return MissingLink.route;
-  }
+  /// What the repository found gone (P-25); else the route itself.
+  static MissingLink _missing(AppException e) => switch (e.reason) {
+    IncidentReason.checkGone => MissingLink.check,
+    IncidentReason.retailUserGone => MissingLink.retailUser,
+    _ => MissingLink.route,
+  };
 
   /// A success status whose body could not be read.
   static bool _acceptedUnreadable(AppException e) {

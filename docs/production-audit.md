@@ -6,7 +6,7 @@ The production-grade review of the app, done on the `production` branch one area
 |---|---|---|
 | 2 | High-level architecture | Checked 2026-11-24: P-1 … P-15. **All fixed**; P-10 on for staging, live waits for its production project |
 | 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11). **All fixed** (2026-11-25) |
-| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-43. Fixed: P-20 … P-24 |
+| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-43. Fixed: P-20 … P-25 |
 | 5 | Dead code | To do |
 | 6+ | Comments, data layer, UI components, state and lifecycle, security, build and release, monitoring, tests, localisation, performance, docs | To do |
 
@@ -843,6 +843,23 @@ The layer rules (step 2) and the central API (step 3) are already enforced, so t
 - **normal:** each of the three texts gives its `what`;
 - **edge:** another case or spacing ("RETAIL USER not found.");
 - **worst:** an unknown 404 text is `other` ("Not available"), never a wrong link taken off the report.
+
+**✅ Fixed 2026-11-25:**
+- **Tests first:** TC-REP-075 … -077 (`test/features/incidents/data/report_not_found_test.dart`), through the real repositories:
+  - the three guide texts give `IncidentReason.checkGone`, `retailUserGone` and `AuthReason.roleGone`, with the rest of the answer kept;
+  - other case and spaces still match, and a text naming neither is the one link that was sent;
+  - with both links or none, an empty text, or another 404 on Request access, no reason ("Not available"), never a wrong link taken off; a 409 is left as it is;
+  - no presentation file decides on a message's text.
+
+  On the old repositories, the four cases that should name a reason were red. Run on the old bloc and screen, the source rule flagged both.
+- **The change:**
+  - `IncidentRepositoryImpl.fileReport` and `AccessRequestRepositoryImpl.submit` read the 404 text, once, into a typed reason;
+  - `NotFoundException` carries the reason (`withReason`);
+  - the bloc maps the reason to what the screen says (`MissingLink`), and Request access matches `AuthReason.roleGone`;
+  - the "one link sent" fallback moved with the text: the repository knows what it sent.
+- **TC-REP-058** (the bloc) now starts from the reason; its text half is TC-REP-075 … -077.
+- **Also:** six catalogue rows still named P-24's old message strings (`answer_shape`, `access_roles_shape`, `session_mismatch`, `<name>_shape`); they name the reasons now.
+- **A backend ask, still open:** a distinct `error.code` for each "not found", so no text has to be read at all.
 
 #### P-26 (should): state equality is mixed
 **Evidence:**

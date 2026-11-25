@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:ziska_verify/core/errors/app_exception.dart';
 import 'package:ziska_verify/features/authentication/domain/entities/access_request.dart';
+import 'package:ziska_verify/features/authentication/domain/entities/failure_reasons.dart';
 import 'package:ziska_verify/features/authentication/domain/services/email_check.dart';
 import 'package:ziska_verify/features/authentication/domain/services/password_policy.dart';
 import 'package:ziska_verify/features/authentication/presentation/bloc/request_access_cubit.dart';
@@ -140,9 +141,8 @@ class _RequestAccessScreenState extends State<RequestAccessScreen> {
               ConflictException() => l.accessTryLater,
               // "Role not found." on sending (guide §3.9); any other 404 is
               // the app not being available (guide §1).
-              NotFoundException(:final message)
-                  when state.rolesLoaded &&
-                      (message?.toLowerCase().contains('role') ?? false) =>
+              NotFoundException(reason: AuthReason.roleGone)
+                  when state.rolesLoaded =>
                 l.accessRoleUnavailable,
               _ => failure?.message(l) ?? '',
             };

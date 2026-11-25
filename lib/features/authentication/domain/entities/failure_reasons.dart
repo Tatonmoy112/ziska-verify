@@ -11,4 +11,8 @@ enum AuthReason implements FailureReason {
 
   /// The login answer lacks what its `status` needs (§6).
   loginAnswer,
+
+  /// "Role not found." on sending a request: the role can no longer be
+  /// asked for (guide §3.9).
+  roleGone,
 }

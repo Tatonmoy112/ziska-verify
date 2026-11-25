@@ -99,14 +99,25 @@ final class ForbiddenException extends AppException {
   });
 }
 
-/// 404 `not_found`.
+/// 404 `not_found`. A [reason], set by the repository that read the
+/// answer, says what is gone (P-25).
 final class NotFoundException extends AppException {
   const NotFoundException({
     super.statusCode,
     super.code,
     super.message,
     super.requestId,
+    super.reason,
   });
+
+  /// This answer, with what is gone.
+  NotFoundException withReason(FailureReason? reason) => NotFoundException(
+    statusCode: statusCode,
+    code: code,
+    message: message,
+    requestId: requestId,
+    reason: reason,
+  );
 }
 
 /// 409 `conflict`.

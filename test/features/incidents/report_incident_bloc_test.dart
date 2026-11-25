@@ -6,6 +6,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:ziska_verify/core/errors/app_exception.dart';
 import 'package:ziska_verify/core/errors/result.dart';
 import 'package:ziska_verify/core/services/media/photo_service.dart';
+import 'package:ziska_verify/features/incidents/domain/entities/failure_reasons.dart';
 import 'package:ziska_verify/features/incidents/domain/repositories/incident_repository.dart';
 import 'package:ziska_verify/features/incidents/domain/usecases/incident_usecases.dart';
 import 'package:ziska_verify/features/incidents/presentation/bloc/report_incident_bloc.dart';
@@ -235,8 +236,10 @@ void main() {
     ),
   );
 
+  // What is gone is decided in the repository (TC-REP-075 … -077, P-25);
+  // here, what the bloc does with it.
   group('TC-REP-058 a 404 on filing names what is gone', () {
-    void answer404(String? message) =>
+    void answer404(IncidentReason? reason) =>
         when(
           () => repo.fileReport(
             note: any(named: 'note'),
@@ -244,21 +247,21 @@ void main() {
             retailUserId: any(named: 'retailUserId'),
           ),
         ).thenAnswer(
-          (_) async => Err(Failure(NotFoundException(message: message))),
+          (_) async => Err(Failure(NotFoundException(reason: reason))),
         );
 
-    for (final (message, check, retail, missing) in [
-      ('Check not found.', true, true, MissingLink.check),
-      ('Retail user not found.', true, true, MissingLink.retailUser),
-      (null, true, false, MissingLink.check),
-      (null, false, true, MissingLink.retailUser),
+    for (final (reason, check, retail, missing) in [
+      (IncidentReason.checkGone, true, true, MissingLink.check),
+      (IncidentReason.retailUserGone, true, true, MissingLink.retailUser),
+      (IncidentReason.checkGone, true, false, MissingLink.check),
+      (IncidentReason.retailUserGone, false, true, MissingLink.retailUser),
       (null, false, false, MissingLink.route),
       (null, true, true, MissingLink.route),
     ]) {
       test(
-        '"$message", check $check, retail user $retail → $missing',
+        '$reason, check $check, retail user $retail → $missing',
         () async {
-          answer404(message);
+          answer404(reason);
           final bloc = build(checkRef: check ? 'MA-2026-000123' : null);
           if (retail) {
             bloc.add(const RetailUserChosen((id: 'r1', name: 'Shop')));

@@ -1,7 +1,9 @@
+import 'package:ziska_verify/core/errors/app_exception.dart';
 import 'package:ziska_verify/core/errors/result.dart';
 import 'package:ziska_verify/features/authentication/data/mappers/access_request_mappers.dart';
 import 'package:ziska_verify/features/authentication/data/services/access_request_api_service.dart';
 import 'package:ziska_verify/features/authentication/domain/entities/access_request.dart';
+import 'package:ziska_verify/features/authentication/domain/entities/failure_reasons.dart';
 import 'package:ziska_verify/features/authentication/domain/repositories/access_request_repository.dart';
 
 class AccessRequestRepositoryImpl implements AccessRequestRepository {
@@ -14,6 +16,14 @@ class AccessRequestRepositoryImpl implements AccessRequestRepository {
   Future<Result<void>> sendCode(String email) =>
       guard(() => _api.sendCode(email));
   @override
-  Future<Result<void>> submit(AccessRequest request) =>
-      guard(() => _api.submit(request));
+  Future<Result<void>> submit(AccessRequest request) => guard(() async {
+    try {
+      await _api.submit(request);
+    } on NotFoundException catch (e) {
+      // "Role not found." (guide §3.9): the one place its text is read
+      // (P-25). Any other 404 is the app not being available (guide §1).
+      final role = e.message?.toLowerCase().contains('role') ?? false;
+      throw e.withReason(role ? AuthReason.roleGone : null);
+    }
+  });
 }

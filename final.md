@@ -250,7 +250,7 @@ Always show the same code-sent confirmation, including for existing accounts. Em
 - The stack's live count counts serials as they are sent: each value prepared, so "1000-001" and "1000001" are one serial.
 - The same photo picked twice keeps one place: the server answers its `n` again and the app says "That photo is already on the report."
 - A report answered 2xx with a body that cannot be read may be filed: it is never filed again from the screen (**Check My reports**).
-- A 404 names what is gone: "Check not found." the check, "Retail user not found." the retail user (taken off the report, so the picker is offered again), "Role not found." the role; any other 404 is "Not available". A page without the error envelope is decided by its status: 400/413/415 a defect, 403 a general error, 404 "Not available".
+- A 404 names what is gone: "Check not found." the check, "Retail user not found." the retail user (taken off the report, so the picker is offered again), "Role not found." the role (the text is read once, in the repository that sent the request, into a typed reason: 2026-11-25, production audit P-25); any other 404 is "Not available". A page without the error envelope is decided by its status: 400/413/415 a defect, 403 a general error, 404 "Not available".
 - A refused photo shows, under the photos, the server's message for a 409 and the reference.
 - The QR value is sent as read, trimmed only, and checked against the `characters` of `GET formats` in either case (Section 13.1).
 - A `409 conflict` shows the server's message (guide §1: "Show the message"), unless the screen handles it itself (TC-ERR-051).
