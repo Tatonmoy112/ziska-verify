@@ -6,7 +6,7 @@ The production-grade review of the app, done on the `production` branch one area
 |---|---|---|
 | 2 | High-level architecture | Checked 2026-11-24: P-1 … P-15. **All fixed**; P-10 on for staging, live waits for its production project |
 | 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11). **All fixed** (2026-11-25) |
-| 4 | Low-level architecture | To do |
+| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-43 |
 | 5 | Dead code | To do |
 | 6+ | Comments, data layer, UI components, state and lifecycle, security, build and release, monitoring, tests, localisation, performance, docs | To do |
 
@@ -677,3 +677,382 @@ Read only.
   - the seven services and the renewal use it. The two `_map` copies and the incidents' `_int` are gone; the verification service keeps a one-line `_map` that passes its name;
   - every name stays as it was: `auth`, `access_roles`, `access_pending`, `me`, `checks`, `reports`, `retail_users`, `incident_id`, `incident_n`, `verification`, `renewal`.
 - **Mutation check:** naming the verification answer `verify` failed all six of its rows. The serial stack (`verification_repository_impl.dart`) acts on `verification_shape`, and the report screen on `incident_id_shape`.
+
+---
+
+## Step 4: low-level architecture (2026-11-25)
+
+### How it was checked
+Read only. All 197 hand-written files in `lib/` (generated code left out) were read layer by layer:
+- **domain and data:** use cases, entities, repositories, domain services, DTOs and mappers;
+- **presentation:** blocs, cubits and their states, screens and widgets;
+- **`app/` and `core/`:** dependency injection, bootstrap, router, core services, the error model, `Result`, pagination and utilities.
+
+The layer rules (step 2) and the central API (step 3) are already enforced, so they were not checked again. Every piece of evidence below was re-read at the line it cites.
+
+### What is already right (keep)
+
+| Area | Result |
+|---|---|
+| Repositories | Every method that can fail returns `Result` through `guard` (`core/errors/result.dart`), including the ones that throw inside it. Interfaces are `abstract interface class`; implementations are `…RepositoryImpl`. |
+| Purity | Domain and data are pure Dart. No `DateTime.now()` anywhere in `lib/` (all time comes through `package:clock`), no unseeded `Random()`, no static mutable field or top-level `var`. The only global is the `locator`, used only in `lib/app`. |
+| Models | Every DTO uses `json_serializable` (`createToJson: false`), with no hand-written `fromJson`. Every mapper is a `toEntity()` extension in `data/mappers`. |
+| Use cases | Each has `call()`, a private repository and a `const` constructor. |
+| Dependency injection | Blocs are never registered: they are built in the route builders. Use cases are factories; repositories and API services are lazy singletons; stateful core services are singletons, with `dispose:` on the session and `ForbiddenSignal`. |
+| Plugin wrappers | Each is an interface plus a `<Plugin>…Service`, and takes its plugin as an optional argument so fakes work. |
+| Configuration | `AppConfig` reads every dart-define in one place and validates them (flavor, HTTPS host, slug, placeholders, all-or-nothing Firebase values); `fromValues` exists for tests. |
+| Bloc lifecycles | `isClosed`, `emit.isDone` and generation guards after every `await`. Transformers fit their events: `droppable` on lookup, login, code, submit, pick and next page; `restartable` and `debounceRestartable` on search and filters; `sequential` on photo upload. Subscriptions and timers are cancelled in `close()`; every `TextEditingController`, `FocusNode` and `AnimationController` is disposed. |
+| `mounted` | Checked after every `await` before navigation or `context.read`, except P-20. |
+| Shared widgets | `AppPaginatedList`, `RetryCountdown` and `FailureBanner` are used by every list and form. |
+
+### Findings
+
+#### P-20 (must): `setState` after the logout dialog, without `mounted`
+**Evidence:** `profile/presentation/screens/profile_screen.dart:88`: after `await showDialog(...)`, `if (!(confirmed ?? false) || _loggingOut) return; setState(() => _loggingOut = true);`.
+
+**Why:** if the page is removed while the dialog is open (the session ends and the router redirects), `setState` on a disposed `State` throws.
+
+**Proposal:** return when `!mounted` before `setState`.
+
+**Tests:**
+- **normal:** logout confirmed: the busy state shows and `onLogout` runs once;
+- **edge:** cancelled, or the dialog dismissed: nothing happens;
+- **worst:** the page is removed while the dialog is open, then the dialog answers: no exception, and `onLogout` does not run.
+
+#### P-21 (must): Sessions' retry reloads from page 1
+**Evidence:** `verification/presentation/widgets/sessions_view.dart:68`: `onRetry: () => unawaited(cubit.load(state.query))`. `AppPaginatedList` shows that same retry in the footer when a later page fails (`shared/widgets/app_paginated_list.dart:98, 137`). `SessionsCubit` has only `load` and `more`.
+
+**Why:** a failed page 2 throws away page 1 and the scroll position. History (`HistoryRetried`), my reports and the retail user picker retry only the failed page.
+
+**Proposal:** `SessionsCubit.retry()`: the next page after a `failureMore`, the first page otherwise.
+
+**Tests:**
+- **normal:** a failed first page is asked for again;
+- **edge:** a failed page 2 is asked for again with its cursor, and page 1 stays;
+- **worst:** a retry during a 429 wait sends nothing.
+
+#### P-22 (should, a bug): a roles reload clears Request access's 429 waits
+**Evidence:** `authentication/presentation/bloc/request_access_cubit.dart:70-79`. The roles-loaded emit builds a new `RequestAccessState(...)` and leaves out `codeRetryAt`, `submitRetryAt` and `busy`; the failure branch (`:90-91`) keeps them. All six emits rebuild the state by hand.
+
+**Why:** the roles are loaded again after a "Role not found" on sending (§13.10), so a running "send code" wait is cleared and the button comes back early.
+
+**Proposal:** a Freezed state with `copyWith`, so an emit changes only what it names.
+
+**Tests:**
+- **normal:** roles loaded, with every other field kept;
+- **edge:** a reload during a code wait keeps `codeRetryAt`;
+- **worst:** a reload while sending keeps `busy`, and a second send is refused.
+
+#### P-23 (should): the API error codes are written three times
+**Evidence:**
+- `core/network/auth_interceptor.dart:64, 103, 109` compares raw strings: `'token_expired'`, `'password_change_required'`, `'forbidden'`;
+- `core/network/error_mapper.dart:78, 92, 106` has the same strings again;
+- `shared/extensions/failure_message.dart:39-55` has a third copy, `_knownCodes`.
+
+`TokenExpiredException`, `PasswordChangeRequiredException` and `ForbiddenException` are made, but nothing decides by their type.
+
+**Proposal:** one `ApiErrorCodes` in `core/network`, used by all three, with a test that it equals guide §1's table.
+
+**Tests:**
+- **normal:** every code of guide §1 maps to its exception;
+- **edge:** an unknown code is decided by status;
+- **worst:** the list equals the guide's both ways, so a code added on one side fails.
+
+#### P-24 (should): internal decisions ride on `message` strings
+**Evidence:** `AppException.message` is documented as "the server's message", yet:
+- `NetworkException.wasNotSent` is `message == 'not_sent'` (`core/errors/app_exception.dart:172-174`);
+- two places act on `<name>_shape`: `report_incident_bloc.dart:377` and `verification_repository_impl.dart:73` (P-19);
+- `'serial_input'`, `'serial_stack_size'`, `'serial_stack_mismatch'` and `'scan_input'` are made in `serial_stack_cubit.dart:84, 95, 145`, `scan_session_cubit.dart:263` and `verification_repository_impl.dart:64-109`, and matched in `serial_stack_screen.dart:253-256` and `scan_session_screen.dart:320`.
+
+**Why:** a typo in either place fails silently, and a server message that happened to equal one of these strings would trigger the decision.
+
+**Proposal:** typed reasons: `NetworkException.notSent` as a field, `InternalErrorException.reason` and `ValidationException.reason` as enums. `message` is left for the server's text.
+
+**Tests:**
+- **normal:** each reason is made and acted on;
+- **edge:** a server message that equals an old string means nothing;
+- **worst:** the `<name>_shape` decisions (P-19's table) keep working.
+
+#### P-25 (should): the 404 "what is gone" text is read in presentation
+**Evidence:** `incidents/presentation/bloc/report_incident_bloc.dart:364-365`: `text.contains('retail user')`, `text.contains('check')`. `authentication/presentation/screens/request_access_screen.dart:145`: `message?.toLowerCase().contains('role')`.
+
+**Why:** the contract gives one code, `not_found`, so the text ("Check not found.", "Retail user not found.", "Role not found.", guide §3.9 and §6.1) is the only way to tell what is gone (§13.10). That is a fact of the contract, not a defect, but reading server text belongs in the data layer, in one place.
+
+**Proposal:** the error mapper (or the repositories) reads it once into a typed `NotFoundException.what` (`check`, `retailUser`, `role`, `other`); presentation switches on that. Also a backend ask: a distinct code for each.
+
+**Tests:**
+- **normal:** each of the three texts gives its `what`;
+- **edge:** another case or spacing ("RETAIL USER not found.");
+- **worst:** an unknown 404 text is `other` ("Not available"), never a wrong link taken off the report.
+
+#### P-26 (should): state equality is mixed
+**Evidence:**
+- **Freezed states:** `ScanSessionState`, `LookupState`, `SerialStackState`, `ProfileState`, `SubmitState`, `VerifyCodeState`.
+- **Hand-written, with no `==`:** `ReportIncidentState` and `ReportPhoto` (`report_incident_bloc.dart:61, 120`), `HistoryState` (`history_bloc.dart:50`), `SessionsState`, `RetailUserPickerState`, `CheckTotalsState`, `RequestAccessState`, and `PaginatedState<T>` (all of `MyReportsBloc`'s state).
+- `Failure`, `LookupResult`, `CheckRecord` and `CheckedInput` have no `==` either, so even the Freezed states compare those fields by identity.
+
+**Why:** an emit of equal values still rebuilds. Tests cannot state an expected state, so they use `isA`/`having` instead (23 of 47 `blocTest`s).
+
+**Proposal:** one convention: Freezed for states, and value equality for the entities and `Failure` that states hold. Done per bloc, with no change in behaviour.
+
+**Tests:**
+- **normal:** equal states are equal;
+- **edge:** a list field compares by value;
+- **worst:** bloc tests compare whole states; the existing tests pass unchanged.
+
+#### P-27 (should): paging is written five times, with different 429 behaviour
+**Evidence:** `HistoryBloc`, `MyReportsBloc`, `SessionsCubit` and `RetailUserPickerBloc` each repeat the generation counter, first and next page, retry and `WaitTimer`.
+- **A load asked for during a 429 wait:** `SessionsCubit` defers it until the wait ends (`sessions_cubit.dart:38-44`); `MyReportsBloc` drops it (`my_reports_bloc.dart:34`).
+- **Pull to refresh:** completes on `bloc.stream.firstWhere` in history and my reports, on `await cubit.load()` in sessions.
+- **The scan session:** builds its own paging (`scan_session_cubit.dart:531-603`), and `app/router/routes/check_routes.dart:63` asks `limit: 100`, while `core/pagination/page_request.dart:5` says "The app always sends 50".
+
+**Proposal:** one `PagedLoader<T, Q>` in `core/pagination` for every list: first page, next page, retry, the 429 wait, and a load asked for during the wait. One limit, or the 100 documented.
+
+**Tests:**
+- **normal:** first page, next page, end of the list;
+- **edge:** a filter changed during a 429 wait is loaded once when the wait ends;
+- **worst:** an answer of an old generation is dropped, and a failed page 2 keeps page 1 (P-21).
+
+#### P-28 (should): the local-days paging loop is copied
+**Evidence:** `history/data/repositories/history_repository_impl.dart:21-57` and `verification/data/repositories/verification_repository_impl.dart:126-172` hold the same loop: `LocalDays.utcDays`, keep the items of the official's days, stop at `beforeFirstDay`, at most `_maxSkippedPages = 50` (defined twice, `:18` and `:176`).
+
+**Proposal:** one generic helper in `core/pagination`, `readLocalDayPages<T>(fetch, at:)`.
+
+**Tests:**
+- **normal:** a page within the days;
+- **edge:** empty pages are skipped to the next with items;
+- **worst:** 50 empty pages end the read, and an item before the first day stops it.
+
+#### P-29 (should): `verification_usecases.dart` holds four kinds of thing
+**Evidence:** `verification/domain/usecases/verification_usecases.dart` (200 lines) holds:
+- seven use cases;
+- the `PreparedInput`, `ReadyInput` and `RefusedInput` types (`:20-37`);
+- `ParsedStack` (`:74`), with the pure `PrepareInput` and `ParseStack`;
+- the serial-key functions `sameSerial`, `distinctSerials` and `_serialKey` (`:126-141`).
+
+Data imports this use-case file for `distinctSerials` (`verification_repository_impl.dart:17`). The stack-size rule is checked in the repository (`:62-65`) and in `serial_stack_cubit.dart:95`, not in `CheckSerials`, which only passes the list on.
+
+**Proposal:**
+- the serial key moves to `domain/services/serial_key.dart`, and the input and stack types to `domain/entities`;
+- one use case per file;
+- the size rule goes in `CheckSerials`, and the repository keeps only its answer checks.
+
+**Tests:**
+- **normal:** a stack of 1 … 25 distinct serials is sent;
+- **edge:** repeats, by the serial key, are sent once;
+- **worst:** 0 or 26 serials are refused before any request.
+
+#### P-30 (should): the router builds the recovered scans
+**Evidence:** `app/router/routes/check_routes.dart:60-88` calls `locator<GetChecks>()`, maps `CheckResult` to `LookupOutcome` value by value, and re-wraps `Success`/`Err` by hand (`Result` has no `map`).
+
+**Why:** a mapping between two features' types lives in routing code, with no test of its own.
+
+**Proposal:** a use case (or domain mapper) that returns the recovered scans, and `Result.map`.
+
+**Tests:**
+- **normal:** each result maps to its outcome;
+- **edge:** an empty page;
+- **worst:** `unknown` stays unknown, and a failure passes through unchanged.
+
+#### P-31 (should): requests are built in different layers
+**Evidence:**
+- **Incidents:** the wire body is built in the repository (`incidents/data/repositories/incident_repository_impl.dart:22-27`, `'check_ref': ?checkRef`), and the service takes an untyped `Future<int> fileReport(Map<String, Object?> body)` (`incident_api_service.dart:12`). Auth, Request access and verification build bodies in the service.
+- **Verification:** `scan` and `serials` return raw `Map<String, dynamic>` (`verification_api_service.dart:11-12`), which the repository parses (`ScanResultDto.fromJson`, `(data['items'] as List).cast`). Every other call returns a DTO.
+
+**Proposal:** typed service parameters, with the body built in the service, and a DTO returned by every service call.
+
+**Tests:**
+- **normal:** the contract tests: the body keys of each route unchanged;
+- **edge:** optional fields left out;
+- **worst:** a wrong answer is still a failure, never a wait (TC-REP-072, the serial stack's tests).
+
+#### P-32 (should): unknown values from the API are handled four ways
+**Evidence:**
+- `CheckWay` has no unknown value and is a nullable field (`history/domain/entities/check.dart:47`);
+- `CheckResult` has an `unknown('')` sentinel that needs its own guard (`check_mappers.dart:31`);
+- `LookupOutcome`, `LookupReason`, `SessionKind` and `ScanStatus` have no wire value and are mapped by inline switches (`verification_mappers.dart:46-61, 88-97`). `ScanStatus` is sent with `.name` (`verification_api_service.dart:62`);
+- `Permission` has a static `fromKey` (`profile.dart:29`).
+
+History's reasons stay raw strings (`CheckRecord.reasons`, `List<String>`), which presentation parses (`history/presentation/widgets/check_tile.dart:23-31`); verification maps the same values to `LookupReason`.
+
+**Proposal:** one pattern: every API enum has a `wire` value and `fromWire`, falling back to `unknown`. History's reasons map to `LookupReason` in its mapper.
+
+**Tests:**
+- **normal:** each wire value both ways;
+- **edge:** case and spacing as the guide allows;
+- **worst:** an unknown value is `unknown`, never a valid one (§3).
+
+#### P-33 (should): input is validated in the use case only for Request access
+**Evidence:**
+- `SendAccessCode` and `SubmitAccessRequest` validate and return a `ValidationException` (`access_request_usecases.dart:17-34`);
+- `Login`, `RequestPasswordReset` and `ResetPassword` only trim (`auth_usecases.dart`);
+- `FileReport` doesn't check `ReportRules.noteMaxLength`, and `AddReportPhoto` doesn't check the photo count or the hour; the bloc enforces them (`report_incident_bloc.dart:234-238`).
+
+**Proposal:** one rule, written in final.md: the use case validates before the repository; screens may check early for display only.
+
+**Tests:**
+- **normal:** valid input reaches the repository;
+- **edge:** input exactly at each limit;
+- **worst:** invalid input never reaches the repository (a fake that fails if called).
+
+#### P-34 (should): three things are never released
+**Evidence:**
+- `VerificationRepositoryImpl` listens to the session (`verification_repository_impl.dart:22`) and caches the formats, but is registered without `dispose:` (`app/bootstrap.dart:247-249`); its `dispose()` is called only by tests;
+- `RouterRefresh` (`app/router/app_router.dart:39`) listens to the session and is never disposed (`App.dispose`, `app/app.dart:79-85`, disposes only the router);
+- the two Dio clients (`bootstrap.dart:157, 164`) are never closed.
+
+**Why:** the app lives as long as the process, so the cost is in tests: each test that builds an `App` leaves listeners on the session.
+
+**Proposal:**
+- `dispose:` on the repository's registration;
+- `buildRouter` returns a dispose with the router;
+- `ApiClient.close()`, registered with `dispose:`.
+
+**Tests:**
+- **normal:** `locator.reset()` disposes each of them;
+- **edge:** disposing twice is harmless;
+- **worst:** after many `App`s are pumped and disposed, the session has no listeners left.
+
+#### P-35 (should): `bootstrap.dart` does four jobs, and tests overwrite registrations
+**Evidence:** `app/bootstrap.dart`:
+- sets up crash reporting and the error handlers (`:98-106`);
+- builds the network stack: mock routing, two Dio clients, interceptor order, `ForbiddenSignal` (`:150-175`);
+- registers everything;
+- starts the app.
+
+`registerCore` accepts only `storage` and `httpAdapter` as overrides, so the flow tests reset the locator and set `allowReassignment = true` (`test/flow/harness.dart:603-604`), then register eight services again.
+
+**Why:** `allowReassignment` hides an accidental double registration in tests.
+
+**Proposal:**
+- `app/di/` modules: `network_module.dart`, `register.dart`;
+- `app/error_handlers.dart`;
+- `bootstrap()` only puts them in order;
+- the platform services are passed in as named overrides with the real ones as defaults, so tests need no reassignment.
+
+**Tests:**
+- **normal:** the flow tests pass without `allowReassignment`;
+- **edge:** a single override;
+- **worst:** registering twice fails.
+
+#### P-36 (should): the scan session's state allows impossible combinations
+**Evidence:** `ScanSessionState` (`verification/presentation/bloc/scan_session_cubit.dart:28-87`) has 27 fields, 11 of them bools: `loading`, `busy`, `paused`, `finishing`, `done`, `resumed`, `renewed`, `restarted`, `repeat`, `rowsFailed`, `loadingMore`. "Loading", "finishing", "done" and "start failed" (`id == null`) cannot hold together, but the type allows it, and the screen works out the phase itself (`scan_session_screen.dart:197-229`, `_BottomBar`).
+
+**Proposal:** a `SessionPhase` (`starting`, `startFailed`, `scanning`, `finishing`, `done`). The one-scan notices (`repeat`, `renewed`, `restarted`) become one small value; the rows use P-27's paging.
+
+**Tests:**
+- **normal:** each phase change;
+- **edge:** a pause while finishing;
+- **worst:** the existing scan-session tests pass unchanged.
+
+#### P-37 (should): two very large screens
+**Evidence:**
+- `verification/presentation/screens/scan_session_screen.dart` is 1,001 lines, with a `build` of about 335 lines (`:157-493`);
+- `verify_screen.dart` is 774 lines;
+- other long `build` methods: `report_incident_screen.dart:203-394`, `profile_screen.dart:171-344`, `serial_stack_screen.dart:95-320`.
+
+**Proposal:** split, with no change in behaviour.
+- **Scan session:** the screen keeps the camera and lifecycle wiring. New widget files:
+  - `scanner_viewport.dart`, shared with `LiveQrCamera` (P-40);
+  - `session_live_panel.dart`: counters, notices, the latest scan;
+  - `session_rows_sliver.dart`;
+  - `session_summary_view.dart`;
+  - `session_bottom_bar.dart`.
+- **Check tab:** the screen keeps camera visibility and the result push. New widget files: `check_header.dart`, `serial_lookup_form.dart`, `tools_section.dart`.
+- Best done after P-36, P-38 and P-40, which take logic and duplicates out first.
+
+**Tests:** the screen, flow and screenshot tests pass unchanged.
+
+#### P-38 (should): decisions made in widgets
+**Evidence:**
+- **The QR read filter:** `verification/presentation/screens/verify_screen.dart:91-106, 171-183` (the same code within 3 s, the 5 s after a result); `ScanSessionCubit` has its own (`:258`).
+- **A serial check unlike the domain's:** `history_screen.dart:233-235`, `_trackedSerial` with `RegExp(r'^\d+$')`, while `HistorySearch` uses `^[0-9]{1,64}$`.
+- **Parsing in `build`:** `serial_stack_screen.dart:222` runs `ParseStack` there.
+- **Form rules:** `request_access_screen.dart` `_valid` checks the password policy and the email.
+- **The clock outside state:** `report_incident_screen.dart:326, 345` reads `bloc.canAddPhoto` and `bloc.photoHourOver`. These are clock-based getters, not state, so the page does not rebuild when the photo hour runs out.
+
+**Proposal:**
+- a `QrReadFilter` used by both the lookup and the scan session;
+- the domain's `HistorySearch` used for the serial check;
+- the parse result and the photo hour moved into state, with a timer at the hour's end.
+
+**Tests:**
+- **normal:** each rule unit-tested;
+- **edge:** the same QR at 2.9 s and at 3.1 s;
+- **worst:** the photo hour ends while the page is open, and adding is disabled without a tap.
+
+#### P-39 (should): the session summary loads data in a widget
+**Evidence:** `verification/presentation/widgets/session_summary_card.dart:31` holds `late Future<...> _session = widget.load()`, and retries with `setState(() => _session = widget.load())` (`:69`).
+
+**Why:** a 429 gets no `Retry-After` countdown, unlike every other load (guide §1).
+
+**Proposal:** a small cubit with `RetryCountdown`, as the other loads have.
+
+**Tests:**
+- **normal:** loaded;
+- **edge:** a retry after a failure;
+- **worst:** a 429 shows its wait and sends nothing until it ends.
+
+#### P-40 (should): duplicated widgets
+**Evidence:**
+- `_CameraProblem` appears twice: `scan_session_screen.dart:618` and `live_qr_camera.dart:354`. The camera overlay (frame, hint, frame maths) is in both too.
+- `_ToolTile` (`verify_screen.dart`) and `_ActionRow` (`profile_screen.dart`) are the same tile.
+- "A row, or a column at large text" is written four times: `verify_screen.dart`, `scan_session_screen.dart`, `check_tile.dart`, `check_totals_card.dart`.
+- The two picker sheets (`check_picker_sheet.dart`, `retail_user_picker_sheet.dart`) share their layout.
+- The "tab became visible" check through `TickerMode` is repeated in `history_screen.dart`, `profile_screen.dart` and `verify_screen.dart`.
+
+**Proposal:** shared widgets: `ScannerViewport`, `CameraProblemView`, `IconActionTile`, `AdaptivePair`, a generic picker sheet, and a tab-visibility mixin.
+
+**Tests:** each shared widget gets its own test; the screenshot tests pass unchanged.
+
+#### P-41 (should): navigation is wired two ways
+**Evidence:**
+- `VerifyScreen` receives `onNewReport`, but pushes the scanner mode and the result itself (`verify_screen.dart:225, 239`);
+- `ScanSessionScreen` receives the same result route as `onOpenResult`;
+- `ReportIncidentScreen` receives its pickers but calls `context.pushReplacementNamed(RouteNames.myReports)` itself (`report_incident_screen.dart:377`).
+
+**Proposal:** one rule, written in final.md: a screen pushes routes of its own feature, and receives any route of another feature as a callback from the router.
+
+**Tests:** the router and flow tests pass unchanged; an architecture check that a screen names only its own feature's routes.
+
+#### P-42 (nice): small duplicates
+- **The `YYYY-MM-DD` formatter:** twice, `history_api_service.dart:46` and `verification_api_service.dart:69`.
+- **`retryAt != null && clock.now().isBefore(retryAt)`:** 7 times (`paginated_state.dart`, `request_access_cubit.dart:41-43`, `submit_state.dart`, `check_totals_cubit.dart`, `scan_session_cubit.dart` and others).
+- **Two secure random generators:** `active_scan_store.dart:30` calls `Random.secure()` directly, while `phone_id_service.dart:17` takes an injectable one.
+- **`SessionQuery`:** no `copyWith`, so it is rebuilt by hand (`verification_repository_impl.dart:137-141`).
+- **`lastAt`:** uses `tryParse` (`verification_mappers.dart`), so a bad value becomes `null`, where every other date fails.
+
+#### P-43 (nice): naming and structure drift
+- **File naming:** use-case files are one per class (`get_checks.dart`) or grouped (`*_usecases.dart`); DTO and mapper files are singular (`profile_dto.dart`, `profile_mapper.dart`) or plural (`*_dtos.dart`, `*_mappers.dart`).
+- **Interface and implementation in one file:** `phone_id_service.dart` and `picture_images.dart` (no `Service` suffix). `logger_service.dart` also holds `LogRedactor` and `ReportedError`.
+- **`ActiveScanStore`:** built ad hoc twice with the same key recipe (`app/app.dart:42`, `check_routes.dart:135`).
+- **Route paths as literals:**
+  - `app/shell/main_shell.dart:44-53` writes `'/history'` and `'/home/result'`;
+  - `app/router/route_guard.dart:43` writes `'/history/sessions/'`;
+  - `tabPermissionByPath` is a mutable top-level map;
+  - its comment says "four tabs" where there are three.
+- **The two app-wide cubits are owned differently:** `LocaleCubit` is a locator singleton registered in `prepareLanguage`, which must run after `registerCore`; `ProfileCubit` is built in `App`.
+- **`RenewalFailed.error`:** typed `Object` (`core/services/session/session_state.dart:50`); both producers pass an `AppException`.
+- **A silent `catchError`:** `app/app.dart:46` drops a failure to clear the stored scan without a log.
+- **`Widget _x()` methods:** four remain among widget classes: `history_screen.dart` `_checks()`, `verify_screen.dart` `formsUnavailable()` and `_headerContent()`, `change_password_screen.dart` `_form()`.
+- **A side effect in `build`:** `verify_screen.dart:367` creates the scanner session there.
+- **Mutable lists on entities:** `CheckRecord.reasons`, `LookupResult.reasons`, `SerialStackResult.items`, `CursorPage.items`.
+
+### Noticed for step 5 (dead code)
+- `Profile.canReadHistory` is used only by tests.
+- `CheckedInput.of` is the same as the constructor.
+- `DisplayTime.withOffset` has no callers.
+- `CrashReportingService` is registered in the locator but never read from it (the logger gets it directly).
+- `outcomeFrom`, `reasonFrom`, `sameSerial` and `HistorySearch.maxSerialLength` are public but used only in their own file.
+- `FirebaseCrashReportingService.attempts` and `.started` are used only by tests.
+
+### Suggested order
+1. **P-20 and P-21 (the two bugs), then P-22.**
+2. **The shared pieces the rest builds on:**
+   - P-23 and P-24 (codes and reasons), with P-25;
+   - P-27 and P-28 (paging);
+   - P-26 (equality).
+3. **Domain and data:** P-29 … P-33.
+4. **App:** P-34, P-35.
+5. **Screens:** P-36, P-38 … P-41, then P-37, the split, last.
+6. **P-42 and P-43** at any time.
