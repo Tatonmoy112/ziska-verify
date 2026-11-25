@@ -60,7 +60,7 @@ List<RouteBase> checkRoutes(RouteDeps d) {
   Future<Result<RecoveredScans>> recovered(String id, String? cursor) async {
     final result = await locator<GetChecks>()(
       CheckQuery(sessionId: id),
-      PageRequest(limit: 100, cursor: cursor),
+      PageRequest(limit: PageRequest.maxLimit, cursor: cursor),
     );
     return switch (result) {
       Success(:final value) => Success(

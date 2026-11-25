@@ -223,9 +223,9 @@ void main() {
       ..add(const MyReportsRetried());
     await Future<void>.delayed(const Duration(milliseconds: 10));
     expect(sent, 1);
+    // Held, not lost: once the wait ends it is sent, once, as every list
+    // does (production audit P-27).
     await Future<void>.delayed(_wait * 2);
-    bloc.add(const MyReportsRetried());
-    await Future<void>.delayed(const Duration(milliseconds: 10));
     expect(sent, 2);
     await bloc.close();
   });

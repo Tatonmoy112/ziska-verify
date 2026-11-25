@@ -127,7 +127,7 @@ The routes are built in `lib/app/router/routes/`, one file per area (auth, check
 
 ## 10. Pagination and time
 
-Pass opaque cursors back unchanged, and only to the list that gave them: a filter changed during a 429 wait loads its own first page (TC-HIST-055). A full last page can be followed by an empty page. Keep totals from the first checks page; later-page `totals: null` does not erase them. Profile totals come from `GET checks?limit=1`, with no additional endpoint.
+Pass opaque cursors back unchanged, and only to the list that gave them: a filter changed during a 429 wait loads its own first page (TC-HIST-055). Every list pages through one `PagedLoader` (`core/pagination/paged_loader.dart`): first and next pages, Try again for what failed, a load held during a 429 wait and sent once after it, late answers dropped (2026-11-25, production audit P-27). A full last page can be followed by an empty page. Keep totals from the first checks page; later-page `totals: null` does not erase them. Profile totals come from `GET checks?limit=1`, with no additional endpoint.
 
 Checks support result, way, inclusive date strings, search, and `session_id`. No history/session request sends `scope`. Clearing ordinary filters in a session detail keeps its session restriction.
 

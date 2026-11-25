@@ -3,10 +3,9 @@ import 'dart:async';
 import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:ziska_verify/core/errors/result.dart';
-import 'package:ziska_verify/core/pagination/page_request.dart';
+import 'package:ziska_verify/core/pagination/cursor_page.dart';
+import 'package:ziska_verify/core/pagination/paged_loader.dart';
 import 'package:ziska_verify/core/pagination/paginated_state.dart';
-import 'package:ziska_verify/core/pagination/wait_timer.dart';
 import 'package:ziska_verify/core/utils/event_transformers.dart';
 import 'package:ziska_verify/features/retail_users/domain/entities/retail_user.dart';
 import 'package:ziska_verify/features/retail_users/domain/usecases/search_retail_users.dart';
@@ -43,92 +42,53 @@ abstract class RetailUserPickerState with _$RetailUserPickerState {
   }) = _RetailUserPickerState;
 }
 
-/// The retail user picker (final.md §10, §13.6).
+/// The retail user picker (final.md §10, §13.6), paged by [PagedLoader]
+/// (P-27).
 class RetailUserPickerBloc
     extends Bloc<RetailUserPickerEvent, RetailUserPickerState> {
-  RetailUserPickerBloc(this._search) : super(const RetailUserPickerState()) {
+  RetailUserPickerBloc(SearchRetailUsers search)
+    : super(const RetailUserPickerState()) {
+    _pages = PagedLoader.ofPages(
+      search.call,
+      onWaitOver: () {
+        if (!isClosed) add(const PickerRetried());
+      },
+    );
     on<PickerStarted>(
-      (_, emit) => _first(null, emit),
+      (_, emit) => _pages.first(_sink(emit), null),
       transformer: restartable(),
     );
     on<PickerSearchTyped>(
-      (e, emit) => _first(e.text, emit),
+      (e, emit) {
+        final text = e.text.trim();
+        return _pages.first(_sink(emit), text.isEmpty ? null : text);
+      },
       transformer: debounceRestartable(const Duration(milliseconds: 400)),
     );
     on<PickerNextPageRequested>(
-      (_, emit) => _next(emit),
+      (_, emit) => _pages.next(_sink(emit), state.search),
       transformer: droppable(),
     );
     on<PickerRetried>(
-      (_, emit) async {
-        if (state.list.isWaiting) return;
-        state.list.status == PaginationStatus.failureMore
-            ? await _next(emit)
-            : await _first(state.search, emit);
-      },
+      (_, emit) => _pages.retry(_sink(emit), state.search),
       transformer: droppable(),
     );
   }
 
-  final SearchRetailUsers _search;
-  int _generation = 0;
+  /// The list of one search (`null`: every retail user).
+  late final PagedLoader<RetailUser, String?, CursorPage<RetailUser>> _pages;
 
-  /// A search typed during a `429` wait, sent when the wait ends.
-  final _deferred = WaitTimer();
+  PageSink<RetailUser, String?, CursorPage<RetailUser>> _sink(
+    Emitter<RetailUserPickerState> emit,
+  ) => PageSink(
+    read: () => state.list,
+    put: (u) => emit(RetailUserPickerState(search: u.query, list: u.list)),
+    alive: () => !emit.isDone,
+  );
 
   @override
   Future<void> close() {
-    _deferred.cancel();
+    _pages.dispose();
     return super.close();
-  }
-
-  Future<void> _first(String? text, Emitter<RetailUserPickerState> emit) async {
-    final search = text?.trim().isEmpty ?? true ? null : text!.trim();
-    // A 429 is counting down (guide section 1): keep the text, and search
-    // once the wait ends.
-    final wait = state.list.retryAt;
-    if (state.list.isWaiting && wait != null) {
-      emit(RetailUserPickerState(search: search, list: state.list));
-      _deferred.schedule(wait, () {
-        if (!isClosed) add(const PickerRetried());
-      });
-      return;
-    }
-    final generation = ++_generation;
-    emit(
-      RetailUserPickerState(search: search, list: state.list.loadingFirst()),
-    );
-    final result = await _search(search, const PageRequest());
-    if (generation != _generation || emit.isDone) return;
-    emit(
-      RetailUserPickerState(
-        search: search,
-        list: switch (result) {
-          Success(:final value) => state.list.firstPage(value),
-          Err(:final failure) => state.list.failed(failure),
-        },
-      ),
-    );
-  }
-
-  Future<void> _next(Emitter<RetailUserPickerState> emit) async {
-    final list = state.list;
-    if (!list.canLoadMore) return;
-    final generation = _generation;
-    emit(RetailUserPickerState(search: state.search, list: list.loadingMore()));
-    final result = await _search(
-      state.search,
-      PageRequest(cursor: list.nextCursor),
-    );
-    if (generation != _generation || emit.isDone) return;
-    emit(
-      RetailUserPickerState(
-        search: state.search,
-        list: switch (result) {
-          Success(:final value) => state.list.nextPage(value),
-          Err(:final failure) => state.list.failed(failure),
-        },
-      ),
-    );
   }
 }

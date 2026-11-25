@@ -6,7 +6,7 @@ The production-grade review of the app, done on the `production` branch one area
 |---|---|---|
 | 2 | High-level architecture | Checked 2026-11-24: P-1 … P-15. **All fixed**; P-10 on for staging, live waits for its production project |
 | 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11). **All fixed** (2026-11-25) |
-| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-44. Fixed: P-20 … P-26 |
+| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-44. Fixed: P-20 … P-27 |
 | 5 | Dead code | To do |
 | 6+ | Comments, data layer, UI components, state and lifecycle, security, build and release, monitoring, tests, localisation, performance, docs | To do |
 
@@ -906,6 +906,23 @@ The layer rules (step 2) and the central API (step 3) are already enforced, so t
 - **normal:** first page, next page, end of the list;
 - **edge:** a filter changed during a 429 wait is loaded once when the wait ends;
 - **worst:** an answer of an old generation is dropped, and a failed page 2 keeps page 1 (P-21).
+
+**✅ Fixed 2026-11-25:**
+- **Tests first:** TC-MIG-077 … -079 (`test/core/pagination/paged_loader_test.dart`):
+  - first, next and the end, and Try again for what failed;
+  - a load during a 429 wait is held, shows its query, and the owner is told once when the wait ends;
+  - a late answer is dropped, and an owner that is gone gets nothing;
+  - nothing is sent during a wait, and a changed query never gets the old cursor;
+  - no list builds pages itself.
+- **Two bugs it caught, both red before:**
+  - **The retail picker:** a search typed during a page-2 429 wait was sent, once the wait ended, with the old list's cursor, the bug P-21 fixed for Sessions. The case needed a wait longer than the picker's 400 ms debounce to show it.
+  - **My reports:** a pull during a wait was dropped; now it is sent once after it, as every other list does. TC-MIG-043's test was changed to this rule.
+- **The change:**
+  - `PagedLoader<T, Q, P>` in `core/pagination` holds the rules: the generation, the list's query, the 429 hold, and the first, next and retry steps.
+  - Each list gives it a `PageSink`: how to read its list, put each step (`PagePhase`) in its state, and whether it is still there.
+  - History's chip counts and refused searches are its `put` (`PagePhase.refused`, the loader's `refuses`), so a search that is not sent stays unsent on every path, a retry included.
+  - `HistoryBloc`, `MyReportsBloc`, `SessionsCubit` and `RetailUserPickerBloc` use it; none keeps a generation or a `WaitTimer`.
+- **The limit:** `PageRequest.maxLimit` (100) names the one place that reads more than 50: a resumed scan session's rows. Its own paging moves onto the loader with P-36.
 
 #### P-28 (should): the local-days paging loop is copied
 **Evidence:** `history/data/repositories/history_repository_impl.dart:21-57` and `verification/data/repositories/verification_repository_impl.dart:126-172` hold the same loop: `LocalDays.utcDays`, keep the items of the official's days, stop at `beforeFirstDay`, at most `_maxSkippedPages = 50` (defined twice, `:18` and `:176`).

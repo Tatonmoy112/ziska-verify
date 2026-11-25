@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:ziska_verify/core/errors/result.dart';
-import 'package:ziska_verify/core/pagination/page_request.dart';
+import 'package:ziska_verify/core/pagination/cursor_page.dart';
+import 'package:ziska_verify/core/pagination/paged_loader.dart';
 import 'package:ziska_verify/core/pagination/paginated_state.dart';
 import 'package:ziska_verify/features/incidents/domain/entities/report.dart';
 import 'package:ziska_verify/features/incidents/domain/usecases/incident_usecases.dart';
@@ -31,59 +31,47 @@ final class MyReportsRetried extends MyReportsEvent {
   const MyReportsRetried();
 }
 
-/// My reports (final.md §10, §13.5).
+/// My reports (final.md §10, §13.5), paged by [PagedLoader] (P-27).
 class MyReportsBloc extends Bloc<MyReportsEvent, PaginatedState<Report>> {
-  MyReportsBloc(this._getReports) : super(const PaginatedState<Report>()) {
+  MyReportsBloc(GetMyReports getReports)
+    : super(const PaginatedState<Report>()) {
+    _pages = PagedLoader.ofPages(
+      (_, page) => getReports(page),
+      onWaitOver: () {
+        if (!isClosed) add(const MyReportsRetried());
+      },
+    );
     on<MyReportsStarted>((e, emit) async {
       try {
-        // Held while a 429 counts down (guide section 1).
-        if (!state.isWaiting) await _first(emit, keepItems: e.keepItems);
+        await _pages.first(_sink(emit), null, keepItems: e.keepItems);
       } finally {
         e.done?.complete();
       }
     }, transformer: restartable());
     on<MyReportsNextPageRequested>(
-      (_, emit) => _next(emit),
+      (_, emit) => _pages.next(_sink(emit), null),
       transformer: droppable(),
     );
     on<MyReportsRetried>(
-      (_, emit) async {
-        if (state.isWaiting) return;
-        state.status == PaginationStatus.failureMore
-            ? await _next(emit)
-            : await _first(emit);
-      },
+      (_, emit) => _pages.retry(_sink(emit), null),
       transformer: droppable(),
     );
   }
 
-  final GetMyReports _getReports;
-  int _generation = 0;
+  /// One list, without a query.
+  late final PagedLoader<Report, Object?, CursorPage<Report>> _pages;
 
-  Future<void> _first(
-    Emitter<PaginatedState<Report>> emit, {
-    bool keepItems = false,
-  }) async {
-    final generation = ++_generation;
-    emit(state.loadingFirst(keepItems: keepItems));
-    final result = await _getReports(const PageRequest());
-    if (generation != _generation || emit.isDone) return;
-    emit(switch (result) {
-      Success(:final value) => state.firstPage(value),
-      Err(:final failure) => state.failed(failure),
-    });
-  }
+  PageSink<Report, Object?, CursorPage<Report>> _sink(
+    Emitter<PaginatedState<Report>> emit,
+  ) => PageSink(
+    read: () => state,
+    put: (u) => emit(u.list),
+    alive: () => !emit.isDone,
+  );
 
-  Future<void> _next(Emitter<PaginatedState<Report>> emit) async {
-    if (!state.canLoadMore) return;
-    final generation = _generation;
-    final cursor = state.nextCursor;
-    emit(state.loadingMore());
-    final result = await _getReports(PageRequest(cursor: cursor));
-    if (generation != _generation || emit.isDone) return;
-    emit(switch (result) {
-      Success(:final value) => state.nextPage(value),
-      Err(:final failure) => state.failed(failure),
-    });
+  @override
+  Future<void> close() {
+    _pages.dispose();
+    return super.close();
   }
 }
