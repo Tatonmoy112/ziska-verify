@@ -41,7 +41,7 @@ void main() {
     expect(check.ref, 'MA-2026-000124');
     expect(check.way, CheckWay.qr);
     expect(check.result, CheckResult.warning);
-    expect(check.reasons, ['checked_before']);
+    expect(check.reasons, [CheckReason.checkedBefore]);
     expect(check.at, DateTime.utc(2026, 10, 28, 10, 2, 11));
     expect(page.totals!.total, 120);
     expect(page.page.nextCursor, '3255');

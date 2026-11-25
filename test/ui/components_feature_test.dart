@@ -421,6 +421,8 @@ void main() {
         (LucideIcons.qrCode, l10n.wayQr),
         (LucideIcons.hash, l10n.waySerial),
         (LucideIcons.tag, l10n.wayHiddenCode),
+        // A way the app does not know yet (P-32).
+        (LucideIcons.circleHelp, l10n.wayOther),
       ]) {
         expect(find.byIcon(icon), findsOneWidget);
         expect(find.text(label), findsOneWidget);
@@ -532,7 +534,9 @@ CheckRecord _check(
   at: DateTime.utc(2026, 11, 14, 4, 30),
   way: way,
   result: result,
-  reasons: result == CheckResult.warning ? const ['checked_before'] : const [],
+  reasons: result == CheckResult.warning
+      ? const [CheckReason.checkedBefore]
+      : const [],
   official: 'Asha Rao',
   serial: serial,
   product: product,

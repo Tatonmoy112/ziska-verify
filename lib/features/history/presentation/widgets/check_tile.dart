@@ -20,14 +20,14 @@ import 'package:ziska_verify/shared/widgets/large_text.dart';
       CheckResult.unknown => (l10n.resultUnknownTitle, AppColors.textLabel),
     };
 
-String checkReasonLabel(String reason, AppLocalizations l10n) =>
+String checkReasonLabel(CheckReason reason, AppLocalizations l10n) =>
     switch (reason) {
-      'checked_before' => l10n.reasonCheckedBefore,
-      'recalled' => l10n.reasonRecalled,
-      'expired' => l10n.reasonExpired,
-      'damaged' => l10n.reasonDamaged,
-      'switched_off' => l10n.reasonSwitchedOff,
-      _ => l10n.reasonUnknown,
+      CheckReason.checkedBefore => l10n.reasonCheckedBefore,
+      CheckReason.recalled => l10n.reasonRecalled,
+      CheckReason.expired => l10n.reasonExpired,
+      CheckReason.damaged => l10n.reasonDamaged,
+      CheckReason.switchedOff => l10n.reasonSwitchedOff,
+      CheckReason.unknown => l10n.reasonUnknown,
     };
 
 /// The sentence in a check's grey box: what the result means; for a
@@ -67,7 +67,7 @@ class CheckTile extends StatelessWidget {
       CheckWay.qr => (LucideIcons.qrCode, l10n.wayQr),
       CheckWay.serial => (LucideIcons.hash, l10n.waySerial),
       CheckWay.hiddenCode => (LucideIcons.tag, l10n.wayHiddenCode),
-      null => (LucideIcons.circleHelp, l10n.wayOther),
+      CheckWay.unknown => (LucideIcons.circleHelp, l10n.wayOther),
     };
     final when = DisplayTime.dayAndTime(
       check.at,

@@ -64,7 +64,7 @@ class DioVerificationApiService implements VerificationApiService {
         query: {
           'limit': page.limit,
           'cursor': page.cursor,
-          'status': query.status?.name,
+          'status': query.status?.wire,
           'from': _day(query.from),
           'to': _day(query.to),
         },

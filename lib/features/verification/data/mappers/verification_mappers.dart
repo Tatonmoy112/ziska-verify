@@ -13,8 +13,9 @@ extension FormatsMapper on FormatsDto {
 extension LookupResultMapper on LookupResultDto {
   LookupResult toEntity() => LookupResult(
     ref: ref,
-    outcome: outcomeFrom(result),
-    reasons: [for (final r in reasons) reasonFrom(r)],
+    // Unknown values fail safe: never valid (final.md §13.1).
+    outcome: LookupOutcome.fromWire(result),
+    reasons: List.unmodifiable(reasons.map(LookupReason.fromWire)),
     count: count == null
         ? null
         : CheckCount(
@@ -42,24 +43,6 @@ extension LookupResultMapper on LookupResultDto {
           ),
   );
 }
-
-/// Unknown values fail safe: never valid (final.md §13.1).
-LookupOutcome outcomeFrom(String value) => switch (value) {
-  'valid' => LookupOutcome.valid,
-  'warning' => LookupOutcome.warning,
-  'not_found' => LookupOutcome.notFound,
-  'unassigned' => LookupOutcome.unassigned,
-  _ => LookupOutcome.unknown,
-};
-
-LookupReason reasonFrom(String value) => switch (value) {
-  'checked_before' => LookupReason.checkedBefore,
-  'recalled' => LookupReason.recalled,
-  'expired' => LookupReason.expired,
-  'damaged' => LookupReason.damaged,
-  'switched_off' => LookupReason.switchedOff,
-  _ => LookupReason.unknown,
-};
 
 DateTime? _date(String? value) =>
     value == null ? null : DateTime.tryParse(value);
@@ -96,16 +79,8 @@ extension SessionSummaryMapper on SessionSummaryDto {
       notFound: notFound,
       unassigned: unassigned,
     ),
-    kind: switch (kind) {
-      'qr' => SessionKind.qr,
-      'serial' => SessionKind.serial,
-      _ => SessionKind.unknown,
-    },
-    status: switch (status) {
-      'open' => ScanStatus.open,
-      'ended' => ScanStatus.ended,
-      _ => ScanStatus.unknown,
-    },
+    kind: SessionKind.fromWire(kind),
+    status: ScanStatus.fromWire(status),
     startedAt: DateTime.parse(startedAt).toUtc(),
     lastScanAt: DateTime.parse(lastScanAt).toUtc(),
   );

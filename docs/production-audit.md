@@ -6,7 +6,7 @@ The production-grade review of the app, done on the `production` branch one area
 |---|---|---|
 | 2 | High-level architecture | Checked 2026-11-24: P-1 … P-15. **All fixed**; P-10 on for staging, live waits for its production project |
 | 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11). **All fixed** (2026-11-25) |
-| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-44. Fixed: P-20 … P-31 |
+| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-44. Fixed: P-20 … P-32 |
 | 5 | Dead code | To do |
 | 6+ | Comments, data layer, UI components, state and lifecycle, security, build and release, monitoring, tests, localisation, performance, docs | To do |
 
@@ -1051,6 +1051,23 @@ History's reasons stay raw strings (`CheckRecord.reasons`, `List<String>`), whic
 - **edge:** case and spacing as the guide allows;
 - **worst:** an unknown value is `unknown`, never a valid one (§3).
 
+**✅ Fixed 2026-11-25:**
+- **Tests first:** TC-ARCH-041 … -043 (`test/architecture/wire_values_test.dart`), for each of the seven enums:
+  - its known values are the guide's, and each reads back as itself;
+  - a value in capitals, with a space, missing, empty, `unknown` or new is `unknown`;
+  - no mapper, service or screen switches on an API string, and no service sends an enum's Dart name.
+
+  On the old code the source check matched 19 places: 13 in the verification mapper, 5 in History's check tile, and `status?.name` in a service.
+- **The change:**
+  - `WireValue` and `fromWireValue` (`core/utils/wire_value.dart`) hold the rule once: a value only counts when written exactly as documented.
+  - `CheckResult`, `CheckWay`, `LookupOutcome`, `LookupReason`, `SessionKind` and `ScanStatus` each have `wire` and `fromWire`.
+  - The mappers call `fromWire`, and the inline switches and `outcomeFrom` / `reasonFrom` are gone.
+  - The sessions' filter is sent as `status?.wire`.
+- **History's reasons are typed:** `CheckReason`, with `CheckRecord.reasons` a read-only `List<CheckReason>`. The check tile switches on it, not on strings. History may not import verification's `LookupReason` (rule R4), so it has its own, as it already had `CheckResult` beside `LookupOutcome`.
+- **`CheckWay` gained `unknown`:** `CheckRecord.way` is no longer nullable, and an unknown way is still shown as "Other". TC-UI-068 now checks that tile too.
+- **Kept on purpose:** `Permission.fromKey` returns `null` for a key it does not know, so the permission is dropped. An unknown permission must grant nothing, so it has no `unknown` member to keep.
+- **Tests changed:** two History tests compare typed reasons, and TC-ERR-054's list of the `not_found` result values follows the outcome into the enum.
+
 #### P-33 (should): input is validated in the use case only for Request access
 **Evidence:**
 - `SendAccessCode` and `SubmitAccessRequest` validate and return a `ValidationException` (`access_request_usecases.dart:17-34`);
@@ -1224,7 +1241,7 @@ History's reasons stay raw strings (`CheckRecord.reasons`, `List<String>`), whic
 - `CheckedInput.of` is the same as the constructor.
 - `DisplayTime.withOffset` has no callers.
 - `CrashReportingService` is registered in the locator but never read from it (the logger gets it directly).
-- `outcomeFrom`, `reasonFrom`, `sameSerial` and `HistorySearch.maxSerialLength` are public but used only in their own file.
+- `sameSerial` and `HistorySearch.maxSerialLength` are public but used only in their own file (`outcomeFrom` and `reasonFrom` went with P-32).
 - `FirebaseCrashReportingService.attempts` and `.started` are used only by tests.
 
 ### Suggested order

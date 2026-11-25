@@ -1172,7 +1172,7 @@ class StagingCheck {
         'GET checks?session_id={id}',
         rows.length == 2 && rows.every((c) => c.sessionId == id),
         '${rows.length} checks: '
-            '${rows.map((c) => '${c.way?.wire}/${c.result.name}').join(', ')}',
+            '${rows.map((c) => '${c.way.wire}/${c.result.name}').join(', ')}',
       );
     } on Object catch (e) {
       _fail('GET checks?session_id={id}', e);

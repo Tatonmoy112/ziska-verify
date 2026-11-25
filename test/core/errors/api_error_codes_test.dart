@@ -91,9 +91,8 @@ void main() {
     // result (guide §5) and a lookup's outcome (guide §4.1), not an error.
     const results = {
       'features/history/domain/entities/check.dart': {'not_found'},
-      'features/verification/data/mappers/verification_mappers.dart': {
-        'not_found',
-      },
+      // Written once in the enum since P-32, not in the mapper.
+      'features/verification/domain/entities/lookup.dart': {'not_found'},
       'core/network/demo/postman_mock_routing.dart': {'not_found'},
     };
 

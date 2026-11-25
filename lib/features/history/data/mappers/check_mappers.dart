@@ -24,14 +24,10 @@ extension CheckMapper on CheckDto {
   CheckRecord toEntity() => CheckRecord(
     ref: ref,
     at: DateTime.parse(at).toUtc(),
-    way: CheckWay.values.where((w) => w.wire == way).firstOrNull,
+    way: CheckWay.fromWire(way),
     // Unknown values fail safe: never valid (final.md §13.1).
-    result:
-        CheckResult.values
-            .where((r) => r.wire == result && r != CheckResult.unknown)
-            .firstOrNull ??
-        CheckResult.unknown,
-    reasons: reasons,
+    result: CheckResult.fromWire(result),
+    reasons: List.unmodifiable(reasons.map(CheckReason.fromWire)),
     official: official,
     serial: serial,
     product: product,

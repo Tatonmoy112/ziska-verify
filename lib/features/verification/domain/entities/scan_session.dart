@@ -1,4 +1,5 @@
 import 'package:ziska_verify/core/pagination/cursor_page.dart';
+import 'package:ziska_verify/core/utils/wire_value.dart';
 import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
 
 /// Authoritative counters returned with a scan or serial stack.
@@ -32,9 +33,35 @@ class ScanResult {
   final SessionTotals session;
 }
 
-enum SessionKind { qr, serial, unknown }
+/// A session's `kind` (guide §4.5): a scanner session or a serial stack.
+enum SessionKind implements WireValue {
+  qr('qr'),
+  serial('serial'),
+  unknown('')
+  ;
 
-enum ScanStatus { open, ended, unknown }
+  const SessionKind(this.wire);
+  @override
+  final String wire;
+
+  static SessionKind fromWire(String? wire) =>
+      fromWireValue(values, wire, unknown);
+}
+
+/// A session's `status` (guide §4.5); also sent as a filter.
+enum ScanStatus implements WireValue {
+  open('open'),
+  ended('ended'),
+  unknown('')
+  ;
+
+  const ScanStatus(this.wire);
+  @override
+  final String wire;
+
+  static ScanStatus fromWire(String? wire) =>
+      fromWireValue(values, wire, unknown);
+}
 
 class ScanSessionSummary {
   const ScanSessionSummary({

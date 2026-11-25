@@ -1,21 +1,28 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:ziska_verify/core/pagination/cursor_page.dart';
+import 'package:ziska_verify/core/utils/wire_value.dart';
 
 part 'check.freezed.dart';
 
-/// How a check was made (`way`).
-enum CheckWay {
+/// How a check was made (`way`, guide §5). [unknown] is a way this app
+/// does not know yet, shown as "Other".
+enum CheckWay implements WireValue {
   serial('serial'),
   qr('qr'),
-  hiddenCode('hidden_code')
+  hiddenCode('hidden_code'),
+  unknown('')
   ;
 
   const CheckWay(this.wire);
+  @override
   final String wire;
+
+  static CheckWay fromWire(String? wire) =>
+      fromWireValue(values, wire, unknown);
 }
 
 /// A check's `result`. [unknown] is never shown as valid (final.md 13.1.5).
-enum CheckResult {
+enum CheckResult implements WireValue {
   valid('valid'),
   warning('warning'),
   notFound('not_found'),
@@ -24,7 +31,31 @@ enum CheckResult {
   ;
 
   const CheckResult(this.wire);
+  @override
   final String wire;
+
+  static CheckResult fromWire(String? wire) =>
+      fromWireValue(values, wire, unknown);
+}
+
+/// A warning's `reasons` (guide §5). [unknown] is shown as a generic
+/// reason. The same values as verification's `LookupReason`, which History
+/// may not import (rule R4).
+enum CheckReason implements WireValue {
+  checkedBefore('checked_before'),
+  recalled('recalled'),
+  expired('expired'),
+  damaged('damaged'),
+  switchedOff('switched_off'),
+  unknown('')
+  ;
+
+  const CheckReason(this.wire);
+  @override
+  final String wire;
+
+  static CheckReason fromWire(String? wire) =>
+      fromWireValue(values, wire, unknown);
 }
 
 /// One check in History (final.md §13.4).
@@ -44,11 +75,11 @@ class CheckRecord {
 
   final String ref;
   final DateTime at;
-  final CheckWay? way;
+  final CheckWay way;
   final CheckResult result;
 
-  /// The API's reason values; empty unless the result is `warning`.
-  final List<String> reasons;
+  /// Empty unless the result is `warning`.
+  final List<CheckReason> reasons;
 
   /// Whoever made the check.
   final String official;

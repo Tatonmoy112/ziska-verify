@@ -1,3 +1,5 @@
+import 'package:ziska_verify/core/utils/wire_value.dart';
+
 /// The ways to look an item up: serial or QR (final.md §13.1;
 /// backend D62: never the hidden code).
 enum LookupWay {
@@ -13,16 +15,38 @@ enum LookupWay {
 
 /// `data.result` (final.md §13.1). [unknown] is any value this app
 /// does not know yet: it is never shown as valid (§13.1).
-enum LookupOutcome { valid, warning, notFound, unassigned, unknown }
+enum LookupOutcome implements WireValue {
+  valid('valid'),
+  warning('warning'),
+  notFound('not_found'),
+  unassigned('unassigned'),
+  unknown('')
+  ;
+
+  const LookupOutcome(this.wire);
+  @override
+  final String wire;
+
+  static LookupOutcome fromWire(String? wire) =>
+      fromWireValue(values, wire, unknown);
+}
 
 /// `data.reasons` entries. [unknown] is shown as a generic "Needs attention".
-enum LookupReason {
-  checkedBefore,
-  recalled,
-  expired,
-  damaged,
-  switchedOff,
-  unknown,
+enum LookupReason implements WireValue {
+  checkedBefore('checked_before'),
+  recalled('recalled'),
+  expired('expired'),
+  damaged('damaged'),
+  switchedOff('switched_off'),
+  unknown('')
+  ;
+
+  const LookupReason(this.wire);
+  @override
+  final String wire;
+
+  static LookupReason fromWire(String? wire) =>
+      fromWireValue(values, wire, unknown);
 }
 
 /// One input format of the client (`GET formats`, final.md §13.1).
