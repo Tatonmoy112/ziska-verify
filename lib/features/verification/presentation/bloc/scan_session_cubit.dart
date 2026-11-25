@@ -572,7 +572,19 @@ class ScanSessionCubit extends Cubit<ScanSessionState> {
     _pump();
   }
 
-  /// Reads a resumed session's scans again, from the first page.
+  // The session's rows are paged here: they are not a `PagedLoader` list
+  // (final.md §10; production audit P-45). A `PagedLoader` list belongs
+  // to the server alone: a query and its pages, each answer replacing or
+  // extending it. These rows are written by this cubit too: each answered
+  // scan goes first, a later page adds only the rows not shown yet (one
+  // row per `ref`), and the first page comes with the session's resume.
+  // The rules every list keeps are kept here: one page at a time, answers
+  // for an older run dropped, nothing sent during a `429` wait
+  // (`rowsRetryAt`), and scanning goes on meanwhile.
+
+  /// Reads a resumed session's scans again, from the first page. A scan
+  /// answered while it is on its way stays first: the page may have been
+  /// read before the scan was recorded.
   Future<void> reloadRows() async {
     final id = state.id;
     if (_ended ||
@@ -588,12 +600,16 @@ class ScanSessionCubit extends Cubit<ScanSessionState> {
     if (!_active(generation)) return;
     switch (result) {
       case Success(:final value):
+        final onPage = {for (final r in value.items) r.ref};
+        final scanned = state.rows.where(
+          (r) => state.answers.containsKey(r.ref) && !onPage.contains(r.ref),
+        );
         emit(
           state.copyWith(
             loadingMore: false,
             rowsFailed: false,
             failure: null,
-            rows: value.items,
+            rows: [...scanned, ...value.items],
             nextCursor: value.nextCursor,
           ),
         );

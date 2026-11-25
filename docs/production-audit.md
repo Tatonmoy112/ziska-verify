@@ -6,7 +6,7 @@ The production-grade review of the app, done on the `production` branch one area
 |---|---|---|
 | 2 | High-level architecture | Checked 2026-11-24: P-1 … P-15. **All fixed**; P-10 on for staging, live waits for its production project |
 | 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11). **All fixed** (2026-11-25) |
-| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-45. Fixed: P-20 … P-44 |
+| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-45. Fixed: P-20 … P-45 |
 | 5 | Dead code | To do |
 | 6+ | Comments, data layer, UI components, state and lifecycle, security, build and release, monitoring, tests, localisation, performance, docs | To do |
 
@@ -1431,6 +1431,16 @@ History's reasons stay raw strings (`CheckRecord.reasons`, `List<String>`), whic
 - **normal:** pages in order after a resume;
 - **edge:** a scanned row that a later page brings again is shown once;
 - **worst:** a 429 on the rows is waited out, and scanning goes on meanwhile.
+
+**✅ Fixed 2026-11-25** (the second way: kept by hand, and said why):
+- **Why not `PagedLoader`:** a `PagedLoader` list belongs to the server alone, a query and its pages, each answer replacing or extending it. These rows are written by the cubit too (each answered scan first, a later page adding only rows not shown yet), and their first page comes inside the session's resume, with its own failure. A merge step and rows put first from outside would make `PagedLoader` serve this one list at the cost of every other; the rows keep its rules instead, and the cubit says so where they are paged.
+- **Tests first:** TC-ARCH-074 … -076 (`session_rows_test`):
+  - pages by cursor, in order, and an answered scan first;
+  - a row a later page brings again shown once; no request with nothing more to read; a scan answered while Try again reloads the first page;
+  - a 429 on the rows: nothing sent during the wait, scanning goes on, the same page asked once after it.
+- **A bug the tests found:** Try again on the first page replaced the rows with the page. A scan answered while that page was on its way, and not yet on it, disappeared from the list (it was still counted). The reload now keeps this run's scans that the page does not hold, first.
+- **The change:** that fix, and the comment where the rows are paged; final.md §10 names this one list as paged by hand.
+- **Every screenshot and flow test passes unchanged.**
 
 ### Noticed for step 5 (dead code)
 - `Profile.canReadHistory` is used only by tests.
