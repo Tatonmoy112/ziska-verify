@@ -102,7 +102,7 @@ A custom role can have bulk without single lookup or history. It can inspect its
 Keep app-wide session/profile state and route-scoped feature controllers. Duplicate form submissions are dropped. History search is debounced; changes reset the cursor; stale responses are discarded. Paginated lists allow one next-page request at a time.
 
 - `RequestAccessCubit`: roles/loading, form, code, pending, failure and cooldown; no password in state.
-- `ScanSessionCubit`: initialization/recovery, active UUID, one scan at a time, counters, latest full result, memory-only summary rows, repeat indicator, cooldown and paused state.
+- `ScanSessionCubit`: initialization/recovery, active UUID, one scan at a time, counters, latest full result, memory-only summary rows, repeat indicator, cooldown and paused state. Its phase is one value, `SessionPhase` (starting, start failed, scanning, finishing, done, closed), and an answer brings at most one `ScanNotice` (2026-11-25, P-36).
 - `SerialStackCubit`: validated serial draft, locked submitted payload, result, failure/cooldown, transport-uncertain state and bounded scheduled retry.
 - `SessionsCubit`: session filters and cursor pagination, guarded against stale responses.
 

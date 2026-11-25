@@ -962,4 +962,89 @@ void main() {
       expect(cubit.state.done, isFalse);
     });
   });
+
+  // TC-MIG-086 … -088 (production audit P-36): the session is in one
+  // phase at a time, and an answer brings at most one notice.
+  group('TC-MIG-086 normal: the phases in order', () {
+    test(
+      'starting, scanning, finishing, done; Scan more starts again',
+      () async {
+        final cubit = scanner();
+        expect(cubit.state.phase, SessionPhase.starting);
+        final phases = <SessionPhase>[];
+        final sub = cubit.stream.listen((s) => phases.add(s.phase));
+        await cubit.start();
+        expect(cubit.state.phase, SessionPhase.scanning);
+        await cubit.scan(raw);
+        await cubit.complete();
+        expect(cubit.state.phase, SessionPhase.done);
+        await Future<void>.delayed(Duration.zero); // the stream catches up
+        expect(
+          phases,
+          containsAllInOrder([
+            SessionPhase.scanning,
+            SessionPhase.finishing,
+            SessionPhase.done,
+          ]),
+        );
+        await cubit.restart();
+        expect(cubit.state.phase, SessionPhase.scanning);
+        await sub.cancel();
+      },
+    );
+  });
+
+  group('TC-MIG-087 edge: a start that fails, and a pause', () {
+    test('formats that cannot be read: start failed, then Try again', () async {
+      when(repo.getFormats).thenAnswer(
+        (_) async =>
+            const Err(Failure(InternalErrorException(statusCode: 500))),
+      );
+      final cubit = scanner();
+      await cubit.start();
+      expect(cubit.state.phase, SessionPhase.startFailed);
+      expect(cubit.state.id, isNull);
+      when(repo.getFormats).thenAnswer((_) async => const Success(formats));
+      await cubit.start();
+      expect(cubit.state.phase, SessionPhase.scanning);
+    });
+
+    test('a pause while scanning keeps the phase', () async {
+      final cubit = scanner();
+      await cubit.start();
+      cubit.pause();
+      expect(cubit.state.phase, SessionPhase.scanning);
+      expect(cubit.state.paused, isTrue);
+    });
+  });
+
+  group('TC-MIG-088 worst: never two at once', () {
+    test('left mid-session: closed, and nothing more is taken', () async {
+      final cubit = scanner();
+      await cubit.start();
+      await cubit.finish();
+      expect(cubit.state.phase, SessionPhase.closed);
+      await cubit.scan(raw);
+      verifyNever(() => repo.scan(any(), any()));
+    });
+
+    test('an answer brings one notice, and the next replaces it', () async {
+      var calls = 0;
+      when(() => repo.scan(any(), any())).thenAnswer((i) async {
+        final id = i.positionalArguments[1] as String;
+        calls++;
+        if (calls == 1) {
+          return const Err(Failure(ScanSessionException(code: 'session_full')));
+        }
+        return Success(scanResult(id, repeat: calls == 3));
+      });
+      final cubit = scanner();
+      await cubit.start();
+      await cubit.scan(raw);
+      expect(cubit.state.notice, ScanNotice.renewed);
+      await cubit.scan('https://example.test/q/A1B2C3D4E5F6');
+      expect(cubit.state.notice, ScanNotice.repeat);
+      expect(cubit.state.renewed, isFalse);
+    });
+  });
 }

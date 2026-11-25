@@ -6,7 +6,7 @@ The production-grade review of the app, done on the `production` branch one area
 |---|---|---|
 | 2 | High-level architecture | Checked 2026-11-24: P-1 … P-15. **All fixed**; P-10 on for staging, live waits for its production project |
 | 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11). **All fixed** (2026-11-25) |
-| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-44. Fixed: P-20 … P-35 |
+| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-45. Fixed: P-20 … P-36 |
 | 5 | Dead code | To do |
 | 6+ | Comments, data layer, UI components, state and lifecycle, security, build and release, monitoring, tests, localisation, performance, docs | To do |
 
@@ -922,7 +922,7 @@ The layer rules (step 2) and the central API (step 3) are already enforced, so t
   - Each list gives it a `PageSink`: how to read its list, put each step (`PagePhase`) in its state, and whether it is still there.
   - History's chip counts and refused searches are its `put` (`PagePhase.refused`, the loader's `refuses`), so a search that is not sent stays unsent on every path, a retry included.
   - `HistoryBloc`, `MyReportsBloc`, `SessionsCubit` and `RetailUserPickerBloc` use it; none keeps a generation or a `WaitTimer`.
-- **The limit:** `PageRequest.maxLimit` (100) names the one place that reads more than 50: a resumed scan session's rows. Its own paging moves onto the loader with P-36.
+- **The limit:** `PageRequest.maxLimit` (100) names the one place that reads more than 50: a resumed scan session's rows. Their own paging did not move onto the loader with P-36 after all: see P-45.
 
 #### P-28 (should): the local-days paging loop is copied
 **Evidence:** `history/data/repositories/history_repository_impl.dart:21-57` and `verification/data/repositories/verification_repository_impl.dart:126-172` hold the same loop: `LocalDays.utcDays`, keep the items of the official's days, stop at `beforeFirstDay`, at most `_maxSkippedPages = 50` (defined twice, `:18` and `:176`).
@@ -1181,6 +1181,23 @@ History's reasons stay raw strings (`CheckRecord.reasons`, `List<String>`), whic
 - **edge:** a pause while finishing;
 - **worst:** the existing scan-session tests pass unchanged.
 
+**✅ Fixed 2026-11-25:**
+- **Tests first:** TC-MIG-086 … -088 (`many_items_cubits_test`):
+  - the phases in order, and Scan more starting again;
+  - a start that fails, then Try again;
+  - a pause that keeps the phase;
+  - a session left mid-way is `closed`, and a scan after it is not sent;
+  - an answer brings one notice, and the next replaces it.
+- **The change:**
+  - `ScanSessionState.phase` (`SessionPhase`: `starting`, `startFailed`, `scanning`, `finishing`, `done`, `closed`) replaces `loading`, `finishing`, `done` and "no `id`, not loading", so impossible combinations cannot be stored;
+  - `notice` (`ScanNotice`: `repeat`, `renewed`, `restarted`) replaces three bools;
+  - read-only getters keep `loading`, `done`, `repeat` and the rest for readers;
+  - the screen's body and bottom bar switch on the phase instead of deriving it.
+- **One deliberate choice:** an answer in a session that rolled over shows "renewed", not "repeat". A new session has no earlier scan to repeat. Before, both flags could be set at once.
+- **New: `closed`.** A session left before Finish (the screen closing, the login ending) used to look like "start failed" for a frame. It now shows nothing while the screen goes.
+- **Not moved: the rows' paging** (P-45). The audit planned it here, but the rows are not a plain server list: a scan puts its row first, and pages are merged without repeating a `ref`. The shared loader does neither.
+- The busy, pause and paging fields stay: they are independent of the phase. The existing tests and screenshots pass unchanged.
+
 #### P-37 (should): two very large screens
 **Evidence:**
 - `verification/presentation/screens/scan_session_screen.dart` is 1,001 lines, with a `build` of about 335 lines (`:157-493`);
@@ -1285,6 +1302,16 @@ History's reasons stay raw strings (`CheckRecord.reasons`, `List<String>`), whic
 - **normal:** each entity built twice is equal;
 - **edge:** list fields compare by value;
 - **worst:** a reload with equal data ends its refresh, and the existing tests pass unchanged.
+
+#### P-45 (nice): the scan session's rows are paged by hand
+**Evidence:** `ScanSessionCubit.reloadRows` and `more` keep their own `loadingMore`, `rowsFailed`, `rowsRetryAt` and `nextCursor` (`scan_session_cubit.dart`), apart from `PagedLoader` (P-27). The rows are not a plain server list: each answered scan puts its row first, and later pages are merged without repeating a `ref` (found while fixing P-36).
+
+**Proposal:** either give `PagedLoader` a merge step (a key that ends repeats, and rows put first from outside), or keep this one list by hand and say why in the code.
+
+**Tests:**
+- **normal:** pages in order after a resume;
+- **edge:** a scanned row that a later page brings again is shown once;
+- **worst:** a 429 on the rows is waited out, and scanning goes on meanwhile.
 
 ### Noticed for step 5 (dead code)
 - `Profile.canReadHistory` is used only by tests.

@@ -195,38 +195,42 @@ class _ScanSessionScreenState extends State<ScanSessionScreen>
           listenWhen: (a, b) => a.answered != b.answered,
           listener: (_, state) => unawaited(_feel(state)),
           builder: (_, state) {
-            if (state.loading) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (state.done) {
-              return _SessionSummary(
-                state: state,
-                onOpen: (answer) => unawaited(_openAnswer(answer, state)),
-                onMore: () => unawaited(_cubit.more()),
-              );
-            }
-            if (state.id == null) {
-              return ListView(
-                padding: const EdgeInsets.all(AppSpacing.screen),
-                children: [
-                  if (state.failure != null)
-                    FailureBanner(
-                      failure: state.failure!,
-                      message: state.failure!.message(l),
-                      retryAt: state.retryAt,
+            switch (state.phase) {
+              case SessionPhase.starting:
+                return const Center(child: CircularProgressIndicator());
+              case SessionPhase.done:
+                return _SessionSummary(
+                  state: state,
+                  onOpen: (answer) => unawaited(_openAnswer(answer, state)),
+                  onMore: () => unawaited(_cubit.more()),
+                );
+              // Left: the screen is going, nothing more to show.
+              case SessionPhase.closed:
+                return const SizedBox.shrink();
+              case SessionPhase.scanning || SessionPhase.finishing:
+                break;
+              case SessionPhase.startFailed:
+                return ListView(
+                  padding: const EdgeInsets.all(AppSpacing.screen),
+                  children: [
+                    if (state.failure != null)
+                      FailureBanner(
+                        failure: state.failure!,
+                        message: state.failure!.message(l),
+                        retryAt: state.retryAt,
+                      ),
+                    RetryCountdown(
+                      until: state.retryAt,
+                      builder: (_, wait) => AppButton(
+                        key: const Key('session.startRetry'),
+                        label: l.retry,
+                        onPressed: wait > 0
+                            ? null
+                            : () => unawaited(_cubit.start()),
+                      ),
                     ),
-                  RetryCountdown(
-                    until: state.retryAt,
-                    builder: (_, wait) => AppButton(
-                      key: const Key('session.startRetry'),
-                      label: l.retry,
-                      onPressed: wait > 0
-                          ? null
-                          : () => unawaited(_cubit.start()),
-                    ),
-                  ),
-                ],
-              );
+                  ],
+                );
             }
             return CustomScrollView(
               key: const Key('session.rows'),
@@ -794,8 +798,13 @@ class _BottomBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    if (state.loading || (state.id == null && !state.done)) {
-      return const SizedBox.shrink();
+    switch (state.phase) {
+      case SessionPhase.starting ||
+          SessionPhase.startFailed ||
+          SessionPhase.closed:
+        return const SizedBox.shrink();
+      case SessionPhase.scanning || SessionPhase.finishing || SessionPhase.done:
+        break;
     }
     final Widget child;
     if (state.done) {

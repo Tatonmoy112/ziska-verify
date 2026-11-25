@@ -28,25 +28,55 @@ class ScanAnswer {
   final CheckedInput checked;
 }
 
+/// Where a scanner session is (production audit P-36): one at a time.
+enum SessionPhase {
+  /// Reading the formats and any saved session.
+  starting,
+
+  /// The start failed: Try again, or a wait to count down.
+  startFailed,
+
+  /// Taking reads.
+  scanning,
+
+  /// Finish was pressed: no new read is taken, and those already read are
+  /// still sent and answered.
+  finishing,
+
+  /// Ended with Finish: its summary shows every row.
+  done,
+
+  /// Left before Finish (the screen closed, the login ended): nothing more
+  /// is taken.
+  closed,
+}
+
+/// What an answer says beside its result; at most one, until the next.
+enum ScanNotice {
+  /// The same QR again in this session.
+  repeat,
+
+  /// The session was full or had ended (`409 session_full`,
+  /// `session_ended`): a new one started by itself and the scan went in it
+  /// (guide section 4.3). The list starts again, and the screen says why
+  /// until the next scan (UI audit 2026-11-22, 5.2).
+  renewed,
+
+  /// The session was another official's (`409 session_not_yours`): a new
+  /// one started; the screen says so once (guide section 4.3).
+  restarted,
+}
+
 @freezed
 abstract class ScanSessionState with _$ScanSessionState {
   const factory ScanSessionState({
+    @Default(SessionPhase.starting) SessionPhase phase,
     String? id,
     InputFormats? formats,
     SessionTotals? totals,
     LookupResult? latest,
     CheckedInput? checked,
-    @Default(false) bool repeat,
-
-    /// The session was another official's (`409 session_not_yours`): a new
-    /// one started; the screen says so once (guide section 4.3).
-    @Default(false) bool restarted,
-
-    /// The session was full or had ended (`409 session_full`,
-    /// `session_ended`): a new one started by itself and the scan went in
-    /// it (guide section 4.3). The list starts again, and the screen says
-    /// why until the next scan (UI audit 2026-11-22, 5.2).
-    @Default(false) bool renewed,
+    ScanNotice? notice,
 
     /// A resumed session's scans could not be read: Try again reloads them
     /// (guide section 4.6); scanning goes on meanwhile.
@@ -71,16 +101,8 @@ abstract class ScanSessionState with _$ScanSessionState {
     /// After a `429` on loading those scans: not asked again before this.
     DateTime? rowsRetryAt,
 
-    /// Finish was pressed: no new read is taken, and those already read
-    /// are still sent and answered.
-    @Default(false) bool finishing,
-
-    /// The session ended with Finish: its summary shows every row.
-    @Default(false) bool done,
-
     /// This run's answers by `ref`, so a row opens its result.
     @Default(<String, ScanAnswer>{}) Map<String, ScanAnswer> answers,
-    @Default(true) bool loading,
     @Default(false) bool busy,
     @Default(false) bool paused,
     @Default(false) bool loadingMore,
@@ -89,6 +111,19 @@ abstract class ScanSessionState with _$ScanSessionState {
     Failure? failure,
     DateTime? retryAt,
   }) = _ScanSessionState;
+
+  const ScanSessionState._();
+
+  bool get loading => phase == SessionPhase.starting;
+  bool get finishing => phase == SessionPhase.finishing;
+  bool get done => phase == SessionPhase.done;
+  bool get repeat => notice == ScanNotice.repeat;
+  bool get renewed => notice == ScanNotice.renewed;
+  bool get restarted => notice == ScanNotice.restarted;
+
+  /// A new scan's notices: a repeat is this answer's only, the others stay
+  /// until the next answer says otherwise.
+  ScanNotice? get _sending => repeat ? null : notice;
 }
 
 class ScanSessionCubit extends Cubit<ScanSessionState> {
@@ -159,14 +194,14 @@ class ScanSessionCubit extends Cubit<ScanSessionState> {
     }
     _starting = true;
     final generation = ++_generation;
-    emit(state.copyWith(loading: true, failure: null));
+    emit(state.copyWith(phase: SessionPhase.starting, failure: null));
     try {
       final formats = await _getFormats();
       if (!_active(generation)) return;
       if (formats case Err(:final failure)) {
         emit(
           state.copyWith(
-            loading: false,
+            phase: SessionPhase.startFailed,
             failure: failure,
             retryAt: failure.retryAtFrom(clock.now()),
           ),
@@ -194,7 +229,8 @@ class ScanSessionCubit extends Cubit<ScanSessionState> {
                   state.copyWith(
                     id: id,
                     totals: totals,
-                    loading: false,
+                    // The session goes on; only its scans wait.
+                    phase: SessionPhase.scanning,
                     failure: failure,
                     rowsFailed: true,
                     rowsRetryAt: failure.retryAtFrom(clock.now()),
@@ -209,7 +245,12 @@ class ScanSessionCubit extends Cubit<ScanSessionState> {
             if (failure.exception is NotFoundException) {
               id = null;
             } else {
-              emit(state.copyWith(loading: false, failure: failure));
+              emit(
+                state.copyWith(
+                  phase: SessionPhase.startFailed,
+                  failure: failure,
+                ),
+              );
               return;
             }
         }
@@ -223,7 +264,7 @@ class ScanSessionCubit extends Cubit<ScanSessionState> {
           id: id,
           totals: totals,
           resumed: resumed,
-          loading: false,
+          phase: SessionPhase.scanning,
           rows: checks?.items ?? [],
           nextCursor: checks?.nextCursor,
         ),
@@ -232,7 +273,7 @@ class ScanSessionCubit extends Cubit<ScanSessionState> {
       if (_active(generation)) {
         emit(
           state.copyWith(
-            loading: false,
+            phase: SessionPhase.startFailed,
             failure: const Failure(
               InternalErrorException(reason: VerificationReason.scanStorage),
             ),
@@ -251,10 +292,8 @@ class ScanSessionCubit extends Cubit<ScanSessionState> {
   Future<void> scan(String raw) {
     final formats = state.formats;
     if (_ended ||
-        state.loading ||
+        state.phase != SessionPhase.scanning ||
         state.paused ||
-        state.finishing ||
-        state.done ||
         formats == null ||
         state.id == null) {
       return Future<void>.value();
@@ -325,7 +364,7 @@ class ScanSessionCubit extends Cubit<ScanSessionState> {
     emit(
       state.copyWith(
         busy: true,
-        repeat: false,
+        notice: state._sending,
         failure: null,
         retryAt: null,
         notChecked: 0,
@@ -372,14 +411,14 @@ class ScanSessionCubit extends Cubit<ScanSessionState> {
       );
       if (code == ApiErrorCodes.sessionNotYours) {
         _lastRaw = null;
-        emit(state.copyWith(busy: false, restarted: true));
+        emit(state.copyWith(busy: false, notice: ScanNotice.restarted));
         read.letGo();
         _inFlight = null;
         _pump();
         return;
       }
       rolledOver = true;
-      emit(state.copyWith(renewed: true));
+      emit(state.copyWith(notice: ScanNotice.renewed));
       result = await _scan(sent, sessionId: id);
       if (!_active(generation)) return _drop(read);
     }
@@ -404,9 +443,13 @@ class ScanSessionCubit extends Cubit<ScanSessionState> {
                     ...state.answers,
                     row.ref: ScanAnswer(value.result, checked),
                   },
-            repeat: value.repeat,
-            restarted: false,
-            renewed: rolledOver,
+            // A roll-over says why the list starts again; a new session
+            // has no repeat to tell.
+            notice: rolledOver
+                ? ScanNotice.renewed
+                : value.repeat
+                ? ScanNotice.repeat
+                : null,
             totals: value.session,
             answered: state.answered + 1,
             pending: _waiting,
@@ -436,7 +479,7 @@ class ScanSessionCubit extends Cubit<ScanSessionState> {
             retryAt: retryAt,
             latest: null,
             checked: null,
-            repeat: false,
+            notice: state._sending,
             notChecked: dropped,
             pending: _waiting,
           ),
@@ -475,8 +518,10 @@ class ScanSessionCubit extends Cubit<ScanSessionState> {
   /// waiting for the server (guide section 4.4). The rows, the totals and
   /// the answers stay for the summary.
   Future<void> complete() async {
-    if (_ended || state.finishing || state.done || state.id == null) return;
-    emit(state.copyWith(finishing: true, paused: false));
+    if (_ended || state.phase != SessionPhase.scanning || state.id == null) {
+      return;
+    }
+    emit(state.copyWith(phase: SessionPhase.finishing, paused: false));
     if (_inFlight != null || _line.isNotEmpty) {
       final idle = _idle ??= Completer<void>();
       _pump();
@@ -488,7 +533,7 @@ class ScanSessionCubit extends Cubit<ScanSessionState> {
     _pace?.cancel();
     final id = state.id!;
     emit(
-      state.copyWith(finishing: false, done: true, busy: false, pending: 0),
+      state.copyWith(phase: SessionPhase.done, busy: false, pending: 0),
     );
     unawaited(_endSession(id));
     try {
@@ -614,7 +659,7 @@ class ScanSessionCubit extends Cubit<ScanSessionState> {
     ++_generation;
     _letGoAll(_inFlight);
     final id = state.id;
-    if (!isClosed) emit(const ScanSessionState(loading: false));
+    if (!isClosed) emit(const ScanSessionState(phase: SessionPhase.closed));
     if (id != null) unawaited(_endSession(id));
     try {
       await _persist(_store.clear);
