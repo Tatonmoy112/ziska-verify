@@ -1,4 +1,5 @@
 import 'package:ziska_verify/core/errors/app_exception.dart';
+import 'package:ziska_verify/core/errors/failure_reason.dart';
 import 'package:ziska_verify/core/network/api_client.dart';
 import 'package:ziska_verify/core/network/api_data.dart';
 import 'package:ziska_verify/core/network/api_routes.dart';
@@ -26,7 +27,7 @@ class DioAccessRequestApiService implements AccessRequestApiService {
   Future<List<RequestableRoleDto>> roles() async {
     final data = await _api.get(ApiRoutes.requestableRoles, skipAuth: true);
     return [
-      for (final role in ApiData.list(data, 'access_roles'))
+      for (final role in ApiData.list(data, ApiAnswer.accessRoles))
         RequestableRoleDto.fromJson(role),
     ];
   }
@@ -48,8 +49,8 @@ class DioAccessRequestApiService implements AccessRequestApiService {
         'password': request.password,
       },
     );
-    if (ApiData.map(data, 'access_pending')['status'] != 'pending') {
-      throw const InternalErrorException(message: 'access_pending_shape');
+    if (ApiData.map(data, ApiAnswer.accessPending)['status'] != 'pending') {
+      throw const InternalErrorException(reason: ApiAnswer.accessPending);
     }
   }
 }

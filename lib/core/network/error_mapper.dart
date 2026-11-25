@@ -17,7 +17,7 @@ class ErrorMapper {
       // No connection was made: the request never reached a server.
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.connectionError:
-        return const NetworkException(message: NetworkException.notSent);
+        return const NetworkException(wasNotSent: true);
       // Sent, but the answer was lost: it may have been recorded.
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
@@ -25,7 +25,7 @@ class ErrorMapper {
         return const NetworkException();
       // The secure connection was refused before anything was sent.
       case DioExceptionType.badCertificate:
-        return const NetworkException(message: NetworkException.notSent);
+        return const NetworkException(wasNotSent: true);
       case DioExceptionType.badResponse:
       case DioExceptionType.unknown:
         final response = e.response;

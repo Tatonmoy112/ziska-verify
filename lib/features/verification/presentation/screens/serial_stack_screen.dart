@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ziska_verify/core/errors/app_exception.dart';
 import 'package:ziska_verify/features/verification/domain/entities/checked_input.dart';
+import 'package:ziska_verify/features/verification/domain/entities/failure_reasons.dart';
 import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
 import 'package:ziska_verify/features/verification/domain/entities/serial_stack.dart';
 import 'package:ziska_verify/features/verification/domain/usecases/verification_usecases.dart';
@@ -249,11 +250,11 @@ class _SerialStackScreenState extends State<SerialStackScreen>
                           ? l.serialStackRecorded
                           : state.uncertain
                           ? l.serialStackUncertain
-                          : state.failure!.exception.message ==
-                                'serial_stack_size'
+                          : state.failure!.exception.reason ==
+                                VerificationReason.serialStackSize
                           ? l.serialStackLimit
-                          : state.failure!.exception.message ==
-                                    'serial_input' &&
+                          : state.failure!.exception.reason ==
+                                    VerificationReason.serialInput &&
                                 state.badSerial != null
                           ? l.serialStackBadSerial(
                               state.badSerial!.position,

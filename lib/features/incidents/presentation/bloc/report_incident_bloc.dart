@@ -4,6 +4,7 @@ import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:clock/clock.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ziska_verify/core/errors/app_exception.dart';
+import 'package:ziska_verify/core/errors/failure_reason.dart';
 import 'package:ziska_verify/core/errors/result.dart';
 import 'package:ziska_verify/core/services/media/photo_service.dart';
 import 'package:ziska_verify/features/incidents/domain/entities/report.dart';
@@ -374,7 +375,7 @@ class ReportIncidentBloc
   static bool _acceptedUnreadable(AppException e) {
     if (e is! InternalErrorException) return false;
     final status = e.statusCode;
-    return e.message == 'incident_id_shape' ||
+    return e.reason == ApiAnswer.incidentId ||
         (status != null && status >= 200 && status < 300);
   }
 

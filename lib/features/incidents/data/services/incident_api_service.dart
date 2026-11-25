@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:ziska_verify/core/errors/failure_reason.dart';
 import 'package:ziska_verify/core/network/api_client.dart';
 import 'package:ziska_verify/core/network/api_data.dart';
 import 'package:ziska_verify/core/network/api_routes.dart';
@@ -26,7 +27,7 @@ class DioIncidentApiService implements IncidentApiService {
   Future<int> fileReport(Map<String, Object?> body) async => ApiData.intField(
     await _api.post(ApiRoutes.fileReport, body: body),
     'id',
-    'incident_id',
+    ApiAnswer.incidentId,
   );
 
   @override
@@ -42,7 +43,7 @@ class DioIncidentApiService implements IncidentApiService {
       contentType: contentType,
     ),
     'n',
-    'incident_n',
+    ApiAnswer.incidentN,
   );
 
   @override
@@ -51,6 +52,6 @@ class DioIncidentApiService implements IncidentApiService {
       ApiRoutes.myReports,
       query: {'limit': page.limit, 'cursor': page.cursor},
     );
-    return ReportsPageDto.fromJson(ApiData.map(data, 'reports'));
+    return ReportsPageDto.fromJson(ApiData.map(data, ApiAnswer.reports));
   }
 }

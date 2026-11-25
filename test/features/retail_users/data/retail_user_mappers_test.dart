@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ziska_verify/core/errors/app_exception.dart';
+import 'package:ziska_verify/core/errors/failure_reason.dart';
 import 'package:ziska_verify/core/errors/result.dart';
 import 'package:ziska_verify/core/network/api_client.dart';
 import 'package:ziska_verify/core/pagination/page_request.dart';
@@ -88,7 +89,7 @@ void main() {
         expect(result, isA<Err<Object?>>());
         final failure = (result as Err).failure;
         expect(failure.exception, isA<InternalErrorException>());
-        expect(failure.exception.message, 'answer_shape');
+        expect(failure.exception.reason, CoreReason.answerShape);
       });
     }
   });

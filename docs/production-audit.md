@@ -6,7 +6,7 @@ The production-grade review of the app, done on the `production` branch one area
 |---|---|---|
 | 2 | High-level architecture | Checked 2026-11-24: P-1 … P-15. **All fixed**; P-10 on for staging, live waits for its production project |
 | 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11). **All fixed** (2026-11-25) |
-| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-43. Fixed: P-20 … P-23 |
+| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-43. Fixed: P-20 … P-24 |
 | 5 | Dead code | To do |
 | 6+ | Comments, data layer, UI components, state and lifecycle, security, build and release, monitoring, tests, localisation, performance, docs | To do |
 
@@ -816,6 +816,21 @@ The layer rules (step 2) and the central API (step 3) are already enforced, so t
 - **normal:** each reason is made and acted on;
 - **edge:** a server message that equals an old string means nothing;
 - **worst:** the `<name>_shape` decisions (P-19's table) keep working.
+
+**✅ Fixed 2026-11-25:**
+- **Tests first:** TC-ERR-055 … -057 (`test/core/errors/failure_reason_test.dart`):
+  - each reason is typed where it is made, and the log line names the reason, never the server's text;
+  - a server text equal to an old reason means nothing;
+  - no `message` is compared with a text, and no exception is made with an app-written message, in `lib/` or `tool/`.
+- **A real defect behind it:** a serial stack answered 500 whose message read `verification_shape` became "recorded", a different outcome from a server error. Run with the old message check put back, the stack test was red (the 500's status was lost) and so was the source check.
+- **The change:**
+  - `FailureReason` (`core/errors/failure_reason.dart`) is an interface. `CoreReason` holds the core's own reasons (`answerShape`, `notEnvelope`, `storage`), and `ApiAnswer` the answers of P-19, which `ApiData` now takes in place of a name.
+  - Each feature names its own reasons: `AuthReason` (`noChallenge`, `phoneId`, `loginAnswer`) and `VerificationReason` (`sessionMismatch`, `serialInput`, `serialStackSize`, `serialStackMismatch`, `scanInput`, `scanStorage`), in their `domain/entities/failure_reasons.dart`. The core knows neither.
+  - `AppException` has a typed `reason`, set by `ValidationException`, `UnauthenticatedException` and `InternalErrorException`. Its `toString()` names the reason, not the server's message.
+  - `NetworkException.wasNotSent` is a field, not `message == 'not_sent'`.
+  - The seven decisions on text now compare reasons: the report screen, the serial stack repository, cubit and screen, and the scan session screen.
+- **Also:** the staging tool's renewal (`tool/staging_check`) read the answer by hand; it uses `ApiData` like the app.
+- **For step 5:** the staging tool still posts `'auth/refresh'` as text, not `ApiRoutes.refresh`. R20 checks only `lib/`.
 
 #### P-25 (should): the 404 "what is gone" text is read in presentation
 **Evidence:** `incidents/presentation/bloc/report_incident_bloc.dart:364-365`: `text.contains('retail user')`, `text.contains('check')`. `authentication/presentation/screens/request_access_screen.dart:145`: `message?.toLowerCase().contains('role')`.

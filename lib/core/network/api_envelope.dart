@@ -1,4 +1,5 @@
 import 'package:ziska_verify/core/errors/app_exception.dart';
+import 'package:ziska_verify/core/errors/failure_reason.dart';
 import 'package:ziska_verify/core/network/error_mapper.dart';
 
 /// The answer shape of every route (final.md §15):
@@ -14,7 +15,7 @@ abstract final class ApiEnvelope {
     }
     throw InternalErrorException(
       statusCode: statusCode,
-      message: 'unexpected_answer_shape',
+      reason: CoreReason.notEnvelope,
     );
   }
 }

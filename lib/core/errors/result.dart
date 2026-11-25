@@ -1,4 +1,5 @@
 import 'package:ziska_verify/core/errors/app_exception.dart';
+import 'package:ziska_verify/core/errors/failure_reason.dart';
 
 /// What a repository returns: repositories never throw
 /// (final.md §3).
@@ -58,11 +59,15 @@ Future<Result<T>> guard<T>(Future<T> Function() action) async {
   } on AppException catch (e) {
     return Err(Failure(e));
   } on FormatException {
-    return const Err(Failure(InternalErrorException(message: 'answer_shape')));
+    return const Err(
+      Failure(InternalErrorException(reason: CoreReason.answerShape)),
+    );
     // The generated parsers report a wrong field type this way; nothing else
     // in an action is expected to.
     // ignore: avoid_catching_errors
   } on TypeError {
-    return const Err(Failure(InternalErrorException(message: 'answer_shape')));
+    return const Err(
+      Failure(InternalErrorException(reason: CoreReason.answerShape)),
+    );
   }
 }

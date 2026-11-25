@@ -7,7 +7,7 @@
 |---|---|
 | Spec | final.md §14.2, §15.2, §15.4–15.5 |
 | API | every route |
-| Automated in | `error_mapper_test`, `api_error_codes_test`, `session_renewal_test`, `test/flow/lookup_flow_test.dart` |
+| Automated in | `error_mapper_test`, `api_error_codes_test`, `failure_reason_test`, `session_renewal_test`, `test/flow/lookup_flow_test.dart` |
 | Format | [Case format and type tags](README.md#3-case-format) |
 
 | ID | Title | Type | Pri | Run on | Auto | Pre-conditions / Data | Steps | Expected | Source |
@@ -73,6 +73,9 @@
 | TC-ERR-052 | The app's error codes are the guide's | POS | P2 | AUTO | ✅ `core/errors/api_error_codes_test` | The app API guide §1 table; `ApiErrorCodes` | Compare both ways; map each code with its status | The same 15 codes, none missing or extra; each is its own exception, with its code | guide §1; production audit P-23 |
 | TC-ERR-053 | A code the app does not know | EDGE | P2 | AUTO | ✅ `core/errors/api_error_codes_test` | Answers with `TOKEN_EXPIRED`, `token_expired ` (a space), and unknown codes on 429, 503 and 418 | Map each | A look-alike is never the known code; unknown codes are decided by status | guide §1; P-23 |
 | TC-ERR-054 | No error code is written by hand | WORST | P2 | AUTO | ✅ `core/errors/api_error_codes_test` | Every hand-written file in `lib/` | Look for any of the 15 codes in quotes | None outside `core/errors/api_error_codes.dart`; the only exceptions are three result values spelled `not_found` (a check's result, a lookup's outcome, the mock's counts) | P-23 |
+| TC-ERR-055 | The app's own reasons are typed | POS | P2 | AUTO | ✅ `core/errors/failure_reason_test` | Dio failures; a parser error; a page without the envelope | Map each | No connection, a connect timeout or a refused certificate is `wasNotSent`; a send or receive timeout is not; a parser error is `CoreReason.answerShape`, a page without the envelope `notEnvelope`; the log line names the reason, never the server's text | production audit P-24 |
+| TC-ERR-056 | A server text equal to an old reason | EDGE | P1 | AUTO | ✅ `core/errors/failure_reason_test` | Server errors whose message reads `verification_shape`, `incident_id_shape`, `serial_stack_mismatch`, `not_sent`, `serial_input`; a serial stack answered 500 with `verification_shape` | Map each; send the stack | The text is kept as the server's message and decides nothing; the stack's 500 stays a server error, never "recorded" | guide §4.7; P-24 |
+| TC-ERR-057 | No decision rides on `message` | WORST | P2 | AUTO | ✅ `core/errors/failure_reason_test` | Every hand-written file in `lib/` and `tool/` | Look for `message ==` with a text, and an exception made with an app-written message | None | P-24 |
 
 ## Request Matrix
 

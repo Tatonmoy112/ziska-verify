@@ -1,3 +1,4 @@
+import 'package:ziska_verify/core/errors/failure_reason.dart';
 import 'package:ziska_verify/core/network/api_client.dart';
 import 'package:ziska_verify/core/network/api_data.dart';
 import 'package:ziska_verify/core/network/api_routes.dart';
@@ -53,7 +54,7 @@ class DioAuthApiService implements AuthApiService {
         body: {'email': email, 'password': password, 'phone_id': phoneId},
         skipAuth: true,
       ),
-      'auth',
+      ApiAnswer.auth,
     ),
   );
 
@@ -69,7 +70,7 @@ class DioAuthApiService implements AuthApiService {
         body: {'challenge_id': challengeId, 'code': code, 'phone_id': phoneId},
         skipAuth: true,
       ),
-      'auth',
+      ApiAnswer.auth,
     ),
   );
 
@@ -96,7 +97,7 @@ class DioAuthApiService implements AuthApiService {
         // ended (app API guide §3.6).
         keepSessionOn401: true,
       ),
-      'auth',
+      ApiAnswer.auth,
     ),
   );
 

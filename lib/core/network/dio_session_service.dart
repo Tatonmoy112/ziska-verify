@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:ziska_verify/core/errors/app_exception.dart';
+import 'package:ziska_verify/core/errors/failure_reason.dart';
 import 'package:ziska_verify/core/network/api_data.dart';
 import 'package:ziska_verify/core/network/api_envelope.dart';
 import 'package:ziska_verify/core/network/api_routes.dart';
@@ -148,12 +149,12 @@ class DioSessionService implements SessionService {
       );
       final data = ApiData.map(
         ApiEnvelope.unwrap(response.data),
-        'renewal',
+        ApiAnswer.renewal,
       );
       final access = data['access_token'];
       final next = data['refresh_token'];
       if (access is! String || next is! String) {
-        throw const InternalErrorException(message: 'renewal_shape');
+        throw const InternalErrorException(reason: ApiAnswer.renewal);
       }
       // Logged out (or in again) meanwhile: these passes belong to a login
       // that is over.
@@ -220,7 +221,7 @@ class DioSessionService implements SessionService {
       await _storage.write(key, value);
     } on Object catch (e) {
       _logger.warning('pass not stored: ${e.runtimeType}');
-      throw const InternalErrorException(message: 'storage');
+      throw const InternalErrorException(reason: CoreReason.storage);
     }
   }
 

@@ -25,8 +25,10 @@ import 'package:image/image.dart' as img;
 import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:ziska_verify/app/config/app_config.dart';
 import 'package:ziska_verify/core/errors/app_exception.dart';
+import 'package:ziska_verify/core/errors/failure_reason.dart';
 import 'package:ziska_verify/core/errors/result.dart';
 import 'package:ziska_verify/core/network/api_client.dart';
+import 'package:ziska_verify/core/network/api_data.dart';
 import 'package:ziska_verify/core/network/api_envelope.dart';
 import 'package:ziska_verify/core/network/api_routes.dart';
 import 'package:ziska_verify/core/network/bodiless_request_interceptor.dart';
@@ -1916,11 +1918,7 @@ class StagingCheck {
         data: {'refresh_token': refresh},
         options: Options(headers: {'Authorization': null}),
       );
-      final data = ApiEnvelope.unwrap(response.data);
-      if (data is! Map<String, dynamic>) {
-        throw const InternalErrorException(message: 'renewal_shape');
-      }
-      return data;
+      return ApiData.map(ApiEnvelope.unwrap(response.data), ApiAnswer.renewal);
     } on DioException catch (e) {
       throw ErrorMapper.fromDio(e);
     }

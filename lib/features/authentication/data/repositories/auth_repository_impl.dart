@@ -6,6 +6,7 @@ import 'package:ziska_verify/core/services/session/session_service.dart';
 import 'package:ziska_verify/core/services/session/session_state.dart';
 import 'package:ziska_verify/features/authentication/data/models/auth_dtos.dart';
 import 'package:ziska_verify/features/authentication/data/services/auth_api_service.dart';
+import 'package:ziska_verify/features/authentication/domain/entities/failure_reasons.dart';
 import 'package:ziska_verify/features/authentication/domain/entities/login_outcome.dart';
 import 'package:ziska_verify/features/authentication/domain/repositories/auth_repository.dart';
 
@@ -42,7 +43,7 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Result<LoginOutcome>> verifyCode(String code) => guard(() async {
     final state = _session.current;
     if (state is! SessionAwaitingCode) {
-      throw const UnauthenticatedException(message: 'no_challenge');
+      throw const UnauthenticatedException(reason: AuthReason.noChallenge);
     }
     final dto = await _api.verifyPhone(
       challengeId: state.challengeId,
@@ -62,7 +63,7 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Result<void>> resendCode() => guard(() async {
     final state = _session.current;
     if (state is! SessionAwaitingCode) {
-      throw const UnauthenticatedException(message: 'no_challenge');
+      throw const UnauthenticatedException(reason: AuthReason.noChallenge);
     }
     await _api.resendCode(state.challengeId);
   });
@@ -127,7 +128,7 @@ class AuthRepositoryImpl implements AuthRepository {
       rethrow;
     } on Object catch (e) {
       _logger.warning('phone ID not readable: ${e.runtimeType}');
-      throw const InternalErrorException(message: 'phone_id');
+      throw const InternalErrorException(reason: AuthReason.phoneId);
     }
   }
 
@@ -140,7 +141,7 @@ class AuthRepositoryImpl implements AuthRepository {
       case 'code_sent':
         final challengeId = dto.challengeId;
         if (challengeId == null) {
-          throw const InternalErrorException(message: 'login_shape');
+          throw const InternalErrorException(reason: AuthReason.loginAnswer);
         }
         _session.awaitCode(challengeId: challengeId, email: email);
         return CodeSent(challengeId);
@@ -148,7 +149,7 @@ class AuthRepositoryImpl implements AuthRepository {
         final access = dto.accessToken;
         final refresh = dto.refreshToken;
         if (access == null || refresh == null) {
-          throw const InternalErrorException(message: 'login_shape');
+          throw const InternalErrorException(reason: AuthReason.loginAnswer);
         }
         final mustChange = dto.mustChangePassword ?? false;
         await _session.saveLogin(

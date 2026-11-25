@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ziska_verify/core/errors/app_exception.dart';
+import 'package:ziska_verify/core/errors/failure_reason.dart';
 import 'package:ziska_verify/core/errors/result.dart';
 import 'package:ziska_verify/core/network/api_client.dart';
 import 'package:ziska_verify/features/authentication/data/mappers/access_request_mappers.dart';
@@ -57,22 +58,22 @@ void main() {
         [
           {'id': '3', 'name': 'Field inspector'},
         ],
-        'answer_shape',
+        CoreReason.answerShape,
       ),
       (
         'a role without a name',
         [
           {'id': 3},
         ],
-        'answer_shape',
+        CoreReason.answerShape,
       ),
       (
         'a role that is not an object',
         ['Field inspector'],
-        'answer_shape',
+        CoreReason.answerShape,
       ),
       // The service's own check: the list is not a list.
-      ('not a list', {'roles': <Object?>[]}, 'access_roles_shape'),
+      ('not a list', {'roles': <Object?>[]}, ApiAnswer.accessRoles),
     ]) {
       test(label, () async {
         next = ScriptedAnswer(200, okBody(data));
@@ -80,7 +81,7 @@ void main() {
         expect(result, isA<Err<Object?>>());
         final failure = (result as Err).failure;
         expect(failure.exception, isA<InternalErrorException>());
-        expect(failure.exception.message, message);
+        expect(failure.exception.reason, message);
       });
     }
   });

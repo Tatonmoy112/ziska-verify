@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ziska_verify/core/errors/app_exception.dart';
+import 'package:ziska_verify/core/errors/failure_reason.dart';
 import 'package:ziska_verify/core/network/api_client.dart';
 import 'package:ziska_verify/core/network/api_data.dart';
 import 'package:ziska_verify/core/pagination/page_request.dart';
@@ -20,52 +21,50 @@ import 'package:ziska_verify/features/verification/domain/entities/scan_session.
 
 import '../../fakes/scripted_adapter.dart';
 
-Matcher _shape(String name) => isA<InternalErrorException>().having(
-  (e) => e.message,
-  'message',
-  '${name}_shape',
-);
+Matcher _shape(ApiAnswer answer) => isA<InternalErrorException>()
+    .having((e) => e.reason, 'reason', answer)
+    .having((e) => e.message, 'message', isNull);
 
 /// TC-ARCH-032 … -034 (docs/test-cases/18-architecture.md): every service
-/// reads the `data` of an answer through `ApiData`, and a wrong shape is
-/// `InternalErrorException('<name>_shape')` with the name it always had
-/// (production audit P-19).
+/// reads the `data` of an answer through `ApiData`, and a wrong shape is an
+/// `InternalErrorException` whose `reason` names the answer (production
+/// audit P-19, P-24).
 void main() {
   group('TC-ARCH-032 normal: the documented shape passes through', () {
     test('a map', () {
       final data = <String, dynamic>{'id': 7, 'name': 'x'};
-      expect(ApiData.map(data, 'me'), same(data));
+      expect(ApiData.map(data, ApiAnswer.me), same(data));
     });
 
     test('a list of maps', () {
       final data = <Object?>[
         <String, dynamic>{'id': 3},
       ];
-      expect(ApiData.list(data, 'roles'), [
+      expect(ApiData.list(data, ApiAnswer.accessRoles), [
         {'id': 3},
       ]);
     });
 
     test('a whole-number field', () {
-      expect(ApiData.intField({'id': 1042}, 'id', 'incident_id'), 1042);
+      expect(ApiData.intField({'id': 1042}, 'id', ApiAnswer.incidentId), 1042);
     });
   });
 
   group('TC-ARCH-033 edge: empty answers', () {
     test('an empty map and an empty list', () {
-      expect(ApiData.map(<String, dynamic>{}, 'me'), isEmpty);
-      expect(ApiData.list(<Object?>[], 'roles'), isEmpty);
+      expect(ApiData.map(<String, dynamic>{}, ApiAnswer.me), isEmpty);
+      expect(ApiData.list(<Object?>[], ApiAnswer.accessRoles), isEmpty);
     });
 
     test('a list whose items are not maps is left to the parser', () {
       // The parser reports it as a TypeError, which `guard` turns into
       // `answer_shape` (TC-AUTH-120).
-      final list = ApiData.list(<Object?>['x'], 'roles');
+      final list = ApiData.list(<Object?>['x'], ApiAnswer.accessRoles);
       expect(() => list.first, throwsA(isA<TypeError>()));
     });
 
     test('a field of 0 is a number', () {
-      expect(ApiData.intField({'n': 0}, 'n', 'incident_n'), 0);
+      expect(ApiData.intField({'n': 0}, 'n', ApiAnswer.incidentN), 0);
     });
   });
 
@@ -79,11 +78,17 @@ void main() {
     ]) {
       test('$label where a map is expected', () {
         if (data is Map<String, dynamic>) return; // the one right shape
-        expect(() => ApiData.map(data, 'me'), throwsA(_shape('me')));
+        expect(
+          () => ApiData.map(data, ApiAnswer.me),
+          throwsA(_shape(ApiAnswer.me)),
+        );
       });
       test('$label where a list is expected', () {
         if (data is List) return;
-        expect(() => ApiData.list(data, 'roles'), throwsA(_shape('roles')));
+        expect(
+          () => ApiData.list(data, ApiAnswer.accessRoles),
+          throwsA(_shape(ApiAnswer.accessRoles)),
+        );
       });
     }
 
@@ -97,8 +102,8 @@ void main() {
         null,
       ]) {
         expect(
-          () => ApiData.intField(data, 'id', 'incident_id'),
-          throwsA(_shape('incident_id')),
+          () => ApiData.intField(data, 'id', ApiAnswer.incidentId),
+          throwsA(_shape(ApiAnswer.incidentId)),
           reason: '$data',
         );
       }
@@ -118,31 +123,31 @@ void main() {
       });
 
       const page = PageRequest();
-      final calls = <(String, Future<Object?> Function(ApiClient))>[
+      final calls = <(ApiAnswer, Future<Object?> Function(ApiClient))>[
         (
-          'auth',
+          ApiAnswer.auth,
           (a) => DioAuthApiService(
             a,
           ).login(email: 'nobody@example.com', password: 'x', phoneId: 'p'),
         ),
         (
-          'auth',
+          ApiAnswer.auth,
           (a) => DioAuthApiService(
             a,
           ).verifyPhone(challengeId: 'c', code: '1', phoneId: 'p'),
         ),
         (
-          'auth',
+          ApiAnswer.auth,
           (a) => DioAuthApiService(
             a,
           ).changePassword(oldPassword: 'x', newPassword: 'y'),
         ),
         (
-          'access_roles',
+          ApiAnswer.accessRoles,
           (a) => DioAccessRequestApiService(a).roles(),
         ),
         (
-          'access_pending',
+          ApiAnswer.accessPending,
           (a) => DioAccessRequestApiService(a).submit(
             const AccessRequest(
               email: 'nobody@example.com',
@@ -153,59 +158,61 @@ void main() {
             ),
           ),
         ),
-        ('me', (a) => DioProfileApiService(a).getMe()),
+        (ApiAnswer.me, (a) => DioProfileApiService(a).getMe()),
         (
-          'checks',
+          ApiAnswer.checks,
           (a) => DioHistoryApiService(a).getChecks(const CheckQuery(), page),
         ),
         (
-          'incident_id',
+          ApiAnswer.incidentId,
           (a) => DioIncidentApiService(a).fileReport({}),
         ),
         (
-          'incident_n',
+          ApiAnswer.incidentN,
           (a) => DioIncidentApiService(
             a,
           ).addPhoto(1, Uint8List(1), 'image/jpeg'),
         ),
-        ('reports', (a) => DioIncidentApiService(a).myReports(page)),
+        (ApiAnswer.reports, (a) => DioIncidentApiService(a).myReports(page)),
         (
-          'retail_users',
+          ApiAnswer.retailUsers,
           (a) => DioRetailUserApiService(a).search(null, page),
         ),
         (
-          'verification',
+          ApiAnswer.verification,
           (a) => DioVerificationApiService(a).getFormats(),
         ),
         (
-          'verification',
+          ApiAnswer.verification,
           (a) => DioVerificationApiService(a).lookup(way: 'qr', value: 'v'),
         ),
         (
-          'verification',
+          ApiAnswer.verification,
           (a) => DioVerificationApiService(a).scan('v', 's'),
         ),
         (
-          'verification',
+          ApiAnswer.verification,
           (a) => DioVerificationApiService(a).serials(['v']),
         ),
         (
-          'verification',
+          ApiAnswer.verification,
           (a) => DioVerificationApiService(a).session('s'),
         ),
         (
-          'verification',
+          ApiAnswer.verification,
           (a) => DioVerificationApiService(
             a,
           ).sessions(const SessionQuery(), page),
         ),
       ];
       for (final (i, (name, call)) in calls.indexed) {
-        test('${i + 1}. $name', () async {
+        test('${i + 1}. ${name.name}', () async {
           await expectLater(call(api), throwsA(_shape(name)));
           // The other container: a map for the one route that answers a
           // list, a list for the rest.
-          answer = name == 'access_roles' ? <String, Object?>{} : <Object?>[];
+          answer = name == ApiAnswer.accessRoles
+              ? <String, Object?>{}
+              : <Object?>[];
           await expectLater(call(api), throwsA(_shape(name)));
         });
       }

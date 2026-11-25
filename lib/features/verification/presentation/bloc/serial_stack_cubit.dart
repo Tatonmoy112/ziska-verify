@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:ziska_verify/core/errors/app_exception.dart';
 import 'package:ziska_verify/core/errors/result.dart';
+import 'package:ziska_verify/features/verification/domain/entities/failure_reasons.dart';
 import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
 import 'package:ziska_verify/features/verification/domain/entities/serial_stack.dart';
 import 'package:ziska_verify/features/verification/domain/usecases/verification_usecases.dart';
@@ -81,7 +82,9 @@ class SerialStackCubit extends Cubit<SerialStackState> {
       // Name the serial: one bad value among 50 must be findable.
       emit(
         state.copyWith(
-          failure: const Failure(ValidationException(message: 'serial_input')),
+          failure: const Failure(
+            ValidationException(reason: VerificationReason.serialInput),
+          ),
           badSerial: bad,
         ),
       );
@@ -92,7 +95,7 @@ class SerialStackCubit extends Cubit<SerialStackState> {
       emit(
         state.copyWith(
           failure: const Failure(
-            ValidationException(message: 'serial_stack_size'),
+            ValidationException(reason: VerificationReason.serialStackSize),
           ),
         ),
       );
@@ -142,7 +145,8 @@ class SerialStackCubit extends Cubit<SerialStackState> {
         );
       case Err(:final failure)
           when failure.exception is InternalErrorException &&
-              failure.exception.message == 'serial_stack_mismatch':
+              failure.exception.reason ==
+                  VerificationReason.serialStackMismatch:
         emit(state.copyWith(busy: false, failure: failure, recorded: true));
       case Err(:final failure):
         final retryAt =

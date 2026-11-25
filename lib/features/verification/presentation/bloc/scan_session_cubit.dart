@@ -9,6 +9,7 @@ import 'package:ziska_verify/core/errors/result.dart';
 import 'package:ziska_verify/core/services/scanner/active_scan_store.dart';
 import 'package:ziska_verify/core/services/session/session_state.dart';
 import 'package:ziska_verify/features/verification/domain/entities/checked_input.dart';
+import 'package:ziska_verify/features/verification/domain/entities/failure_reasons.dart';
 import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
 import 'package:ziska_verify/features/verification/domain/entities/scan_session.dart';
 import 'package:ziska_verify/features/verification/domain/usecases/verification_usecases.dart';
@@ -231,7 +232,7 @@ class ScanSessionCubit extends Cubit<ScanSessionState> {
           state.copyWith(
             loading: false,
             failure: const Failure(
-              InternalErrorException(message: 'scan_storage'),
+              InternalErrorException(reason: VerificationReason.scanStorage),
             ),
           ),
         );
@@ -261,7 +262,9 @@ class ScanSessionCubit extends Cubit<ScanSessionState> {
     if (prepared is! ReadyInput) {
       emit(
         state.copyWith(
-          failure: const Failure(ValidationException(message: 'scan_input')),
+          failure: const Failure(
+            ValidationException(reason: VerificationReason.scanInput),
+          ),
         ),
       );
       return Future<void>.value();
@@ -344,7 +347,7 @@ class ScanSessionCubit extends Cubit<ScanSessionState> {
             state.copyWith(
               busy: false,
               failure: const Failure(
-                InternalErrorException(message: 'scan_storage'),
+                InternalErrorException(reason: VerificationReason.scanStorage),
               ),
             ),
           );

@@ -7,6 +7,7 @@ import 'package:ziska_verify/core/network/api_client.dart';
 import 'package:ziska_verify/core/services/scanner/active_scan_store.dart';
 import 'package:ziska_verify/features/verification/data/repositories/verification_repository_impl.dart';
 import 'package:ziska_verify/features/verification/data/services/verification_api_service.dart';
+import 'package:ziska_verify/features/verification/domain/entities/failure_reasons.dart';
 import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
 import 'package:ziska_verify/features/verification/domain/entities/scan_session.dart';
 
@@ -138,9 +139,9 @@ void main() {
       expect(
         (result as Err<ScanResult>).failure.exception,
         isA<InternalErrorException>().having(
-          (e) => e.message,
-          'message',
-          'session_mismatch',
+          (e) => e.reason,
+          'reason',
+          VerificationReason.sessionMismatch,
         ),
       );
     });

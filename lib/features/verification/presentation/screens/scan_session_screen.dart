@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:ziska_verify/core/errors/app_exception.dart';
 import 'package:ziska_verify/core/services/scanner/scanner_service.dart';
+import 'package:ziska_verify/features/verification/domain/entities/failure_reasons.dart';
 import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
 import 'package:ziska_verify/features/verification/domain/entities/scan_session.dart';
 import 'package:ziska_verify/features/verification/presentation/bloc/scan_session_cubit.dart';
@@ -314,10 +315,8 @@ class _ScanSessionScreenState extends State<ScanSessionScreen>
                             failure: state.failure!,
                             retryAt: state.retryAt,
                             message:
-                                state.failure!.exception
-                                        is ValidationException &&
-                                    state.failure!.exception.message ==
-                                        'scan_input'
+                                state.failure!.exception.reason ==
+                                    VerificationReason.scanInput
                                 ? l.notProductQr
                                 // Nothing is queued: scan the product
                                 // again (FR-SCN-15, guide section 4.6).

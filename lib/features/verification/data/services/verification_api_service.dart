@@ -1,3 +1,4 @@
+import 'package:ziska_verify/core/errors/failure_reason.dart';
 import 'package:ziska_verify/core/network/api_client.dart';
 import 'package:ziska_verify/core/network/api_data.dart';
 import 'package:ziska_verify/core/network/api_routes.dart';
@@ -75,5 +76,5 @@ class DioVerificationApiService implements VerificationApiService {
   /// Every answer here is an object; the repository acts on this name
   /// (a serial stack recorded with an unreadable answer).
   static Map<String, dynamic> _map(Object? data) =>
-      ApiData.map(data, 'verification');
+      ApiData.map(data, ApiAnswer.verification);
 }

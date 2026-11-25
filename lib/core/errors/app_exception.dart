@@ -1,14 +1,17 @@
+import 'package:ziska_verify/core/errors/failure_reason.dart';
+
 /// One typed exception per API `error.code` (final.md §15).
 ///
 /// Thrown by the network layer and API services; caught in repositories and
-/// turned into a `Failure`. Decisions are made on the type, never on
-/// [message].
+/// turned into a `Failure`. Decisions are made on the type and [reason],
+/// never on [message] (production audit P-24).
 sealed class AppException implements Exception {
   const AppException({
     this.statusCode,
     this.code,
     this.message,
     this.requestId,
+    this.reason,
   });
 
   /// The HTTP status, `null` when no answer arrived.
@@ -23,9 +26,14 @@ sealed class AppException implements Exception {
   /// Shown on every error screen as "Reference: {requestId}".
   final String? requestId;
 
+  /// Why the app itself failed, when it did; `null` for the server's own
+  /// errors.
+  final FailureReason? reason;
+
+  /// For logs: never the server's [message].
   @override
   String toString() =>
-      'AppException(status: $statusCode, code: ${code ?? message}, '
+      'AppException(status: $statusCode, code: ${code ?? reason}, '
       'requestId: $requestId)';
 }
 
@@ -36,6 +44,7 @@ final class ValidationException extends AppException {
     super.code,
     super.message,
     super.requestId,
+    super.reason,
   });
 }
 
@@ -56,6 +65,7 @@ final class UnauthenticatedException extends AppException {
     super.code,
     super.message,
     super.requestId,
+    super.reason,
   });
 }
 
@@ -160,18 +170,17 @@ final class InternalErrorException extends AppException {
     super.code,
     super.message,
     super.requestId,
+    super.reason,
   });
 }
 
 /// No answer: offline, timeout, or connection failure.
 final class NetworkException extends AppException {
-  const NetworkException({super.message});
+  const NetworkException({super.message, this.wasNotSent = false});
 
-  /// The [message] of a request that never reached a server (no
-  /// connection): nothing was recorded, so sending again is safe.
-  static const notSent = 'not_sent';
-
-  bool get wasNotSent => message == notSent;
+  /// The request never reached a server (no connection): nothing was
+  /// recorded, so sending again is safe.
+  final bool wasNotSent;
 }
 
 /// The request was cancelled by the app (a screen closed, a newer search).

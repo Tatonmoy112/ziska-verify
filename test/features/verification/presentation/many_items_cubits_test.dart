@@ -7,6 +7,7 @@ import 'package:ziska_verify/core/errors/result.dart';
 import 'package:ziska_verify/core/pagination/cursor_page.dart';
 import 'package:ziska_verify/core/services/scanner/active_scan_store.dart';
 import 'package:ziska_verify/core/services/session/session_state.dart';
+import 'package:ziska_verify/features/verification/domain/entities/failure_reasons.dart';
 import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
 import 'package:ziska_verify/features/verification/domain/entities/scan_session.dart';
 import 'package:ziska_verify/features/verification/domain/entities/serial_stack.dart';
@@ -722,7 +723,11 @@ void main() {
       'sent again', () async {
     when(() => repo.serials(any())).thenAnswer(
       (_) async => const Err(
-        Failure(InternalErrorException(message: 'serial_stack_mismatch')),
+        Failure(
+          InternalErrorException(
+            reason: VerificationReason.serialStackMismatch,
+          ),
+        ),
       ),
     );
     final cubit = stack();
@@ -748,7 +753,7 @@ void main() {
     () async {
       when(() => repo.serials(any())).thenAnswer(
         (_) async => const Err(
-          Failure(NetworkException(message: NetworkException.notSent)),
+          Failure(NetworkException(wasNotSent: true)),
         ),
       );
       final cubit = stack();

@@ -1,3 +1,4 @@
+import 'package:ziska_verify/core/errors/failure_reason.dart';
 import 'package:ziska_verify/core/network/api_client.dart';
 import 'package:ziska_verify/core/network/api_data.dart';
 import 'package:ziska_verify/core/network/api_routes.dart';
@@ -20,6 +21,8 @@ class DioRetailUserApiService implements RetailUserApiService {
       ApiRoutes.retailUsers,
       query: {'search': search, 'limit': page.limit, 'cursor': page.cursor},
     );
-    return RetailUsersPageDto.fromJson(ApiData.map(data, 'retail_users'));
+    return RetailUsersPageDto.fromJson(
+      ApiData.map(data, ApiAnswer.retailUsers),
+    );
   }
 }

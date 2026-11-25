@@ -1,3 +1,4 @@
+import 'package:ziska_verify/core/errors/failure_reason.dart';
 import 'package:ziska_verify/core/network/api_client.dart';
 import 'package:ziska_verify/core/network/api_data.dart';
 import 'package:ziska_verify/core/network/api_routes.dart';
@@ -21,7 +22,7 @@ class DioHistoryApiService implements HistoryApiService {
       ApiRoutes.checks,
       query: checksQuery(query, page),
     );
-    return ChecksPageDto.fromJson(ApiData.map(data, 'checks'));
+    return ChecksPageDto.fromJson(ApiData.map(data, ApiAnswer.checks));
   }
 
   /// Only documented parameters; empty filters are left out, and so is

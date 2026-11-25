@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:ziska_verify/core/errors/app_exception.dart';
+import 'package:ziska_verify/core/errors/failure_reason.dart';
 import 'package:ziska_verify/core/errors/result.dart';
 import 'package:ziska_verify/core/pagination/cursor_page.dart';
 import 'package:ziska_verify/core/pagination/page_request.dart';
@@ -10,6 +11,7 @@ import 'package:ziska_verify/core/utils/local_days.dart';
 import 'package:ziska_verify/features/verification/data/mappers/verification_mappers.dart';
 import 'package:ziska_verify/features/verification/data/models/verification_dtos.dart';
 import 'package:ziska_verify/features/verification/data/services/verification_api_service.dart';
+import 'package:ziska_verify/features/verification/domain/entities/failure_reasons.dart';
 import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
 import 'package:ziska_verify/features/verification/domain/entities/scan_session.dart';
 import 'package:ziska_verify/features/verification/domain/entities/serial_stack.dart';
@@ -46,7 +48,9 @@ class VerificationRepositoryImpl implements VerificationRepository {
         final data = await _api.scan(value, sessionId);
         final scan = ScanResultDto.fromJson(data);
         if (scan.session.id != sessionId) {
-          throw const InternalErrorException(message: 'session_mismatch');
+          throw const InternalErrorException(
+            reason: VerificationReason.sessionMismatch,
+          );
         }
         return ScanResult(
           result: LookupResultDto.fromJson(data).toEntity(),
@@ -61,7 +65,9 @@ class VerificationRepositoryImpl implements VerificationRepository {
         // Each item once, as the server counts them (B5).
         final expected = distinctSerials(values);
         if (expected.isEmpty || expected.length > serialStackLimit) {
-          throw const ValidationException(message: 'serial_stack_size');
+          throw const ValidationException(
+            reason: VerificationReason.serialStackSize,
+          );
         }
         final Map<String, dynamic> data;
         try {
@@ -70,9 +76,9 @@ class VerificationRepositoryImpl implements VerificationRepository {
           // A 200 that is not the documented answer: the stack was
           // recorded all the same (guide section 4.7, "when the answer is
           // not 200, nothing was recorded").
-          if (e.message == 'verification_shape' || _success(e.statusCode)) {
+          if (e.reason == ApiAnswer.verification || _success(e.statusCode)) {
             throw const InternalErrorException(
-              message: 'serial_stack_mismatch',
+              reason: VerificationReason.serialStackMismatch,
             );
           }
           rethrow;
@@ -86,7 +92,7 @@ class VerificationRepositoryImpl implements VerificationRepository {
                 (entry) => entry.$2.serial != expected[entry.$1],
               )) {
             throw const InternalErrorException(
-              message: 'serial_stack_mismatch',
+              reason: VerificationReason.serialStackMismatch,
             );
           }
           return SerialStackResult(
@@ -104,9 +110,13 @@ class VerificationRepositoryImpl implements VerificationRepository {
           // field this way.
           // ignore: avoid_catching_errors
         } on TypeError {
-          throw const InternalErrorException(message: 'serial_stack_mismatch');
+          throw const InternalErrorException(
+            reason: VerificationReason.serialStackMismatch,
+          );
         } on FormatException {
-          throw const InternalErrorException(message: 'serial_stack_mismatch');
+          throw const InternalErrorException(
+            reason: VerificationReason.serialStackMismatch,
+          );
         }
       });
 
