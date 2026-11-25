@@ -6,7 +6,7 @@ The production-grade review of the app, done on the `production` branch one area
 |---|---|---|
 | 2 | High-level architecture | Checked 2026-11-24: P-1 … P-15. **All fixed**; P-10 on for staging, live waits for its production project |
 | 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11). **All fixed** (2026-11-25) |
-| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-45. Fixed: P-20 … P-40 |
+| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-45. Fixed: P-20 … P-41 |
 | 5 | Dead code | To do |
 | 6+ | Comments, data layer, UI components, state and lifecycle, security, build and release, monitoring, tests, localisation, performance, docs | To do |
 
@@ -1329,6 +1329,19 @@ History's reasons stay raw strings (`CheckRecord.reasons`, `List<String>`), whic
 **Proposal:** one rule, written in final.md: a screen pushes routes of its own feature, and receives any route of another feature as a callback from the router.
 
 **Tests:** the router and flow tests pass unchanged; an architecture check that a screen names only its own feature's routes.
+
+**✅ Fixed 2026-11-25:**
+- **What was found on re-reading:** the rule was already written in final.md §9 and checked by R18 (P-9): a screen opens its own feature's routes and Home, and gets other features' routes as callbacks. `VerifyScreen` pushing its own scanner mode and result, and `ReportIncidentScreen` replacing itself with My reports, keep that rule. What broke it was the other way around: the router handed `ScanSessionScreen` and `SerialStackScreen` the check feature's own result route as `onOpenResult`, so that route was reached two ways.
+- **Tests first:** TC-ARCH-062 … -064 (`architecture/route_callbacks_test`):
+  - other features' routes handed in, and a screen's own route opened by itself, are not reported, and on the real router nothing is;
+  - the innermost widget counts (the sessions view inside History's screen); Home handed in is reported; comments, routes outside any widget, and widgets not imported are not;
+  - a screen's own route handed in directly, or through a helper of the route file, called or torn off, is reported; neither screen takes `onOpenResult`.
+  - Before the change, the real router broke the new rule twice: `ScanSessionScreen` and `SerialStackScreen`, each with `RouteNames.lookupResult`.
+- **The change:**
+  - a new rule, **R22**: the router never hands a feature's widget a route it opens itself, its own feature's or Home;
+  - `openResult` (`verification/presentation/models/result_view.dart`) opens the result page, for Check, scanner mode and the serial stack alike; `OpenLookupResult` and the router's `openManyResult` are gone;
+  - final.md §9 states both directions.
+- **Every screenshot and flow test passes unchanged.**
 
 #### P-42 (nice): small duplicates
 - **The `YYYY-MM-DD` formatter:** twice, `history_api_service.dart:46` and `verification_api_service.dart:69`.

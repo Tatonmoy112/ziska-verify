@@ -37,7 +37,11 @@ enum Rule {
     'R20',
     'a route is made outside core/network/api_routes.dart',
   ),
-  dataImportsUseCase('R21', 'data imports a use case')
+  dataImportsUseCase('R21', 'data imports a use case'),
+  ownRouteHandedIn(
+    'R22',
+    'the router hands a screen a route it opens itself',
+  )
   ;
 
   const Rule(this.id, this.text);
@@ -137,6 +141,9 @@ class LayerRules {
           }
         }
       }
+      if (from.area == _Area.app && routeOwners.isNotEmpty) {
+        _checkHandedRoutes(file, sources, imports[file]!, add);
+      }
       // Every route of the API is made in one file (P-17).
       if (file != 'core/network/api_routes.dart' &&
           _newRoute.hasMatch(sources[file]!.replaceAll(_comment, ''))) {
@@ -176,6 +183,86 @@ class LayerRules {
     }
     _checkFolderCycles(sources.keys, imports, add);
     return found.values.toList()..sort(_order);
+  }
+
+  /// R22 (production audit P-41): in the router's [file], a route named in
+  /// a feature widget's arguments (directly, or through a helper function
+  /// of the file) is one the widget opens itself when it is its own
+  /// feature's or Home. Each route counts for the innermost widget around
+  /// it.
+  void _checkHandedRoutes(
+    String file,
+    Map<String, String> sources,
+    List<String> imports,
+    void Function(Rule, String, String) add,
+  ) {
+    final widgets = <String, String>{
+      for (final target in imports)
+        if (_Place.of(target) case _Place(
+          area: _Area.feature,
+          layer: _Layer.presentation,
+          :final feature?,
+        ))
+          for (final m in _widgetClass.allMatches(
+            (sources[target] ?? '').replaceAll(_comment, ''),
+          ))
+            m.group(1)!: feature,
+    };
+    if (widgets.isEmpty) return;
+    final code = sources[file]!.replaceAll(_comment, '');
+
+    // Helpers of the file and the routes their bodies name.
+    final helpers = <String, Set<String>>{};
+    for (final m in _function.allMatches(code)) {
+      final params = _closing(code, m.end - 1);
+      if (params == null) continue;
+      final body = _body(code, params + 1);
+      if (body == null) continue;
+      final routes = _routeName
+          .allMatches(code.substring(body.$1, body.$2))
+          .map((r) => r.group(1)!)
+          .toSet();
+      if (routes.isNotEmpty) helpers[m.group(1)!] = routes;
+    }
+
+    // Each widget built, and the span of its arguments.
+    final calls = <(String, int, int)>[];
+    for (final m in RegExp(r'\b(\w+)\s*\(').allMatches(code)) {
+      final name = m.group(1)!;
+      if (!widgets.containsKey(name)) continue;
+      final end = _closing(code, m.end - 1);
+      if (end != null) calls.add((name, m.end, end));
+    }
+    String? innermost(int at) {
+      (String, int, int)? best;
+      for (final c in calls) {
+        if (c.$2 <= at && at < c.$3 && (best == null || c.$2 > best.$2)) {
+          best = c;
+        }
+      }
+      return best?.$1;
+    }
+
+    void handed(int at, String route) {
+      final widget = innermost(at);
+      if (widget == null) return;
+      final own =
+          openToAll.contains(route) || routeOwners[route] == widgets[widget];
+      if (own) add(Rule.ownRouteHandedIn, file, '$widget -> RouteNames.$route');
+    }
+
+    for (final m in _routeName.allMatches(code)) {
+      handed(m.start, m.group(1)!);
+    }
+    for (final MapEntry(key: name, value: routes) in helpers.entries) {
+      for (final m in RegExp(
+        '(?<![.\\w])${RegExp.escape(name)}\\b',
+      ).allMatches(code)) {
+        for (final route in routes) {
+          handed(m.start, route);
+        }
+      }
+    }
   }
 
   void _checkLink(
@@ -438,6 +525,57 @@ final _apiInterface = RegExp(
   r'^abstract interface class (\w+ApiService)\b',
   multiLine: true,
 );
+
+/// A widget class a feature declares (R22).
+final _widgetClass = RegExp(
+  r'^(?:final\s+)?class (\w+) extends (?:StatelessWidget|StatefulWidget)\b',
+  multiLine: true,
+);
+
+/// A function declared at the start of a line: its return type, its name
+/// and the `(` of its parameters (R22).
+final _function = RegExp(
+  r'^[ \t]*[A-Za-z_][\w<>?, ]*[\w>?][ \t]+(\w+)[ \t]*\(',
+  multiLine: true,
+);
+
+/// The index of the `)` that closes the `(` at [open], or null.
+int? _closing(String code, int open) {
+  var depth = 0;
+  for (var i = open; i < code.length; i++) {
+    final c = code[i];
+    if (c == '(') depth++;
+    if (c == ')' && --depth == 0) return i;
+  }
+  return null;
+}
+
+/// The span of a function body that starts after [from] (`async`, then
+/// `=> …;` or `{ … }`), or null when no body follows.
+(int, int)? _body(String code, int from) {
+  final head = RegExp(
+    r'\s*(?:async\*?\s*|sync\*\s*)?(=>|\{)',
+  ).matchAsPrefix(code, from);
+  if (head == null) return null;
+  final start = head.end;
+  if (head.group(1) == '=>') {
+    var depth = 0;
+    for (var i = start; i < code.length; i++) {
+      final c = code[i];
+      if ('([{'.contains(c)) depth++;
+      if (')]}'.contains(c)) depth--;
+      if ((c == ';' && depth == 0) || depth < 0) return (start, i);
+    }
+    return null;
+  }
+  var depth = 1;
+  for (var i = start; i < code.length; i++) {
+    final c = code[i];
+    if (c == '{') depth++;
+    if (c == '}' && --depth == 0) return (start, i);
+  }
+  return null;
+}
 
 /// A route a screen names (`RouteNames.scannerMode`).
 final _routeName = RegExp(r'\bRouteNames\.(\w+)');

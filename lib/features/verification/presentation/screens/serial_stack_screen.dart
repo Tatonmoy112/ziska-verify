@@ -23,11 +23,9 @@ import 'package:ziska_verify/shared/widgets/retry_countdown.dart';
 
 class SerialStackScreen extends StatefulWidget {
   const SerialStackScreen({
-    required this.onOpenResult,
     this.onOpenSession,
     super.key,
   });
-  final OpenLookupResult onOpenResult;
   final void Function(String id)? onOpenSession;
   @override
   State<SerialStackScreen> createState() => _SerialStackScreenState();
@@ -151,14 +149,18 @@ class _SerialStackScreenState extends State<SerialStackScreen>
                         leading: Icon(style.icon, color: style.color),
                         onTap: () async {
                           _cubit.pause();
-                          await widget.onOpenResult(
-                            row.result,
-                            CheckedInput.of(
-                              LookupWay.serial,
-                              row.serial,
-                              state.checkedAt!,
+                          await openResult(
+                            context,
+                            ResultView(
+                              result: row.result,
+                              input: CheckedInput.of(
+                                LookupWay.serial,
+                                row.serial,
+                                state.checkedAt!,
+                              ),
+                              origin: ResultOrigin.manyItems,
+                              formats: state.formats,
                             ),
-                            state.formats,
                           );
                           if (mounted) _cubit.resume();
                         },

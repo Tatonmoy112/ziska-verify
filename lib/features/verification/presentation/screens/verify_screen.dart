@@ -222,7 +222,7 @@ class _VerifyScreenState extends State<VerifyScreen>
 
     _hold(true);
     context.read<LookupBloc>().add(const LookupCleared());
-    final opening = context.pushNamed(RouteNames.lookupResult, extra: view);
+    final opening = openResult(context, view);
     // The result takes the loader's place.
     _loader.stop();
     await opening;

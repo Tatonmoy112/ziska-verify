@@ -1,3 +1,6 @@
+import 'package:flutter/widgets.dart';
+import 'package:go_router/go_router.dart';
+import 'package:ziska_verify/core/navigation/route_names.dart';
 import 'package:ziska_verify/features/verification/domain/entities/checked_input.dart';
 import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
 
@@ -23,9 +26,8 @@ class ResultView {
   final InputFormats? formats;
 }
 
-typedef OpenLookupResult =
-    Future<void> Function(
-      LookupResult result,
-      CheckedInput input,
-      InputFormats? formats,
-    );
+/// Opens the result page for [view]. The result is the check feature's own
+/// route, so its screens open it themselves (final.md §9; production audit
+/// P-41); it ends when the page closes.
+Future<void> openResult(BuildContext context, ResultView view) =>
+    context.pushNamed<void>(RouteNames.lookupResult, extra: view);

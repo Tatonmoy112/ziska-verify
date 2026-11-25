@@ -370,9 +370,16 @@ void main() {
             "import 'package:ziska_verify/features/a/domain/usecases/u.dart';",
         'features/a/domain/usecases/u.dart': '',
       },
+      Rule.ownRouteHandedIn: {
+        'app/router/routes/a.dart':
+            "import 'package:ziska_verify/features/a/presentation/s.dart';\n"
+            'Widget b() => AScreen(onBack: () => go(RouteNames.home));',
+        'features/a/presentation/s.dart':
+            'class AScreen extends StatelessWidget {}',
+      },
     };
 
-    test('TC-ARCH-008 each rule R1 … R21 is reported, with its file', () {
+    test('TC-ARCH-008 each rule R1 … R22 is reported, with its file', () {
       expect(cases.keys, unorderedEquals(Rule.values));
       for (final MapEntry(key: rule, value: files) in cases.entries) {
         final found = check(files);

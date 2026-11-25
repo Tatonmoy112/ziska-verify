@@ -27,12 +27,10 @@ class ScanSessionScreen extends StatefulWidget {
   const ScanSessionScreen({
     required this.scanner,
     required this.onOpenSettings,
-    required this.onOpenResult,
     super.key,
   });
   final ScannerService scanner;
   final Future<bool> Function() onOpenSettings;
-  final OpenLookupResult onOpenResult;
   @override
   State<ScanSessionScreen> createState() => _ScanSessionScreenState();
 }
@@ -109,7 +107,15 @@ class _ScanSessionScreenState extends State<ScanSessionScreen>
       await _camera.stop();
     }
     if (mounted) {
-      await widget.onOpenResult(answer.result, answer.checked, state.formats);
+      await openResult(
+        context,
+        ResultView(
+          result: answer.result,
+          input: answer.checked,
+          origin: ResultOrigin.manyItems,
+          formats: state.formats,
+        ),
+      );
     }
     if (!mounted) return;
     _detail = false;

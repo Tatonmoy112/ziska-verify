@@ -17,8 +17,6 @@ import 'package:ziska_verify/core/services/scanner/scanner_service.dart';
 import 'package:ziska_verify/core/services/storage/secure_storage_service.dart';
 import 'package:ziska_verify/features/history/domain/usecases/get_checks.dart';
 import 'package:ziska_verify/features/profile/domain/entities/profile.dart';
-import 'package:ziska_verify/features/verification/domain/entities/checked_input.dart';
-import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
 import 'package:ziska_verify/features/verification/domain/usecases/verification_usecases.dart';
 import 'package:ziska_verify/features/verification/presentation/bloc/lookup_bloc.dart';
 import 'package:ziska_verify/features/verification/presentation/bloc/scan_session_cubit.dart';
@@ -35,23 +33,6 @@ List<RouteBase> checkRoutes(RouteDeps d) {
   final locator = d.locator;
   final profileCubit = d.profileCubit;
   final session = d.session;
-
-  Future<void> openManyResult(
-    BuildContext context,
-    LookupResult result,
-    CheckedInput input,
-    InputFormats? formats,
-  ) async {
-    await context.pushNamed<void>(
-      RouteNames.lookupResult,
-      extra: ResultView(
-        result: result,
-        input: input,
-        origin: ResultOrigin.manyItems,
-        formats: formats,
-      ),
-    );
-  }
 
   // A resumed session's scans, from History's checks of it (P-30).
   final recovered = RecoveredScansBridge(locator<GetChecks>());
@@ -118,8 +99,6 @@ List<RouteBase> checkRoutes(RouteDeps d) {
         child: ScanSessionScreen(
           scanner: locator<ScannerService>(),
           onOpenSettings: locator<PermissionService>().openSettings,
-          onOpenResult: (result, input, formats) =>
-              openManyResult(context, result, input, formats),
         ),
       ),
     ),
@@ -136,8 +115,7 @@ List<RouteBase> checkRoutes(RouteDeps d) {
           return cubit;
         },
         child: SerialStackScreen(
-          onOpenResult: (result, input, formats) =>
-              openManyResult(context, result, input, formats),
+          // History's route: another feature's, so handed in (final.md §9).
           onOpenSession:
               profileCubit.state.permissions.contains(Permission.ownHistory)
               ? (id) => context.pushNamed(
