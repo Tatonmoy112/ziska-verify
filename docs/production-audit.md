@@ -6,7 +6,7 @@ The production-grade review of the app, done on the `production` branch one area
 |---|---|---|
 | 2 | High-level architecture | Checked 2026-11-24: P-1 … P-15. **All fixed**; P-10 on for staging, live waits for its production project |
 | 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11). **All fixed** (2026-11-25) |
-| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-43. Fixed: P-20, P-21 |
+| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-43. Fixed: P-20, P-21, P-22 |
 | 5 | Dead code | To do |
 | 6+ | Comments, data layer, UI components, state and lifecycle, security, build and release, monitoring, tests, localisation, performance, docs | To do |
 
@@ -760,6 +760,20 @@ The layer rules (step 2) and the central API (step 3) are already enforced, so t
 - **normal:** roles loaded, with every other field kept;
 - **edge:** a reload during a code wait keeps `codeRetryAt`;
 - **worst:** a reload while sending keeps `busy`, and a second send is refused.
+
+**✅ Fixed 2026-11-25:**
+- **Tests first:** TC-AUTH-121 … -123 (`test/features/authentication/access_request_test.dart`):
+  - a roles reload changes the roles only;
+  - after a code 429 and a "Role not found." 404, the code wait survives the reload and **Send code** sends nothing;
+  - the roles answering while a code is on its way keep it busy, and a second tap sends nothing;
+  - a failed roles reload never undoes a 429 wait set while it ran.
+
+  The last three were red before.
+- **The change:**
+  - `RequestAccessState` is Freezed, and every emit is a `copyWith` of the current state that names only what it changes;
+  - a failed reload no longer restores the state from before it.
+  - Every other field changes exactly as before, case by case: the waits, `busy`, the stage, the address, `codeVersion`, the failure.
+- **Also regenerated:** three Freezed files (`submit_state`, `lookup_bloc`, `scan_session_cubit`) were stale since P-16 rewrote their doc comments. Only those comment lines change.
 
 #### P-23 (should): the API error codes are written three times
 **Evidence:**

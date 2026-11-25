@@ -19,7 +19,7 @@ mixin _$ScanSessionState {
  bool get restarted;/// The session was full or had ended (`409 session_full`,
 /// `session_ended`): a new one started by itself and the scan went in
 /// it (guide section 4.3). The list starts again, and the screen says
-/// why until the next scan (audit 5.2).
+/// why until the next scan (UI audit 2026-11-22, 5.2).
  bool get renewed;/// A resumed session's scans could not be read: Try again reloads them
 /// (guide section 4.6); scanning goes on meanwhile.
  bool get rowsFailed;/// A saved session was taken up again; without its totals (no
@@ -266,7 +266,7 @@ class _ScanSessionState implements ScanSessionState {
 /// The session was full or had ended (`409 session_full`,
 /// `session_ended`): a new one started by itself and the scan went in
 /// it (guide section 4.3). The list starts again, and the screen says
-/// why until the next scan (audit 5.2).
+/// why until the next scan (UI audit 2026-11-22, 5.2).
 @override@JsonKey() final  bool renewed;
 /// A resumed session's scans could not be read: Try again reloads them
 /// (guide section 4.6); scanning goes on meanwhile.

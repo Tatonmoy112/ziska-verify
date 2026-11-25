@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 mixin _$LookupState {
 
  InputFormats? get formats; bool get formatsLoading; Failure? get formatsFailure;/// After a `429` on the formats: Retry waits until this time.
- DateTime? get formatsRetryAt; LookupStatus get status; LookupResult? get result;/// The serial/QR value and response time (final.md Section 13.1).
+ DateTime? get formatsRetryAt; LookupStatus get status; LookupResult? get result;/// The serial/QR value and response time (final.md §13.1).
  CheckedInput? get checked; Failure? get failure; RefusedInput? get refused;/// After a `429`: when the next lookup may be sent (`Retry-After`).
  DateTime? get retryAt;
 /// Create a copy of LookupState
@@ -228,7 +228,7 @@ class _LookupState extends LookupState {
 @override final  DateTime? formatsRetryAt;
 @override@JsonKey() final  LookupStatus status;
 @override final  LookupResult? result;
-/// The serial/QR value and response time (final.md Section 13.1).
+/// The serial/QR value and response time (final.md §13.1).
 @override final  CheckedInput? checked;
 @override final  Failure? failure;
 @override final  RefusedInput? refused;

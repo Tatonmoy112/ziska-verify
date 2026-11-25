@@ -356,5 +356,98 @@ void main() {
       expect(cubit.state.stage, AccessStage.pending);
       verify(() => repo.submit(any())).called(1);
     });
+
+    // TC-AUTH-121 … -123 (production audit P-22): reloading the roles
+    // changes the roles only; every other field, the waits above all,
+    // stays.
+    group('a roles reload keeps the rest', () {
+      const limited = Err<Never>(
+        Failure(RateLimitedException(retryAfter: Duration(minutes: 30))),
+      );
+
+      test('TC-AUTH-121 normal: on the code step', () async {
+        await cubit.load();
+        await cubit.sendCode(request.email);
+        final before = cubit.state;
+        const more = [...roles, RequestableRole(id: 8, name: 'Inspector')];
+        when(repo.roles).thenAnswer((_) async => const Success(more));
+
+        await cubit.load();
+        expect(cubit.state.roles.map((r) => r.id), [7, 8]);
+        expect(cubit.state.stage, AccessStage.code);
+        expect(cubit.state.email, before.email);
+        expect(cubit.state.codeVersion, before.codeVersion);
+        expect(cubit.state.rolesLoaded, isTrue);
+      });
+
+      test(
+        'TC-AUTH-122 edge: "Role not found" reloads, the code wait stays',
+        () async {
+          await cubit.load();
+          await cubit.sendCode(request.email);
+          when(
+            () => repo.sendCode(any()),
+          ).thenAnswer((_) async => limited);
+          await cubit.sendCode(request.email); // 429: a code wait
+          expect(cubit.state.codeWaiting, isTrue);
+          when(() => repo.submit(any())).thenAnswer(
+            (_) async => const Err(
+              Failure(NotFoundException(message: 'Role not found.')),
+            ),
+          );
+
+          await cubit.submit(request); // 404, then the roles reload
+          verify(repo.roles).called(2);
+          expect(cubit.state.codeWaiting, isTrue, reason: 'wait cleared');
+          expect(cubit.state.codeRetryAt, isNotNull);
+
+          await cubit.sendCode(request.email);
+          verify(() => repo.sendCode(any())).called(2); // not a third
+        },
+      );
+
+      test(
+        'TC-AUTH-123 worst: a reload during sending keeps it busy',
+        () async {
+          await cubit.load();
+          final held = Completer<Result<void>>();
+          when(() => repo.sendCode(any())).thenAnswer((_) => held.future);
+          final sending = cubit.sendCode(request.email);
+          expect(cubit.state.busy, isTrue);
+
+          await cubit.load(); // answers while the code is on its way
+          expect(cubit.state.busy, isTrue, reason: 'busy cleared');
+          await cubit.sendCode(request.email); // a second tap
+          verify(() => repo.sendCode(any())).called(1);
+
+          held.complete(limited);
+          await sending;
+          expect(cubit.state.busy, isFalse);
+          expect(cubit.state.codeWaiting, isTrue);
+        },
+      );
+
+      test(
+        'TC-AUTH-123 worst: a failed reload never undoes a wait set meanwhile',
+        () async {
+          await cubit.load();
+          final rolesHeld = Completer<Result<List<RequestableRole>>>();
+          when(repo.roles).thenAnswer((_) => rolesHeld.future);
+          when(
+            () => repo.sendCode(any()),
+          ).thenAnswer((_) async => limited);
+          final reloading = cubit.load();
+          await cubit.sendCode(request.email); // 429 while roles load
+          expect(cubit.state.codeWaiting, isTrue);
+
+          rolesHeld.complete(
+            const Err(Failure(InternalErrorException(statusCode: 500))),
+          );
+          await reloading;
+          expect(cubit.state.codeWaiting, isTrue, reason: 'wait undone');
+          expect(cubit.state.roles, roles);
+        },
+      );
+    });
   });
 }

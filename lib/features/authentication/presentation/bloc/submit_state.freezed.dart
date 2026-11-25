@@ -14,8 +14,8 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$SubmitState {
 
- SubmitStatus get status; Failure? get failure;/// After a `429`: no new request before this time (final.md Section
-/// 15.4: a countdown from `Retry-After`, then a retry is allowed).
+ SubmitStatus get status; Failure? get failure;/// After a `429`: no new request before this time (final.md
+/// §15: a countdown from `Retry-After`, then a retry is allowed).
  DateTime? get retryAt;
 /// Create a copy of SubmitState
 /// with the given fields replaced by the non-null parameter values.
@@ -215,8 +215,8 @@ class _SubmitState extends SubmitState {
 
 @override@JsonKey() final  SubmitStatus status;
 @override final  Failure? failure;
-/// After a `429`: no new request before this time (final.md Section
-/// 15.4: a countdown from `Retry-After`, then a retry is allowed).
+/// After a `429`: no new request before this time (final.md
+/// §15: a countdown from `Retry-After`, then a retry is allowed).
 @override final  DateTime? retryAt;
 
 /// Create a copy of SubmitState
