@@ -65,7 +65,7 @@ class SessionsView extends StatelessWidget {
             ),
           ),
           onNextPage: () => unawaited(cubit.more()),
-          onRetry: () => unawaited(cubit.load(state.query)),
+          onRetry: () => unawaited(cubit.retry()),
           onRefresh: () async {
             // A 429 wait: nothing is asked for, so nothing to wait for.
             if (!cubit.state.list.isWaiting) await cubit.load();

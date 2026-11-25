@@ -6,7 +6,7 @@ The production-grade review of the app, done on the `production` branch one area
 |---|---|---|
 | 2 | High-level architecture | Checked 2026-11-24: P-1 … P-15. **All fixed**; P-10 on for staging, live waits for its production project |
 | 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11). **All fixed** (2026-11-25) |
-| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-43. Fixed: P-20 |
+| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-43. Fixed: P-20, P-21 |
 | 5 | Dead code | To do |
 | 6+ | Comments, data layer, UI components, state and lifecycle, security, build and release, monitoring, tests, localisation, performance, docs | To do |
 
@@ -738,6 +738,17 @@ The layer rules (step 2) and the central API (step 3) are already enforced, so t
 - **edge:** a failed page 2 is asked for again with its cursor, and page 1 stays;
 - **worst:** a retry during a 429 wait sends nothing.
 
+**✅ Fixed 2026-11-25:**
+- **Tests first:** TC-MIG-074 … -076 (`test/features/verification/presentation/sessions_cubit_test.dart`):
+  - a failed first page is asked for again;
+  - a failed page 2 is asked for again with its cursor, and page 1 stays. This was red before: the retry sent page 1 again;
+  - a retry during a 429 wait sends nothing;
+  - a filter changed during a page-2 wait, then Try again the moment the wait ends, starts the new filter's list from page 1. Run against a naive retry (page 2 whenever it failed), this case was red: it sent All's cursor with Ended.
+- **The change:**
+  - `SessionsCubit.retry()` follows History: the failed next page, only for the list it belongs to; otherwise the first page; nothing during a wait;
+  - the cubit keeps the query its list belongs to, and `more()` sends that query;
+  - `sessions_view.dart` calls `retry()`.
+
 #### P-22 (should, a bug): a roles reload clears Request access's 429 waits
 **Evidence:** `authentication/presentation/bloc/request_access_cubit.dart:70-79`. The roles-loaded emit builds a new `RequestAccessState(...)` and leaves out `codeRetryAt`, `submitRetryAt` and `busy`; the failure branch (`:90-91`) keeps them. All six emits rebuild the state by hand.
 
@@ -845,9 +856,9 @@ Data imports this use-case file for `distinctSerials` (`verification_repository_
 - the size rule goes in `CheckSerials`, and the repository keeps only its answer checks.
 
 **Tests:**
-- **normal:** a stack of 1 … 25 distinct serials is sent;
+- **normal:** a stack of 1 … 50 distinct serials is sent (`serialStackLimit`);
 - **edge:** repeats, by the serial key, are sent once;
-- **worst:** 0 or 26 serials are refused before any request.
+- **worst:** 0 or 51 serials are refused before any request.
 
 #### P-30 (should): the router builds the recovered scans
 **Evidence:** `app/router/routes/check_routes.dart:60-88` calls `locator<GetChecks>()`, maps `CheckResult` to `LookupOutcome` value by value, and re-wraps `Success`/`Err` by hand (`Result` has no `map`).

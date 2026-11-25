@@ -33,10 +33,10 @@ Current migration acceptance: [16-mobile-migration.md](16-mobile-migration.md). 
 | E2E | [13-e2e-journeys.md](13-e2e-journeys.md) | 16 | 7 | 9 | 0 | 10 | 0 | 6 | 0 |
 | Exploratory | [14-exploratory-charters.md](14-exploratory-charters.md) | 9 | 0 | 6 | 3 | 0 | 0 | 9 | 0 |
 | UI | [15-ui.md](15-ui.md) | 183 | 29 | 99 | 55 | 169 | 0 | 14 | 0 |
-| MIG | [16-mobile-migration.md](16-mobile-migration.md) | 73 | 46 | 25 | 2 | 72 | 0 | 1 | 0 |
+| MIG | [16-mobile-migration.md](16-mobile-migration.md) | 76 | 46 | 28 | 2 | 75 | 0 | 1 | 0 |
 | STG | [17-test-server.md](17-test-server.md) | 58 | 44 | 11 | 3 | 47 | 0 | 11 | 0 |
 | ARCH | [18-architecture.md](18-architecture.md) | 34 | 0 | 11 | 23 | 34 | 0 | 0 | 0 |
-| **Total** | | **980** | 315 | 461 | 204 | 852 | 0 | 128 | 0 |
+| **Total** | | **983** | 315 | 464 | 204 | 855 | 0 | 128 | 0 |
 
 ## 3. Case Format
 
