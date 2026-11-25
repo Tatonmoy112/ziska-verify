@@ -4,7 +4,7 @@ import 'package:ziska_verify/l10n/generated/app_localizations.dart';
 import 'package:ziska_verify/shared/design_system/components/buttons/app_button.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_colors.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_spacing.dart';
-import 'package:ziska_verify/shared/widgets/large_text.dart';
+import 'package:ziska_verify/shared/widgets/button_pair.dart';
 
 /// Finish while scanning; Scan more and Done on the summary.
 class SessionBottomBar extends StatelessWidget {
@@ -45,24 +45,13 @@ class SessionBottomBar extends StatelessWidget {
         label: l.sessionDone,
         onPressed: onDone,
       );
-      // Side by side; stacked at a large font, so no label is cut.
-      child = isLargeText(context)
-          ? Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                done,
-                const SizedBox(height: AppSpacing.xs),
-                scanMore,
-              ],
-            )
-          : Row(
-              children: [
-                Expanded(child: scanMore),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(child: done),
-              ],
-            );
+      // Side by side; stacked at a large font, Done on top.
+      child = ButtonPair(
+        first: scanMore,
+        second: done,
+        stackedGap: AppSpacing.xs,
+        secondFirstWhenStacked: true,
+      );
     } else {
       child = AppButton(
         key: const Key('session.finish'),

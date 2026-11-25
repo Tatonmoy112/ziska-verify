@@ -24,6 +24,7 @@ import 'package:ziska_verify/shared/design_system/tokens/app_spacing.dart';
 import 'package:ziska_verify/shared/widgets/app_empty_state.dart';
 import 'package:ziska_verify/shared/widgets/large_text.dart';
 import 'package:ziska_verify/shared/widgets/navy_status_bar.dart';
+import 'package:ziska_verify/shared/widgets/tab_visibility.dart';
 
 /// The Check tab (final.md §13.1, §13.7). With `item:lookup` it
 /// opens on the camera: a read QR is the trigger, sent at once as
@@ -60,7 +61,7 @@ class VerifyScreen extends StatefulWidget {
 }
 
 class _VerifyScreenState extends State<VerifyScreen>
-    with WidgetsBindingObserver {
+    with WidgetsBindingObserver, TabVisibility {
   final _input = TextEditingController();
   final _inputFocus = FocusNode();
   final _loader = VerifyingLoader();
@@ -96,10 +97,16 @@ class _VerifyScreenState extends State<VerifyScreen>
     WidgetsBinding.instance.addObserver(this);
   }
 
+  /// The camera runs only while the tab can be seen.
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _visible = TickerMode.valuesOf(context).enabled;
+  void onTabShown({required bool firstTime}) {
+    _visible = true;
+    _sync();
+  }
+
+  @override
+  void onTabHidden() {
+    _visible = false;
     _sync();
   }
 

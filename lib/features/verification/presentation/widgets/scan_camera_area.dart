@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:ziska_verify/core/services/scanner/scanner_service.dart';
 import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
+import 'package:ziska_verify/features/verification/presentation/widgets/camera_problem_view.dart';
 import 'package:ziska_verify/features/verification/presentation/widgets/scan_frame.dart';
 import 'package:ziska_verify/features/verification/presentation/widgets/verification_result_card.dart';
 import 'package:ziska_verify/l10n/generated/app_localizations.dart';
-import 'package:ziska_verify/shared/design_system/components/buttons/app_button.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_colors.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_radius.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_spacing.dart';
@@ -68,8 +68,9 @@ class ScanCameraArea extends StatelessWidget {
               fit: StackFit.expand,
               children: [
                 preview(
-                  (context, problem) => _CameraProblem(
+                  (context, problem) => CameraProblemView(
                     problem: problem,
+                    layout: CameraProblemLayout.inline,
                     onOpenSettings: onOpenSettings,
                   ),
                 ),
@@ -128,56 +129,6 @@ class ScanCameraArea extends StatelessWidget {
               ],
             );
           },
-        ),
-      ),
-    );
-  }
-}
-
-class _CameraProblem extends StatelessWidget {
-  const _CameraProblem({required this.problem, required this.onOpenSettings});
-
-  final ScannerProblem problem;
-  final VoidCallback onOpenSettings;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    final text = switch (problem) {
-      ScannerProblem.permissionDenied => l.scannerPermissionDenied,
-      ScannerProblem.unsupported => l.scannerUnsupported,
-      ScannerProblem.other => l.scannerFailed,
-    };
-    return ColoredBox(
-      color: AppColors.textStrong,
-      child: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.screen),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(
-                LucideIcons.cameraOff,
-                color: AppColors.onPrimary,
-                size: 32,
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                text,
-                key: const Key('session.cameraProblem'),
-                textAlign: TextAlign.center,
-                style: AppTypography.body.copyWith(color: AppColors.onPrimary),
-              ),
-              if (problem == ScannerProblem.permissionDenied) ...[
-                const SizedBox(height: AppSpacing.sm),
-                AppButton(
-                  label: l.openSettings,
-                  variant: AppButtonVariant.tonal,
-                  onPressed: onOpenSettings,
-                ),
-              ],
-            ],
-          ),
         ),
       ),
     );

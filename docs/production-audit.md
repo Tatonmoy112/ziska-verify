@@ -6,7 +6,7 @@ The production-grade review of the app, done on the `production` branch one area
 |---|---|---|
 | 2 | High-level architecture | Checked 2026-11-24: P-1 … P-15. **All fixed**; P-10 on for staging, live waits for its production project |
 | 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11). **All fixed** (2026-11-25) |
-| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-45. Fixed: P-20 … P-39 |
+| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-45. Fixed: P-20 … P-40 |
 | 5 | Dead code | To do |
 | 6+ | Comments, data layer, UI components, state and lifecycle, security, build and release, monitoring, tests, localisation, performance, docs | To do |
 
@@ -1305,6 +1305,20 @@ History's reasons stay raw strings (`CheckRecord.reasons`, `List<String>`), whic
 **Proposal:** shared widgets: `ScannerViewport`, `CameraProblemView`, `IconActionTile`, `AdaptivePair`, a generic picker sheet, and a tab-visibility mixin.
 
 **Tests:** each shared widget gets its own test; the screenshot tests pass unchanged.
+
+**✅ Fixed 2026-11-25:**
+- **Tests first:** TC-ARCH-059 … -061 (`architecture/shared_widgets_test`):
+  - each shared widget does what its copies did: both camera problem layouts, a tile's chevron only with an action, a tab told once each time it is shown or hidden;
+  - two buttons side by side at 3 : 2, stacked at a large font in the order asked, and a picker stays above the keyboard;
+  - the sources: `TickerMode.valuesOf` in one file only, no `_CameraProblem`, `_ActionRow` or `_ButtonPair` left, and each former copy uses its shared widget.
+- **The change:**
+  - `CameraProblemView` (`verification/presentation/widgets/`), with a full-screen and an inline layout, replaces the two `_CameraProblem` classes of `LiveQrCamera` and the scanner session. The overlay was already shared (`ScanOverlayPainter`, `ScanFrame`);
+  - `IconActionTile` (`shared/widgets/`) is the profile's rows and the check tab's tools;
+  - `ButtonPair` (`shared/widgets/`) is the serial lookup's two buttons and the scanner session's bottom bar;
+  - `PickerSheetFrame` (`shared/widgets/`) is the frame of the check and retail user pickers, kept above the keyboard;
+  - the `TabVisibility` mixin (`shared/widgets/`) tells History, Profile and the check tab when they are shown or hidden.
+- **Left as they are:** `check_tile.dart`'s footer and `check_totals_card.dart` also turn a row into a column at a large font, but they are not a pair of buttons: a line of text, and any number of stat cards of one height. One widget for all four would take more options than it saves.
+- **Every screenshot test passes unchanged.**
 
 #### P-41 (should): navigation is wired two ways
 **Evidence:**

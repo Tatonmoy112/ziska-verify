@@ -11,8 +11,10 @@ import 'package:ziska_verify/shared/design_system/tokens/app_colors.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_radius.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_spacing.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_typography.dart';
+import 'package:ziska_verify/shared/widgets/icon_action_tile.dart';
 import 'package:ziska_verify/shared/widgets/label_value_row.dart';
 import 'package:ziska_verify/shared/widgets/navy_status_bar.dart';
+import 'package:ziska_verify/shared/widgets/tab_visibility.dart';
 
 /// The Profile tab (Figma "Profile"; final.md §13.7). Actions and
 /// content that belong to other features are passed in by the router.
@@ -48,23 +50,17 @@ class ProfileScreen extends StatefulWidget {
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class _ProfileScreenState extends State<ProfileScreen> with TabVisibility {
   /// Whether the tab was in view at the last check; the shell turns
   /// tickers off for the tabs it keeps off stage.
-  bool? _shown;
 
   /// Log out is running: the button spins (the login ends either way).
   bool _loggingOut = false;
 
+  /// Each time the tab comes into view, the counts are asked for again.
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final shown = TickerMode.valuesOf(context).enabled;
-    if (shown && _shown != true) {
+  void onTabShown({required bool firstTime}) =>
       unawaited(widget.totals?.refresh());
-    }
-    _shown = shown;
-  }
 
   Future<void> _confirmLogout(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
@@ -249,14 +245,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ])
                           if (profile.can(permission))
-                            _ActionRow(
+                            IconActionTile(
+                              contentPadding: _rowPadding,
                               key: Key('profile.permission.${permission.key}'),
                               icon: icon,
                               title: title,
                             ),
                         // Only the app's permissions are kept (the mapper).
                         if (profile.permissions.isEmpty)
-                          _ActionRow(
+                          IconActionTile(
+                            contentPadding: _rowPadding,
                             icon: LucideIcons.circleSlash,
                             title: l10n.permissionsNone,
                           ),
@@ -267,12 +265,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     const SizedBox(height: AppSpacing.xs),
                     _Card(
                       children: [
-                        _ActionRow(
+                        IconActionTile(
+                          contentPadding: _rowPadding,
                           icon: LucideIcons.lock,
                           title: l10n.changePasswordRow,
                           onTap: widget.onChangePassword,
                         ),
-                        _ActionRow(
+                        IconActionTile(
+                          contentPadding: _rowPadding,
                           key: const Key('profile.language'),
                           icon: LucideIcons.languages,
                           title: l10n.languageRow,
@@ -284,7 +284,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         // Each channel the office set (guide section 3.8):
                         // email and phone both, or "Not set".
                         if (supportEmail != null)
-                          _ActionRow(
+                          IconActionTile(
+                            contentPadding: _rowPadding,
                             key: const Key('profile.supportEmail'),
                             icon: LucideIcons.mail,
                             title: l10n.supportContactRow,
@@ -294,7 +295,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                           ),
                         if (supportPhone != null)
-                          _ActionRow(
+                          IconActionTile(
+                            contentPadding: _rowPadding,
                             key: const Key('profile.supportPhone'),
                             icon: LucideIcons.phone,
                             title: l10n.supportContactRow,
@@ -304,14 +306,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                           ),
                         if (supportEmail == null && supportPhone == null)
-                          _ActionRow(
+                          IconActionTile(
+                            contentPadding: _rowPadding,
                             icon: LucideIcons.mail,
                             title: l10n.supportContactRow,
                             subtitle: l10n.supportNotSet,
                           ),
                         FutureBuilder(
                           future: widget.versionInfo,
-                          builder: (context, snapshot) => _ActionRow(
+                          builder: (context, snapshot) => IconActionTile(
+                            contentPadding: _rowPadding,
                             icon: LucideIcons.clock,
                             title: l10n.appVersionRow,
                             subtitle: snapshot.data == null
@@ -582,44 +586,8 @@ class _InfoRow extends StatelessWidget {
   }
 }
 
-class _ActionRow extends StatelessWidget {
-  const _ActionRow({
-    required this.icon,
-    required this.title,
-    this.subtitle,
-    this.onTap,
-    super.key,
-  });
-
-  final IconData icon;
-  final String title;
-  final String? subtitle;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      onTap: onTap,
-      contentPadding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.xxs,
-      ),
-      leading: Container(
-        width: 40,
-        height: 40,
-        decoration: const BoxDecoration(
-          color: AppColors.surfaceMuted,
-          borderRadius: BorderRadius.all(Radius.circular(AppRadius.md)),
-        ),
-        child: Icon(icon, size: 20, color: AppColors.primary),
-      ),
-      title: Text(title, style: AppTypography.bodyStrong),
-      subtitle: subtitle == null
-          ? null
-          : Text(subtitle!, style: AppTypography.caption),
-      trailing: onTap == null
-          ? null
-          : const Icon(LucideIcons.chevronRight, color: AppColors.textMuted),
-    );
-  }
-}
+/// Profile's rows: a little room above and below (P-40).
+const _rowPadding = EdgeInsets.symmetric(
+  horizontal: AppSpacing.md,
+  vertical: AppSpacing.xxs,
+);

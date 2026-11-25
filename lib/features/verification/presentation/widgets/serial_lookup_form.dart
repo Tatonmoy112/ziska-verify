@@ -13,9 +13,9 @@ import 'package:ziska_verify/shared/design_system/tokens/app_colors.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_radius.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_spacing.dart';
 import 'package:ziska_verify/shared/extensions/failure_message.dart';
+import 'package:ziska_verify/shared/widgets/button_pair.dart';
 import 'package:ziska_verify/shared/widgets/error_banner.dart';
 import 'package:ziska_verify/shared/widgets/failure_banner.dart';
-import 'package:ziska_verify/shared/widgets/large_text.dart';
 import 'package:ziska_verify/shared/widgets/retry_countdown.dart';
 
 class SerialLookupForm extends StatelessWidget {
@@ -148,7 +148,9 @@ class SerialLookupForm extends StatelessWidget {
                           ),
                         ],
                         const SizedBox(height: AppSpacing.md),
-                        _ButtonPair(
+                        ButtonPair(
+                          firstFlex: 3,
+                          secondFlex: 2,
                           // Held while a 429 counts down (guide section 1).
                           first: RetryCountdown(
                             until: state.retryAt,
@@ -181,36 +183,6 @@ class SerialLookupForm extends StatelessWidget {
             ],
           ),
         ),
-      ],
-    );
-  }
-}
-
-/// Two buttons side by side (3 : 2); one above the other at a large font,
-/// so neither label is cut.
-class _ButtonPair extends StatelessWidget {
-  const _ButtonPair({required this.first, required this.second});
-
-  final Widget first;
-  final Widget second;
-
-  @override
-  Widget build(BuildContext context) {
-    if (isLargeText(context)) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          first,
-          const SizedBox(height: AppSpacing.sm),
-          second,
-        ],
-      );
-    }
-    return Row(
-      children: [
-        Expanded(flex: 3, child: first),
-        const SizedBox(width: AppSpacing.sm),
-        Expanded(flex: 2, child: second),
       ],
     );
   }

@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:ziska_verify/core/services/scanner/scanner_service.dart';
+import 'package:ziska_verify/features/verification/presentation/widgets/camera_problem_view.dart';
 import 'package:ziska_verify/features/verification/presentation/widgets/scan_frame.dart';
 import 'package:ziska_verify/l10n/generated/app_localizations.dart';
 import 'package:ziska_verify/shared/design_system/components/buttons/app_button.dart';
@@ -139,9 +140,10 @@ class _LiveQrCameraState extends State<LiveQrCamera> {
                     if (mounted) setState(() => _problem = problem);
                   });
                 }
-                return _CameraProblem(
+                return CameraProblemView(
                   problem: problem,
-                  onOpenSettings: widget.onOpenSettings,
+                  layout: CameraProblemLayout.fullScreen,
+                  onOpenSettings: () => unawaited(widget.onOpenSettings()),
                 );
               },
             ),
@@ -345,56 +347,6 @@ class _GlassIconButton extends StatelessWidget {
           icon: Icon(icon, size: 20),
           color: AppColors.onPrimary,
           onPressed: onPressed,
-        ),
-      ),
-    );
-  }
-}
-
-class _CameraProblem extends StatelessWidget {
-  const _CameraProblem({required this.problem, required this.onOpenSettings});
-
-  final ScannerProblem problem;
-  final Future<bool> Function() onOpenSettings;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final text = switch (problem) {
-      ScannerProblem.permissionDenied => l10n.scannerPermissionDenied,
-      ScannerProblem.unsupported => l10n.scannerUnsupported,
-      ScannerProblem.other => l10n.scannerFailed,
-    };
-    return ColoredBox(
-      key: const Key('scanner.problem'),
-      color: AppColors.scannerBackground,
-      child: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.screen),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(
-                LucideIcons.cameraOff,
-                color: AppColors.onPrimary,
-                size: 40,
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                text,
-                textAlign: TextAlign.center,
-                style: AppTypography.body.copyWith(color: AppColors.onPrimary),
-              ),
-              if (problem == ScannerProblem.permissionDenied) ...[
-                const SizedBox(height: AppSpacing.md),
-                AppButton(
-                  key: const Key('scanner.openSettings'),
-                  label: l10n.openSettings,
-                  onPressed: () => unawaited(onOpenSettings()),
-                ),
-              ],
-            ],
-          ),
         ),
       ),
     );

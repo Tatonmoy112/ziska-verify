@@ -8,9 +8,8 @@ import 'package:ziska_verify/features/history/presentation/bloc/history_bloc.dar
 import 'package:ziska_verify/features/history/presentation/widgets/check_tile.dart';
 import 'package:ziska_verify/l10n/generated/app_localizations.dart';
 import 'package:ziska_verify/shared/design_system/components/inputs/app_search_field.dart';
-import 'package:ziska_verify/shared/design_system/tokens/app_spacing.dart';
-import 'package:ziska_verify/shared/design_system/tokens/app_typography.dart';
 import 'package:ziska_verify/shared/widgets/app_paginated_list.dart';
+import 'package:ziska_verify/shared/widgets/picker_sheet_frame.dart';
 
 /// Picks one of the official's own checks for a report (SRS UC-08: the
 /// official "optionally picks one of own checks"; app API guide §5 and
@@ -49,57 +48,38 @@ class _CheckPickerSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final bloc = context.read<HistoryBloc>();
-    // The sheet stays above the keyboard while searching.
-    final keyboard = MediaQuery.viewInsetsOf(context).bottom;
-    return Padding(
-      padding: EdgeInsets.only(bottom: keyboard),
-      child: SizedBox(
-        height: MediaQuery.sizeOf(context).height * 0.8,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              child: Text(l10n.pickCheck, style: AppTypography.headline),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: AppSearchField(
-                fieldKey: const Key('checkPicker.search'),
-                hint: l10n.historySearchHint,
-                onChanged: (t) => bloc.add(HistorySearchTyped(t)),
-              ),
-            ),
-            Expanded(
-              child: BlocBuilder<HistoryBloc, HistoryState>(
-                builder: (context, state) => AppPaginatedList<CheckRecord>(
-                  state: state.list,
-                  placeholderItem: _placeholder,
-                  itemBuilder: (context, check) => InkWell(
-                    onTap: () => Navigator.of(context).pop(check.ref),
-                    child: CheckTile(check: check),
-                  ),
-                  onNextPage: () => bloc.add(const HistoryNextPageRequested()),
-                  onRetry: () => bloc.add(const HistoryRetried()),
-                  onRefresh: () async {
-                    // A 429 wait: nothing is asked for, so nothing to wait for.
-                    if (bloc.state.list.isWaiting) return;
-                    final done = Completer<void>();
-                    bloc.add(HistoryRefreshed(done: done));
-                    await done.future;
-                  },
-                  // A search that is not a serial or a reference number is
-                  // not sent; the list says what to type (finding F-4).
-                  emptyTitle: state.searchRefused
-                      ? l10n.historySearchRefusedTitle
-                      : l10n.historyEmptyTitle,
-                  emptyBody: state.searchRefused
-                      ? l10n.historySearchRefusedBody
-                      : l10n.historyNoChecksYet,
-                ),
-              ),
-            ),
-          ],
+    return PickerSheetFrame(
+      title: l10n.pickCheck,
+      search: AppSearchField(
+        fieldKey: const Key('checkPicker.search'),
+        hint: l10n.historySearchHint,
+        onChanged: (t) => bloc.add(HistorySearchTyped(t)),
+      ),
+      list: BlocBuilder<HistoryBloc, HistoryState>(
+        builder: (context, state) => AppPaginatedList<CheckRecord>(
+          state: state.list,
+          placeholderItem: _placeholder,
+          itemBuilder: (context, check) => InkWell(
+            onTap: () => Navigator.of(context).pop(check.ref),
+            child: CheckTile(check: check),
+          ),
+          onNextPage: () => bloc.add(const HistoryNextPageRequested()),
+          onRetry: () => bloc.add(const HistoryRetried()),
+          onRefresh: () async {
+            // A 429 wait: nothing is asked for, so nothing to wait for.
+            if (bloc.state.list.isWaiting) return;
+            final done = Completer<void>();
+            bloc.add(HistoryRefreshed(done: done));
+            await done.future;
+          },
+          // A search that is not a serial or a reference number is
+          // not sent; the list says what to type (finding F-4).
+          emptyTitle: state.searchRefused
+              ? l10n.historySearchRefusedTitle
+              : l10n.historyEmptyTitle,
+          emptyBody: state.searchRefused
+              ? l10n.historySearchRefusedBody
+              : l10n.historyNoChecksYet,
         ),
       ),
     );

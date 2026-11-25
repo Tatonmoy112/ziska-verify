@@ -20,6 +20,7 @@ import 'package:ziska_verify/shared/design_system/tokens/app_typography.dart';
 import 'package:ziska_verify/shared/widgets/app_paginated_list.dart';
 import 'package:ziska_verify/shared/widgets/label_value_row.dart';
 import 'package:ziska_verify/shared/widgets/navy_app_bar.dart';
+import 'package:ziska_verify/shared/widgets/tab_visibility.dart';
 
 /// The History tab (final.md §13.4). A serial search shows the
 /// item's tracking log (§13.4).
@@ -55,23 +56,20 @@ class HistoryScreen extends StatefulWidget {
 
 enum _HistoryView { checks, sessions }
 
-class _HistoryScreenState extends State<HistoryScreen> {
+class _HistoryScreenState extends State<HistoryScreen> with TabVisibility {
   _HistoryView _view = _HistoryView.checks;
 
   late final TextEditingController _search = TextEditingController(
     text: context.read<HistoryBloc>().state.query.search,
   );
 
-  bool? _shown;
+  /// Back on the tab: the list is asked for again (not on the first show,
+  /// which loads it anyway).
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final shown = TickerMode.valuesOf(context).enabled;
-    if (shown && _shown == false) {
-      context.read<HistoryBloc>().add(const HistoryRefreshed());
-      if (_view == _HistoryView.sessions) widget.onSessionsShown?.call(context);
-    }
-    _shown = shown;
+  void onTabShown({required bool firstTime}) {
+    if (firstTime) return;
+    context.read<HistoryBloc>().add(const HistoryRefreshed());
+    if (_view == _HistoryView.sessions) widget.onSessionsShown?.call(context);
   }
 
   @override

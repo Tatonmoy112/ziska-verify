@@ -7,9 +7,9 @@ import 'package:ziska_verify/features/retail_users/presentation/bloc/retail_user
 import 'package:ziska_verify/l10n/generated/app_localizations.dart';
 import 'package:ziska_verify/shared/design_system/components/inputs/app_search_field.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_colors.dart';
-import 'package:ziska_verify/shared/design_system/tokens/app_spacing.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_typography.dart';
 import 'package:ziska_verify/shared/widgets/app_paginated_list.dart';
+import 'package:ziska_verify/shared/widgets/picker_sheet_frame.dart';
 
 /// Opens the retail user picker (final.md §13.6) and returns the
 /// chosen one, or `null`.
@@ -40,58 +40,40 @@ class _PickerSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final bloc = context.read<RetailUserPickerBloc>();
-    // The sheet stays above the keyboard while searching.
-    return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
-      child: SizedBox(
-        height: MediaQuery.sizeOf(context).height * 0.8,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              child: Text(l10n.pickRetailUser, style: AppTypography.headline),
+    return PickerSheetFrame(
+      title: l10n.pickRetailUser,
+      search: AppSearchField(
+        fieldKey: const Key('picker.search'),
+        hint: l10n.pickRetailUserHint,
+        maxLength: SearchRetailUsers.maxSearchLength,
+        onChanged: (t) => bloc.add(PickerSearchTyped(t)),
+      ),
+      list: BlocBuilder<RetailUserPickerBloc, RetailUserPickerState>(
+        builder: (context, state) => AppPaginatedList<RetailUser>(
+          state: state.list,
+          placeholderItem: _placeholder,
+          itemBuilder: (context, user) => ListTile(
+            leading: const CircleAvatar(
+              backgroundColor: AppColors.surfaceMuted,
+              child: Icon(LucideIcons.store, color: AppColors.primary),
             ),
-            Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: AppSearchField(
-                fieldKey: const Key('picker.search'),
-                hint: l10n.pickRetailUserHint,
-                maxLength: SearchRetailUsers.maxSearchLength,
-                onChanged: (t) => bloc.add(PickerSearchTyped(t)),
-              ),
+            title: Text(user.name, style: AppTypography.bodyStrong),
+            subtitle: Text(
+              user.maskedEmail,
+              style: AppTypography.caption,
             ),
-            Expanded(
-              child: BlocBuilder<RetailUserPickerBloc, RetailUserPickerState>(
-                builder: (context, state) => AppPaginatedList<RetailUser>(
-                  state: state.list,
-                  placeholderItem: _placeholder,
-                  itemBuilder: (context, user) => ListTile(
-                    leading: const CircleAvatar(
-                      backgroundColor: AppColors.surfaceMuted,
-                      child: Icon(LucideIcons.store, color: AppColors.primary),
-                    ),
-                    title: Text(user.name, style: AppTypography.bodyStrong),
-                    subtitle: Text(
-                      user.maskedEmail,
-                      style: AppTypography.caption,
-                    ),
-                    onTap: () => Navigator.of(
-                      context,
-                    ).pop((id: user.id, name: user.name)),
-                  ),
-                  onNextPage: () => bloc.add(const PickerNextPageRequested()),
-                  onRetry: () => bloc.add(const PickerRetried()),
-                  onRefresh: () async {
-                    if (!bloc.state.list.isWaiting) {
-                      bloc.add(const PickerRetried());
-                    }
-                  },
-                  emptyTitle: l10n.pickRetailUserEmpty,
-                ),
-              ),
-            ),
-          ],
+            onTap: () => Navigator.of(
+              context,
+            ).pop((id: user.id, name: user.name)),
+          ),
+          onNextPage: () => bloc.add(const PickerNextPageRequested()),
+          onRetry: () => bloc.add(const PickerRetried()),
+          onRefresh: () async {
+            if (!bloc.state.list.isWaiting) {
+              bloc.add(const PickerRetried());
+            }
+          },
+          emptyTitle: l10n.pickRetailUserEmpty,
         ),
       ),
     );
