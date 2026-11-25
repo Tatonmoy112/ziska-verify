@@ -7,7 +7,7 @@ The production-grade review of the app, done on the `production` branch one area
 | 2 | High-level architecture | Checked 2026-11-24: P-1 … P-15. **All fixed**; P-10 on for staging, live waits for its production project |
 | 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11). **All fixed** (2026-11-25) |
 | 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-45. Fixed: P-20 … P-45 |
-| 5 | Dead code | To do |
+| 5 | Dead code | Checked 2026-11-25: P-46 … P-53 |
 | 6+ | Comments, data layer, UI components, state and lifecycle, security, build and release, monitoring, tests, localisation, performance, docs | To do |
 
 **Severity:**
@@ -1443,12 +1443,7 @@ History's reasons stay raw strings (`CheckRecord.reasons`, `List<String>`), whic
 - **Every screenshot and flow test passes unchanged.**
 
 ### Noticed for step 5 (dead code)
-- `Profile.canReadHistory` is used only by tests.
-- `CheckedInput.of` is the same as the constructor.
-- `DisplayTime.withOffset` has no callers.
-- `CrashReportingService` is registered in the locator but never read from it (the logger gets it directly).
-- `sameSerial` and `HistorySearch.maxSerialLength` are public but used only in their own file (`outcomeFrom` and `reasonFrom` went with P-32).
-- `FirebaseCrashReportingService.attempts` and `.started` are used only by tests.
+Checked in step 5: see P-47, P-48 and P-50. `sameSerial` turned out to be used by `parse_stack.dart`.
 
 ### Suggested order
 1. **P-20 and P-21 (the two bugs), then P-22.**
@@ -1460,3 +1455,129 @@ History's reasons stay raw strings (`CheckRecord.reasons`, `List<String>`), whic
 4. **App:** P-34, P-35.
 5. **Screens:** P-36, P-38 … P-41, then P-37, the split, last.
 6. **P-42 and P-43** at any time.
+
+---
+
+## Step 5: dead code (2026-11-25)
+
+### How it was checked
+Read only. Three reviewers searched in parallel, and every finding below was then re-checked by hand at the line it cites (whole-word search over `lib/`, `test/`, `tool/` and `docs/`; generated files left out). Dart has no check for unused public members, so each name was searched for itself:
+- **Dart code:** every public class, function, member, constant and parameter in `lib/`, and which files reach it: none, only its own file, only `test/` or only `tool/`;
+- **material around the code:** translation keys, assets, `pubspec.yaml` packages, test fakes, fixtures and screenshots, `tool/`, `config/`, the platform folders and the docs;
+- **values that never matter:** enum values, failure reasons, error codes, exception classes, routes, state fields, bloc events, branches, design tokens, and analyzer suppressions.
+
+### What is already right (keep)
+
+| Area | Result |
+|---|---|
+| Comments | No `TODO`, `FIXME` or commented-out code in `lib/`, `test/` or `tool/`. |
+| Translations | Both ARB files have the same 334 keys; every key but one (P-48) is used. |
+| Values | Every enum value, failure reason, `ApiErrorCodes` code and exception class is produced somewhere; every `RouteNames` and `RoutePaths` entry routes; every bloc event is sent and every public cubit method called. |
+| Configuration | Every key of `config/*.json` is read by `AppConfig`; every Android and iOS resource is referenced. |
+| Tests | Every fake and helper is imported; every test file has tests. |
+| Suppressions | No `unused_*` ignore anywhere; the five ignores that exist hide nothing dead. |
+| Kept on purpose | `ApiRoutes.all` and `ApiErrorCodes.internalError` (the lists the contract tests compare); the test seams (`now`, `random`, `PlatformServices`, `httpAdapter`); the mock-routing flavor check (`network_module.dart:33`), which guards configurations built directly; `NetworkException.message`, part of every `AppException`. |
+
+### Findings
+
+#### P-46 (should): packages nothing uses
+**Evidence:** in `pubspec.yaml`:
+- `flutter_animate` (line 18) and `path_provider` (line 34) are never imported in `lib/`, `test/` or `tool/`;
+- dev: `http_mock_adapter` (line 49) is never imported (the tests use `test/fakes/scripted_adapter.dart`), and `integration_test` (line 52) has no `integration_test/` folder.
+
+**Why:** `path_provider` is a plugin, so its native code ships in every build, while `test/core/picture_storage_test.dart:27` already forbids the calls it exists for. Unused packages also widen the supply chain and slow every `pub get`.
+
+**Proposal:** remove the four.
+
+**Tests:**
+- **normal:** a check that every package in `pubspec.yaml` is used: runtime ones imported in `lib/`, dev ones in `test/` or `tool/`, or a known build or analysis tool;
+- **edge:** `build_runner`, `freezed`, `json_serializable`, `very_good_analysis` and the icon and splash generators are recognised as used;
+- **worst:** a package added and never imported fails the check; `flutter build apk --debug --flavor mock` still builds.
+
+#### P-47 (nice): code nothing uses
+**Evidence:**
+- `lib/shared/widgets/numbered_step_row.dart`: the whole file; nothing imports it;
+- `PaginatedState.isLoading` (`paginated_state.dart:42`), `ScanSessionState.loading` (`scan_session_cubit.dart:119`), `VerifyingLoader.isShown` (`verifying_view.dart:22`) and `DisplayTime.withOffset` (`display_time.dart:18`): no reference anywhere;
+- `LookupState.formatsLoading` (`lookup_bloc.dart:45`): set at lines 108-116, never read; the form shows its spinner from `formats` and `formatsFailure`;
+- `HistoryState.totals` (`history_bloc.dart:65`): written and carried forward (lines 217, 242, 286), but no screen reads it; History shows `chipTotals`.
+
+**Proposal:** remove them.
+
+**Tests:** the suites pass unchanged; a source check that each name is gone.
+
+#### P-48 (nice): code kept alive only by its tests
+**Evidence:**
+- `Profile.canReadHistory` (`profile.dart:57`): only `test/features/profile/domain/permission_test.dart`. The `canReadHistory` the app reads is `ScanSessionCubit`'s;
+- `RequestAccessState.waiting` (`request_access_cubit.dart:43`): only `access_request_test.dart`; the screen reads the three waits itself;
+- `FirebaseCrashReportingService.attempts` and `.started` (`firebase_crash_reporting_service.dart:18, 22`): only its test;
+- `AppColors.successOnDark` (`app_colors.dart:50`): only the token contrast test. Its comment names the Profile role badge, which now uses `success`;
+- the `notProductQr` extension on `RefusedInput` (`prepared_input.dart`): only two tests; the app's `notProductQr` is the translation;
+- the translation `checkedByLabel` (`app_en.arb:429`, `app_bn.arb:236`): its one use is a test that it is never shown (who made an earlier check is never sent, guide §4.2).
+
+**Proposal:** remove each, and point its tests at what the app does: the crash test through what it reports, the privacy test through the text "Checked before by" itself.
+
+**Tests:**
+- **normal:** each rewritten test still proves the same behaviour;
+- **worst:** a check that none of these names is left in `lib/`.
+
+#### P-49 (nice): parameters no caller passes
+**Evidence:** every call in `lib/` and `test/` leaves these at their default:
+- the inputs: `AppTextField.secret`, `.showCounter` and `.suffix`; `AppSearchField.autofocus`; `AppOtpField.errorText`; `AppPasswordField.hint`;
+- `NetworkStatusShell.settle` (`network_status_banner.dart:26`) and `VerifyingLoader.delay`;
+- `ReasonChip.detail` (`verification_result_card.dart:196`), so its branch at line 234 never runs;
+- `PrepareInput`'s `parser`, `normalizer` and `validator`, `LookupBloc.prepareInput`, `ParseStack`'s optional preparer, and `buildRouter(guard:)` (`app_router.dart:35`).
+
+**Why:** each is a branch nobody runs or tests, and an option a reader has to understand.
+
+**Proposal:** remove them and the branches they guard.
+
+**Tests:**
+- **normal:** the widgets render as before (every screenshot unchanged);
+- **edge:** a password field still turns suggestions off;
+- **worst:** a source check that the parameters are gone.
+
+#### P-50 (nice): duplicates and more exposure than needed
+**Evidence:**
+- `CheckedInput.of` (`checked_input.dart:17`) builds exactly what the constructor builds; it has three callers;
+- `CrashReportingService` is registered in the locator (`register.dart:87`), but nothing reads it from there: the logger is given it directly (`error_handlers.dart`);
+- `HistorySearch.maxSerialLength` (`history_search.dart:39`) is public but used only in its own file.
+
+**Proposal:** the callers use the constructor; drop the registration; make the constant private.
+
+**Tests:** the startup-modules test no longer expects the crash service in the locator; the suites pass.
+
+#### P-51 (nice): test material nothing uses
+**Evidence:**
+- 21 screenshots in `test/ui/goldens/` that no test produces, all of screens removed earlier (bulk lookup, retail users, the old History list): `big_bulk`, `bulk_list`, `bulk_results`, `bulk_summary`, `details_placeholder`, `screen_add_retail` (four), `screen_added_emailed`, `screen_added_password`, `screen_bulk_*` (six), `screen_history_all`, `screen_retail_confirm`, `screen_retail_users`, `screen_retail_users_empty`;
+- 5 recorded test-server answers that no test loads (`test/fixtures/staging/`): `checks_result_valid_200`, `photo_third_201`, `reports_limit1_200`, `reports_page2_200`, `stack_session_200`.
+
+**Proposal:** delete the screenshots. For each answer, replay it in a contract test where it covers something not yet replayed; otherwise delete it.
+
+**Tests:** a check that every screenshot is produced by a test and every recorded answer is loaded, by its literal name.
+
+#### P-52 (nice): the staging tool
+**Evidence:** `tool/staging_check/staging_check.dart`:
+- writes `'lookups/sessions/$id/end'` (line 1898), `'auth/logout'` (1906) and `'auth/refresh'` (1916) as text, where `ApiRoutes` has all three; R20 checks only `lib/`;
+- its header (lines 8-9) lists 10 steps, while its switch also runs `lengths`, `signup-probe`, `signup-code`, `signup`, `password-probe`, `serial-probe`, `backend-probe` and `history-days`.
+
+**Proposal:** use `ApiRoutes` and list every step.
+
+**Tests:** R20 extended to `tool/`: no API path written as text.
+
+#### P-53 (nice): leftovers in the tree
+**Evidence:**
+- empty folders on disk (not in git): `lib/features/incidents/presentation/widgets/` and `lib/features/retail_users/presentation/screens/`;
+- `devtools_options.yaml`, untracked, holding only the DevTools default;
+- `docs/test-cases/15-ui.md:278` places `BulkSummaryCard` in `bulk_results_view.dart`, which no longer exists.
+
+**Proposal:** remove the folders; ignore `devtools_options.yaml` in `.gitignore`; correct the test-case line.
+
+**Left as they are:**
+- the user's own files that git already ignores: the `bugreport-*.zip` files and `postman/` at the root, and `test/ui/failures/`;
+- the dated reports (`docs/*-2026-11-*.md`) and this audit's earlier steps, which keep the paths of their day;
+- iOS `RunnerTests.swift` (Flutter's empty template test): for the build-and-release step, as removing it needs Xcode.
+
+### Suggested order
+1. **P-46** first: it ships native code no one uses.
+2. **The app's own code:** P-47 … P-50.
+3. **P-51 … P-53** at any time.
