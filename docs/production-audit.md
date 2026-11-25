@@ -6,7 +6,7 @@ The production-grade review of the app, done on the `production` branch one area
 |---|---|---|
 | 2 | High-level architecture | Checked 2026-11-24: P-1 … P-15. **All fixed**; P-10 on for staging, live waits for its production project |
 | 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11). **All fixed** (2026-11-25) |
-| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-45. Fixed: P-20 … P-36 |
+| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-45. Fixed: P-20 … P-37 |
 | 5 | Dead code | To do |
 | 6+ | Comments, data layer, UI components, state and lifecycle, security, build and release, monitoring, tests, localisation, performance, docs | To do |
 
@@ -1215,6 +1215,25 @@ History's reasons stay raw strings (`CheckRecord.reasons`, `List<String>`), whic
 - Best done after P-36, P-38 and P-40, which take logic and duplicates out first.
 
 **Tests:** the screen, flow and screenshot tests pass unchanged.
+
+**✅ Fixed 2026-11-25** (before P-38 … P-40, as asked):
+- **Tests first:** TC-ARCH-053 … -055 (`test/architecture/screen_split_test.dart`):
+  - each of the two screens holds only itself and its state, in at most 400 and 450 lines;
+  - each `build` is at most 150 lines;
+  - the nine widgets split out hold no state and never reach a bloc themselves.
+
+  All but the check tab's `build` length were red before.
+- **The change** (`presentation/widgets/`), with no change in behaviour:
+  - **The scanner screen** went from 1,009 lines to 291. It keeps the camera and lifecycle wiring. Its parts:
+    - `ScanCameraArea`, with the camera problem view and the live result;
+    - `SessionLivePanel`, new from its `build`: counters, notices, the failure and Scan again, the latest card;
+    - `SessionRowsSliver`, new from its `build`;
+    - `SessionScanRow`, `SessionSummaryView`, `SessionBottomBar`.
+  - **The check tab** went from 774 lines to 413. Its parts are `CheckHeader`, `SerialLookupForm` (with its button pair) and `ToolsSection` (with `ToolTile`).
+  - The classes were moved as written and only renamed. The two new widgets take callbacks for what the screen did itself (open the latest, scan again, retry the rows, more).
+- **Found by the worst test:** the lookup form asked the bloc for the formats itself. It now takes `onRetryFormats`.
+- **Layout:** the live panel's lines sit in a full-width column, so each is centred as before, and the rows in a `SliverMainAxisGroup`. Every screenshot test passes unchanged.
+- **Still long, not part of this split:** the `build` methods of `report_incident_screen.dart`, `profile_screen.dart` and `serial_stack_screen.dart`. The camera problem view still exists twice, here and in `LiveQrCamera`: that is P-40.
 
 #### P-38 (should): decisions made in widgets
 **Evidence:**

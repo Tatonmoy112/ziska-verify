@@ -3,7 +3,6 @@ import 'dart:math' as math;
 
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -14,24 +13,17 @@ import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
 import 'package:ziska_verify/features/verification/presentation/bloc/lookup_bloc.dart';
 import 'package:ziska_verify/features/verification/presentation/models/result_view.dart';
 import 'package:ziska_verify/features/verification/presentation/screens/verifying_view.dart';
+import 'package:ziska_verify/features/verification/presentation/widgets/check_header.dart';
 import 'package:ziska_verify/features/verification/presentation/widgets/live_qr_camera.dart';
 import 'package:ziska_verify/features/verification/presentation/widgets/lookup_messages.dart';
-import 'package:ziska_verify/features/verification/presentation/widgets/serial_input_formatter.dart';
+import 'package:ziska_verify/features/verification/presentation/widgets/serial_lookup_form.dart';
+import 'package:ziska_verify/features/verification/presentation/widgets/tools_section.dart';
 import 'package:ziska_verify/l10n/generated/app_localizations.dart';
-import 'package:ziska_verify/shared/design_system/components/buttons/app_button.dart';
-import 'package:ziska_verify/shared/design_system/components/inputs/app_text_field.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_colors.dart';
-import 'package:ziska_verify/shared/design_system/tokens/app_radius.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_spacing.dart';
-import 'package:ziska_verify/shared/design_system/tokens/app_typography.dart';
-import 'package:ziska_verify/shared/extensions/failure_message.dart';
 import 'package:ziska_verify/shared/widgets/app_empty_state.dart';
-import 'package:ziska_verify/shared/widgets/error_banner.dart';
-import 'package:ziska_verify/shared/widgets/failure_banner.dart';
 import 'package:ziska_verify/shared/widgets/large_text.dart';
 import 'package:ziska_verify/shared/widgets/navy_status_bar.dart';
-import 'package:ziska_verify/shared/widgets/pattern_background.dart';
-import 'package:ziska_verify/shared/widgets/retry_countdown.dart';
 
 /// The Check tab (final.md §13.1, §13.7). With `item:lookup` it
 /// opens on the camera: a read QR is the trigger, sent at once as
@@ -300,27 +292,27 @@ class _VerifyScreenState extends State<VerifyScreen>
     // Entry points to the other features the role allows (§13.7).
     final tools = <Widget>[
       if (profile?.canBulkLookup ?? false)
-        _ToolTile(
+        ToolTile(
           key: const Key('verify.tool.bulk'),
           icon: LucideIcons.layers,
           title: l10n.scannerModeTitle,
           onTap: () => unawaited(_open(() => _push(RouteNames.scannerMode))),
         ),
       if (profile?.canBulkLookup ?? false)
-        _ToolTile(
+        ToolTile(
           key: const Key('verify.tool.serials'),
           icon: LucideIcons.listOrdered,
           title: l10n.serialStackTitle,
           onTap: () => unawaited(_open(() => _push(RouteNames.serialStack))),
         ),
       if (profile?.canReport ?? false) ...[
-        _ToolTile(
+        ToolTile(
           key: const Key('verify.tool.report'),
           icon: LucideIcons.flag,
           title: l10n.toolReport,
           onTap: () => unawaited(_open(widget.onNewReport)),
         ),
-        _ToolTile(
+        ToolTile(
           key: const Key('verify.tool.myReports'),
           icon: LucideIcons.fileText,
           title: l10n.toolMyReports,
@@ -342,7 +334,7 @@ class _VerifyScreenState extends State<VerifyScreen>
           body: ListView(
             padding: EdgeInsets.zero,
             children: [
-              _Header(
+              CheckHeader(
                 organisation: profile?.organisation ?? l10n.appTitle,
                 name: profile?.name ?? '',
                 onOpenProfile: widget.onOpenProfile,
@@ -350,7 +342,7 @@ class _VerifyScreenState extends State<VerifyScreen>
               if (tools.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.all(AppSpacing.screen),
-                  child: _ToolsSection(tools: tools),
+                  child: ToolsSection(tools: tools),
                 )
               else
                 AppEmptyState(
@@ -366,7 +358,7 @@ class _VerifyScreenState extends State<VerifyScreen>
     final session = canLookup
         ? _session ??= widget.scanner.createSession()
         : null;
-    final header = _Header(
+    final header = CheckHeader(
       organisation: profile?.organisation ?? l10n.appTitle,
       name: profile?.name ?? '',
       onOpenProfile: widget.onOpenProfile,
@@ -387,7 +379,7 @@ class _VerifyScreenState extends State<VerifyScreen>
                       // Back waits while the one lookup runs.
                       builder: (context, state) => PopScope(
                         canPop: !state.isBusy,
-                        child: _LookupForm(
+                        child: SerialLookupForm(
                           state: state,
                           way: _way,
                           typed: _lastWay == LookupWay.serial,
@@ -397,6 +389,9 @@ class _VerifyScreenState extends State<VerifyScreen>
                           onChanged: () => _onTyped(context),
                           onVerify: _verify,
                           onClear: _clear,
+                          onRetryFormats: () => context.read<LookupBloc>().add(
+                            const FormatsRequested(),
+                          ),
                           tools: tools,
                           header: scrollingHeader ? header : null,
                         ),
@@ -405,7 +400,7 @@ class _VerifyScreenState extends State<VerifyScreen>
                   : tools.isNotEmpty
                   ? ListView(
                       padding: const EdgeInsets.all(AppSpacing.screen),
-                      children: [_ToolsSection(tools: tools)],
+                      children: [ToolsSection(tools: tools)],
                     )
                   : AppEmptyState(
                       icon: LucideIcons.lockKeyhole,
@@ -416,359 +411,6 @@ class _VerifyScreenState extends State<VerifyScreen>
           ],
         ),
       ),
-    );
-  }
-}
-
-class _LookupForm extends StatelessWidget {
-  const _LookupForm({
-    required this.state,
-    required this.way,
-    required this.typed,
-    required this.camera,
-    required this.input,
-    required this.inputFocus,
-    required this.onChanged,
-    required this.onVerify,
-    required this.onClear,
-    required this.tools,
-    this.header,
-  });
-
-  /// Scrolls with the page at a large font.
-  final Widget? header;
-  final LookupState state;
-  final LookupWay way;
-
-  /// The last lookup was a typed serial: its messages show here.
-  final bool typed;
-  final Widget camera;
-  final TextEditingController input;
-  final FocusNode inputFocus;
-  final VoidCallback onChanged;
-  final VoidCallback onVerify;
-  final VoidCallback onClear;
-  final List<Widget> tools;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final formats = state.formats;
-
-    // Without the formats only the serial form waits: the tools need no
-    // formats, so they stay (final.md §13.7).
-    Widget formsUnavailable() {
-      final formatsFailure = state.formatsFailure;
-      if (formatsFailure == null) {
-        return const Padding(
-          padding: EdgeInsets.all(AppSpacing.xl),
-          child: Center(
-            child: CircularProgressIndicator(key: Key('verify.formatsLoading')),
-          ),
-        );
-      }
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          ErrorBanner(
-            message:
-                '${l10n.formatsFailed} '
-                '${formatsFailure.message(l10n)}',
-            requestId: formatsFailure.requestId,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          RetryCountdown(
-            until: state.formatsRetryAt,
-            builder: (context, wait) => AppButton(
-              key: const Key('verify.formatsRetry'),
-              label: wait > 0 ? l10n.errorRateLimited(wait) : l10n.retry,
-              onPressed: wait > 0
-                  ? null
-                  : () => context.read<LookupBloc>().add(
-                      const FormatsRequested(),
-                    ),
-            ),
-          ),
-        ],
-      );
-    }
-
-    final failure = state.failure;
-    return ListView(
-      padding: EdgeInsets.zero,
-      children: [
-        ?header,
-        camera,
-        Padding(
-          padding: const EdgeInsets.all(AppSpacing.screen),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (formats == null)
-                formsUnavailable()
-              else
-                DecoratedBox(
-                  decoration: const BoxDecoration(
-                    color: AppColors.background,
-                    borderRadius: AppRadius.card,
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.lg),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        AppTextField(
-                          fieldKey: const Key('verify.input'),
-                          label: l10n.typeSerialLabel,
-                          hint: l10n.serialHint(formats.serialMaxDigits),
-                          controller: input,
-                          focusNode: inputFocus,
-                          prefixIcon: LucideIcons.hash,
-                          keyboardType: TextInputType.number,
-                          inputFormatters: [
-                            LengthLimitingTextInputFormatter(64),
-                            const SerialInputFormatter(),
-                          ],
-                          textInputAction: TextInputAction.search,
-                          errorText:
-                              typed && state.status == LookupStatus.refused
-                              ? refusedMessage(l10n, state.refused!, formats)
-                              : null,
-                          onChanged: (_) => onChanged(),
-                          onSubmitted: (_) => onVerify(),
-                        ),
-                        if (typed &&
-                            state.status == LookupStatus.failed &&
-                            failure != null) ...[
-                          const SizedBox(height: AppSpacing.sm),
-                          // A `429` counts down and goes away at 0.
-                          FailureBanner(
-                            failure: failure,
-                            retryAt: state.retryAt,
-                            message: lookupFailureMessage(l10n, failure),
-                          ),
-                        ],
-                        const SizedBox(height: AppSpacing.md),
-                        _ButtonPair(
-                          // Held while a 429 counts down (guide section 1).
-                          first: RetryCountdown(
-                            until: state.retryAt,
-                            builder: (context, seconds) => AppButton(
-                              key: const Key('verify.submit'),
-                              label: l10n.verifyButtonLookup,
-                              loading: typed && state.isBusy,
-                              onPressed:
-                                  input.text.isEmpty ||
-                                      seconds > 0 ||
-                                      state.isBusy
-                                  ? null
-                                  : onVerify,
-                            ),
-                          ),
-                          second: AppButton(
-                            label: l10n.clear,
-                            variant: AppButtonVariant.outlined,
-                            onPressed: state.isBusy ? null : onClear,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              if (tools.isNotEmpty) ...[
-                const SizedBox(height: AppSpacing.xl),
-                _ToolsSection(tools: tools),
-              ],
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _ToolsSection extends StatelessWidget {
-  const _ToolsSection({required this.tools});
-
-  final List<Widget> tools;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(l10n.toolsTitle, style: AppTypography.fieldLabel),
-        const SizedBox(height: AppSpacing.xs),
-        ...tools,
-      ],
-    );
-  }
-}
-
-class _ToolTile extends StatelessWidget {
-  const _ToolTile({
-    required this.icon,
-    required this.title,
-    required this.onTap,
-    super.key,
-  });
-
-  final IconData icon;
-  final String title;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.xs),
-      child: Material(
-        color: AppColors.background,
-        borderRadius: AppRadius.card,
-        child: ListTile(
-          onTap: onTap,
-          shape: const RoundedRectangleBorder(borderRadius: AppRadius.card),
-          leading: Container(
-            width: 40,
-            height: 40,
-            decoration: const BoxDecoration(
-              color: AppColors.surfaceMuted,
-              borderRadius: BorderRadius.all(Radius.circular(AppRadius.md)),
-            ),
-            child: Icon(icon, size: 20, color: AppColors.primary),
-          ),
-          title: Text(title, style: AppTypography.bodyStrong),
-          trailing: const Icon(
-            LucideIcons.chevronRight,
-            color: AppColors.textMuted,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _Header extends StatelessWidget {
-  const _Header({
-    required this.organisation,
-    required this.name,
-    required this.onOpenProfile,
-  });
-
-  final String organisation;
-  final String name;
-  final VoidCallback onOpenProfile;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return DecoratedBox(
-      decoration: const BoxDecoration(gradient: AppColors.headerGradient),
-      child: Stack(
-        children: [
-          // The Figma's faint honeycomb, strongest at the end.
-          const Positioned.fill(
-            child: PatternBackground(
-              key: Key('verify.header.pattern'),
-              color: AppColors.onPrimaryFaint,
-              kind: PatternKind.hexagons,
-              spacing: AppSpacing.xxxl,
-              fade: PatternFade.towardStart,
-            ),
-          ),
-          _headerContent(l10n),
-        ],
-      ),
-    );
-  }
-
-  Widget _headerContent(AppLocalizations l10n) {
-    return SafeArea(
-      bottom: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.screen,
-          AppSpacing.md,
-          AppSpacing.screen,
-          AppSpacing.xl,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(
-                  LucideIcons.shieldCheck,
-                  color: AppColors.onPrimary,
-                ),
-                const SizedBox(width: AppSpacing.xs),
-                Expanded(
-                  child: Text(
-                    organisation,
-                    style: AppTypography.bodyStrong.copyWith(
-                      color: AppColors.onPrimary,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                Material(
-                  color: AppColors.onPrimary.withValues(alpha: 0.15),
-                  borderRadius: AppRadius.button,
-                  child: IconButton(
-                    onPressed: onOpenProfile,
-                    icon: const Icon(LucideIcons.user),
-                    color: AppColors.onPrimary,
-                    tooltip: l10n.tabProfile,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Text(
-              l10n.welcomeBack,
-              style: AppTypography.subtitle.copyWith(
-                color: AppColors.onPrimary.withValues(alpha: 0.85),
-              ),
-            ),
-            Text(
-              name,
-              style: AppTypography.title.copyWith(
-                color: AppColors.onPrimary,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Two buttons side by side (3 : 2); one above the other at a large font,
-/// so neither label is cut.
-class _ButtonPair extends StatelessWidget {
-  const _ButtonPair({required this.first, required this.second});
-
-  final Widget first;
-  final Widget second;
-
-  @override
-  Widget build(BuildContext context) {
-    if (isLargeText(context)) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          first,
-          const SizedBox(height: AppSpacing.sm),
-          second,
-        ],
-      );
-    }
-    return Row(
-      children: [
-        Expanded(flex: 3, child: first),
-        const SizedBox(width: AppSpacing.sm),
-        Expanded(flex: 2, child: second),
-      ],
     );
   }
 }
