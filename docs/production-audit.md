@@ -6,7 +6,7 @@ The production-grade review of the app, done on the `production` branch one area
 |---|---|---|
 | 2 | High-level architecture | Checked 2026-11-24: P-1 … P-15. **All fixed**; P-10 on for staging, live waits for its production project |
 | 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11). **All fixed** (2026-11-25) |
-| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-45. Fixed: P-20 … P-38 |
+| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-45. Fixed: P-20 … P-39 |
 | 5 | Dead code | To do |
 | 6+ | Comments, data layer, UI components, state and lifecycle, security, build and release, monitoring, tests, localisation, performance, docs | To do |
 
@@ -1281,6 +1281,18 @@ History's reasons stay raw strings (`CheckRecord.reasons`, `List<String>`), whic
 - **normal:** loaded;
 - **edge:** a retry after a failure;
 - **worst:** a 429 shows its wait and sends nothing until it ends.
+
+**✅ Fixed 2026-11-25:**
+- **Tests first:** TC-MIG-089 … -091 (`session_summary_cubit_test`):
+  - the summary loads;
+  - Try again after a failure, and one request for two loads at once;
+  - during a 429 wait Try again sends nothing, and after it, it does;
+  - the card's Try again is off during the wait and counts it down.
+- **The change:**
+  - `SessionSummaryCubit` (Freezed state: loading, ready, failed, `retryAt`) loads the summary, refusing a second load while one runs or a wait counts;
+  - `SessionSummaryCard` is a view of it: a `RetryCountdown` on Try again, and the loaded summary as before;
+  - the session's route creates the cubit, as every route-scoped bloc is.
+- **A test detail:** the countdown's "30" shows twice, in the banner's message and on the button. The test looks on the button.
 
 #### P-40 (should): duplicated widgets
 **Evidence:**

@@ -11,6 +11,7 @@ import 'package:ziska_verify/features/history/domain/usecases/get_checks.dart';
 import 'package:ziska_verify/features/history/presentation/bloc/history_bloc.dart';
 import 'package:ziska_verify/features/history/presentation/screens/history_screen.dart';
 import 'package:ziska_verify/features/verification/domain/usecases/verification_usecases.dart';
+import 'package:ziska_verify/features/verification/presentation/bloc/session_summary_cubit.dart';
 import 'package:ziska_verify/features/verification/presentation/bloc/sessions_cubit.dart';
 import 'package:ziska_verify/features/verification/presentation/widgets/session_summary_card.dart';
 import 'package:ziska_verify/features/verification/presentation/widgets/sessions_view.dart';
@@ -32,9 +33,16 @@ List<RouteBase> historyRoutes(RouteDeps d) {
                 ..add(HistoryQueryChanged(query)),
           child: HistoryScreen(
             title: AppLocalizations.of(context).sessionChecksTitle,
-            top: SessionSummaryCard(
+            top: BlocProvider(
               key: ValueKey(query.sessionId),
-              load: () => locator<GetSession>()(query.sessionId!),
+              create: (_) {
+                final cubit = SessionSummaryCubit(
+                  () => locator<GetSession>()(query.sessionId!),
+                );
+                unawaited(cubit.load());
+                return cubit;
+              },
+              child: const SessionSummaryCard(),
             ),
           ),
         );

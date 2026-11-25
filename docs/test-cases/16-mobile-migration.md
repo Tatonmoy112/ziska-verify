@@ -92,6 +92,9 @@ Authority: final.md v2.0 and the current app API guide/Postman snapshot. These c
 | TC-MIG-086 | A scanner session's phases, in order | POS | P2 | AUTO | ✅ `features/verification/presentation/many_items_cubits_test` | Fake repository | Start; scan; Finish; Scan more | `starting`, `scanning`, `finishing`, `done`; Scan more back to `scanning` | final.md §8, §13.2; production audit P-36 |
 | TC-MIG-087 | A start that fails, and a pause | EDGE | P2 | AUTO | ✅ `features/verification/presentation/many_items_cubits_test` | `GET formats` answered 500, then right; a camera pause | Start; Try again; pause | `startFailed` with no session, then `scanning`; a pause keeps `scanning` | P-36 |
 | TC-MIG-088 | Never two at once | WORST | P1 | AUTO | ✅ `features/verification/presentation/many_items_cubits_test` | A session left mid-way; a full session, then a repeat | Leave; scan; scan twice | `closed`, and a scan after it is not sent; the roll-over's notice, then the repeat's in its place, never both | guide §4.3; P-36 |
+| TC-MIG-089 | A session's summary loads | POS | P3 | AUTO | ✅ `features/verification/presentation/session_summary_cubit_test` | `GET lookups/sessions/{id}` answered | Open a session's checks | Loading, then the session | guide §4.5; production audit P-39 |
+| TC-MIG-090 | Try again, and a load that runs | EDGE | P2 | AUTO | ✅ `features/verification/presentation/session_summary_cubit_test` | A 500, then the session; an answer held | Try again; load twice at once | The session after Try again; one request for two loads | P-39 |
+| TC-MIG-091 | A 429 on the summary is waited out | WORST | P2 | AUTO | ✅ `features/verification/presentation/session_summary_cubit_test` | A 429 with `Retry-After: 30` | Try again during the wait; after it; see the card | Nothing sent during the wait, sent after it; Try again off, counting the wait down | guide §1; P-39 |
 
 ## Device and staging run sheet
 
