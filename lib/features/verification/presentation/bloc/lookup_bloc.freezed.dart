@@ -28,12 +28,12 @@ $LookupStateCopyWith<LookupState> get copyWith => _$LookupStateCopyWithImpl<Look
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is LookupState&&(identical(other.formats, formats) || other.formats == formats)&&(identical(other.formatsLoading, formatsLoading) || other.formatsLoading == formatsLoading)&&(identical(other.formatsFailure, formatsFailure) || other.formatsFailure == formatsFailure)&&(identical(other.formatsRetryAt, formatsRetryAt) || other.formatsRetryAt == formatsRetryAt)&&(identical(other.status, status) || other.status == status)&&(identical(other.result, result) || other.result == result)&&(identical(other.checked, checked) || other.checked == checked)&&(identical(other.failure, failure) || other.failure == failure)&&(identical(other.refused, refused) || other.refused == refused)&&(identical(other.retryAt, retryAt) || other.retryAt == retryAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LookupState&&(identical(other.formats, formats) || other.formats == formats)&&(identical(other.formatsLoading, formatsLoading) || other.formatsLoading == formatsLoading)&&(identical(other.formatsFailure, formatsFailure) || other.formatsFailure == formatsFailure)&&(identical(other.formatsRetryAt, formatsRetryAt) || other.formatsRetryAt == formatsRetryAt)&&(identical(other.status, status) || other.status == status)&&(identical(other.result, result) || other.result == result)&&(identical(other.checked, checked) || other.checked == checked)&&(identical(other.failure, failure) || other.failure == failure)&&const DeepCollectionEquality().equals(other.refused, refused)&&(identical(other.retryAt, retryAt) || other.retryAt == retryAt));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,formats,formatsLoading,formatsFailure,formatsRetryAt,status,result,checked,failure,refused,retryAt);
+int get hashCode => Object.hash(runtimeType,formats,formatsLoading,formatsFailure,formatsRetryAt,status,result,checked,failure,const DeepCollectionEquality().hash(refused),retryAt);
 
 @override
 String toString() {
@@ -52,7 +52,7 @@ $Res call({
 });
 
 
-
+$InputFormatsCopyWith<$Res>? get formats;$LookupResultCopyWith<$Res>? get result;$CheckedInputCopyWith<$Res>? get checked;
 
 }
 /// @nodoc
@@ -80,7 +80,43 @@ as RefusedInput?,retryAt: freezed == retryAt ? _self.retryAt : retryAt // ignore
 as DateTime?,
   ));
 }
+/// Create a copy of LookupState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$InputFormatsCopyWith<$Res>? get formats {
+    if (_self.formats == null) {
+    return null;
+  }
 
+  return $InputFormatsCopyWith<$Res>(_self.formats!, (value) {
+    return _then(_self.copyWith(formats: value));
+  });
+}/// Create a copy of LookupState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$LookupResultCopyWith<$Res>? get result {
+    if (_self.result == null) {
+    return null;
+  }
+
+  return $LookupResultCopyWith<$Res>(_self.result!, (value) {
+    return _then(_self.copyWith(result: value));
+  });
+}/// Create a copy of LookupState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$CheckedInputCopyWith<$Res>? get checked {
+    if (_self.checked == null) {
+    return null;
+  }
+
+  return $CheckedInputCopyWith<$Res>(_self.checked!, (value) {
+    return _then(_self.copyWith(checked: value));
+  });
+}
 }
 
 
@@ -245,12 +281,12 @@ _$LookupStateCopyWith<_LookupState> get copyWith => __$LookupStateCopyWithImpl<_
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LookupState&&(identical(other.formats, formats) || other.formats == formats)&&(identical(other.formatsLoading, formatsLoading) || other.formatsLoading == formatsLoading)&&(identical(other.formatsFailure, formatsFailure) || other.formatsFailure == formatsFailure)&&(identical(other.formatsRetryAt, formatsRetryAt) || other.formatsRetryAt == formatsRetryAt)&&(identical(other.status, status) || other.status == status)&&(identical(other.result, result) || other.result == result)&&(identical(other.checked, checked) || other.checked == checked)&&(identical(other.failure, failure) || other.failure == failure)&&(identical(other.refused, refused) || other.refused == refused)&&(identical(other.retryAt, retryAt) || other.retryAt == retryAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LookupState&&(identical(other.formats, formats) || other.formats == formats)&&(identical(other.formatsLoading, formatsLoading) || other.formatsLoading == formatsLoading)&&(identical(other.formatsFailure, formatsFailure) || other.formatsFailure == formatsFailure)&&(identical(other.formatsRetryAt, formatsRetryAt) || other.formatsRetryAt == formatsRetryAt)&&(identical(other.status, status) || other.status == status)&&(identical(other.result, result) || other.result == result)&&(identical(other.checked, checked) || other.checked == checked)&&(identical(other.failure, failure) || other.failure == failure)&&const DeepCollectionEquality().equals(other.refused, refused)&&(identical(other.retryAt, retryAt) || other.retryAt == retryAt));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,formats,formatsLoading,formatsFailure,formatsRetryAt,status,result,checked,failure,refused,retryAt);
+int get hashCode => Object.hash(runtimeType,formats,formatsLoading,formatsFailure,formatsRetryAt,status,result,checked,failure,const DeepCollectionEquality().hash(refused),retryAt);
 
 @override
 String toString() {
@@ -269,7 +305,7 @@ $Res call({
 });
 
 
-
+@override $InputFormatsCopyWith<$Res>? get formats;@override $LookupResultCopyWith<$Res>? get result;@override $CheckedInputCopyWith<$Res>? get checked;
 
 }
 /// @nodoc
@@ -298,7 +334,43 @@ as DateTime?,
   ));
 }
 
+/// Create a copy of LookupState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$InputFormatsCopyWith<$Res>? get formats {
+    if (_self.formats == null) {
+    return null;
+  }
 
+  return $InputFormatsCopyWith<$Res>(_self.formats!, (value) {
+    return _then(_self.copyWith(formats: value));
+  });
+}/// Create a copy of LookupState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$LookupResultCopyWith<$Res>? get result {
+    if (_self.result == null) {
+    return null;
+  }
+
+  return $LookupResultCopyWith<$Res>(_self.result!, (value) {
+    return _then(_self.copyWith(result: value));
+  });
+}/// Create a copy of LookupState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$CheckedInputCopyWith<$Res>? get checked {
+    if (_self.checked == null) {
+    return null;
+  }
+
+  return $CheckedInputCopyWith<$Res>(_self.checked!, (value) {
+    return _then(_self.copyWith(checked: value));
+  });
+}
 }
 
 // dart format on

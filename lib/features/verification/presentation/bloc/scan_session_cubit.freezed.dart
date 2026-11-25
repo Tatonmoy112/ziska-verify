@@ -61,7 +61,7 @@ $Res call({
 });
 
 
-
+$InputFormatsCopyWith<$Res>? get formats;$SessionTotalsCopyWith<$Res>? get totals;$LookupResultCopyWith<$Res>? get latest;$CheckedInputCopyWith<$Res>? get checked;
 
 }
 /// @nodoc
@@ -100,7 +100,55 @@ as Failure?,retryAt: freezed == retryAt ? _self.retryAt : retryAt // ignore: cas
 as DateTime?,
   ));
 }
+/// Create a copy of ScanSessionState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$InputFormatsCopyWith<$Res>? get formats {
+    if (_self.formats == null) {
+    return null;
+  }
 
+  return $InputFormatsCopyWith<$Res>(_self.formats!, (value) {
+    return _then(_self.copyWith(formats: value));
+  });
+}/// Create a copy of ScanSessionState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$SessionTotalsCopyWith<$Res>? get totals {
+    if (_self.totals == null) {
+    return null;
+  }
+
+  return $SessionTotalsCopyWith<$Res>(_self.totals!, (value) {
+    return _then(_self.copyWith(totals: value));
+  });
+}/// Create a copy of ScanSessionState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$LookupResultCopyWith<$Res>? get latest {
+    if (_self.latest == null) {
+    return null;
+  }
+
+  return $LookupResultCopyWith<$Res>(_self.latest!, (value) {
+    return _then(_self.copyWith(latest: value));
+  });
+}/// Create a copy of ScanSessionState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$CheckedInputCopyWith<$Res>? get checked {
+    if (_self.checked == null) {
+    return null;
+  }
+
+  return $CheckedInputCopyWith<$Res>(_self.checked!, (value) {
+    return _then(_self.copyWith(checked: value));
+  });
+}
 }
 
 
@@ -322,7 +370,7 @@ $Res call({
 });
 
 
-
+@override $InputFormatsCopyWith<$Res>? get formats;@override $SessionTotalsCopyWith<$Res>? get totals;@override $LookupResultCopyWith<$Res>? get latest;@override $CheckedInputCopyWith<$Res>? get checked;
 
 }
 /// @nodoc
@@ -362,7 +410,55 @@ as DateTime?,
   ));
 }
 
+/// Create a copy of ScanSessionState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$InputFormatsCopyWith<$Res>? get formats {
+    if (_self.formats == null) {
+    return null;
+  }
 
+  return $InputFormatsCopyWith<$Res>(_self.formats!, (value) {
+    return _then(_self.copyWith(formats: value));
+  });
+}/// Create a copy of ScanSessionState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$SessionTotalsCopyWith<$Res>? get totals {
+    if (_self.totals == null) {
+    return null;
+  }
+
+  return $SessionTotalsCopyWith<$Res>(_self.totals!, (value) {
+    return _then(_self.copyWith(totals: value));
+  });
+}/// Create a copy of ScanSessionState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$LookupResultCopyWith<$Res>? get latest {
+    if (_self.latest == null) {
+    return null;
+  }
+
+  return $LookupResultCopyWith<$Res>(_self.latest!, (value) {
+    return _then(_self.copyWith(latest: value));
+  });
+}/// Create a copy of ScanSessionState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$CheckedInputCopyWith<$Res>? get checked {
+    if (_self.checked == null) {
+    return null;
+  }
+
+  return $CheckedInputCopyWith<$Res>(_self.checked!, (value) {
+    return _then(_self.copyWith(checked: value));
+  });
+}
 }
 
 // dart format on

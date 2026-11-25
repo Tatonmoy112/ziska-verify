@@ -56,7 +56,7 @@ $Res call({
 });
 
 
-$CheckQueryCopyWith<$Res> get query;$PaginatedStateCopyWith<CheckRecord, $Res> get list;
+$CheckQueryCopyWith<$Res> get query;$PaginatedStateCopyWith<CheckRecord, $Res> get list;$CheckTotalsCopyWith<$Res>? get totals;$CheckTotalsCopyWith<$Res>? get chipTotals;
 
 }
 /// @nodoc
@@ -96,6 +96,30 @@ $PaginatedStateCopyWith<CheckRecord, $Res> get list {
   
   return $PaginatedStateCopyWith<CheckRecord, $Res>(_self.list, (value) {
     return _then(_self.copyWith(list: value));
+  });
+}/// Create a copy of HistoryState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$CheckTotalsCopyWith<$Res>? get totals {
+    if (_self.totals == null) {
+    return null;
+  }
+
+  return $CheckTotalsCopyWith<$Res>(_self.totals!, (value) {
+    return _then(_self.copyWith(totals: value));
+  });
+}/// Create a copy of HistoryState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$CheckTotalsCopyWith<$Res>? get chipTotals {
+    if (_self.chipTotals == null) {
+    return null;
+  }
+
+  return $CheckTotalsCopyWith<$Res>(_self.chipTotals!, (value) {
+    return _then(_self.copyWith(chipTotals: value));
   });
 }
 }
@@ -285,7 +309,7 @@ $Res call({
 });
 
 
-@override $CheckQueryCopyWith<$Res> get query;@override $PaginatedStateCopyWith<CheckRecord, $Res> get list;
+@override $CheckQueryCopyWith<$Res> get query;@override $PaginatedStateCopyWith<CheckRecord, $Res> get list;@override $CheckTotalsCopyWith<$Res>? get totals;@override $CheckTotalsCopyWith<$Res>? get chipTotals;
 
 }
 /// @nodoc
@@ -326,6 +350,30 @@ $PaginatedStateCopyWith<CheckRecord, $Res> get list {
   
   return $PaginatedStateCopyWith<CheckRecord, $Res>(_self.list, (value) {
     return _then(_self.copyWith(list: value));
+  });
+}/// Create a copy of HistoryState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$CheckTotalsCopyWith<$Res>? get totals {
+    if (_self.totals == null) {
+    return null;
+  }
+
+  return $CheckTotalsCopyWith<$Res>(_self.totals!, (value) {
+    return _then(_self.copyWith(totals: value));
+  });
+}/// Create a copy of HistoryState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$CheckTotalsCopyWith<$Res>? get chipTotals {
+    if (_self.chipTotals == null) {
+    return null;
+  }
+
+  return $CheckTotalsCopyWith<$Res>(_self.chipTotals!, (value) {
+    return _then(_self.copyWith(chipTotals: value));
   });
 }
 }

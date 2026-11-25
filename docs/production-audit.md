@@ -6,7 +6,7 @@ The production-grade review of the app, done on the `production` branch one area
 |---|---|---|
 | 2 | High-level architecture | Checked 2026-11-24: P-1 … P-15. **All fixed**; P-10 on for staging, live waits for its production project |
 | 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11). **All fixed** (2026-11-25) |
-| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-45. Fixed: P-20 … P-43 |
+| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-45. Fixed: P-20 … P-44 |
 | 5 | Dead code | To do |
 | 6+ | Comments, data layer, UI components, state and lifecycle, security, build and release, monitoring, tests, localisation, performance, docs | To do |
 
@@ -1408,6 +1408,19 @@ History's reasons stay raw strings (`CheckRecord.reasons`, `List<String>`), whic
 - **normal:** each entity built twice is equal;
 - **edge:** list fields compare by value;
 - **worst:** a reload with equal data ends its refresh, and the existing tests pass unchanged.
+
+**✅ Fixed 2026-11-25** (with P-43's last item, the lists):
+- **Tests first:** TC-ARCH-071 … -073 (`architecture/entity_equality_test`):
+  - each of the 22 entities, made twice as new objects, is equal with the same hash, and a changed field is not;
+  - lists compare by value and in order, and cannot be changed through an entity; the getters and constants the entities carry stay;
+  - History reloaded with a new but equal page ends its refresh with an equal state; every entity class is `@freezed`.
+- **The change:**
+  - every entity is Freezed: `CursorPage`, `RequestableRole`, `AccessRequest`, `CheckRecord`, `CheckTotals`, `CheckPage`, `Report`, `RetailUser`, `CheckedInput`, `CodeFormat`, `InputFormats`, `Product`, `Batch`, `ItemDetails`, `CheckCount`, `LookupResult`, `SessionTotals`, `ScanResult`, `ScanSessionSummary`, `RecoveredScan`, `SerialStackRow`, `SerialStackResult` and `ParsedStack`, as `CheckQuery`, `SessionQuery` and `Profile` were;
+  - `LoginOutcome` and `PreparedInput` are sealed Freezed unions. Their cases keep their names (`LoggedIn`, `CodeSent`, `ReadyInput`, `RefusedInput`), so every call and `switch` reads as before; `notProductQr` is an extension on `RefusedInput`;
+  - the constructors are unchanged, so no caller changed.
+- **Found by the credential guard:** Freezed writes a `toString` that prints every field, so `AccessRequest` would have printed its password and emailed code, and `CodeSent` its challenge, in any log or error that printed one. Nothing prints them today. Both now write their own `toString`: a request names only its name and role, a sent code nothing. A test makes a request and an outcome with made-up secrets and checks none is printed. It also reads every generated `toString` in `lib/` for a password, a pass, a login code, a challenge or the phone ID, and finds none.
+- **What value equality does not do:** Freezed wraps a list without copying it, so a caller that keeps the list it passed in could still change it. No caller does: the mappers and blocs build each list for the entity. History's check numbers keep their identity map, on purpose.
+- **Every screenshot and flow test passes unchanged**, with no test changed to suit equality.
 
 #### P-45 (nice): the scan session's rows are paged by hand
 **Evidence:** `ScanSessionCubit.reloadRows` and `more` keep their own `loadingMore`, `rowsFailed`, `rowsRetryAt` and `nextCursor` (`scan_session_cubit.dart`), apart from `PagedLoader` (P-27). The rows are not a plain server list: each answered scan puts its row first, and later pages are merged without repeating a `ref` (found while fixing P-36).

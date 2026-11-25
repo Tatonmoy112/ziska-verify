@@ -34,6 +34,8 @@ Use small constructor-injected interfaces and feature-first layering. Domain ent
 
 Generated JSON, Freezed, and localization files are regenerated and committed, never edited by hand.
 
+Domain entities (and `CursorPage`) are Freezed values: equal when their fields are, with lists that cannot be changed through them; the two outcomes (`LoginOutcome`, `PreparedInput`) are sealed Freezed unions. A state that holds equal entities is an equal state (2026-11-25, production audit P-44). Classes of static rules only, such as `ReportRules`, stay plain. A value that holds a secret writes its own `toString` without it (`AccessRequest`, `LoginOutcome`), as a generated one prints every field.
+
 **One name and one place for each kind of thing** (2026-11-25, production audit P-43):
 - a feature's use cases, DTOs and mappers are in `<area>_usecases.dart`, `<area>_dtos.dart` and `<area>_mappers.dart`;
 - a service interface in `core/services/` is `<name>_service.dart` and holds no implementation: each implementation has its own file (`secure_phone_id_service.dart`, `network_picture_image_service.dart`, `no_op_crash_reporting_service.dart`);

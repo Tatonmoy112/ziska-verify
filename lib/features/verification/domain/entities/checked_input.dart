@@ -1,23 +1,19 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
 
+part 'checked_input.freezed.dart';
+
 /// The serial or QR value and response time shown with a result.
-class CheckedInput {
+@freezed
+abstract class CheckedInput with _$CheckedInput {
   /// A submitted serial or QR value; hidden-code input is not supported.
-  const CheckedInput({
-    required this.way,
-    required this.shown,
-    required this.at,
-  });
+  const factory CheckedInput({
+    required LookupWay way,
+    required String shown,
+    required DateTime at,
+  }) = _CheckedInput;
 
   /// Preserve the value as sent, including serial leading zeros.
   factory CheckedInput.of(LookupWay way, String value, DateTime at) =>
-      CheckedInput(
-        way: way,
-        shown: value,
-        at: at,
-      );
-
-  final LookupWay way;
-  final String shown;
-  final DateTime at;
+      CheckedInput(way: way, shown: value, at: at);
 }

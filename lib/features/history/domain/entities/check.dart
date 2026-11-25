@@ -59,53 +59,38 @@ enum CheckReason implements WireValue {
 }
 
 /// One check in History (final.md §13.4).
-class CheckRecord {
-  const CheckRecord({
-    required this.ref,
-    required this.at,
-    required this.way,
-    required this.result,
-    required this.reasons,
-    required this.official,
-    this.serial,
-    this.product,
-    this.batch,
-    this.sessionId,
-  });
+@freezed
+abstract class CheckRecord with _$CheckRecord {
+  const factory CheckRecord({
+    required String ref,
+    required DateTime at,
+    required CheckWay way,
+    required CheckResult result,
 
-  final String ref;
-  final DateTime at;
-  final CheckWay way;
-  final CheckResult result;
+    /// Empty unless the result is `warning`.
+    required List<CheckReason> reasons,
 
-  /// Empty unless the result is `warning`.
-  final List<CheckReason> reasons;
+    /// Whoever made the check.
+    required String official,
 
-  /// Whoever made the check.
-  final String official;
-
-  /// `null` for `not_found`; [product] and [batch] also for `unassigned`.
-  final String? serial;
-  final String? product;
-  final String? batch;
-  final String? sessionId;
+    /// `null` for `not_found`; [product] and [batch] also for `unassigned`.
+    String? serial,
+    String? product,
+    String? batch,
+    String? sessionId,
+  }) = _CheckRecord;
 }
 
 /// Counts of every check matching the filters (first page only).
-class CheckTotals {
-  const CheckTotals({
-    required this.total,
-    required this.valid,
-    required this.warning,
-    required this.notFound,
-    required this.unassigned,
-  });
-
-  final int total;
-  final int valid;
-  final int warning;
-  final int notFound;
-  final int unassigned;
+@freezed
+abstract class CheckTotals with _$CheckTotals {
+  const factory CheckTotals({
+    required int total,
+    required int valid,
+    required int warning,
+    required int notFound,
+    required int unassigned,
+  }) = _CheckTotals;
 }
 
 /// The filters of `GET checks` (final.md §13.4).
@@ -131,9 +116,10 @@ abstract class CheckQuery with _$CheckQuery {
 }
 
 /// A page of checks; [totals] only on the first page.
-class CheckPage {
-  const CheckPage({required this.page, this.totals});
-
-  final CursorPage<CheckRecord> page;
-  final CheckTotals? totals;
+@freezed
+abstract class CheckPage with _$CheckPage {
+  const factory CheckPage({
+    required CursorPage<CheckRecord> page,
+    CheckTotals? totals,
+  }) = _CheckPage;
 }

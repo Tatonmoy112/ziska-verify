@@ -1,4 +1,7 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:ziska_verify/core/utils/wire_value.dart';
+
+part 'lookup.freezed.dart';
 
 /// The ways to look an item up: serial or QR (final.md §13.1;
 /// backend D62: never the hidden code).
@@ -50,89 +53,75 @@ enum LookupReason implements WireValue {
 }
 
 /// One input format of the client (`GET formats`, final.md §13.1).
-class CodeFormat {
-  const CodeFormat({required this.length, required this.characters});
-
-  final int length;
-  final String characters;
+@freezed
+abstract class CodeFormat with _$CodeFormat {
+  const factory CodeFormat({required int length, required String characters}) =
+      _CodeFormat;
 }
 
-class InputFormats {
-  const InputFormats({
-    required this.serialMaxDigits,
-    required this.qr,
-  });
-
-  final int serialMaxDigits;
-  final CodeFormat qr;
+@freezed
+abstract class InputFormats with _$InputFormats {
+  const factory InputFormats({
+    required int serialMaxDigits,
+    required CodeFormat qr,
+  }) = _InputFormats;
 }
 
-class Product {
-  const Product({
-    required this.name,
-    this.genericName,
-    this.shortName,
-    this.pictureUrl,
-  });
-
-  final String name;
-  final String? genericName;
-  final String? shortName;
-  final String? pictureUrl;
+@freezed
+abstract class Product with _$Product {
+  const factory Product({
+    required String name,
+    String? genericName,
+    String? shortName,
+    String? pictureUrl,
+  }) = _Product;
 }
 
-class Batch {
-  const Batch({required this.number, this.made, this.expires});
+@freezed
+abstract class Batch with _$Batch {
+  const factory Batch({
+    required String number,
 
-  final String number;
-
-  /// `YYYY-MM-DD` dates, either can be `null`.
-  final DateTime? made;
-  final DateTime? expires;
+    /// `YYYY-MM-DD` dates, either can be `null`.
+    DateTime? made,
+    DateTime? expires,
+  }) = _Batch;
 }
 
-class ItemDetails {
-  const ItemDetails({
-    required this.serial,
-    required this.maskedCode,
-    required this.product,
-    required this.batch,
-  });
+@freezed
+abstract class ItemDetails with _$ItemDetails {
+  const factory ItemDetails({
+    required String serial,
 
-  final String serial;
-
-  /// The hidden code as the API sends it (`*****7K2`), shown as received.
-  final String maskedCode;
-  final Product product;
-  final Batch batch;
+    /// The hidden code as the API sends it (`*****7K2`), shown as received.
+    required String maskedCode,
+    required Product product,
+    required Batch batch,
+  }) = _ItemDetails;
 }
 
-class CheckCount {
-  const CheckCount({required this.thisCheck, this.lastAt});
+@freezed
+abstract class CheckCount with _$CheckCount {
+  const factory CheckCount({
+    /// This check's number for the item (1 for a first check).
+    required int thisCheck,
 
-  /// This check's number for the item (1 for a first check).
-  final int thisCheck;
-
-  /// The check before, `null` on a first check.
-  final DateTime? lastAt;
+    /// The check before, `null` on a first check.
+    DateTime? lastAt,
+  }) = _CheckCount;
 }
 
 /// A lookup's answer (`POST lookups`).
-class LookupResult {
-  const LookupResult({
-    required this.ref,
-    required this.outcome,
-    required this.reasons,
-    this.count,
-    this.item,
-  });
+@freezed
+abstract class LookupResult with _$LookupResult {
+  const factory LookupResult({
+    /// The check's reference number, on every result.
+    required String ref,
+    required LookupOutcome outcome,
+    required List<LookupReason> reasons,
 
-  /// The check's reference number, on every result.
-  final String ref;
-  final LookupOutcome outcome;
-  final List<LookupReason> reasons;
-
-  /// Present for `valid` and `warning`.
-  final CheckCount? count;
-  final ItemDetails? item;
+    /// Present for `valid` and `warning`.
+    CheckCount? count,
+    ItemDetails? item,
+  }) = _LookupResult;
 }

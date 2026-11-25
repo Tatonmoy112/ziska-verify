@@ -50,7 +50,7 @@ $Res call({
 });
 
 
-
+$ScanSessionSummaryCopyWith<$Res>? get session;
 
 }
 /// @nodoc
@@ -72,7 +72,19 @@ as Failure?,retryAt: freezed == retryAt ? _self.retryAt : retryAt // ignore: cas
 as DateTime?,
   ));
 }
+/// Create a copy of SessionSummaryState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ScanSessionSummaryCopyWith<$Res>? get session {
+    if (_self.session == null) {
+    return null;
+  }
 
+  return $ScanSessionSummaryCopyWith<$Res>(_self.session!, (value) {
+    return _then(_self.copyWith(session: value));
+  });
+}
 }
 
 
@@ -253,7 +265,7 @@ $Res call({
 });
 
 
-
+@override $ScanSessionSummaryCopyWith<$Res>? get session;
 
 }
 /// @nodoc
@@ -276,7 +288,19 @@ as DateTime?,
   ));
 }
 
+/// Create a copy of SessionSummaryState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ScanSessionSummaryCopyWith<$Res>? get session {
+    if (_self.session == null) {
+    return null;
+  }
 
+  return $ScanSessionSummaryCopyWith<$Res>(_self.session!, (value) {
+    return _then(_self.copyWith(session: value));
+  });
+}
 }
 
 // dart format on

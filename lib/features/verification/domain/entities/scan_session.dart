@@ -6,34 +6,26 @@ import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
 part 'scan_session.freezed.dart';
 
 /// Authoritative counters returned with a scan or serial stack.
-class SessionTotals {
-  const SessionTotals({
-    required this.id,
-    required this.scanned,
-    required this.valid,
-    required this.warning,
-    required this.notFound,
-    required this.unassigned,
-    this.left,
-  });
-  final String id;
-  final int scanned;
-  final int valid;
-  final int warning;
-  final int notFound;
-  final int unassigned;
-  final int? left;
+@freezed
+abstract class SessionTotals with _$SessionTotals {
+  const factory SessionTotals({
+    required String id,
+    required int scanned,
+    required int valid,
+    required int warning,
+    required int notFound,
+    required int unassigned,
+    int? left,
+  }) = _SessionTotals;
 }
 
-class ScanResult {
-  const ScanResult({
-    required this.result,
-    required this.repeat,
-    required this.session,
-  });
-  final LookupResult result;
-  final bool repeat;
-  final SessionTotals session;
+@freezed
+abstract class ScanResult with _$ScanResult {
+  const factory ScanResult({
+    required LookupResult result,
+    required bool repeat,
+    required SessionTotals session,
+  }) = _ScanResult;
 }
 
 /// A session's `kind` (guide §4.5): a scanner session or a serial stack.
@@ -66,19 +58,15 @@ enum ScanStatus implements WireValue {
       fromWireValue(values, wire, unknown);
 }
 
-class ScanSessionSummary {
-  const ScanSessionSummary({
-    required this.totals,
-    required this.kind,
-    required this.status,
-    required this.startedAt,
-    required this.lastScanAt,
-  });
-  final SessionTotals totals;
-  final SessionKind kind;
-  final ScanStatus status;
-  final DateTime startedAt;
-  final DateTime lastScanAt;
+@freezed
+abstract class ScanSessionSummary with _$ScanSessionSummary {
+  const factory ScanSessionSummary({
+    required SessionTotals totals,
+    required SessionKind kind,
+    required ScanStatus status,
+    required DateTime startedAt,
+    required DateTime lastScanAt,
+  }) = _ScanSessionSummary;
 }
 
 /// The filters of `GET scan-sessions` (final.md §10): copied with
@@ -95,17 +83,14 @@ abstract class SessionQuery with _$SessionQuery {
 }
 
 /// The history API cannot reconstruct a full lookup response.
-class RecoveredScan {
-  const RecoveredScan({
-    required this.ref,
-    required this.outcome,
-    this.serial,
-    this.product,
-  });
-  final String ref;
-  final LookupOutcome outcome;
-  final String? serial;
-  final String? product;
+@freezed
+abstract class RecoveredScan with _$RecoveredScan {
+  const factory RecoveredScan({
+    required String ref,
+    required LookupOutcome outcome,
+    String? serial,
+    String? product,
+  }) = _RecoveredScan;
 }
 
 typedef RecoveredScans = CursorPage<RecoveredScan>;

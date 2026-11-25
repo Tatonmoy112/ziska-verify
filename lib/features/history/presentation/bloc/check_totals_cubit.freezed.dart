@@ -52,7 +52,7 @@ $Res call({
 });
 
 
-
+$CheckTotalsCopyWith<$Res>? get totals;
 
 }
 /// @nodoc
@@ -73,7 +73,19 @@ as CheckTotals?,retryAt: freezed == retryAt ? _self.retryAt : retryAt // ignore:
 as DateTime?,
   ));
 }
+/// Create a copy of CheckTotalsState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$CheckTotalsCopyWith<$Res>? get totals {
+    if (_self.totals == null) {
+    return null;
+  }
 
+  return $CheckTotalsCopyWith<$Res>(_self.totals!, (value) {
+    return _then(_self.copyWith(totals: value));
+  });
+}
 }
 
 
@@ -255,7 +267,7 @@ $Res call({
 });
 
 
-
+@override $CheckTotalsCopyWith<$Res>? get totals;
 
 }
 /// @nodoc
@@ -277,7 +289,19 @@ as DateTime?,
   ));
 }
 
+/// Create a copy of CheckTotalsState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$CheckTotalsCopyWith<$Res>? get totals {
+    if (_self.totals == null) {
+    return null;
+  }
 
+  return $CheckTotalsCopyWith<$Res>(_self.totals!, (value) {
+    return _then(_self.copyWith(totals: value));
+  });
+}
 }
 
 // dart format on

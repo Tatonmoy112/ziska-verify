@@ -1,37 +1,43 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
 import 'package:ziska_verify/features/verification/domain/entities/scan_session.dart';
 
+part 'serial_stack.freezed.dart';
+
 const serialStackLimit = 50;
 
-class SerialStackRow {
-  const SerialStackRow({required this.serial, required this.result});
-  final String serial;
-  final LookupResult result;
+@freezed
+abstract class SerialStackRow with _$SerialStackRow {
+  const factory SerialStackRow({
+    required String serial,
+    required LookupResult result,
+  }) = _SerialStackRow;
 }
 
-class SerialStackResult {
-  const SerialStackResult({required this.session, required this.items});
-  final SessionTotals session;
-  final List<SerialStackRow> items;
+@freezed
+abstract class SerialStackResult with _$SerialStackResult {
+  const factory SerialStackResult({
+    required SessionTotals session,
+    required List<SerialStackRow> items,
+  }) = _SerialStackResult;
 }
 
 /// A stack of serials as typed: split by commas, spaces or new lines, each
 /// prepared like one serial, repeats kept once (app API guide §4.7).
-class ParsedStack {
-  const ParsedStack({
-    required this.serials,
-    required this.typed,
-    this.bad,
-  });
+@freezed
+abstract class ParsedStack with _$ParsedStack {
+  const factory ParsedStack({
+    /// The serials sent, each once, in the order typed.
+    required List<String> serials,
 
-  /// The serials sent, each once, in the order typed.
-  final List<String> serials;
+    /// How many values were typed, repeats included.
+    required int typed,
 
-  /// How many values were typed, repeats included.
-  final int typed;
+    /// The first value that is not a serial, by its place (from 1).
+    ({int position, String value})? bad,
+  }) = _ParsedStack;
 
-  /// The first value that is not a serial, by its place (from 1).
-  final ({int position, String value})? bad;
+  const ParsedStack._();
 
   /// Values typed more than once, counted after preparing them, so
   /// "1000-001" and "1000001" are one serial.

@@ -55,7 +55,7 @@ $Res call({
 });
 
 
-
+$InputFormatsCopyWith<$Res>? get formats;$ParsedStackCopyWith<$Res>? get draft;$SerialStackResultCopyWith<$Res>? get result;
 
 }
 /// @nodoc
@@ -86,7 +86,43 @@ as Failure?,retryAt: freezed == retryAt ? _self.retryAt : retryAt // ignore: cas
 as DateTime?,
   ));
 }
+/// Create a copy of SerialStackState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$InputFormatsCopyWith<$Res>? get formats {
+    if (_self.formats == null) {
+    return null;
+  }
 
+  return $InputFormatsCopyWith<$Res>(_self.formats!, (value) {
+    return _then(_self.copyWith(formats: value));
+  });
+}/// Create a copy of SerialStackState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ParsedStackCopyWith<$Res>? get draft {
+    if (_self.draft == null) {
+    return null;
+  }
+
+  return $ParsedStackCopyWith<$Res>(_self.draft!, (value) {
+    return _then(_self.copyWith(draft: value));
+  });
+}/// Create a copy of SerialStackState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$SerialStackResultCopyWith<$Res>? get result {
+    if (_self.result == null) {
+    return null;
+  }
+
+  return $SerialStackResultCopyWith<$Res>(_self.result!, (value) {
+    return _then(_self.copyWith(result: value));
+  });
+}
 }
 
 
@@ -287,7 +323,7 @@ $Res call({
 });
 
 
-
+@override $InputFormatsCopyWith<$Res>? get formats;@override $ParsedStackCopyWith<$Res>? get draft;@override $SerialStackResultCopyWith<$Res>? get result;
 
 }
 /// @nodoc
@@ -319,7 +355,43 @@ as DateTime?,
   ));
 }
 
+/// Create a copy of SerialStackState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$InputFormatsCopyWith<$Res>? get formats {
+    if (_self.formats == null) {
+    return null;
+  }
 
+  return $InputFormatsCopyWith<$Res>(_self.formats!, (value) {
+    return _then(_self.copyWith(formats: value));
+  });
+}/// Create a copy of SerialStackState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ParsedStackCopyWith<$Res>? get draft {
+    if (_self.draft == null) {
+    return null;
+  }
+
+  return $ParsedStackCopyWith<$Res>(_self.draft!, (value) {
+    return _then(_self.copyWith(draft: value));
+  });
+}/// Create a copy of SerialStackState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$SerialStackResultCopyWith<$Res>? get result {
+    if (_self.result == null) {
+    return null;
+  }
+
+  return $SerialStackResultCopyWith<$Res>(_self.result!, (value) {
+    return _then(_self.copyWith(result: value));
+  });
+}
 }
 
 // dart format on

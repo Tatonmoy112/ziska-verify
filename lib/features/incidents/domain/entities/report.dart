@@ -1,26 +1,24 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'report.freezed.dart';
+
 /// One of the official's own reports (`GET incidents`, final.md 13.5.4).
-class Report {
-  const Report({
-    required this.id,
-    required this.at,
-    required this.note,
-    required this.photos,
-    this.checkRef,
-    this.retailUserName,
-  });
+@freezed
+abstract class Report with _$Report {
+  const factory Report({
+    required int id,
+    required DateTime at,
+    required String note,
 
-  final int id;
-  final DateTime at;
-  final String note;
+    /// How many photos the report has, 0 to 3. Photos cannot be downloaded.
+    required int photos,
 
-  /// How many photos the report has, 0 to 3. Photos cannot be downloaded.
-  final int photos;
+    /// The check the report points to.
+    String? checkRef,
 
-  /// The check the report points to.
-  final String? checkRef;
-
-  /// The retail user the report names.
-  final String? retailUserName;
+    /// The retail user the report names.
+    String? retailUserName,
+  }) = _Report;
 }
 
 /// The rules of a report (final.md §13.5).
