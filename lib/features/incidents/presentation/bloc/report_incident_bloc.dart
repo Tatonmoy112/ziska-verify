@@ -186,11 +186,8 @@ class ReportIncidentBloc
   /// The hour for photos after filing is over (guide section 6.2).
   bool get photoHourOver => state.isFiled && !_withinWindow;
 
-  bool get _withinWindow {
-    final filedAt = state.filedAt;
-    return filedAt == null ||
-        _now().isBefore(filedAt.add(ReportRules.photoWindow));
-  }
+  bool get _withinWindow =>
+      ReportRules.withinPhotoWindow(state.filedAt, _now());
 
   Future<void> _onPick(
     PhotoPickRequested event,

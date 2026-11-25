@@ -30,4 +30,9 @@ abstract final class ReportRules {
 
   /// Photos can be added only within this time after filing.
   static const photoWindow = Duration(hours: 1);
+
+  /// Whether a photo may still be added at [now] to a report filed at
+  /// [filedAt]; a report not filed yet may take photos (guide §6.2).
+  static bool withinPhotoWindow(DateTime? filedAt, DateTime now) =>
+      filedAt == null || now.isBefore(filedAt.add(photoWindow));
 }

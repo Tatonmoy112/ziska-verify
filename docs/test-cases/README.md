@@ -35,8 +35,8 @@ Current migration acceptance: [16-mobile-migration.md](16-mobile-migration.md). 
 | UI | [15-ui.md](15-ui.md) | 183 | 29 | 99 | 55 | 169 | 0 | 14 | 0 |
 | MIG | [16-mobile-migration.md](16-mobile-migration.md) | 85 | 48 | 34 | 3 | 84 | 0 | 1 | 0 |
 | STG | [17-test-server.md](17-test-server.md) | 58 | 44 | 11 | 3 | 47 | 0 | 11 | 0 |
-| ARCH | [18-architecture.md](18-architecture.md) | 43 | 1 | 15 | 27 | 43 | 0 | 0 | 0 |
-| **Total** | | **1016** | 322 | 485 | 209 | 888 | 0 | 128 | 0 |
+| ARCH | [18-architecture.md](18-architecture.md) | 46 | 2 | 17 | 27 | 46 | 0 | 0 | 0 |
+| **Total** | | **1019** | 323 | 487 | 209 | 891 | 0 | 128 | 0 |
 
 ## 3. Case Format
 

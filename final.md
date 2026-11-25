@@ -36,7 +36,7 @@ Generated JSON, Freezed, and localization files are regenerated and committed, n
 
 ## 4. Architecture and data flow
 
-Presentation calls domain use cases only, never a repository interface (2026-11-24, production audit P-3). A repository never calls a use case (rule R21, 2026-11-25, P-29). What turns one feature's data into another's lives in `lib/app/bridges/`, the composition root, not in the routes (2026-11-25, P-30). Data implements those interfaces, calls API services, parses DTOs, and maps them into domain entities. API services use the shared API client and its envelope/error handling.
+Presentation calls domain use cases only, never a repository interface (2026-11-24, production audit P-3). A repository never calls a use case (rule R21, 2026-11-25, P-29). What turns one feature's data into another's lives in `lib/app/bridges/`, the composition root, not in the routes (2026-11-25, P-30). A use case validates its input before the repository: invalid input is a `ValidationException` and nothing is sent; a screen may check first only to say so (2026-11-25, P-33). Data implements those interfaces, calls API services, parses DTOs, and maps them into domain entities. API services use the shared API client and its envelope/error handling.
 
 - `lib/app/` owns composition, session/profile wiring, route guards, and cross-feature callbacks.
 - `lib/features/authentication/` owns login/password and public access requests.

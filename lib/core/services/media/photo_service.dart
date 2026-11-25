@@ -23,6 +23,12 @@ class PhotoException implements Exception {
 class PreparedPhoto {
   const PreparedPhoto(this.bytes);
 
+  /// At most 1 MB (app API guide §6.2).
+  static const int maxBytes = 1024 * 1024;
+
+  /// The file types the server takes (guide §6.2).
+  static const types = {'image/jpeg', 'image/png'};
+
   final Uint8List bytes;
   String get contentType => 'image/jpeg';
 }

@@ -6,7 +6,7 @@ The production-grade review of the app, done on the `production` branch one area
 |---|---|---|
 | 2 | High-level architecture | Checked 2026-11-24: P-1 … P-15. **All fixed**; P-10 on for staging, live waits for its production project |
 | 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11). **All fixed** (2026-11-25) |
-| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-44. Fixed: P-20 … P-32 |
+| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-44. Fixed: P-20 … P-33 |
 | 5 | Dead code | To do |
 | 6+ | Comments, data layer, UI components, state and lifecycle, security, build and release, monitoring, tests, localisation, performance, docs | To do |
 
@@ -1080,6 +1080,22 @@ History's reasons stay raw strings (`CheckRecord.reasons`, `List<String>`), whic
 - **normal:** valid input reaches the repository;
 - **edge:** input exactly at each limit;
 - **worst:** invalid input never reaches the repository (a fake that fails if called).
+
+**✅ Fixed 2026-11-25:**
+- **The rule, now in final.md §3:** a use case validates its input before the repository; a screen may check first only to say so.
+- **Tests first:** TC-ARCH-044 … -046 (`test/architecture/use_case_input_test.dart`), for the seven use cases that take input:
+  - valid input reaches the repository once, trimmed;
+  - input exactly at a limit is taken: a note of 1,000 characters counted as code points, the code in Bangla digits, a photo of exactly 1 MB, a PNG, and the photo hour at 59:59 and at 1:00:00;
+  - invalid input is a `ValidationException`, and nothing is sent.
+
+  Run on the old use cases, five failed: every worst case, and the Bangla code.
+- **The change:**
+  - `Login`, `VerifyCode`, `ChangePassword`, `RequestPasswordReset` and `ResetPassword` check the email (`looksLikeEmail`), the code (exactly 6 digits, any script's digits read as 0-9) and the new password (`PasswordPolicy`).
+  - `FileReport` checks the note (1 to 1,000 code points after trimming).
+  - `AddReportPhoto` checks the photo (JPEG or PNG, 1 byte to 1 MB, a real report).
+  - The 1 MB limit and the types are `PreparedPhoto`'s, so the photo service and the domain read one number.
+- **The photo count and hour** are the report's state, which the bloc holds. Their rule is now `ReportRules.withinPhotoWindow`, which the bloc asks instead of computing itself. Their staying current on screen is P-38.
+- No flow relied on invalid input reaching the fake server: the full suite passes unchanged.
 
 #### P-34 (should): three things are never released
 **Evidence:**

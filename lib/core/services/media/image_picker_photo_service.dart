@@ -13,7 +13,7 @@ class ImagePickerPhotoService implements PhotoService {
   final ImagePicker _picker;
 
   static const maxSide = 2048;
-  static const int maxBytes = 1024 * 1024;
+  static const int maxBytes = PreparedPhoto.maxBytes;
 
   /// Quality 85 first (backend D39); lower only if 1 MB is exceeded.
   static const List<int> qualities = [85, 75, 65];
