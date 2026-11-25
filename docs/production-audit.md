@@ -5,7 +5,7 @@ The production-grade review of the app, done on the `production` branch one area
 | Step | Area | State |
 |---|---|---|
 | 2 | High-level architecture | Checked 2026-11-24: P-1 … P-15. **All fixed**; P-10 on for staging, live waits for its production project |
-| 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11). Fixed: P-16, P-17, P-18 |
+| 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11). **All fixed** (2026-11-25) |
 | 4 | Low-level architecture | To do |
 | 5 | Dead code | To do |
 | 6+ | Comments, data layer, UI components, state and lifecycle, security, build and release, monitoring, tests, localisation, performance, docs | To do |
@@ -666,3 +666,14 @@ Read only.
 - **edge:** an empty map or list;
 - **worst:** `null`, a string or a list where a map is expected gives `InternalErrorException('<route>_shape')`;
 - the services' contract tests pass unchanged.
+
+**✅ Fixed 2026-11-25:**
+- **Tests first** (`test/core/network/api_data_test.dart`):
+  - TC-ARCH-032 … -034, red before: `ApiData` did not exist, and the services checked shapes by hand;
+  - a table of all 17 service calls, each answering text and then the other container, pins every name: it passed on the old code before the swap and passes after;
+  - a source check: no service, and not the renewal, writes `is Map` or `is List`.
+- **The change:**
+  - `ApiData` (`core/network/api_data.dart`), beside the envelope, has `map`, `list` and `intField`;
+  - the seven services and the renewal use it. The two `_map` copies and the incidents' `_int` are gone; the verification service keeps a one-line `_map` that passes its name;
+  - every name stays as it was: `auth`, `access_roles`, `access_pending`, `me`, `checks`, `reports`, `retail_users`, `incident_id`, `incident_n`, `verification`, `renewal`.
+- **Mutation check:** naming the verification answer `verify` failed all six of its rows. The serial stack (`verification_repository_impl.dart`) acts on `verification_shape`, and the report screen on `incident_id_shape`.

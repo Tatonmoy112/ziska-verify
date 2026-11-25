@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
-import 'package:ziska_verify/core/errors/app_exception.dart';
 import 'package:ziska_verify/core/network/api_client.dart';
+import 'package:ziska_verify/core/network/api_data.dart';
 import 'package:ziska_verify/core/network/api_routes.dart';
 import 'package:ziska_verify/core/pagination/page_request.dart';
 import 'package:ziska_verify/features/incidents/data/models/incident_dtos.dart';
@@ -23,15 +23,18 @@ class DioIncidentApiService implements IncidentApiService {
   final ApiClient _api;
 
   @override
-  Future<int> fileReport(Map<String, Object?> body) async =>
-      _int(await _api.post(ApiRoutes.fileReport, body: body), 'id');
+  Future<int> fileReport(Map<String, Object?> body) async => ApiData.intField(
+    await _api.post(ApiRoutes.fileReport, body: body),
+    'id',
+    'incident_id',
+  );
 
   @override
   Future<int> addPhoto(
     int reportId,
     Uint8List bytes,
     String contentType,
-  ) async => _int(
+  ) async => ApiData.intField(
     // The body is the file itself, with its Content-Length (§6).
     await _api.postBytes(
       ApiRoutes.reportPhotos(reportId),
@@ -39,6 +42,7 @@ class DioIncidentApiService implements IncidentApiService {
       contentType: contentType,
     ),
     'n',
+    'incident_n',
   );
 
   @override
@@ -47,16 +51,6 @@ class DioIncidentApiService implements IncidentApiService {
       ApiRoutes.myReports,
       query: {'limit': page.limit, 'cursor': page.cursor},
     );
-    if (data is! Map<String, dynamic>) {
-      throw const InternalErrorException(message: 'reports_shape');
-    }
-    return ReportsPageDto.fromJson(data);
-  }
-
-  static int _int(Object? data, String key) {
-    if (data is Map<String, dynamic> && data[key] is int) {
-      return data[key] as int;
-    }
-    throw InternalErrorException(message: 'incident_${key}_shape');
+    return ReportsPageDto.fromJson(ApiData.map(data, 'reports'));
   }
 }

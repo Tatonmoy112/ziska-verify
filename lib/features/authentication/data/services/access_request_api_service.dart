@@ -1,5 +1,6 @@
 import 'package:ziska_verify/core/errors/app_exception.dart';
 import 'package:ziska_verify/core/network/api_client.dart';
+import 'package:ziska_verify/core/network/api_data.dart';
 import 'package:ziska_verify/core/network/api_routes.dart';
 import 'package:ziska_verify/features/authentication/data/models/access_request_dtos.dart';
 import 'package:ziska_verify/features/authentication/domain/entities/access_request.dart';
@@ -24,11 +25,8 @@ class DioAccessRequestApiService implements AccessRequestApiService {
   @override
   Future<List<RequestableRoleDto>> roles() async {
     final data = await _api.get(ApiRoutes.requestableRoles, skipAuth: true);
-    if (data is! List) {
-      throw const InternalErrorException(message: 'access_roles_shape');
-    }
     return [
-      for (final role in data.cast<Map<String, dynamic>>())
+      for (final role in ApiData.list(data, 'access_roles'))
         RequestableRoleDto.fromJson(role),
     ];
   }
@@ -50,7 +48,7 @@ class DioAccessRequestApiService implements AccessRequestApiService {
         'password': request.password,
       },
     );
-    if (data is! Map<String, dynamic> || data['status'] != 'pending') {
+    if (ApiData.map(data, 'access_pending')['status'] != 'pending') {
       throw const InternalErrorException(message: 'access_pending_shape');
     }
   }

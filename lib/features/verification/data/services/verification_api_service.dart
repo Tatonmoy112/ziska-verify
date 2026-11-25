@@ -1,5 +1,5 @@
-import 'package:ziska_verify/core/errors/app_exception.dart';
 import 'package:ziska_verify/core/network/api_client.dart';
+import 'package:ziska_verify/core/network/api_data.dart';
 import 'package:ziska_verify/core/network/api_routes.dart';
 import 'package:ziska_verify/core/pagination/page_request.dart';
 import 'package:ziska_verify/features/verification/data/models/verification_dtos.dart';
@@ -71,8 +71,9 @@ class DioVerificationApiService implements VerificationApiService {
       : '${date.year.toString().padLeft(4, '0')}-'
             '${date.month.toString().padLeft(2, '0')}-'
             '${date.day.toString().padLeft(2, '0')}';
-  static Map<String, dynamic> _map(Object? data) {
-    if (data is Map<String, dynamic>) return data;
-    throw const InternalErrorException(message: 'verification_shape');
-  }
+
+  /// Every answer here is an object; the repository acts on this name
+  /// (a serial stack recorded with an unreadable answer).
+  static Map<String, dynamic> _map(Object? data) =>
+      ApiData.map(data, 'verification');
 }

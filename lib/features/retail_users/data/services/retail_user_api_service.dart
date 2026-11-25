@@ -1,5 +1,5 @@
-import 'package:ziska_verify/core/errors/app_exception.dart';
 import 'package:ziska_verify/core/network/api_client.dart';
+import 'package:ziska_verify/core/network/api_data.dart';
 import 'package:ziska_verify/core/network/api_routes.dart';
 import 'package:ziska_verify/core/pagination/page_request.dart';
 import 'package:ziska_verify/features/retail_users/data/models/retail_user_dtos.dart';
@@ -20,9 +20,6 @@ class DioRetailUserApiService implements RetailUserApiService {
       ApiRoutes.retailUsers,
       query: {'search': search, 'limit': page.limit, 'cursor': page.cursor},
     );
-    if (data is! Map<String, dynamic>) {
-      throw const InternalErrorException(message: 'retail_users_shape');
-    }
-    return RetailUsersPageDto.fromJson(data);
+    return RetailUsersPageDto.fromJson(ApiData.map(data, 'retail_users'));
   }
 }

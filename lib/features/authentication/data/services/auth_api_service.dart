@@ -1,5 +1,5 @@
-import 'package:ziska_verify/core/errors/app_exception.dart';
 import 'package:ziska_verify/core/network/api_client.dart';
+import 'package:ziska_verify/core/network/api_data.dart';
 import 'package:ziska_verify/core/network/api_routes.dart';
 import 'package:ziska_verify/features/authentication/data/models/auth_dtos.dart';
 
@@ -47,12 +47,13 @@ class DioAuthApiService implements AuthApiService {
     required String password,
     required String phoneId,
   }) async => LoginResponseDto.fromJson(
-    _map(
+    ApiData.map(
       await _api.post(
         ApiRoutes.login,
         body: {'email': email, 'password': password, 'phone_id': phoneId},
         skipAuth: true,
       ),
+      'auth',
     ),
   );
 
@@ -62,12 +63,13 @@ class DioAuthApiService implements AuthApiService {
     required String code,
     required String phoneId,
   }) async => LoginResponseDto.fromJson(
-    _map(
+    ApiData.map(
       await _api.post(
         ApiRoutes.verifyPhone,
         body: {'challenge_id': challengeId, 'code': code, 'phone_id': phoneId},
         skipAuth: true,
       ),
+      'auth',
     ),
   );
 
@@ -86,7 +88,7 @@ class DioAuthApiService implements AuthApiService {
     required String oldPassword,
     required String newPassword,
   }) async => PasswordChangeResponseDto.fromJson(
-    _map(
+    ApiData.map(
       await _api.post(
         ApiRoutes.changePassword,
         body: {'old_password': oldPassword, 'new_password': newPassword},
@@ -94,6 +96,7 @@ class DioAuthApiService implements AuthApiService {
         // ended (app API guide §3.6).
         keepSessionOn401: true,
       ),
+      'auth',
     ),
   );
 
@@ -114,9 +117,4 @@ class DioAuthApiService implements AuthApiService {
     body: {'email': email, 'code': code, 'new_password': newPassword},
     skipAuth: true,
   );
-
-  static Map<String, dynamic> _map(Object? data) {
-    if (data is Map<String, dynamic>) return data;
-    throw const InternalErrorException(message: 'auth_shape');
-  }
 }

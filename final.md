@@ -294,7 +294,7 @@ Use Lucide icons, token-based spacing/color/typography, and scrolling at small s
 
 ## 15. API contract
 
-All routes are relative to `/v1/clients/{slug}/` and use the documented success/error envelope. They are listed once, in `lib/core/network/api_routes.dart` (`ApiRoutes`): `ApiClient` takes a route, not a path, refuses a route of the other method, and a test keeps the list equal to the backend's Postman collection (2026-11-24, production audit P-17). Branch on HTTP status and codes, never message text.
+All routes are relative to `/v1/clients/{slug}/` and use the documented success/error envelope. They are listed once, in `lib/core/network/api_routes.dart` (`ApiRoutes`): `ApiClient` takes a route, not a path, refuses a route of the other method, and a test keeps the list equal to the backend's Postman collection (2026-11-24, production audit P-17). A service reads an answer's `data` through `ApiData` (`core/network/api_data.dart`): any other shape is `InternalErrorException('<name>_shape')`, the name fixed per answer (2026-11-25, P-19). Branch on HTTP status and codes, never message text.
 
 | Resource | Routes |
 |---|---|

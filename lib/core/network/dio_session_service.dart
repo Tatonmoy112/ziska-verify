@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:ziska_verify/core/errors/app_exception.dart';
+import 'package:ziska_verify/core/network/api_data.dart';
 import 'package:ziska_verify/core/network/api_envelope.dart';
 import 'package:ziska_verify/core/network/api_routes.dart';
 import 'package:ziska_verify/core/network/error_mapper.dart';
@@ -145,10 +146,10 @@ class DioSessionService implements SessionService {
         ApiRoutes.refresh.path,
         data: {'refresh_token': refresh},
       );
-      final data = ApiEnvelope.unwrap(response.data);
-      if (data is! Map<String, dynamic>) {
-        throw const InternalErrorException(message: 'renewal_shape');
-      }
+      final data = ApiData.map(
+        ApiEnvelope.unwrap(response.data),
+        'renewal',
+      );
       final access = data['access_token'];
       final next = data['refresh_token'];
       if (access is! String || next is! String) {
