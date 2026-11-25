@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:ziska_verify/core/errors/api_error_codes.dart';
 import 'package:ziska_verify/core/errors/app_exception.dart';
 import 'package:ziska_verify/core/services/session/session_service.dart';
 import 'package:ziska_verify/core/services/session/session_state.dart';
@@ -61,7 +62,7 @@ class AuthInterceptor extends Interceptor {
     final sentWithToken = options.extra[RequestFlags.usedToken] != null;
 
     if (response?.statusCode == 401 &&
-        code == 'token_expired' &&
+        code == ApiErrorCodes.tokenExpired &&
         sentWithToken &&
         options.extra[RequestFlags.retried] != true) {
       // A request that failed with a pass renewed meanwhile is retried with
@@ -100,18 +101,18 @@ class AuthInterceptor extends Interceptor {
     // An answer to an older login's pass says nothing about the login of
     // now (the same rule as a 401 below).
     if (response?.statusCode == 403 &&
-        code == 'password_change_required' &&
+        code == ApiErrorCodes.passwordChangeRequired &&
         options.extra[RequestFlags.usedToken] == _session.accessToken) {
       _session.requirePasswordChange();
     }
 
     // The role may have lost a permission: the profile is loaded again.
-    if (response?.statusCode == 403 && code == 'forbidden') {
+    if (response?.statusCode == 403 && code == ApiErrorCodes.forbidden) {
       _onForbidden?.call();
     }
 
     if (response?.statusCode == 401 &&
-        code == 'unauthenticated' &&
+        code == ApiErrorCodes.unauthenticated &&
         sentWithToken &&
         options.extra[RequestFlags.keepSessionOn401] != true) {
       final current = _session.accessToken;

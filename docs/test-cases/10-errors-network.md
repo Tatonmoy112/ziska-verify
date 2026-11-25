@@ -7,7 +7,7 @@
 |---|---|
 | Spec | final.md §14.2, §15.2, §15.4–15.5 |
 | API | every route |
-| Automated in | `error_mapper_test`, `session_renewal_test`, `test/flow/lookup_flow_test.dart` |
+| Automated in | `error_mapper_test`, `api_error_codes_test`, `session_renewal_test`, `test/flow/lookup_flow_test.dart` |
 | Format | [Case format and type tags](README.md#3-case-format) |
 
 | ID | Title | Type | Pri | Run on | Auto | Pre-conditions / Data | Steps | Expected | Source |
@@ -70,6 +70,9 @@
 | TC-ERR-049 | A refused certificate | NET | P2 | AUTO | ✅ `core/network/error_mapper_test` | A TLS certificate error | Any request | Counted as not sent: safe to send again | §15.4 |
 | TC-ERR-050 | An unknown code on a busy or wait answer | NET | P2 | AUTO | ✅ `flow/errors_edge_flow_test` | Fake backend: `503 storage_slow` and `429 daily_quota` with messages; `503 service_unavailable` | Look up | The server's message for the unknown codes, the app's "The service is busy…" for the known one; the reference on each; no result | final.md §16 |
 | TC-ERR-051 | A `409 conflict` shows the server's message | NEG | P2 | AUTO | ✅ `shared/failure_message_test`, `flow/errors_edge_flow_test` | Unit; fake backend | A 409 `conflict` with a message, with a blank one, and without one; another known code (`forbidden`) with a message; an unknown code | The 409's message is shown; a blank or missing one falls back to "Something went wrong. Try again."; other known codes keep the app's text; an unknown code still shows the server's message | guide §1 (error table) |
+| TC-ERR-052 | The app's error codes are the guide's | POS | P2 | AUTO | ✅ `core/errors/api_error_codes_test` | The app API guide §1 table; `ApiErrorCodes` | Compare both ways; map each code with its status | The same 15 codes, none missing or extra; each is its own exception, with its code | guide §1; production audit P-23 |
+| TC-ERR-053 | A code the app does not know | EDGE | P2 | AUTO | ✅ `core/errors/api_error_codes_test` | Answers with `TOKEN_EXPIRED`, `token_expired ` (a space), and unknown codes on 429, 503 and 418 | Map each | A look-alike is never the known code; unknown codes are decided by status | guide §1; P-23 |
+| TC-ERR-054 | No error code is written by hand | WORST | P2 | AUTO | ✅ `core/errors/api_error_codes_test` | Every hand-written file in `lib/` | Look for any of the 15 codes in quotes | None outside `core/errors/api_error_codes.dart`; the only exceptions are three result values spelled `not_found` (a check's result, a lookup's outcome, the mock's counts) | P-23 |
 
 ## Request Matrix
 

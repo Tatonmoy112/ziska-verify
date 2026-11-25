@@ -2,6 +2,7 @@ import 'dart:io' show HttpDate;
 
 import 'package:clock/clock.dart';
 import 'package:dio/dio.dart';
+import 'package:ziska_verify/core/errors/api_error_codes.dart';
 import 'package:ziska_verify/core/errors/app_exception.dart';
 
 /// Turns a failed HTTP exchange into one typed [AppException]
@@ -59,72 +60,72 @@ class ErrorMapper {
 
     final s = statusCode;
     switch (code) {
-      case 'session_full':
-      case 'session_ended':
-      case 'session_not_yours':
+      case ApiErrorCodes.sessionFull:
+      case ApiErrorCodes.sessionEnded:
+      case ApiErrorCodes.sessionNotYours:
         return ScanSessionException(
           statusCode: s,
           code: code,
           message: message,
           requestId: requestId,
         );
-      case 'validation_failed':
+      case ApiErrorCodes.validationFailed:
         return ValidationException(
           statusCode: s,
           code: code,
           message: message,
           requestId: requestId,
         );
-      case 'token_expired':
+      case ApiErrorCodes.tokenExpired:
         return TokenExpiredException(
           statusCode: s,
           code: code,
           message: message,
           requestId: requestId,
         );
-      case 'unauthenticated':
+      case ApiErrorCodes.unauthenticated:
         return UnauthenticatedException(
           statusCode: s,
           code: code,
           message: message,
           requestId: requestId,
         );
-      case 'password_change_required':
+      case ApiErrorCodes.passwordChangeRequired:
         return PasswordChangeRequiredException(
           statusCode: s,
           code: code,
           message: message,
           requestId: requestId,
         );
-      case 'policy_denied':
+      case ApiErrorCodes.policyDenied:
         return PolicyDeniedException(
           statusCode: s,
           code: code,
           message: message,
           requestId: requestId,
         );
-      case 'forbidden':
+      case ApiErrorCodes.forbidden:
         return ForbiddenException(
           statusCode: s,
           code: code,
           message: message,
           requestId: requestId,
         );
-      case 'not_found':
+      case ApiErrorCodes.notFound:
         return NotFoundException(
           statusCode: s,
           code: code,
           message: message,
           requestId: requestId,
         );
-      case 'conflict':
+      case ApiErrorCodes.conflict:
         return ConflictException(
           statusCode: s,
           code: code,
           message: message,
           requestId: requestId,
         );
-      case 'rate_limited':
+      case ApiErrorCodes.rateLimited:
         return RateLimitedException(
           retryAfter: parseRetryAfter(retryAfterHeader),
           statusCode: s,
@@ -132,14 +133,14 @@ class ErrorMapper {
           message: message,
           requestId: requestId,
         );
-      case 'app_preparing':
+      case ApiErrorCodes.appPreparing:
         return AppPreparingException(
           statusCode: s,
           code: code,
           message: message,
           requestId: requestId,
         );
-      case 'service_unavailable':
+      case ApiErrorCodes.serviceUnavailable:
         return ServiceUnavailableException(
           statusCode: s,
           code: code,

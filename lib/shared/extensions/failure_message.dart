@@ -1,3 +1,4 @@
+import 'package:ziska_verify/core/errors/api_error_codes.dart';
 import 'package:ziska_verify/core/errors/app_exception.dart';
 import 'package:ziska_verify/core/errors/result.dart';
 import 'package:ziska_verify/l10n/generated/app_localizations.dart';
@@ -30,26 +31,7 @@ extension FailureMessage on Failure {
     final text = exception.message?.trim();
     if (text == null || text.isEmpty) return null;
     if (exception is ConflictException) return text;
-    if (code == null || _knownCodes.contains(code)) return null;
+    if (code == null || ApiErrorCodes.all.contains(code)) return null;
     return text;
   }
 }
-
-/// The `error.code` values of the API guide §1.
-const _knownCodes = {
-  'validation_failed',
-  'token_expired',
-  'unauthenticated',
-  'password_change_required',
-  'policy_denied',
-  'forbidden',
-  'not_found',
-  'conflict',
-  'rate_limited',
-  'app_preparing',
-  'service_unavailable',
-  'internal_error',
-  'session_full',
-  'session_ended',
-  'session_not_yours',
-};

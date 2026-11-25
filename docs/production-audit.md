@@ -6,7 +6,7 @@ The production-grade review of the app, done on the `production` branch one area
 |---|---|---|
 | 2 | High-level architecture | Checked 2026-11-24: P-1 … P-15. **All fixed**; P-10 on for staging, live waits for its production project |
 | 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11). **All fixed** (2026-11-25) |
-| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-43. Fixed: P-20, P-21, P-22 |
+| 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-43. Fixed: P-20 … P-23 |
 | 5 | Dead code | To do |
 | 6+ | Comments, data layer, UI components, state and lifecycle, security, build and release, monitoring, tests, localisation, performance, docs | To do |
 
@@ -789,6 +789,18 @@ The layer rules (step 2) and the central API (step 3) are already enforced, so t
 - **normal:** every code of guide §1 maps to its exception;
 - **edge:** an unknown code is decided by status;
 - **worst:** the list equals the guide's both ways, so a code added on one side fails.
+
+**✅ Fixed 2026-11-25:**
+- **Tests first:** TC-ERR-052 … -054 (`test/core/errors/api_error_codes_test.dart`):
+  - the list equals the 15 codes of guide §1's table, both ways;
+  - each code maps to its exception;
+  - a look-alike (`TOKEN_EXPIRED`, a trailing space) or an unknown code is decided by status;
+  - no code is written in quotes anywhere else in `lib/`. This was red before, in the mapper, the interceptor, the failure messages and the scan session.
+- **The change:**
+  - `ApiErrorCodes` (15 constants and `all`), used by the mapper's 14 cases, the interceptor's 4 checks, the failure messages (replacing `_knownCodes`) and a fourth place found while fixing: `scan_session_cubit.dart` checked `'session_not_yours'`;
+  - it lives in `core/errors`, not `core/network` as proposed: the shared failure messages and a cubit read it, and `core/errors` is already theirs to import.
+- **Kept on purpose:** three result values spelled like a code: a check's `not_found` result, a lookup's `not_found` outcome, and the mock's counts. The test names them.
+- **Mutation check:** leaving `app_preparing` out of the list failed TC-ERR-052, naming it as missing.
 
 #### P-24 (should): internal decisions ride on `message` strings
 **Evidence:** `AppException.message` is documented as "the server's message", yet:

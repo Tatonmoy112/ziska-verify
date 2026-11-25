@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:clock/clock.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:ziska_verify/core/errors/api_error_codes.dart';
 import 'package:ziska_verify/core/errors/app_exception.dart';
 import 'package:ziska_verify/core/errors/result.dart';
 import 'package:ziska_verify/core/services/scanner/active_scan_store.dart';
@@ -364,7 +365,7 @@ class ScanSessionCubit extends Cubit<ScanSessionState> {
           resumed: false,
         ),
       );
-      if (code == 'session_not_yours') {
+      if (code == ApiErrorCodes.sessionNotYours) {
         _lastRaw = null;
         emit(state.copyWith(busy: false, restarted: true));
         read.letGo();
