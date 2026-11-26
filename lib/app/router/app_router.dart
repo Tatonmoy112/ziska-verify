@@ -32,10 +32,9 @@ AppRouter buildRouter({
   required GetIt locator,
   required ProfileCubit profileCubit,
   required LocaleCubit localeCubit,
-  RouteGuard? guard,
 }) {
   final session = locator<SessionService>();
-  final routeGuard = guard ?? RouteGuard(permissionByPath: routePermissions);
+  final routeGuard = RouteGuard(permissionByPath: routePermissions);
   // The guard reads the session, whether the profile is loaded, and its
   // permissions: the router runs it again only when one of them changes. A
   // profile refresh that changes nothing else (the password reminder going,

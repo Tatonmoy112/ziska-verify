@@ -193,10 +193,9 @@ class ResultBadge extends StatelessWidget {
 
 /// One `warning` reason, each with its own label and icon.
 class ReasonChip extends StatelessWidget {
-  const ReasonChip({required this.reason, this.detail, super.key});
+  const ReasonChip({required this.reason, super.key});
 
   final LookupReason reason;
-  final String? detail;
 
   @override
   Widget build(BuildContext context) {
@@ -227,14 +226,7 @@ class ReasonChip extends StatelessWidget {
               Icon(icon, size: 20, color: AppColors.warning),
               const SizedBox(width: AppSpacing.xs),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(label, style: AppTypography.bodyStrong),
-                    if (detail != null)
-                      Text(detail!, style: AppTypography.caption),
-                  ],
-                ),
+                child: Text(label, style: AppTypography.bodyStrong),
               ),
             ],
           ),

@@ -7,8 +7,9 @@ import 'package:ziska_verify/features/verification/domain/services/serial_key.da
 /// Splits a typed stack by commas, spaces or new lines and prepares each
 /// value like one serial (app API guide §4.7).
 class ParseStack {
-  const ParseStack([this._prepare = const PrepareInput()]);
-  final PrepareInput _prepare;
+  const ParseStack();
+
+  static const _prepare = PrepareInput();
 
   ParsedStack call(String text, InputFormats formats) {
     final serials = <String>[];

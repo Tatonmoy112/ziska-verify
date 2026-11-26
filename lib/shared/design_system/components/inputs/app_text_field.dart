@@ -11,7 +11,6 @@ class AppTextField extends StatelessWidget {
     this.controller,
     this.hint,
     this.prefixIcon,
-    this.suffix,
     this.keyboardType,
     this.textInputAction,
     this.autofillHints,
@@ -24,11 +23,9 @@ class AppTextField extends StatelessWidget {
     this.onSubmitted,
     this.style,
     this.fieldKey,
-    this.secret = false,
     this.minLines,
     this.maxLines = 1,
     this.textCapitalization = TextCapitalization.none,
-    this.showCounter = false,
     this.counter,
     this.focusNode,
     super.key,
@@ -38,7 +35,6 @@ class AppTextField extends StatelessWidget {
   final TextEditingController? controller;
   final String? hint;
   final IconData? prefixIcon;
-  final Widget? suffix;
   final TextInputType? keyboardType;
   final TextInputAction? textInputAction;
   final Iterable<String>? autofillHints;
@@ -58,19 +54,13 @@ class AppTextField extends StatelessWidget {
   /// "Enter manually" returns to the Check tab with the field focused).
   final FocusNode? focusNode;
 
-  /// A secret the keyboard must not learn or suggest.
-  final bool secret;
-
   /// A note over several lines (Report incident).
   final int? minLines;
   final int? maxLines;
   final TextCapitalization textCapitalization;
 
-  /// Shows "12/1000" under the field when [maxLength] is set.
-  final bool showCounter;
-
-  /// A counter of the caller's own (it overrides [showCounter]), for a
-  /// limit that is not counted the way [maxLength] counts.
+  /// A counter of the caller's own, for a limit that is not counted the
+  /// way [maxLength] counts. Without it no counter is shown.
   final String? counter;
 
   @override
@@ -94,7 +84,8 @@ class AppTextField extends StatelessWidget {
           onChanged: onChanged,
           onSubmitted: onSubmitted,
           autocorrect: false,
-          enableSuggestions: !obscureText && !secret,
+          // A hidden value (a password) is never learned or suggested.
+          enableSuggestions: !obscureText,
           minLines: minLines,
           maxLines: obscureText ? 1 : maxLines,
           textCapitalization: textCapitalization,
@@ -107,9 +98,8 @@ class AppTextField extends StatelessWidget {
           decoration: InputDecoration(
             hintText: hint,
             prefixIcon: prefixIcon == null ? null : Icon(prefixIcon, size: 20),
-            suffixIcon: suffix,
             errorText: errorText,
-            counterText: counter ?? (showCounter ? null : ''),
+            counterText: counter ?? '',
             // A long hint wraps instead of ending with "…".
             hintMaxLines: 3,
           ),

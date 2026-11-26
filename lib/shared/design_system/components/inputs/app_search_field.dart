@@ -12,7 +12,6 @@ class AppSearchField extends StatelessWidget {
     this.controller,
     this.onClear,
     this.maxLength,
-    this.autofocus = false,
     this.fieldKey,
     super.key,
   });
@@ -25,7 +24,6 @@ class AppSearchField extends StatelessWidget {
   /// (needs [controller]).
   final VoidCallback? onClear;
   final int? maxLength;
-  final bool autofocus;
 
   /// Key of the inner [TextField], for tests.
   final Key? fieldKey;
@@ -37,7 +35,6 @@ class AppSearchField extends StatelessWidget {
     Widget build({required bool hasText}) => TextField(
       key: fieldKey,
       controller: field,
-      autofocus: autofocus,
       maxLength: maxLength,
       onChanged: onChanged,
       textInputAction: TextInputAction.search,

@@ -14,7 +14,6 @@ class AppPasswordField extends StatefulWidget {
     required this.showLabel,
     required this.hideLabel,
     this.controller,
-    this.hint,
     this.textInputAction,
     this.autofillHints = const [AutofillHints.password],
     this.errorText,
@@ -31,7 +30,6 @@ class AppPasswordField extends StatefulWidget {
   final String showLabel;
   final String hideLabel;
   final TextEditingController? controller;
-  final String? hint;
   final TextInputAction? textInputAction;
   final Iterable<String>? autofillHints;
   final String? errorText;
@@ -60,7 +58,6 @@ class _AppPasswordFieldState extends State<AppPasswordField> {
           fieldKey: widget.fieldKey,
           label: widget.label,
           controller: widget.controller,
-          hint: widget.hint,
           prefixIcon: LucideIcons.lock,
           obscureText: !_visible,
           keyboardType: TextInputType.visiblePassword,

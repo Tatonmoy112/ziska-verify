@@ -7,7 +7,7 @@ The production-grade review of the app, done on the `production` branch one area
 | 2 | High-level architecture | Checked 2026-11-24: P-1 … P-15. **All fixed**; P-10 on for staging, live waits for its production project |
 | 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11). **All fixed** (2026-11-25) |
 | 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-45. Fixed: P-20 … P-45 |
-| 5 | Dead code | Checked 2026-11-25: P-46 … P-53. Fixed: P-46 … P-48 |
+| 5 | Dead code | Checked 2026-11-25: P-46 … P-53. Fixed: P-46 … P-49 |
 | 6+ | Comments, data layer, UI components, state and lifecycle, security, build and release, monitoring, tests, localisation, performance, docs | To do |
 
 **Severity:**
@@ -1561,6 +1561,15 @@ Read only. Three reviewers searched in parallel, and every finding below was the
 - **normal:** the widgets render as before (every screenshot unchanged);
 - **edge:** a password field still turns suggestions off;
 - **worst:** a source check that the parameters are gone.
+
+**✅ Fixed 2026-11-26:**
+- **Tests first:** TC-ARCH-086 … -088 (`architecture/unpassed_parameters_test`):
+  - a text field as before: no counter unless the caller gives one;
+  - secrets the keyboard does not learn: a password field is hidden, with no suggestions and no autocorrect; the emailed-code field has no autocorrect, a number keyboard and one-time-code autofill;
+  - none of the 16 options is declared any more (red before the change).
+- **The change:** the options are removed with what they guarded: the text field's `suffix`, `secret` and `showCounter` (no counter unless the caller gives one, as before); the search field's `autofocus`; the code field's `errorText`; the password field's `hint`; the banner's `settle` and the loader's `delay` (now fixed constants of one second and 300 ms); `ReasonChip.detail` and the line it showed; `PrepareInput`'s three parts, `LookupBloc.prepareInput` and `ParseStack`'s preparer (fixed parts now); `buildRouter(guard:)`.
+- **What `secret` was for:** the manual hidden-code field, gone since lookups are by serial or QR only (backend D62). TC-SEC-014 still described that field and named a test that no longer exists; it now covers the secrets the app does take, the passwords and the emailed code, through TC-ARCH-087.
+- **Every screenshot and flow test passes unchanged.**
 
 #### P-50 (nice): duplicates and more exposure than needed
 **Evidence:**

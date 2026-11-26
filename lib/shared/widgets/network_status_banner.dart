@@ -15,7 +15,7 @@ import 'package:ziska_verify/shared/design_system/tokens/app_typography.dart';
 ///   so itself, and nothing is sent again when the link is back.
 /// - It never covers the screen: it takes its own height, and the screen
 ///   below loses the status-bar padding the banner now holds.
-/// - Shown after [settle] offline, gone at once online, so a flapping
+/// - Shown after a second offline, gone at once online, so a flapping
 ///   link does not flicker.
 /// - The tree is the same online and offline, so the screens below keep
 ///   their state.
@@ -23,19 +23,19 @@ class NetworkStatusShell extends StatefulWidget {
   const NetworkStatusShell({
     required this.connectivity,
     required this.child,
-    this.settle = const Duration(seconds: 1),
     super.key,
   });
 
   final ConnectivityService connectivity;
   final Widget child;
-  final Duration settle;
 
   @override
   State<NetworkStatusShell> createState() => _NetworkStatusShellState();
 }
 
 class _NetworkStatusShellState extends State<NetworkStatusShell> {
+  static const _settle = Duration(seconds: 1);
+
   StreamSubscription<bool>? _changes;
   Timer? _settling;
   bool _offline = false;
@@ -53,7 +53,7 @@ class _NetworkStatusShellState extends State<NetworkStatusShell> {
       if (mounted && _offline) setState(() => _offline = false);
       return;
     }
-    _settling = Timer(widget.settle, () {
+    _settling = Timer(_settle, () {
       if (mounted && !_offline) setState(() => _offline = true);
     });
   }

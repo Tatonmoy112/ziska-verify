@@ -70,12 +70,10 @@ class LookupBloc extends Bloc<LookupEvent, LookupState> {
   LookupBloc({
     required GetFormats getFormats,
     required LookupItem lookupItem,
-    PrepareInput prepareInput = const PrepareInput(),
     DateTime Function()? now,
   }) : _getFormats = getFormats,
        _now = now ?? clock.now,
        _lookupItem = lookupItem,
-       _prepare = prepareInput,
        super(const LookupState()) {
     on<FormatsRequested>(_onFormats, transformer: droppable());
     on<LookupRequested>(_onLookup, transformer: droppable());
@@ -94,7 +92,7 @@ class LookupBloc extends Bloc<LookupEvent, LookupState> {
 
   final GetFormats _getFormats;
   final LookupItem _lookupItem;
-  final PrepareInput _prepare;
+  static const _prepare = PrepareInput();
   final DateTime Function() _now;
 
   Future<void> _onFormats(

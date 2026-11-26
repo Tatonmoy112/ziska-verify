@@ -13,9 +13,9 @@ import 'package:ziska_verify/shared/design_system/tokens/app_typography.dart';
 /// the lookup ends (final.md §13.1, decision 48). A faster answer
 /// never shows it; nothing is delayed to show it.
 class VerifyingLoader {
-  VerifyingLoader({this.delay = const Duration(milliseconds: 300)});
+  /// A lookup answered sooner never shows the loader.
+  static const delay = Duration(milliseconds: 300);
 
-  final Duration delay;
   Timer? _timer;
   OverlayEntry? _entry;
 

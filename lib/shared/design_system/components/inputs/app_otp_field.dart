@@ -9,7 +9,6 @@ class AppOtpField extends StatelessWidget {
   const AppOtpField({
     required this.label,
     this.controller,
-    this.errorText,
     this.onChanged,
     this.onSubmitted,
     this.fieldKey,
@@ -21,7 +20,6 @@ class AppOtpField extends StatelessWidget {
 
   final String label;
   final TextEditingController? controller;
-  final String? errorText;
   final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onSubmitted;
 
@@ -43,7 +41,6 @@ class AppOtpField extends StatelessWidget {
       autofillHints: const [AutofillHints.oneTimeCode],
       inputFormatters: const [CodeInputFormatter()],
       maxLength: length,
-      errorText: errorText,
       onChanged: onChanged,
       onSubmitted: onSubmitted,
       style: AppTypography.headline.copyWith(letterSpacing: 10),
