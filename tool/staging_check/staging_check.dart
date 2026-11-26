@@ -6,7 +6,8 @@
 //       --out <dir> [--state <file>]
 //
 // Steps: connect; login; verify <code>; session; profile; lookup; history;
-// stack; scan; report.
+// stack; scan; report; lengths; signup-probe; signup-code; signup <code>;
+// password-probe; serial-probe; backend-probe; history-days.
 //
 // The address comes from config/staging.json. Every answer is saved in
 // <dir> (the scratchpad, outside the repo) so it can be cleaned of passes
@@ -701,7 +702,7 @@ class StagingCheck {
     var requests = 0;
     final counter = InterceptorsWrapper(
       onRequest: (options, handler) {
-        if (options.path == 'checks') requests++;
+        if (options.path == ApiRoutes.checks.path) requests++;
         handler.next(options);
       },
     );
@@ -1895,7 +1896,7 @@ class StagingCheck {
 
     stdout.writeln(
       'INFO  POST lookups/sessions/{id}/end, empty JSON body  '
-      '${await emptyJson('lookups/sessions/$id/end')}',
+      '${await emptyJson(ApiRoutes.endSession(id).path)}',
     );
     await info(
       'POST lookups/sessions/{id}/end, bare',
@@ -1903,7 +1904,7 @@ class StagingCheck {
     );
     stdout.writeln(
       'INFO  POST auth/logout, empty JSON body  '
-      '${await emptyJson('auth/logout')}',
+      '${await emptyJson(ApiRoutes.logout.path)}',
     );
     await _logOut();
   }
@@ -1913,7 +1914,7 @@ class StagingCheck {
   Future<Map<String, dynamic>> _refresh(String refresh) async {
     try {
       final response = await dio.post<Object?>(
-        'auth/refresh',
+        ApiRoutes.refresh.path,
         data: {'refresh_token': refresh},
         options: Options(headers: {'Authorization': null}),
       );

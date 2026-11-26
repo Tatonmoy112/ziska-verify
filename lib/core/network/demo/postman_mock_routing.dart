@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:ziska_verify/core/network/api_routes.dart';
 
 /// **Mock build only.** Lets the Postman mock (build guide §6) serve the
 /// flows a fixed mock cannot tell apart, so the whole app can be tried on
@@ -82,7 +83,9 @@ class PostmanMockRouting extends Interceptor {
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
     final body = options.data;
     final session = _sessionPath.firstMatch(options.path);
-    if (options.method == 'POST' && options.path == 'lookups' && body is Map) {
+    if (options.method == 'POST' &&
+        options.path == ApiRoutes.lookups.path &&
+        body is Map) {
       final value = '${body['value'] ?? ''}';
       final last = value.isEmpty ? '' : value.substring(value.length - 1);
       final session = body['session_id'];
@@ -97,12 +100,13 @@ class PostmanMockRouting extends Interceptor {
         '4' => '200 unassigned',
         _ => '200 valid: genuine, first check',
       };
-    } else if (options.method == 'GET' && options.path == 'checks') {
+    } else if (options.method == 'GET' &&
+        options.path == ApiRoutes.checks.path) {
       options.headers[header] = options.queryParameters['cursor'] != null
           ? '200 A later page'
           : '200 First page';
     } else if (options.method == 'POST' &&
-        options.path == 'auth/verify-phone') {
+        options.path == ApiRoutes.verifyPhone.path) {
       options.headers[header] = body is Map && body['code'] == '111111'
           ? '200 Logged in, a new password must be set'
           : '200 Logged in, the phone is now trusted';
@@ -112,8 +116,9 @@ class PostmanMockRouting extends Interceptor {
           : '200 Session ended';
       if (session.group(1) != exampleSessionId) {
         options.extra[_realId] = session.group(1);
-        options.path =
-            'lookups/sessions/$exampleSessionId${session.group(2) ?? ''}';
+        options.path = session.group(2) == null
+            ? ApiRoutes.session(exampleSessionId).path
+            : ApiRoutes.endSession(exampleSessionId).path;
       }
     } else if (_photoPath.hasMatch(options.path)) {
       options.headers[header] = '201 Uploaded as photo 1';

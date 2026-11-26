@@ -7,7 +7,7 @@ The production-grade review of the app, done on the `production` branch one area
 | 2 | High-level architecture | Checked 2026-11-24: P-1 … P-15. **All fixed**; P-10 on for staging, live waits for its production project |
 | 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11). **All fixed** (2026-11-25) |
 | 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-45. Fixed: P-20 … P-45 |
-| 5 | Dead code | Checked 2026-11-25: P-46 … P-53. Fixed: P-46 … P-51 |
+| 5 | Dead code | Checked 2026-11-25: P-46 … P-53. Fixed: P-46 … P-52 |
 | 6+ | Comments, data layer, UI components, state and lifecycle, security, build and release, monitoring, tests, localisation, performance, docs | To do |
 
 **Severity:**
@@ -1619,6 +1619,14 @@ Read only. Three reviewers searched in parallel, and every finding below was the
 **Proposal:** use `ApiRoutes` and list every step.
 
 **Tests:** R20 extended to `tool/`: no API path written as text.
+
+**✅ Fixed 2026-11-26:**
+- **Tests first:** TC-ARCH-095 … -097 (`architecture/api_path_literals_test`, with `api_path_literals.dart`). A quoted text that is a route's whole template, an `{id}` written as any interpolation, counts as a path wherever it stands, inside another string's interpolation too; a message that only names a path does not. It reads `tool/` and `lib/` (but `api_routes.dart`, and generated parts, whose texts are JSON keys). The header test holds the tool's header, its usage text and its switch to the same steps.
+- **More than the audit listed:** the check found eight paths written by hand, not three:
+  - in the staging tool, a fourth: a request counter comparing a path to `'checks'` (line 704);
+  - in the app, the Postman mock routing (`core/network/demo/postman_mock_routing.dart`) compared requests to `'lookups'`, `'checks'` and `'auth/verify-phone'`, and rewrote a session's path by hand.
+- **The change:** all eight use `ApiRoutes` (the session rewrite uses `ApiRoutes.session` and `ApiRoutes.endSession`). The header lists the 18 steps, as the usage text does. The mock routing's patterns for session and photo IDs stay: a route template does not match an ID.
+- **Checked:** analyze compiles the tool; the mock routing's own tests and every other test pass. The tool talks to the test server and is not run here.
 
 #### P-53 (nice): leftovers in the tree
 **Evidence:**
