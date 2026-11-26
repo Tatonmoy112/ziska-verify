@@ -40,7 +40,6 @@ abstract class RequestAccessState with _$RequestAccessState {
 
   bool get codeWaiting => waitsUntil(codeRetryAt);
   bool get submitWaiting => waitsUntil(submitRetryAt);
-  bool get waiting => waitsUntil(retryAt);
 }
 
 class RequestAccessCubit extends Cubit<RequestAccessState> {

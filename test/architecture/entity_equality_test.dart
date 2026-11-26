@@ -199,10 +199,6 @@ void main() {
     test('what the entities work out stays', () {
       expect(const CursorPage(items: <int>[], nextCursor: 'c').hasMore, isTrue);
       expect(const ParsedStack(serials: ['1'], typed: 3).repeats, 2);
-      expect(
-        const RefusedInput(LookupWay.qr, InputProblem.empty).notProductQr,
-        isTrue,
-      );
       expect(AccessRequest.nameMaxLength, 100);
     });
   });

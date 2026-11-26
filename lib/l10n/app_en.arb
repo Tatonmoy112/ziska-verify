@@ -426,7 +426,6 @@
     }
   },
   "previousCheckLabel": "Previous check",
-  "checkedByLabel": "Checked before by",
   "enteredTitle": "What you entered",
   "checkedAtLabel": "Checked at",
   "resultRowLabel": "Result",

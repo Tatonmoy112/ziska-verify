@@ -168,8 +168,6 @@ void main() {
           for (final s in surfaces) (name, text, s),
         ('onPrimary', AppColors.onPrimary, AppColors.primary),
         ('onPrimary', AppColors.onPrimary, AppColors.primaryDark),
-        ('successOnDark', AppColors.successOnDark, AppColors.primary),
-        ('successOnDark', AppColors.successOnDark, AppColors.primaryDark),
         ('success', AppColors.success, AppColors.successBackground),
         ('warning', AppColors.warning, AppColors.warningBackground),
         ('danger', AppColors.danger, AppColors.dangerBackground),

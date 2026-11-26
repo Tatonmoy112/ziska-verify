@@ -258,7 +258,9 @@ void main() {
           'https://a.example/q/Q8F2KD91XA7',
           formats,
         );
-        expect((out as RefusedInput).notProductQr, isTrue);
+        // A QR refused for its form: told as not a product QR
+        // (`refusedMessage`, TC-ARCH-083).
+        expect(out, const RefusedInput(LookupWay.qr, InputProblem.wrongFormat));
       },
     );
   });

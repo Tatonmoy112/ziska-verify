@@ -233,7 +233,6 @@
   "detailsProductTitle": "পণ্যের বিবরণ",
   "checkNumber": "যাচাই {count}",
   "previousCheckLabel": "আগের যাচাই",
-  "checkedByLabel": "আগে যাচাই করেছেন",
   "enteredTitle": "আপনি যা দিয়েছেন",
   "checkedAtLabel": "যাচাইয়ের সময়",
   "resultRowLabel": "ফলাফল",

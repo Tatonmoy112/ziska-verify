@@ -14,17 +14,13 @@ class FirebaseCrashReportingService implements CrashReportingService {
   final CrashTarget _target;
   FirebaseCrashlytics? _crashlytics;
 
-  /// How many times a start was tried: once, however often it is asked.
-  int get attempts => _attempts;
-  int _attempts = 0;
-
-  /// Whether Crashlytics is running.
-  bool get started => _crashlytics != null;
+  /// A start is tried once, however often it is asked.
+  bool _tried = false;
 
   @override
   Future<void> initialize() async {
-    if (_attempts > 0) return;
-    _attempts++;
+    if (_tried) return;
+    _tried = true;
     try {
       // The default Firebase app: Crashlytics reports for it only.
       await Firebase.initializeApp(

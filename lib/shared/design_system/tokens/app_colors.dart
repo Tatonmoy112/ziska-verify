@@ -46,9 +46,6 @@ abstract final class AppColors {
   static const danger = Color(0xFFC81E1E);
   static const dangerBackground = Color(0xFFFEF2F2);
 
-  /// Success text on the dark header (the Profile role badge).
-  static const successOnDark = Color(0xFFBBF7D0);
-
   /// Behind the camera and over a photo; see-through with an alpha.
   static const scrim = Color(0xFF000000);
 

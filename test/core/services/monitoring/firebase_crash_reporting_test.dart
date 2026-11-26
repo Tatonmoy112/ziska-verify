@@ -18,7 +18,6 @@ void main() {
   test('a failed start never throws, and nothing after it does', () async {
     final service = FirebaseCrashReportingService(target);
     await expectLater(service.initialize(), completes);
-    expect(service.started, isFalse);
     expect(() => service.log('a line'), returnsNormally);
     expect(
       () => service.recordError(StateError('x'), StackTrace.current),
@@ -26,10 +25,10 @@ void main() {
     );
   });
 
-  test('starting twice tries once', () async {
+  test('starting twice is harmless', () async {
     final service = FirebaseCrashReportingService(target);
     await service.initialize();
-    await service.initialize();
-    expect(service.attempts, 1);
+    await expectLater(service.initialize(), completes);
+    expect(() => service.log('a line'), returnsNormally);
   });
 }

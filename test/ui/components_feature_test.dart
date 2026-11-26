@@ -321,7 +321,8 @@ void main() {
       expect(drawnStyle(tester, pill).color, AppColors.warning);
       expect(find.text(l10n.previousCheckLabel), findsOneWidget);
       expect(find.textContaining('Nov 10, 2026'), findsOneWidget);
-      expect(find.text(l10n.checkedByLabel), findsNothing);
+      // Who made the earlier checks is never sent (guide §4.2).
+      expect(find.textContaining('Checked before by'), findsNothing);
       expect(find.text('Asha Rao, Karim'), findsNothing);
       // Never a uses limit (backend D31).
       expect(find.textContaining('/'), findsNothing);

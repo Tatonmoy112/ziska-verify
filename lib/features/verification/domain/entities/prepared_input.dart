@@ -12,8 +12,3 @@ sealed class PreparedInput with _$PreparedInput {
   const factory PreparedInput.refused(LookupWay way, InputProblem problem) =
       RefusedInput;
 }
-
-extension RefusedInputKind on RefusedInput {
-  /// A scanned QR that is not a product QR link.
-  bool get notProductQr => way == LookupWay.qr;
-}

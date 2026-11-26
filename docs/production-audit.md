@@ -7,7 +7,7 @@ The production-grade review of the app, done on the `production` branch one area
 | 2 | High-level architecture | Checked 2026-11-24: P-1 … P-15. **All fixed**; P-10 on for staging, live waits for its production project |
 | 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11). **All fixed** (2026-11-25) |
 | 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-45. Fixed: P-20 … P-45 |
-| 5 | Dead code | Checked 2026-11-25: P-46 … P-53. Fixed: P-46, P-47 |
+| 5 | Dead code | Checked 2026-11-25: P-46 … P-53. Fixed: P-46 … P-48 |
 | 6+ | Comments, data layer, UI components, state and lifecycle, security, build and release, monitoring, tests, localisation, performance, docs | To do |
 
 **Severity:**
@@ -1534,6 +1534,17 @@ Read only. Three reviewers searched in parallel, and every finding below was the
 **Tests:**
 - **normal:** each rewritten test still proves the same behaviour;
 - **worst:** a check that none of these names is left in `lib/`.
+
+**✅ Fixed 2026-11-26:**
+- **Tests first:** TC-ARCH-083 … -085 (`architecture/test_only_code_test`):
+  - what the app reads: `history:own` opens History through the route permissions, and a QR refused for its form is told as "not a product QR" (`refusedMessage`);
+  - crash reporting that cannot start, started twice: both starts complete and nothing throws;
+  - none of the six is left in `lib/`, each member checked in its own file (the scanner session has a `canReadHistory` of its own, which is used). Run on the old code, the check was red.
+- **The change:** `Profile.canReadHistory`, `RequestAccessState.waiting`, the crash reporter's `attempts` and `started` (a private flag still starts it once), `AppColors.successOnDark`, the `notProductQr` extension and the translation `checkedByLabel` (both languages) are gone.
+- **The tests, pointed at what the app does:** the permission test reads the key itself; the 429 test the code's own wait (`codeWaiting`); the crash test that a second start is harmless; the contrast test drops the colour's two rows; the QR test asserts the refused input itself; the "checked by" test looks for the text "Checked before by".
+- **What a test can no longer see:** that a second start is not tried. It cost a getter only tests read, and a second try would fail silently too.
+- **Stale test cases found:** TC-LOOK-047 and -092 still said "Checked before by" is shown when the server lists `count.by`. Their tests went when the backend stopped sending it (2026-11-17); the rows now describe the card as it is, with TC-UI-064.
+- **Every screenshot and flow test passes unchanged.**
 
 #### P-49 (nice): parameters no caller passes
 **Evidence:** every call in `lib/` and `test/` leaves these at their default:

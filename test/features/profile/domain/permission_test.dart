@@ -20,7 +20,8 @@ void main() {
   ({bool lookup, bool bulk, bool history, bool report}) can(Profile p) => (
     lookup: p.canLookup,
     bulk: p.canBulkLookup,
-    history: p.canReadHistory,
+    // The app checks the key itself (the routes and the History tab).
+    history: p.permissions.contains(Permission.ownHistory),
     report: p.canReport,
   );
 

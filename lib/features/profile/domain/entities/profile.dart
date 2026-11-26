@@ -54,6 +54,5 @@ abstract class Profile with _$Profile {
 
   bool get canLookup => can(Permission.lookup);
   bool get canBulkLookup => can(Permission.bulkLookup);
-  bool get canReadHistory => can(Permission.ownHistory);
   bool get canReport => can(Permission.report);
 }

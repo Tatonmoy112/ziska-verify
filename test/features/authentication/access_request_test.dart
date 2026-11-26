@@ -204,7 +204,8 @@ void main() {
         await cubit.load();
         await cubit.sendCode(request.email);
         await cubit.sendCode(request.email);
-        expect(cubit.state.waiting, isTrue);
+        // The code's own wait, which holds Send code back.
+        expect(cubit.state.codeWaiting, isTrue);
         verify(() => repo.sendCode(any())).called(1);
       },
     );

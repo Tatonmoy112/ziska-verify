@@ -793,9 +793,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get previousCheckLabel => 'Previous check';
 
   @override
-  String get checkedByLabel => 'Checked before by';
-
-  @override
   String get enteredTitle => 'What you entered';
 
   @override

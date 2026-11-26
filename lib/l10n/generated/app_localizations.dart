@@ -1496,12 +1496,6 @@ abstract class AppLocalizations {
   /// **'Previous check'**
   String get previousCheckLabel;
 
-  /// No description provided for @checkedByLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Checked before by'**
-  String get checkedByLabel;
-
   /// No description provided for @enteredTitle.
   ///
   /// In en, this message translates to:

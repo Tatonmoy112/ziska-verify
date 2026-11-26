@@ -791,9 +791,6 @@ class AppLocalizationsBn extends AppLocalizations {
   String get previousCheckLabel => 'আগের যাচাই';
 
   @override
-  String get checkedByLabel => 'আগে যাচাই করেছেন';
-
-  @override
   String get enteredTitle => 'আপনি যা দিয়েছেন';
 
   @override
