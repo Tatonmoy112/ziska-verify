@@ -19,8 +19,6 @@ class VerifyingLoader {
   Timer? _timer;
   OverlayEntry? _entry;
 
-  bool get isShown => _entry != null;
-
   /// A lookup started.
   void start(BuildContext context) {
     stop();

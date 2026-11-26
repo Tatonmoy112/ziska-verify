@@ -116,7 +116,6 @@ abstract class ScanSessionState with _$ScanSessionState {
 
   const ScanSessionState._();
 
-  bool get loading => phase == SessionPhase.starting;
   bool get finishing => phase == SessionPhase.finishing;
   bool get done => phase == SessionPhase.done;
   bool get repeat => notice == ScanNotice.repeat;

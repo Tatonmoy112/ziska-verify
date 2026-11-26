@@ -14,16 +14,6 @@ abstract final class DisplayTime {
   static String dateTime(DateTime instant, String locale) =>
       DateFormat.yMMMd(locale).add_jm().format(inZone(instant));
 
-  /// With the offset: "2026-10-12 15:14 +06:00".
-  static String withOffset(DateTime instant) {
-    final local = inZone(instant);
-    final offset = local.timeZoneOffset;
-    final sign = offset.isNegative ? '-' : '+';
-    final h = offset.inHours.abs().toString().padLeft(2, '0');
-    final m = (offset.inMinutes.abs() % 60).toString().padLeft(2, '0');
-    return '${DateFormat('yyyy-MM-dd HH:mm').format(local)} $sign$h:$m';
-  }
-
   /// "Today · 4:02 PM", "Yesterday · 9:08 AM", or "Oct 12, 2026 · 3:14 PM":
   /// the day counted in Bangladesh time against [now].
   static String dayAndTime(

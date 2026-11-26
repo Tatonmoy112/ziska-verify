@@ -7,7 +7,7 @@ The production-grade review of the app, done on the `production` branch one area
 | 2 | High-level architecture | Checked 2026-11-24: P-1 … P-15. **All fixed**; P-10 on for staging, live waits for its production project |
 | 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11). **All fixed** (2026-11-25) |
 | 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-45. Fixed: P-20 … P-45 |
-| 5 | Dead code | Checked 2026-11-25: P-46 … P-53. Fixed: P-46 |
+| 5 | Dead code | Checked 2026-11-25: P-46 … P-53. Fixed: P-46, P-47 |
 | 6+ | Comments, data layer, UI components, state and lifecycle, security, build and release, monitoring, tests, localisation, performance, docs | To do |
 
 **Severity:**
@@ -1510,6 +1510,15 @@ Read only. Three reviewers searched in parallel, and every finding below was the
 **Proposal:** remove them.
 
 **Tests:** the suites pass unchanged; a source check that each name is gone.
+
+**✅ Fixed 2026-11-26:**
+- **Tests first:** TC-ARCH-080 … -082 (`architecture/unused_code_test`):
+  - each piece is gone from `lib/`;
+  - what the screens show still comes from where it did: History's chips count the first page, and while the formats load again the lookup form has neither formats nor a failure, so it shows its spinner, then the formats. These two passed before the change and after it;
+  - no file in `lib/` or `test/` still names them.
+- **The change:** the step row file and the four members are removed. `LookupState.formatsLoading` is gone; Try again still clears the failure, so the spinner shows while the formats load. `HistoryState.totals` is gone: the chips' counts (`chipTotals`) never came from it.
+- **The tests that read `totals`:** `history_bloc_test` asserted it in eight places. The three that repeated a `chipTotals` check were dropped; the five others now assert `chipTotals`, which is what the screen shows. The state-equality test clears `chipTotals` instead.
+- **Every screenshot and flow test passes unchanged.**
 
 #### P-48 (nice): code kept alive only by its tests
 **Evidence:**

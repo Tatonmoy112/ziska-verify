@@ -127,7 +127,6 @@ void main() {
         expect(counts.warning, 1);
         expect(counts.notFound, 1);
         expect(counts.unassigned, 0);
-        expect(bloc.state.totals?.total, 3);
       },
     );
 
@@ -163,7 +162,6 @@ void main() {
       verify: (bloc) {
         expect(bloc.state.list.hasReachedEnd, isFalse);
         expect(bloc.state.chipTotals?.total, 3, reason: 'kept, not blanked');
-        expect(bloc.state.totals?.total, 3);
       },
     );
 
@@ -182,7 +180,8 @@ void main() {
         expect(bloc.state.chipTotals?.total, 3, reason: 'same filters');
         bloc.add(const HistoryNextPageRequested());
         await Future<void>.delayed(Duration.zero);
-        expect(bloc.state.totals?.total, 3, reason: 'the kept checks');
+        // A result picked: the chips keep every result's counts.
+        expect(bloc.state.chipTotals?.total, 3, reason: 'the chips kept');
         bloc.add(const HistoryRefreshed());
         await Future<void>.delayed(Duration.zero);
       },
@@ -197,7 +196,7 @@ void main() {
     act: (bloc) => bloc.add(const HistoryQueryChanged(CheckQuery())),
     verify: (bloc) {
       expect(bloc.state.list.items.map((c) => c.ref), ['A', 'B']);
-      expect(bloc.state.totals, _totals);
+      expect(bloc.state.chipTotals, _totals);
       expect(bloc.state.list.nextCursor, 'c1');
       expect(calls.single.$2, isNull);
     },
@@ -219,7 +218,7 @@ void main() {
       expect(calls.map((c) => c.$2), [null, 'c1']);
       expect(bloc.state.list.hasReachedEnd, isTrue);
       expect(bloc.state.list.items, hasLength(2));
-      expect(bloc.state.totals, _totals);
+      expect(bloc.state.chipTotals, _totals);
     },
   );
 
@@ -368,7 +367,7 @@ void main() {
       wait: const Duration(milliseconds: 20),
       verify: (bloc) {
         expect(bloc.state.list.items, hasLength(1));
-        expect(bloc.state.totals, isNull);
+        expect(bloc.state.chipTotals, isNull);
       },
     );
   });
@@ -444,7 +443,6 @@ void main() {
       },
       verify: (bloc) {
         expect(bloc.state.query.result, CheckResult.valid);
-        expect(bloc.state.totals, onlyValid);
         expect(bloc.state.chipTotals, all);
         expect(counting(), isEmpty);
       },
@@ -482,7 +480,6 @@ void main() {
         expect(query.result, isNull);
         expect(query.search, '1000001');
         expect(bloc.state.chipTotals, all);
-        expect(bloc.state.totals, onlyValid);
       },
     );
 

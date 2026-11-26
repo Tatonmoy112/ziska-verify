@@ -119,11 +119,11 @@ void main() {
         unassigned: 0,
       );
       final history = const HistoryState(
-        totals: totals,
         chipTotals: totals,
-      ).copyWith(totals: null);
-      expect(history.totals, isNull);
-      expect(history.chipTotals, totals);
+        searchRefused: true,
+      ).copyWith(chipTotals: null);
+      expect(history.chipTotals, isNull);
+      expect(history.searchRefused, isTrue);
       final photo = ReportPhoto(
         localId: 1,
         photo: _photo,

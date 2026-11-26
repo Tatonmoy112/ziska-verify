@@ -14,8 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$HistoryState {
 
- CheckQuery get query; PaginatedState<CheckRecord> get list;/// From the first page; kept while later pages load (§10).
- CheckTotals? get totals;/// The counts on the result chips: every check matching the search and
+ CheckQuery get query; PaginatedState<CheckRecord> get list;/// The counts on the result chips: every check matching the search and
 /// the other filters, whatever result is picked, so picking a chip
 /// never changes them. `null` while unknown (the chips then show no
 /// count).
@@ -32,16 +31,16 @@ $HistoryStateCopyWith<HistoryState> get copyWith => _$HistoryStateCopyWithImpl<H
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is HistoryState&&(identical(other.query, query) || other.query == query)&&(identical(other.list, list) || other.list == list)&&(identical(other.totals, totals) || other.totals == totals)&&(identical(other.chipTotals, chipTotals) || other.chipTotals == chipTotals)&&(identical(other.searchRefused, searchRefused) || other.searchRefused == searchRefused));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is HistoryState&&(identical(other.query, query) || other.query == query)&&(identical(other.list, list) || other.list == list)&&(identical(other.chipTotals, chipTotals) || other.chipTotals == chipTotals)&&(identical(other.searchRefused, searchRefused) || other.searchRefused == searchRefused));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,query,list,totals,chipTotals,searchRefused);
+int get hashCode => Object.hash(runtimeType,query,list,chipTotals,searchRefused);
 
 @override
 String toString() {
-  return 'HistoryState(query: $query, list: $list, totals: $totals, chipTotals: $chipTotals, searchRefused: $searchRefused)';
+  return 'HistoryState(query: $query, list: $list, chipTotals: $chipTotals, searchRefused: $searchRefused)';
 }
 
 
@@ -52,11 +51,11 @@ abstract mixin class $HistoryStateCopyWith<$Res>  {
   factory $HistoryStateCopyWith(HistoryState value, $Res Function(HistoryState) _then) = _$HistoryStateCopyWithImpl;
 @useResult
 $Res call({
- CheckQuery query, PaginatedState<CheckRecord> list, CheckTotals? totals, CheckTotals? chipTotals, bool searchRefused
+ CheckQuery query, PaginatedState<CheckRecord> list, CheckTotals? chipTotals, bool searchRefused
 });
 
 
-$CheckQueryCopyWith<$Res> get query;$PaginatedStateCopyWith<CheckRecord, $Res> get list;$CheckTotalsCopyWith<$Res>? get totals;$CheckTotalsCopyWith<$Res>? get chipTotals;
+$CheckQueryCopyWith<$Res> get query;$PaginatedStateCopyWith<CheckRecord, $Res> get list;$CheckTotalsCopyWith<$Res>? get chipTotals;
 
 }
 /// @nodoc
@@ -69,12 +68,11 @@ class _$HistoryStateCopyWithImpl<$Res>
 
 /// Create a copy of HistoryState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? query = null,Object? list = null,Object? totals = freezed,Object? chipTotals = freezed,Object? searchRefused = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? query = null,Object? list = null,Object? chipTotals = freezed,Object? searchRefused = null,}) {
   return _then(_self.copyWith(
 query: null == query ? _self.query : query // ignore: cast_nullable_to_non_nullable
 as CheckQuery,list: null == list ? _self.list : list // ignore: cast_nullable_to_non_nullable
-as PaginatedState<CheckRecord>,totals: freezed == totals ? _self.totals : totals // ignore: cast_nullable_to_non_nullable
-as CheckTotals?,chipTotals: freezed == chipTotals ? _self.chipTotals : chipTotals // ignore: cast_nullable_to_non_nullable
+as PaginatedState<CheckRecord>,chipTotals: freezed == chipTotals ? _self.chipTotals : chipTotals // ignore: cast_nullable_to_non_nullable
 as CheckTotals?,searchRefused: null == searchRefused ? _self.searchRefused : searchRefused // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
@@ -96,18 +94,6 @@ $PaginatedStateCopyWith<CheckRecord, $Res> get list {
   
   return $PaginatedStateCopyWith<CheckRecord, $Res>(_self.list, (value) {
     return _then(_self.copyWith(list: value));
-  });
-}/// Create a copy of HistoryState
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$CheckTotalsCopyWith<$Res>? get totals {
-    if (_self.totals == null) {
-    return null;
-  }
-
-  return $CheckTotalsCopyWith<$Res>(_self.totals!, (value) {
-    return _then(_self.copyWith(totals: value));
   });
 }/// Create a copy of HistoryState
 /// with the given fields replaced by the non-null parameter values.
@@ -203,10 +189,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( CheckQuery query,  PaginatedState<CheckRecord> list,  CheckTotals? totals,  CheckTotals? chipTotals,  bool searchRefused)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( CheckQuery query,  PaginatedState<CheckRecord> list,  CheckTotals? chipTotals,  bool searchRefused)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _HistoryState() when $default != null:
-return $default(_that.query,_that.list,_that.totals,_that.chipTotals,_that.searchRefused);case _:
+return $default(_that.query,_that.list,_that.chipTotals,_that.searchRefused);case _:
   return orElse();
 
 }
@@ -224,10 +210,10 @@ return $default(_that.query,_that.list,_that.totals,_that.chipTotals,_that.searc
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( CheckQuery query,  PaginatedState<CheckRecord> list,  CheckTotals? totals,  CheckTotals? chipTotals,  bool searchRefused)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( CheckQuery query,  PaginatedState<CheckRecord> list,  CheckTotals? chipTotals,  bool searchRefused)  $default,) {final _that = this;
 switch (_that) {
 case _HistoryState():
-return $default(_that.query,_that.list,_that.totals,_that.chipTotals,_that.searchRefused);case _:
+return $default(_that.query,_that.list,_that.chipTotals,_that.searchRefused);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -244,10 +230,10 @@ return $default(_that.query,_that.list,_that.totals,_that.chipTotals,_that.searc
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( CheckQuery query,  PaginatedState<CheckRecord> list,  CheckTotals? totals,  CheckTotals? chipTotals,  bool searchRefused)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( CheckQuery query,  PaginatedState<CheckRecord> list,  CheckTotals? chipTotals,  bool searchRefused)?  $default,) {final _that = this;
 switch (_that) {
 case _HistoryState() when $default != null:
-return $default(_that.query,_that.list,_that.totals,_that.chipTotals,_that.searchRefused);case _:
+return $default(_that.query,_that.list,_that.chipTotals,_that.searchRefused);case _:
   return null;
 
 }
@@ -259,13 +245,11 @@ return $default(_that.query,_that.list,_that.totals,_that.chipTotals,_that.searc
 
 
 class _HistoryState implements HistoryState {
-  const _HistoryState({this.query = const CheckQuery(), this.list = const PaginatedState<CheckRecord>(), this.totals, this.chipTotals, this.searchRefused = false});
+  const _HistoryState({this.query = const CheckQuery(), this.list = const PaginatedState<CheckRecord>(), this.chipTotals, this.searchRefused = false});
   
 
 @override@JsonKey() final  CheckQuery query;
 @override@JsonKey() final  PaginatedState<CheckRecord> list;
-/// From the first page; kept while later pages load (§10).
-@override final  CheckTotals? totals;
 /// The counts on the result chips: every check matching the search and
 /// the other filters, whatever result is picked, so picking a chip
 /// never changes them. `null` while unknown (the chips then show no
@@ -285,16 +269,16 @@ _$HistoryStateCopyWith<_HistoryState> get copyWith => __$HistoryStateCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _HistoryState&&(identical(other.query, query) || other.query == query)&&(identical(other.list, list) || other.list == list)&&(identical(other.totals, totals) || other.totals == totals)&&(identical(other.chipTotals, chipTotals) || other.chipTotals == chipTotals)&&(identical(other.searchRefused, searchRefused) || other.searchRefused == searchRefused));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _HistoryState&&(identical(other.query, query) || other.query == query)&&(identical(other.list, list) || other.list == list)&&(identical(other.chipTotals, chipTotals) || other.chipTotals == chipTotals)&&(identical(other.searchRefused, searchRefused) || other.searchRefused == searchRefused));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,query,list,totals,chipTotals,searchRefused);
+int get hashCode => Object.hash(runtimeType,query,list,chipTotals,searchRefused);
 
 @override
 String toString() {
-  return 'HistoryState(query: $query, list: $list, totals: $totals, chipTotals: $chipTotals, searchRefused: $searchRefused)';
+  return 'HistoryState(query: $query, list: $list, chipTotals: $chipTotals, searchRefused: $searchRefused)';
 }
 
 
@@ -305,11 +289,11 @@ abstract mixin class _$HistoryStateCopyWith<$Res> implements $HistoryStateCopyWi
   factory _$HistoryStateCopyWith(_HistoryState value, $Res Function(_HistoryState) _then) = __$HistoryStateCopyWithImpl;
 @override @useResult
 $Res call({
- CheckQuery query, PaginatedState<CheckRecord> list, CheckTotals? totals, CheckTotals? chipTotals, bool searchRefused
+ CheckQuery query, PaginatedState<CheckRecord> list, CheckTotals? chipTotals, bool searchRefused
 });
 
 
-@override $CheckQueryCopyWith<$Res> get query;@override $PaginatedStateCopyWith<CheckRecord, $Res> get list;@override $CheckTotalsCopyWith<$Res>? get totals;@override $CheckTotalsCopyWith<$Res>? get chipTotals;
+@override $CheckQueryCopyWith<$Res> get query;@override $PaginatedStateCopyWith<CheckRecord, $Res> get list;@override $CheckTotalsCopyWith<$Res>? get chipTotals;
 
 }
 /// @nodoc
@@ -322,12 +306,11 @@ class __$HistoryStateCopyWithImpl<$Res>
 
 /// Create a copy of HistoryState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? query = null,Object? list = null,Object? totals = freezed,Object? chipTotals = freezed,Object? searchRefused = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? query = null,Object? list = null,Object? chipTotals = freezed,Object? searchRefused = null,}) {
   return _then(_HistoryState(
 query: null == query ? _self.query : query // ignore: cast_nullable_to_non_nullable
 as CheckQuery,list: null == list ? _self.list : list // ignore: cast_nullable_to_non_nullable
-as PaginatedState<CheckRecord>,totals: freezed == totals ? _self.totals : totals // ignore: cast_nullable_to_non_nullable
-as CheckTotals?,chipTotals: freezed == chipTotals ? _self.chipTotals : chipTotals // ignore: cast_nullable_to_non_nullable
+as PaginatedState<CheckRecord>,chipTotals: freezed == chipTotals ? _self.chipTotals : chipTotals // ignore: cast_nullable_to_non_nullable
 as CheckTotals?,searchRefused: null == searchRefused ? _self.searchRefused : searchRefused // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
@@ -350,18 +333,6 @@ $PaginatedStateCopyWith<CheckRecord, $Res> get list {
   
   return $PaginatedStateCopyWith<CheckRecord, $Res>(_self.list, (value) {
     return _then(_self.copyWith(list: value));
-  });
-}/// Create a copy of HistoryState
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$CheckTotalsCopyWith<$Res>? get totals {
-    if (_self.totals == null) {
-    return null;
-  }
-
-  return $CheckTotalsCopyWith<$Res>(_self.totals!, (value) {
-    return _then(_self.copyWith(totals: value));
   });
 }/// Create a copy of HistoryState
 /// with the given fields replaced by the non-null parameter values.

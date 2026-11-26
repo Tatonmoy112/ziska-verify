@@ -61,9 +61,6 @@ abstract class HistoryState with _$HistoryState {
     @Default(CheckQuery()) CheckQuery query,
     @Default(PaginatedState<CheckRecord>()) PaginatedState<CheckRecord> list,
 
-    /// From the first page; kept while later pages load (§10).
-    CheckTotals? totals,
-
     /// The counts on the result chips: every check matching the search and
     /// the other filters, whatever result is picked, so picking a chip
     /// never changes them. `null` while unknown (the chips then show no
@@ -190,7 +187,6 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
           state.copyWith(
             query: query,
             list: u.list,
-            totals: null,
             chipTotals: null,
             searchRefused: true,
           ),
@@ -214,7 +210,6 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
             query: query,
             list: u.list,
             searchRefused: false,
-            totals: u.keepItems ? state.totals : null,
             chipTotals: keepChips || refreshChips ? state.chipTotals : null,
           ),
         );
@@ -239,7 +234,6 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
               : _counted(
                   state.copyWith(
                     list: u.list,
-                    totals: dated ? state.totals : answer.totals,
                     chipTotals: query.result == null && !dated
                         ? answer.totals
                         : state.chipTotals,
@@ -283,7 +277,7 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
       notFound: count(CheckResult.notFound),
       unassigned: count(CheckResult.unassigned),
     );
-    if (query.result != null) return state.copyWith(totals: counts);
-    return state.copyWith(totals: counts, chipTotals: counts);
+    if (query.result != null) return state;
+    return state.copyWith(chipTotals: counts);
   }
 }

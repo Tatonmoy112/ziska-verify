@@ -42,7 +42,6 @@ enum LookupStatus { idle, inProgress, completed, failed, refused }
 abstract class LookupState with _$LookupState {
   const factory LookupState({
     InputFormats? formats,
-    @Default(false) bool formatsLoading,
     Failure? formatsFailure,
 
     /// After a `429` on the formats: Retry waits until this time.
@@ -105,15 +104,13 @@ class LookupBloc extends Bloc<LookupEvent, LookupState> {
     if (state.formats != null) return;
     final wait = state.formatsRetryAt;
     if (waitsUntil(wait, now: _now())) return;
-    emit(state.copyWith(formatsLoading: true, formatsFailure: null));
+    // Loading again: the form shows its spinner while there is neither
+    // formats nor a failure.
+    emit(state.copyWith(formatsFailure: null));
     final result = await _getFormats();
     emit(switch (result) {
-      Success(:final value) => state.copyWith(
-        formats: value,
-        formatsLoading: false,
-      ),
+      Success(:final value) => state.copyWith(formats: value),
       Err(:final failure) => state.copyWith(
-        formatsLoading: false,
         formatsFailure: failure,
         formatsRetryAt: failure.retryAtFrom(_now()),
       ),

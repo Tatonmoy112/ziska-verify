@@ -39,10 +39,6 @@ abstract class PaginatedState<T> with _$PaginatedState<T> {
   /// A `429` countdown is still running.
   bool get isWaiting => waitsUntil(retryAt);
 
-  bool get isLoading =>
-      status == PaginationStatus.loadingFirst ||
-      status == PaginationStatus.loadingMore;
-
   /// A next page may be requested now.
   bool get canLoadMore =>
       !hasReachedEnd &&
