@@ -8,7 +8,8 @@ The production-grade review of the app, done on the `production` branch one area
 | 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11). **All fixed** (2026-11-25) |
 | 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-45. Fixed: P-20 … P-45 |
 | 5 | Dead code | Checked 2026-11-25: P-46 … P-53. **All fixed** (2026-11-26) |
-| 6+ | Comments, data layer, UI components, state and lifecycle, security, build and release, monitoring, tests, localisation, performance, docs | To do |
+| 6 | Comments | Checked 2026-11-26: P-54 … P-59 |
+| 7+ | Data layer, UI components, state and lifecycle, security, build and release, monitoring, tests, localisation, performance, docs | To do |
 
 **Severity:**
 - **must:** a production risk;
@@ -1653,3 +1654,122 @@ Read only. Three reviewers searched in parallel, and every finding below was the
 1. **P-46** first: it ships native code no one uses.
 2. **The app's own code:** P-47 … P-50.
 3. **P-51 … P-53** at any time.
+
+---
+
+## Step 6: comments (2026-11-26)
+
+### How it was checked
+Read only. Three reviewers searched in parallel, and every finding below was then re-checked by hand at the line it cites. Steps 2 to 5 renamed and removed much of the code, and the 2026-11-16 baseline retired whole features (bulk lookup, retail-user administration, hidden-code input, everyone's checks), so the review looked for comments that still describe them:
+- **in `lib/`:** names a comment mentions that no longer exist, comments the code next to them contradicts, counts and lists, and claims made with an audit finding;
+- **in `test/`:** the test-case IDs tests cite against the IDs `docs/test-cases/` defines (ranges expanded, IDs built from data tables resolved), headers, and comments the assertions next to them contradict;
+- **outside Dart:** `pubspec.yaml`, `analysis_options.yaml`, `l10n.yaml`, CI, Android and iOS configuration, `tool/`, `README.md` and `AGENTS.md`.
+
+Already enforced, so not checked again: every citation in `lib/`, `test/`, `tool/`, `android/` and `ios/` resolves (`doc_references_test`, P-11 and P-16), and the `comment_references` lint (on through very_good_analysis 10.2.0) catches every `[bracketed]` name that dangles.
+
+### What is already right (keep)
+
+| Area | Result |
+|---|---|
+| Names | No `[bracketed]` name dangles. None of the names steps 2 to 5 renamed or removed is left in a `lib/` comment. |
+| Words | Prose says "pass" for the access and refresh tokens everywhere; "token" means a design token. |
+| Numbers | Counts and figures in comments match the code: the 23 routes, the three tabs, the limits, the durations, the photo sizes, the Bangladesh day. |
+| Audit claims | The claims comments make with P-12 … P-50 still hold. |
+| Platforms | The Android and iOS permission strings match what the app does (the camera for QR codes and report photos, the photo library); no template TODO is left. |
+| Tests | The fakes and the flow harness name no removed code; no two tests in a file have the same name. |
+
+### Findings
+
+#### P-54 (should): citations the check never reads
+**Evidence:** `doc_references_test` reads `lib/`, `test/`, `tool/`, `android/` and `ios/` only (`readSources`, `doc_references.dart:240`). Outside them, sections that no longer exist are cited:
+- `l10n.yaml:7`: "final.md Section 20.3" (§20 has 20.0 … 20.2). The comment also says missing Bangla texts fall back to English, while final.md §16 and `arb_completeness_test` require every one;
+- `.github/workflows/ci.yml:37` and `docs/test-cases/11-security.md` (TC-SEC-024 … -026): "final.md §12.1 Supply chain" (§12 has no subsections);
+- `analysis_options.yaml:14`: "final.md 5.1" (§5 has none);
+- `AGENTS.md:33`: "full branch coverage per `final.md`": final.md has no such rule.
+
+Each is a number of `final.md` v1.6 (`docs/archive/app-architecture-1.6.md`).
+
+**Proposal:** cite the current section, or drop the citation; extend the check to the root YAML files, CI, `README.md`, `AGENTS.md` and `docs/test-cases/`.
+
+**Tests:**
+- **normal:** the real files resolve;
+- **edge:** a YAML comment and a Markdown table row are read;
+- **worst:** a stale section in each kind of file is reported with its line.
+
+#### P-55 (should): test cases and tests that do not point at each other
+**Evidence:** of the 932 automated (✅) test cases:
+- **92 are cited by no test** (105 by their literal text; 13 are cited through IDs built from data tables, such as `'TC-AUTH-$id'`). Among them every case from TC-MIG-001 to -029, and 17 AUTH, 12 LOOK, 12 REP, 10 HIST, 6 SESS, 6 ERR, 4 SEC, 3 NAV, 2 PROF, 2 STG and 1 ROLE case. Fourteen test files cite no ID at all (`login_screen_test`, `route_guard_test`, `main_shell_test`, `lookup_bloc_test` and others);
+- **5 are cited only by another file** than the one their row names (TC-AUTH-007, TC-HIST-002, TC-LOOK-002, TC-REP-001, TC-REP-006);
+- **6 name no test file** (TC-MIG-030, TC-PROF-020, -021, and TC-SEC-024 … -026, which name `ci.yml`).
+
+The other way round:
+- **25 IDs tests cite are not defined:** ranges that still span retired cases (`TC-UI-056 … -074`, `-087 … -113` and `-114 … -133` take in the 19 UI cases P-53 retired; `TC-LOOK-023 … -042` and `-094 … -101` take in hidden-code cases);
+- **10 manual (✋) cases are cited as if automated** (for example TC-PROF-002 and -006 by name);
+- **two IDs lack their `TC-`:** `'MIG-031 …'` (`mobile_migration_flow_test.dart:330`) and "NFR-004" in `profile_a11y_flow_test.dart:7`.
+
+**Why:** a ✅ row says a test proves the case. When nothing names the case, nobody can tell which test that is, and a deleted test leaves the row claiming it passes (as P-53 found for 19 cases).
+
+**Proposal:** cite each automated case in the test that proves it, or correct its file or its status; narrow the ranges to defined IDs; add the missing prefixes. A check keeps it so.
+
+**Tests:**
+- **normal:** every ✅ row's ID is cited by the file it names, and every ID a test cites is defined;
+- **edge:** ranges, IDs over wrapped comment lines and IDs built from a data table are read;
+- **worst:** a ✅ row no test cites, an undefined ID, a ✋ row cited as automated and an ID without `TC-` are each reported.
+
+#### P-56 (should): stale comments in `lib/`
+**Evidence:**
+- `history_api_service.dart:29-30`: a broken sentence ("…and so is / No scope parameter is supported."), left when the "everyone's checks" scope went;
+- `api_client.dart:105-106`: `DioFactory` "builds the two Dio instances … the renewal one without [interceptors]". It returns options only, and the renewal client has the mock-routing and logging interceptors (`network_module.dart`);
+- `app_text_field.dart:53-54`: the focus node serves "the scanner's 'Enter manually'", which no longer exists;
+- `profile_cubit.dart:29-30`: "read by the router guard and `PermissionGate`". `PermissionGate` was never built;
+- `scan_session.dart:72`: "`GET scan-sessions`". The route is `GET lookups/sessions`;
+- `lookup_result_screen.dart:145-146`: "a hidden code stays masked". Hidden-code input is gone;
+- `app_search_field.dart:7`: used by "Retail users". That screen is gone; the users are History and the two pickers;
+- `route_paths.dart:1` and `route_names.dart:1-2`: paths are used "only inside `app/router/`". `main_shell.dart` reads them too;
+- `secure_storage_service.dart:1-2, 9`: storage "for the phone ID and the two passes" and "keys used in secure storage". The scanner session's ID is stored there too, under a key `ActiveScanStore` makes;
+- `app_colors.dart:11-12`: `onPrimaryFaint` decorates "the Scan card's QR corner". There is no Scan card; its one use is the Check header;
+- `app_button.dart:71-72`: a screen reader hears "Checking 3 items…", a text of bulk lookup;
+- `console_logger_service.dart:11-12`: `printing` is set by "`bootstrap`". It is set by `startMonitoring` (P-35, P-50);
+- `api_data.dart:16-17`: `guard` reports "`answer_shape`". The reason is `CoreReason.answerShape`;
+- `app_exception.dart:40`: `ValidationException` is "400 / 413 / 415 … an app defect, logged". Since P-33 the use cases also give it for input refused on the phone;
+- `result_entry_cards.dart:72-75`: a list with an item cut out ("the serial's digits and length, and / scanning the QR code…");
+- `event_transformers.dart:7-8`: quotes final.md §8 as "debounce 400 ms + restartable". §8 says only that the search is debounced; the 400 ms is the callers'.
+
+**Proposal:** correct each to what the code does.
+
+**Tests:** a source check that no `lib/` comment names `PermissionGate`, "Enter manually", "hidden code", "Retail users", "Scan card", "scan-sessions" or "answer_shape".
+
+#### P-57 (should): stale comments and headers in `test/`
+**Evidence:**
+- `security_flow_test.dart:15-16`: "a whole session: … a hidden-code lookup … a retail user added". It looks up a serial and adds no retail user;
+- headers that name retired areas or span retired cases: `lookup_flow_test.dart:7-8` ("LOOK, BULK", `05-bulk.md`); `reports_retail_flow_test.dart:7` ("REP and RTL", `08-retail-users.md`); `components_feature_test.dart:21-23` ("the bulk views"), `screens_verify_history_test.dart:27-29` ("Bulk lookup") and `screens_reports_profile_test.dart:16-19` ("Retail users, Add retail user"); `device_a11y_flow_test.dart:12-14` places TC-UI-011 in `12-device-a11y-perf.md` (it is in `15-ui.md`);
+- comments that claim more than the test asserts: `screens_verify_history_test.dart:141` ("the hidden code's tag": only the serial's is checked), `history_flow_test.dart:186-191` ("the name on every row is the official's": only "Checked by " is), `input_preparation_test.dart:119-120` (a range naming cases its table does not have);
+- `test/fakes/roles.dart:1`: "the 7 role profiles". It defines 9;
+- screen labels still say "Bulk lookup" for the serial stack (`device_a11y_flow_test.dart:73, 75`, `consistency_fit_test.dart:281, 328`).
+
+**Proposal:** correct each; the ranges with P-55.
+
+**Tests:** P-55's check covers the IDs; a source check that no test header names `05-bulk.md` or `08-retail-users.md`.
+
+#### P-58 (should): docs that mislead
+**Evidence:**
+- `README.md:27`: the staging flavor is the test server's client "`demo-pharma`". `config/staging.json` is `ziska-test` (final.md §17);
+- `README.md:20-33`: each flavor has its own app ID, and the commands use `--flavor`. That holds on Android only: iOS has one scheme (`Runner.xcscheme`) and no flavors;
+- `AGENTS.md:37`: "No commits exist yet";
+- test cases that still describe retired features: TC-E2E-001 (a supervisor's day adds a retail user), TC-LOOK-037 ("Paste 65 characters into Hidden code"), TC-LOOK-100 ("from a Bulk lookup row") and TC-NFR-018 (TalkBack on Bulk lookup and Retail users).
+
+**Proposal:** correct the README and AGENTS.md (iOS flavors stay a build-and-release item); rewrite the four cases to the app as it is.
+
+**Tests:** P-54's extended check reads README and AGENTS.md; a check that no test case names Bulk lookup, Retail users or Hidden code as a screen or field.
+
+#### P-59 (nice): small notes
+- `pubspec.yaml:47`: `image` is pinned "for the development-only QR-sheet generator". The QR sheet imports only `pdf`; `image`'s user is `tool/staging_check`;
+- `ci.yml:48-49`: an accepted finding "goes in `osv-scanner.toml`", which does not exist (an instruction, but it reads as if the file were there);
+- comments that repeat the line below: `verifying_view.dart:22`, `gradient_header.dart:21`, `app_radius.dart:3`, `api_routes.dart:1`;
+- "for tests" on code the app uses: `AppConfig.fromValues` (`app_config.dart:48`, called by `fromEnvironment`) and `shrink` (`image_picker_photo_service.dart:50`, called by `prepare`);
+- three imprecisions: `retryAfter` is also `null` when the header cannot be read (`app_exception.dart:153`); the interceptor order given is the main client's only (`network_module.dart:21-22`); the screens that use `NavyAppBar` leave out scanner mode (`navy_app_bar.dart:5-6`).
+
+### Suggested order
+1. **P-54 and P-55** first: they add the checks that keep the rest honest.
+2. **P-56 … P-58.**
+3. **P-59** at any time.
