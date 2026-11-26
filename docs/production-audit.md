@@ -7,7 +7,7 @@ The production-grade review of the app, done on the `production` branch one area
 | 2 | High-level architecture | Checked 2026-11-24: P-1 … P-15. **All fixed**; P-10 on for staging, live waits for its production project |
 | 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11). **All fixed** (2026-11-25) |
 | 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-45. Fixed: P-20 … P-45 |
-| 5 | Dead code | Checked 2026-11-25: P-46 … P-53 |
+| 5 | Dead code | Checked 2026-11-25: P-46 … P-53. Fixed: P-46 |
 | 6+ | Comments, data layer, UI components, state and lifecycle, security, build and release, monitoring, tests, localisation, performance, docs | To do |
 
 **Severity:**
@@ -1493,6 +1493,12 @@ Read only. Three reviewers searched in parallel, and every finding below was the
 - **normal:** a check that every package in `pubspec.yaml` is used: runtime ones imported in `lib/`, dev ones in `test/` or `tool/`, or a known build or analysis tool;
 - **edge:** `build_runner`, `freezed`, `json_serializable`, `very_good_analysis` and the icon and splash generators are recognised as used;
 - **worst:** a package added and never imported fails the check; `flutter build apk --debug --flavor mock` still builds.
+
+**✅ Fixed 2026-11-25:**
+- **A correction to the "Why":** `path_provider`'s native code still ships. `flutter_secure_storage` brings its Windows part, `flutter_secure_storage_windows`, which depends on `path_provider`, so `path_provider_android` and `path_provider_foundation` are still built for Android and iOS (`.flutter-plugins-dependencies`). What the removal does: the app no longer declares a package it never uses, and that its own rule forbids it to call.
+- **Tests first:** TC-ARCH-077 … -079 (`architecture/package_use_test`, with `package_use.dart`). A package counts as used only with evidence: a runtime one imported in `lib/`; a dev one imported in `test/` or `tool/`, or traced by its generated parts, an `include:`, or its own section in `pubspec.yaml`. No name is excused. On the real project the check found exactly the four packages.
+- **The change:** `flutter_animate`, `path_provider`, `http_mock_adapter` and `integration_test` are out of `pubspec.yaml`. `pub get` only removed packages from the lock file (with `flutter_driver`, `flutter_shaders`, `fuchsia_remote_debug_protocol`, `process`, `sync_http` and `webdriver`, which only they needed); `path_provider` stays there as a transitive dependency. No version changed.
+- **Checked:** analyze clean, every test passes, and the mock debug APK builds.
 
 #### P-47 (nice): code nothing uses
 **Evidence:**

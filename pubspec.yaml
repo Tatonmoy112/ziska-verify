@@ -15,7 +15,6 @@ dependencies:
   firebase_crashlytics: ^6.0.1
   flutter:
     sdk: flutter
-  flutter_animate: ^4.5.2
   flutter_bloc: ^9.1.1
   flutter_image_compress: ^2.5.1
   flutter_localizations:
@@ -31,7 +30,6 @@ dependencies:
   lucide_icons_flutter: ^4.0.3
   mobile_scanner: ^7.5.0
   package_info_plus: ^10.2.2
-  path_provider: ^2.1.6
   permission_handler: 12.0.1
   shared_preferences: ^2.5.6
   skeletonizer: ^3.0.0
@@ -46,11 +44,8 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   freezed: ^3.2.5
-  http_mock_adapter: ^0.6.1
   # Pinned for the development-only QR-sheet generator (pdf 3.12).
   image: 4.5.4
-  integration_test:
-    sdk: flutter
   json_serializable: ^6.14.1
   mocktail: ^1.0.5
   pdf: ^3.12.0
