@@ -18,9 +18,11 @@ typedef NetworkStack = ({
   ForbiddenSignal forbidden,
 });
 
-/// Builds the two Dio clients and their interceptors, in order: bodiless,
-/// Postman mock routing (mock build only), auth, logging. [httpAdapter]
-/// replaces the transport of both, for automated flow tests.
+/// Builds the two Dio clients and their interceptors. The main client's, in
+/// order: bodiless, Postman mock routing (mock build only), auth, logging;
+/// the refresh client's: mock routing and logging only, so a renewal is
+/// never itself renewed. [httpAdapter] replaces the transport of both,
+/// for automated flow tests.
 NetworkStack buildNetwork({
   required AppConfig config,
   required LoggerService logger,

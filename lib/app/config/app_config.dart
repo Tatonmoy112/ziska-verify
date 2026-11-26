@@ -45,7 +45,8 @@ class AppConfig {
     firebaseIosAppId: const String.fromEnvironment('FIREBASE_IOS_APP_ID'),
   );
 
-  /// [AppConfig.fromEnvironment] on given values (for tests).
+  /// The configuration from given values: [AppConfig.fromEnvironment]
+  /// passes the build's, a test its own.
   factory AppConfig.fromValues({
     required String flavorName,
     required String baseUrl,

@@ -45,8 +45,9 @@ jobs:
       - name: pubspec.lock is committed
         run: git ls-files --error-unmatch pubspec.lock
 
-      # TC-SEC-024: fails on any known vulnerability. An accepted finding
-      # goes in osv-scanner.toml with a reason and an end date (TC-SEC-026).
+      # TC-SEC-024: fails on any known vulnerability. None is accepted yet;
+      # to accept one, create one at the root, osv-scanner.toml, giving
+      # its reason and an end date (TC-SEC-026).
       - name: Scan pubspec.lock (OSV-Scanner)
         uses: google/osv-scanner-action/osv-scanner-action@v2.7.0
         with:

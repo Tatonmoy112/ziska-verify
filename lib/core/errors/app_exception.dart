@@ -152,7 +152,8 @@ final class RateLimitedException extends AppException {
     super.requestId,
   });
 
-  /// From the `Retry-After` header; `null` when the header is missing.
+  /// From the `Retry-After` header; `null` when the header is missing,
+  /// cannot be read, or is already past.
   final Duration? retryAfter;
 }
 

@@ -47,7 +47,8 @@ class ImagePickerPhotoService implements PhotoService {
     sizeOf: imageSize,
   );
 
-  /// [prepare] with its encoder and size reader given, for tests. When the
+  /// The work of [prepare], which gives it the real encoder and size
+  /// reader (a test gives its own). When the
   /// original's size cannot be read (HEIC on some phones), the encoder is
   /// asked for [maxSide] on both sides, which it treats as a minimum: the
   /// result is read again and, when its longer side is still over

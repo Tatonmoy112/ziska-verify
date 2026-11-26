@@ -5,8 +5,8 @@ import 'package:ziska_verify/shared/design_system/tokens/app_radius.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_spacing.dart';
 import 'package:ziska_verify/shared/design_system/tokens/app_typography.dart';
 
-/// The navy header of the Sign up design: a back button, a title,
-/// and a subtitle.
+/// The navy header of the Sign up design: a title, and a subtitle and
+/// a back button when given.
 class GradientHeader extends StatelessWidget {
   const GradientHeader({
     required this.title,
@@ -18,7 +18,6 @@ class GradientHeader extends StatelessWidget {
   final String title;
   final String? subtitle;
 
-  /// Shows the back button when set.
   final VoidCallback? onBack;
 
   @override

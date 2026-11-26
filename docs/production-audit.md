@@ -8,7 +8,7 @@ The production-grade review of the app, done on the `production` branch one area
 | 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11). **All fixed** (2026-11-25) |
 | 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-45. Fixed: P-20 … P-45 |
 | 5 | Dead code | Checked 2026-11-25: P-46 … P-53. **All fixed** (2026-11-26) |
-| 6 | Comments | Checked 2026-11-26: P-54 … P-61. Fixed: P-54 … P-58 |
+| 6 | Comments | Checked 2026-11-26: P-54 … P-61. Fixed: P-54 … P-59 |
 | 7+ | Data layer, UI components, state and lifecycle, security, build and release, monitoring, tests, localisation, performance, docs | To do |
 
 **Severity:**
@@ -1812,6 +1812,19 @@ The other way round:
 - comments that repeat the line below: `verifying_view.dart:22`, `gradient_header.dart:21`, `app_radius.dart:3`, `api_routes.dart:1`;
 - "for tests" on code the app uses: `AppConfig.fromValues` (`app_config.dart:48`, called by `fromEnvironment`) and `shrink` (`image_picker_photo_service.dart:50`, called by `prepare`);
 - three imprecisions: `retryAfter` is also `null` when the header cannot be read (`app_exception.dart:153`); the interceptor order given is the main client's only (`network_module.dart:21-22`); the screens that use `NavyAppBar` leave out scanner mode (`navy_app_bar.dart:5-6`).
+
+**✅ Fixed 2026-11-26:**
+- **Tests first:** TC-ARCH-116 … -118 (`architecture/comment_notes_test`): each note says what is there; `fromValues` and `shrink` are not said to be for tests, while `buildNetwork`'s adapter, which only tests set, still is; the four notes that repeated their line are gone. Red before the change.
+- **The change:**
+  - `image` is for `tool/staging_check`'s test photos (pdf 3.12 itself takes image up to 5.0, so the pin is not pdf's; the version is unchanged);
+  - CI says no scan finding is accepted yet, and how to create `osv-scanner.toml` for one;
+  - the loader's `start` says it shows the loader after `delay` unless `stop` comes first;
+  - `GradientHeader`'s class doc says the subtitle and the back button are optional, so `onBack` needs no note of its own; `AppRadius` says its unit and what `pill` does; `ApiMethod`'s note is gone;
+  - `fromValues` is the configuration from given values (the build's or a test's), and `shrink` the work of `prepare`;
+  - `retryAfter` is also `null` when the header cannot be read or is past;
+  - `buildNetwork` gives both clients' interceptors, the refresh client having no auth;
+  - `NavyAppBar` lists Scanner mode, and the Serial stack by its title (Session checks is the History screen with its own title).
+- **Every test passes.**
 
 #### P-60 (should): the test cases cite final.md's old numbering
 **Evidence:** found while fixing P-54. Read with the same checker, the test-case documents and the test plan hold 655 citations of sections final.md no longer has: 643 in `docs/test-cases/` (01-auth 118, 04-lookup 93, 15-ui 69, 02-session 62, README 53, 07-reports 46, 10-errors-network 42, 06-history 39, 03-roles-nav 37, 11-security 30, 13-e2e 17, 09-profile 12, 12-device 12, 14-exploratory 8, 16-mobile-migration 4, 17-test-server 1) and 12 in `docs/test-plan.md` (its §10 title cites "final.md §18.3"). Nearly every "Source" cell cites a number of `final.md` v1.6 (`§13.1.4`, `§9.4`, `§12.1`): P-11 renumbered the code's comments only.

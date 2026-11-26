@@ -1,4 +1,3 @@
-/// The HTTP methods the app API uses.
 enum ApiMethod { get, post }
 
 /// One route of the app API, relative to `{base}/v1/clients/{slug}/`

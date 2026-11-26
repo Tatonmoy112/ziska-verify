@@ -19,7 +19,7 @@ class VerifyingLoader {
   Timer? _timer;
   OverlayEntry? _entry;
 
-  /// A lookup started.
+  /// Shows the loader after [delay], unless [stop] comes first.
   void start(BuildContext context) {
     stop();
     final overlay = Overlay.of(context, rootOverlay: true);

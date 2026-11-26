@@ -1,6 +1,6 @@
 import 'package:flutter/painting.dart';
 
-/// Corner radius tokens.
+/// Corner radii in logical pixels; [pill] rounds any height fully.
 abstract final class AppRadius {
   static const sm = 8.0;
   static const md = 12.0;

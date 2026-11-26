@@ -44,7 +44,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   freezed: ^3.2.5
-  # Pinned for the development-only QR-sheet generator (pdf 3.12).
+  # For tool/staging_check, which makes its test photos with it.
   image: 4.5.4
   json_serializable: ^6.14.1
   mocktail: ^1.0.5
