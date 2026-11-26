@@ -7,7 +7,7 @@ The production-grade review of the app, done on the `production` branch one area
 | 2 | High-level architecture | Checked 2026-11-24: P-1 … P-15. **All fixed**; P-10 on for staging, live waits for its production project |
 | 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11). **All fixed** (2026-11-25) |
 | 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-45. Fixed: P-20 … P-45 |
-| 5 | Dead code | Checked 2026-11-25: P-46 … P-53. Fixed: P-46 … P-52 |
+| 5 | Dead code | Checked 2026-11-25: P-46 … P-53. **All fixed** (2026-11-26) |
 | 6+ | Comments, data layer, UI components, state and lifecycle, security, build and release, monitoring, tests, localisation, performance, docs | To do |
 
 **Severity:**
@@ -1640,6 +1640,14 @@ Read only. Three reviewers searched in parallel, and every finding below was the
 - the user's own files that git already ignores: the `bugreport-*.zip` files and `postman/` at the root, and `test/ui/failures/`;
 - the dated reports (`docs/*-2026-11-*.md`) and this audit's earlier steps, which keep the paths of their day;
 - iOS `RunnerTests.swift` (Flutter's empty template test): for the build-and-release step, as removing it needs Xcode.
+
+**✅ Fixed 2026-11-26:**
+- **Tests first:** TC-ARCH-098 … -100 (`architecture/tree_leftovers_test`): no empty folder in `lib/`, `test/` or `tool/`, and `devtools_options.yaml` ignored; every `.dart` file a test case names exists (but one a case names to say it is gone); every screenshot a test case names is in `test/ui/goldens/` (Figma's reference pictures left out). All red before the change.
+- **The change:** the two empty folders are removed; `.gitignore` ignores `devtools_options.yaml`; the components inventory says `BulkSummaryCard` went with bulk lookup and names the scanner session's summary instead.
+- **More than the audit listed:** 19 UI test cases (TC-UI-069 … -071, -101 … -106, -113, -121 … -129) still said ✅ for bulk lookup, everyone's checks and retail-user administration, which the 2026-11-16 baseline removed. Their tests were gone; each named a screenshot P-51 deleted because nothing took it. They are retired as BULK's and RTL's were: taken out, named once in a note with what covers the scanner summary now, their IDs not reused. The UI area goes from 183 cases to 164 (150 automated), the total from 1,076 to 1,060. Two notes on the bulk screens are marked as history; the test plan's log of past defects keeps its rows.
+- **Every test passes, screenshots included.**
+
+**Step 5 is done:** P-46 … P-53 are all fixed.
 
 ### Suggested order
 1. **P-46** first: it ships native code no one uses.

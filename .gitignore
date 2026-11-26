@@ -68,3 +68,6 @@ bugreport-*.zip
 # Firebase files downloaded from the console (google-services.json): read
 # for config/<flavor>.json, never committed (production audit P-10).
 /firebase/
+
+# Flutter DevTools' own settings (production audit P-53).
+devtools_options.yaml
