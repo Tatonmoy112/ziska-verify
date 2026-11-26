@@ -114,7 +114,7 @@ class DioSessionService implements SessionService {
     // An answer that still forces a change keeps the session there.
     if (mustChangePassword) return requirePasswordChange();
     // A forced change moves the session on; a voluntary one leaves it as
-    // it is, so the router does not rebuild the screens (final.md 6.6).
+    // it is, so the router does not rebuild the screens (final.md §6).
     if (_current is! SessionAuthenticated) _emit(const SessionAuthenticated());
   }
 

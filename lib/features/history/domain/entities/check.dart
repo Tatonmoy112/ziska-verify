@@ -21,7 +21,7 @@ enum CheckWay implements WireValue {
       fromWireValue(values, wire, unknown);
 }
 
-/// A check's `result`. [unknown] is never shown as valid (final.md 13.1.5).
+/// A check's `result`. [unknown] is never shown as valid (final.md §13.1).
 enum CheckResult implements WireValue {
   valid('valid'),
   warning('warning'),

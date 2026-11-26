@@ -33,7 +33,12 @@ final _token = RegExp(
   r'final\.md|UI audit 2026-11-22,?|audit)'
   r'|(§ ?|Sections? )(\d+(?:\.\d+)*)'
   r'((?:(?:,? and |, |–|-)\d+(?:\.\d+)*)*)',
+  caseSensitive: false,
 );
+
+/// A number right after a document's name, without `§` or "Section"
+/// (`final.md 5.1`); never a date (`final.md 2026-11-24`).
+final _bareNumber = RegExp(r'^\s+(\d+(?:\.\d+)*)(?![\d.\-])');
 final _number = RegExp(r'\d+(?:\.\d+)*');
 final _auditNumber = RegExp(r'^\s*(\d+\.\d+)');
 
@@ -42,6 +47,7 @@ final _auditNumber = RegExp(r'^\s*(\d+\.\d+)');
 final _unfinished = RegExp(
   r'(final\.md|guide|test plan|audit|audit 2026-11-22,|Sections?|§|\d,|'
   r' and)\s*\(?$',
+  caseSensitive: false,
 );
 
 /// One comment line: where it is, and its text without the comment marks.
@@ -53,10 +59,22 @@ class _Line {
 }
 
 /// The comment lines of [source], by the kind of file [path] names: `//`
-/// comments in Dart, Kotlin and Swift (never a `//` inside a string), and
-/// `<!-- -->` comments in XML.
+/// comments in Dart, Kotlin and Swift (never a `//` inside a string),
+/// `<!-- -->` comments in XML, `#` comments in YAML (never a `#` inside a
+/// quoted value), and every line of Markdown, which is all prose
+/// (production audit P-54).
 List<_Line> _commentLines(String path, String source) {
   final lines = source.split('\n');
+  if (path.endsWith('.md')) {
+    return [for (var i = 0; i < lines.length; i++) _Line(i + 1, lines[i])];
+  }
+  if (path.endsWith('.yaml') || path.endsWith('.yml')) {
+    return [
+      for (var i = 0; i < lines.length; i++)
+        if (_commentStart(lines[i], '#') case final at?)
+          _Line(i + 1, lines[i].substring(at + 1)),
+    ];
+  }
   if (path.endsWith('.xml') || path.endsWith('.plist')) {
     final out = <_Line>[];
     for (final m in RegExp(r'<!--([\s\S]*?)-->').allMatches(source)) {
@@ -70,14 +88,15 @@ List<_Line> _commentLines(String path, String source) {
   }
   return [
     for (var i = 0; i < lines.length; i++)
-      if (_commentStart(lines[i]) case final at?)
+      if (_commentStart(lines[i], '//') case final at?)
         _Line(i + 1, lines[i].substring(at).replaceFirst(RegExp('^/+'), '')),
   ];
 }
 
-/// Where the `//` comment of [line] starts, or `null`: a `//` inside a
-/// string (`'https://…'`, a sample comment in a test) is not one.
-int? _commentStart(String line) {
+/// Where the comment of [line] starts, by its [mark] (`//` or `#`), or
+/// `null`: a mark inside a string (`'https://…'`, `"#FFFFFF"`, a sample
+/// comment in a test) is not one.
+int? _commentStart(String line, String mark) {
   String? quote;
   for (var i = 0; i < line.length; i++) {
     final c = line[i];
@@ -89,7 +108,7 @@ int? _commentStart(String line) {
       }
     } else if (c == "'" || c == '"') {
       quote = c;
-    } else if (c == '/' && i + 1 < line.length && line[i + 1] == '/') {
+    } else if (line.startsWith(mark, i)) {
       return i;
     }
   }
@@ -144,10 +163,10 @@ List<BadReference> badReferences(
 
       var doc = Doc.finalMd;
       for (final m in _token.allMatches(comment)) {
-        final name = m.group(1);
+        final name = m.group(1)?.toLowerCase();
         final at = lineAt(m.start);
         if (name != null) {
-          if (name.startsWith('UI audit')) {
+          if (name.startsWith('ui audit')) {
             doc = Doc.uiAudit;
             final finding = _auditNumber.firstMatch(comment.substring(m.end));
             if (finding != null &&
@@ -179,6 +198,14 @@ List<BadReference> badReferences(
             doc = Doc.testPlan;
           } else {
             doc = Doc.finalMd;
+          }
+          if (!name.startsWith('ui audit') && name != 'audit') {
+            final bare = _bareNumber.firstMatch(comment.substring(m.end));
+            if (bare != null && !sections[doc]!.contains(bare.group(1))) {
+              bad.add(
+                BadReference(file, at, '${doc.label} has no §${bare[1]}'),
+              );
+            }
           }
           continue;
         }
@@ -236,7 +263,9 @@ Map<Doc, Set<String>> readSections() => {
 };
 
 /// Every file whose comments may cite the documents: the code, the tests,
-/// the tools, and the Android and iOS projects (build output left out).
+/// the tools, the Android and iOS projects (build output left out), and
+/// the files beside them: the root YAML files, CI, `README.md` and
+/// `AGENTS.md` (production audit P-54).
 Map<String, String> readSources() {
   const skip = [
     '/build/',
@@ -259,6 +288,19 @@ Map<String, String> readSources() {
       if (path.endsWith('.g.dart') || path.endsWith('.freezed.dart')) continue;
       out[path] = f.readAsStringSync();
     }
+  }
+  final beside = [
+    for (final f in Directory('.').listSync().whereType<File>())
+      f.path.replaceAll(r'\', '/').replaceFirst('./', ''),
+    for (final dir in ['.github/workflows'])
+      if (Directory(dir).existsSync())
+        for (final f in Directory(dir).listSync().whereType<File>())
+          f.path.replaceAll(r'\', '/'),
+  ];
+  for (final path in beside) {
+    final yaml = path.endsWith('.yaml') || path.endsWith('.yml');
+    final docs = path == 'README.md' || path == 'AGENTS.md';
+    if (yaml || docs) out[path] = File(path).readAsStringSync();
   }
   return out;
 }

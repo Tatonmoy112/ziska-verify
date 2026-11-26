@@ -11,5 +11,5 @@ analyzer:
 linter:
   rules:
     public_member_api_docs: false
-    # Every service is an interface, even with one method (final.md 5.1).
+    # Every service is an interface, even with one method (final.md §3).
     one_member_abstracts: false

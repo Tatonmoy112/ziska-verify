@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ziska_verify/core/services/media/image_picker_photo_service.dart';
 import 'package:ziska_verify/core/services/media/photo_service.dart';
 
-/// The 1 MB photo limit (docs/test-cases/07-reports.md, final.md 13.5.2).
+/// The 1 MB photo limit (docs/test-cases/07-reports.md, final.md §13.5).
 void main() {
   const limit = ImagePickerPhotoService.maxBytes;
   Uint8List bytes(int n) => Uint8List(n)..fillRange(0, n, 1);

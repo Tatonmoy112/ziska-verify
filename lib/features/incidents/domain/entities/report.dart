@@ -2,7 +2,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'report.freezed.dart';
 
-/// One of the official's own reports (`GET incidents`, final.md 13.5.4).
+/// One of the official's own reports (`GET incidents`, final.md §13.5).
 @freezed
 abstract class Report with _$Report {
   const factory Report({

@@ -34,8 +34,8 @@ jobs:
           flutter build apk --debug --flavor mock
           --dart-define-from-file=config/mock.json
 
-  # Known vulnerabilities in the packages the app ships (final.md §12.1
-  # Supply chain; docs/test-cases/11-security.md TC-SEC-024 … -026).
+  # Known vulnerabilities in the packages the app ships (test plan §12;
+  # docs/test-cases/11-security.md TC-SEC-024 … -026).
   dependency-scan:
     runs-on: ubuntu-latest
     steps:

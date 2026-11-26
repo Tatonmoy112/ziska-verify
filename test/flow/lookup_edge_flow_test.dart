@@ -490,8 +490,9 @@ void main() {
       );
     });
 
-    // Audit 4.2: a timeout after sending is a lost answer, and the check
-    // may already be recorded; checking again counts as another check.
+    // UI audit 2026-11-22, 4.2: a timeout after sending is a lost answer,
+    // and the check may already be recorded; checking again counts as
+    // another check.
     testWidgets('TC-LOOK-060 a timeout: the answer was lost', (tester) async {
       await lookUp(tester, timedOut());
       expect(find.text(lookupLost), findsOneWidget);

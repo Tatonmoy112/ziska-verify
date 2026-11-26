@@ -30,7 +30,7 @@ Use two-space indentation, `snake_case.dart` filenames, `UpperCamelCase` types, 
 
 ## Testing Guidelines
 
-Name tests `*_test.dart`. Use `flutter_test`, `bloc_test`, and existing fakes/mock adapters; automated tests must avoid real networks and plugins. Validate API contracts against Postman examples. Domain services require full branch coverage per `final.md`; CI has no numeric coverage gate. Follow `docs/test-plan.md` and `docs/manual-test-checklist.md` for device checks.
+Name tests `*_test.dart`. Use `flutter_test`, `bloc_test`, and existing fakes/mock adapters; automated tests must avoid real networks and plugins. Validate API contracts against Postman examples. Domain services aim for full branch coverage; CI has no numeric coverage gate. Follow `docs/test-plan.md` and `docs/manual-test-checklist.md` for device checks.
 
 ## Commit & Pull Request Guidelines
 

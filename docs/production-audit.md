@@ -8,7 +8,7 @@ The production-grade review of the app, done on the `production` branch one area
 | 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11). **All fixed** (2026-11-25) |
 | 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-45. Fixed: P-20 … P-45 |
 | 5 | Dead code | Checked 2026-11-25: P-46 … P-53. **All fixed** (2026-11-26) |
-| 6 | Comments | Checked 2026-11-26: P-54 … P-59 |
+| 6 | Comments | Checked 2026-11-26: P-54 … P-60. Fixed: P-54 |
 | 7+ | Data layer, UI components, state and lifecycle, security, build and release, monitoring, tests, localisation, performance, docs | To do |
 
 **Severity:**
@@ -1696,6 +1696,13 @@ Each is a number of `final.md` v1.6 (`docs/archive/app-architecture-1.6.md`).
 - **edge:** a YAML comment and a Markdown table row are read;
 - **worst:** a stale section in each kind of file is reported with its line.
 
+**✅ Fixed 2026-11-26** (with `docs/test-cases/` split off as P-60, as decided):
+- **Tests first:** TC-ARCH-101 … -103 (`architecture/citations_outside_code_test`): the root YAML files, CI, `README.md` and `AGENTS.md` are read and resolve; a YAML `#` comment is read but a `#` inside a value is not, every Markdown line is, "Guide" counts in any case, and a number right after a document's name (`final.md 5.1`) is a citation while a date is not; a stale section in each kind is reported with its line.
+- **The checker** (`doc_references.dart`) reads YAML and Markdown, matches the documents' names in any case, and reads a bare number after a name.
+- **Corrected:** `l10n.yaml` (final.md §16: every English text has a Bangla one); `ci.yml` and TC-SEC-024 … -026 (the scan has no section in final.md: they cite the test plan's §12, where its result is kept); `analysis_options.yaml` (§3: small interfaces); `AGENTS.md` (the coverage aim kept, the citation of final.md dropped: final.md has no such rule).
+- **Found by the stricter reading, in the code:** eight citations P-11 missed because they were written `final.md 6.6`, lower case or "Audit 4.2": `dio_session_service.dart`, `app_password_field.dart` (v1.6 §6.6 → §6), `check.dart`, `lookup_bloc.dart` (§13.1.5, §8.4 → §13.1), `report.dart`, `photo_limit_test.dart` (§13.5.4, §13.5.2 → §13.5), `text_limits.dart` (its "section 3.9" is the guide's), `lookup_edge_flow_test.dart` ("Audit 4.2" → "UI audit 2026-11-22, 4.2").
+- **Every test passes.**
+
 #### P-55 (should): test cases and tests that do not point at each other
 **Evidence:** of the 932 automated (✅) test cases:
 - **92 are cited by no test** (105 by their literal text; 13 are cited through IDs built from data tables, such as `'TC-AUTH-$id'`). Among them every case from TC-MIG-001 to -029, and 17 AUTH, 12 LOOK, 12 REP, 10 HIST, 6 SESS, 6 ERR, 4 SEC, 3 NAV, 2 PROF, 2 STG and 1 ROLE case. Fourteen test files cite no ID at all (`login_screen_test`, `route_guard_test`, `main_shell_test`, `lookup_bloc_test` and others);
@@ -1769,7 +1776,19 @@ The other way round:
 - "for tests" on code the app uses: `AppConfig.fromValues` (`app_config.dart:48`, called by `fromEnvironment`) and `shrink` (`image_picker_photo_service.dart:50`, called by `prepare`);
 - three imprecisions: `retryAfter` is also `null` when the header cannot be read (`app_exception.dart:153`); the interceptor order given is the main client's only (`network_module.dart:21-22`); the screens that use `NavyAppBar` leave out scanner mode (`navy_app_bar.dart:5-6`).
 
+#### P-60 (should): the test cases cite final.md's old numbering
+**Evidence:** found while fixing P-54. Read with the same checker, the test-case documents and the test plan hold 655 citations of sections final.md no longer has: 643 in `docs/test-cases/` (01-auth 118, 04-lookup 93, 15-ui 69, 02-session 62, README 53, 07-reports 46, 10-errors-network 42, 06-history 39, 03-roles-nav 37, 11-security 30, 13-e2e 17, 09-profile 12, 12-device 12, 14-exploratory 8, 16-mobile-migration 4, 17-test-server 1) and 12 in `docs/test-plan.md` (its §10 title cites "final.md §18.3"). Nearly every "Source" cell cites a number of `final.md` v1.6 (`§13.1.4`, `§9.4`, `§12.1`): P-11 renumbered the code's comments only.
+
+**Why:** a case's source is where its expected result comes from (test-cases README, rule 1). A source that leads nowhere cannot be checked against the spec.
+
+**Proposal:** move each citation to the current section, by the v1.6 heading's title (`docs/archive/app-architecture-1.6.md`) where it maps, by hand where it does not; then add `docs/test-cases/` and the test plan to the citation check.
+
+**Tests:**
+- **normal:** every citation in the test cases and the test plan resolves;
+- **edge:** a Source cell citing two documents ("§13.1; Guide §4.2"), and a range;
+- **worst:** a v1.6 section in a test case is reported with its file and line.
+
 ### Suggested order
 1. **P-54 and P-55** first: they add the checks that keep the rest honest.
-2. **P-56 … P-58.**
+2. **P-56 … P-58**, and **P-60** (a large docs change, best on its own).
 3. **P-59** at any time.

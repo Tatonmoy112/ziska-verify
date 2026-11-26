@@ -22,7 +22,7 @@ final class FormatsRequested extends LookupEvent {
   const FormatsRequested();
 }
 
-/// A scanned QR text or a typed serial (final.md 8.4).
+/// A scanned QR text or a typed serial (final.md §13.1).
 final class LookupRequested extends LookupEvent {
   const LookupRequested(this.way, this.raw);
   final LookupWay way;

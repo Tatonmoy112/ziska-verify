@@ -1,7 +1,7 @@
 /// Text limits counted the way the backend counts them.
 ///
-/// The test server counts a search (guide section 7.1) and an access
-/// request's name (section 3.9) in UTF-16 units, an emoji as two; a note
+/// The test server counts a search (guide §7.1) and an access
+/// request's name (guide §3.9) in UTF-16 units, an emoji as two; a note
 /// and a password in code points (2026-11-22, backend question B5).
 abstract final class TextLimits {
   /// [text]'s whole characters, as many as fit in [units] UTF-16 units:

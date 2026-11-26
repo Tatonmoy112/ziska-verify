@@ -64,7 +64,7 @@ class _AppPasswordFieldState extends State<AppPasswordField> {
           textInputAction: widget.textInputAction,
           autofillHints: widget.autofillHints,
           // 128 characters as the backend and PasswordPolicy count them
-          // (code points), not as the screen shows them (final.md 6.6).
+          // (code points), not as the screen shows them (final.md §6).
           inputFormatters: const [CodePointLimit(128)],
           errorText: widget.errorText,
           onChanged: widget.onChanged,

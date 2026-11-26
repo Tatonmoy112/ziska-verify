@@ -4,6 +4,7 @@ output-dir: lib/l10n/generated
 output-localization-file: app_localizations.dart
 output-class: AppLocalizations
 nullable-getter: false
-# Bangla text is supplied by the client (final.md Section 20.3). Until then,
-# missing Bangla messages fall back to English and are listed in this file.
+# Every English text has a Bangla text (final.md §16;
+# test/l10n/arb_completeness_test.dart). A text left without one would be
+# listed in this file, which stays empty.
 untranslated-messages-file: l10n_untranslated.json
