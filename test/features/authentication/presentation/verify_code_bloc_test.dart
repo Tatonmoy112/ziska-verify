@@ -25,6 +25,7 @@ void main() {
     now = DateTime(2026, 11, 10, 12);
   });
 
+  // TC-AUTH-006: Resend waits one minute.
   test('the first resend waits a minute after the code was sent', () {
     final bloc = build();
     expect(
@@ -64,6 +65,7 @@ void main() {
     ],
   );
 
+  // TC-AUTH-007: Resend honours Retry-After.
   blocTest<VerifyCodeBloc, VerifyCodeState>(
     '429 waits for Retry-After',
     setUp: () => when(() => repo.resendCode()).thenAnswer(
@@ -86,6 +88,7 @@ void main() {
     ],
   );
 
+  // TC-AUTH-008: After 3 resends, back to Login.
   blocTest<VerifyCodeBloc, VerifyCodeState>(
     '401 on resend means the 3 resends are used up',
     setUp: () => when(() => repo.resendCode()).thenAnswer(

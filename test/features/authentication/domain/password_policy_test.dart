@@ -21,6 +21,8 @@ void main() {
   ];
 
   for (final (password, valid, why) in cases) {
+    // TC-AUTH-016: Weak passwords are stopped.
+    // TC-AUTH-017: Bangla password accepted.
     test('${valid ? 'accepts' : 'refuses'}: $why', () {
       expect(policy.check(password).isValid, valid);
     });
@@ -69,6 +71,7 @@ void main() {
     });
   });
 
+  // TC-AUTH-015: Password rules tick live.
   test('reports each rule separately for the live ticks', () {
     final check = policy.check('abc');
     expect(check.hasLength, isFalse);

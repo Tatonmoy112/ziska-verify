@@ -30,6 +30,8 @@ const request = AccessRequest(
 const roles = [RequestableRole(id: 7, name: 'Retail seller')];
 void main() {
   setUpAll(() => registerFallbackValue(request));
+  // TC-MIG-005: Public roles/code/request calls do not attach an existing
+  // access token.
   group('public access contract', () {
     late ScriptedAdapter adapter;
     late AccessRequestRepositoryImpl repository;
@@ -121,6 +123,7 @@ void main() {
       );
       addTearDown(cubit.close);
     });
+    // TC-MIG-006: Form precedes code.
     test(
       'request success is pending without a session or retained secret',
       () async {
@@ -133,6 +136,7 @@ void main() {
         expect(cubit.state.toString(), isNot(contains(request.password)));
       },
     );
+    // TC-MIG-007: No requestable roles replaces the form with office fallback.
     test('empty roles prevent sending a code', () async {
       when(repo.roles).thenAnswer((_) async => const Success([]));
       await cubit.load();
@@ -140,6 +144,7 @@ void main() {
       expect(cubit.state.roles, isEmpty);
       verifyNever(() => repo.sendCode(any()));
     });
+    // TC-MIG-008: Email edits invalidate the local code stage.
     test('editing email invalidates the code step', () async {
       await cubit.load();
       await cubit.sendCode(request.email);
@@ -153,6 +158,7 @@ void main() {
       const NotFoundException(),
       const UnauthenticatedException(),
     ]) {
+      // TC-MIG-009: 401 code.
       test('${error.runtimeType} preserves the code step', () async {
         when(
           () => repo.submit(any()),
@@ -180,6 +186,7 @@ void main() {
         expect(cubit.state.codeVersion, version);
       },
     );
+    // TC-MIG-010: 409 consumes the code and requires another code.
     test('409 consumes the code and requires sending another', () async {
       when(
         () => repo.submit(any()),
@@ -209,6 +216,7 @@ void main() {
         verify(() => repo.sendCode(any())).called(1);
       },
     );
+    // TC-MIG-011: Duplicate access submissions produce one API request.
     test(
       'duplicate submission is dropped while one request is in flight',
       () async {

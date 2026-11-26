@@ -62,6 +62,7 @@ void main() {
     },
   );
 
+  // TC-LOOK-012: One press, one check.
   blocTest<LookupBloc, LookupState>(
     'a second lookup while one is in flight is dropped',
     setUp: () {

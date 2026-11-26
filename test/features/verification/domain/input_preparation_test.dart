@@ -66,6 +66,7 @@ void main() {
       (LookupWay.qr, 'Q8F2KD91XA7', InputProblem.wrongFormat),
     ];
     for (final (way, value, expected) in cases) {
+      // TC-LOOK-003: Too-long serial refused.
       test('$way "$value" → $expected', () {
         expect(validator.validate(way, value, formats), expected);
       });
@@ -105,6 +106,7 @@ void main() {
       expect((out as ReadyInput).value, 'Q8F2KD91XA7M');
     });
 
+    // TC-LOOK-016: Scan a non-product QR.
     test('a QR that is not a product link is refused', () {
       final out = prepare(LookupWay.qr, 'https://example.com/menu', formats);
       expect(out, isA<RefusedInput>());
@@ -117,7 +119,8 @@ void main() {
   });
 
   // docs/test-cases/04-lookup.md and 11-security.md: every input boundary.
-  group('Input boundaries (TC-LOOK-023 … -042, TC-SEC-016, -017)', () {
+  // Each case's ID is its table row's (`TC-$id`).
+  group('Input boundaries (TC-SEC-016, -017)', () {
     const prepare = PrepareInput();
     const other = InputFormats(
       serialMaxDigits: 10,

@@ -11,7 +11,7 @@ import 'harness.dart';
 
 /// Flow tests: the result screen without an item (final.md
 /// §13.1, decision 49): what was entered, hints, and the actions
-/// (docs/test-cases/04-lookup.md, TC-LOOK-094 … -101).
+/// (docs/test-cases/04-lookup.md, TC-LOOK-094, -096 … -101).
 void main() {
   const notFound = {'ref': 'MA-2026-000999', 'result': 'not_found'};
 

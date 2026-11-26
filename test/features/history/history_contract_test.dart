@@ -30,6 +30,7 @@ void main() {
     postmanExample(request: 'History of checks', example: name),
   );
 
+  // TC-HIST-002: First page with totals.
   test('first page: checks, totals, and an opaque cursor', () async {
     next = example('200 First page');
     final page = (await service.getChecks(
@@ -61,7 +62,8 @@ void main() {
   });
 
   group('query parameters (final.md Section 10.2)', () {
-    test('empty filters are not sent; scope only when all', () {
+    // TC-MIG-003: Own checks/session requests never serialize scope.
+    test('empty filters are not sent, and never a scope', () {
       expect(
         DioHistoryApiService.checksQuery(
           const CheckQuery(search: '  '),
@@ -71,6 +73,7 @@ void main() {
       );
     });
 
+    // TC-MIG-004: Legacy hidden_code history still renders and filters.
     test('every filter in the API form', () {
       final q = DioHistoryApiService.checksQuery(
         CheckQuery(

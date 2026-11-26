@@ -10,7 +10,7 @@
 | ID | Title | Type | Pri | Run on | Auto | Pre-conditions / Data | Steps | Expected | Source |
 |---|---|---|---|---|---|---|---|---|---|
 | TC-PROF-001 | Profile details | POS | P2 | MOCK | ✅ `flow/profile_a11y_flow_test` | Mock build | Open Profile | Initials "AR", Asha Rao, role, organisation, email | §13.8 |
-| TC-PROF-002 | Support contact | POS | P2 | DEVICE | ✋ | Real phone | Tap **Support contact** | Mail app to `help@ziska.example` | §13.8 |
+| TC-PROF-002 | Support contact | POS | P2 | AUTO + DEVICE | ✅ `flow/profile_a11y_flow_test` (the mail link opened); the mail app on a phone: ✋ | Real phone | Tap **Support contact** | Mail app to `help@ziska.example` | §13.8 |
 | TC-PROF-003 | Support not set | EDGE | P3 | MOCK | ✅ `flow/profile_a11y_flow_test` | Mock build | Profile with `support` emails `null` | "Not set by your office"; row not tappable | §13.8 |
 | TC-PROF-004 | App version | POS | P3 | MOCK | ✅ `flow/profile_a11y_flow_test` | Mock build | Look at App version | `v0.1.0 · build 1` | §13.8 |
 | TC-PROF-005 | Voluntary password change | POS | P2 | STAGE | ✋ | Staging build, backend test sheet | Profile → Change password → save | "Your password was changed."; back on Profile; other phones logged out | §6.6 |
@@ -32,7 +32,7 @@
 
 | ID | Title | Type | Pri | Run on | Auto | Pre-conditions / Data | Steps | Expected | Source |
 |---|---|---|---|---|---|---|---|---|---|
-| TC-PROF-006 | Language | I18N | P2 | MOCK | ✋ | Mock build | Switch to Bangla | Texts change to Bangla at once; the row names the current language | §16 |
+| TC-PROF-006 | Language | I18N | P2 | MOCK | ✅ `flow/language_flow_test` | Mock build | Switch to Bangla | Texts change to Bangla at once; the row names the current language | §16 |
 | TC-PROF-018 | Switch to Bangla | I18N | P2 | MOCK | ✋ | Mock build | Profile → language → Bangla; visit every screen | Every app text in Bangla; "Reference: …" in Bangla too | §16 |
 | TC-PROF-019 | Language kept after a restart | STATE | P2 | AUTO | ✅ `flow/language_flow_test` | Fake backend | Choose Bangla; restart the app | Still Bangla (a stored preference) | §12.1 Local data, §16 |
 | TC-PROF-020 | Every English text has a Bangla text | I18N | P1 | AUTO | ✅ `l10n/arb_completeness_test` | `app_en.arb` and `app_bn.arb` | Compare the keys of both files | Every key of `app_en.arb` has a non-empty value in `app_bn.arb`; no extra keys | §16, §20.3 |

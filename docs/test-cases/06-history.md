@@ -3,6 +3,9 @@
 > **2026-11-16 baseline:** [16-mobile-migration.md](16-mobile-migration.md) replaces conflicting cases for hidden-code input, bulk submission, everyone scope, retail administration, certificates, and email-only access requests. Historical IDs/counts below remain for traceability; do not execute retired cases as release requirements. Current architecture: ../../final.md.
 
 
+> **Retired 2026-11-26 (production audit P-55):** TC-HIST-009, -042 and -043 covered "Everyone's checks" (`history:all`), which the 2026-11-16 baseline removed. Their IDs are not reused.
+
+
 | Field | Value |
 |---|---|
 | Spec | final.md §8.3, §10, §13.4, §16 |
@@ -20,7 +23,6 @@
 | TC-HIST-006 | Next-page failure keeps items | NET | P2 | AUTO | ✅ `history_bloc_test` | Fake backend | Next page fails | Loaded rows stay; retry footer | §10.6 |
 | TC-HIST-007 | Search waits for typing to stop | STATE | P2 | AUTO | ✅ `history_bloc_test` | Fake backend | Type a serial quickly | One request, 400 ms after the last key | §8.3 |
 | TC-HIST-008 | Item tracking by serial | POS | P2 | STAGE | ✅ `flow/history_flow_test` | Staging build, backend test sheet | Search a serial | "Every check of serial …"; only that item's checks | §13.4.1 |
-| TC-HIST-009 | Everyone's checks only with `history:all` | SEC | P1 | MOCK | ✅ `flow/history_flow_test` | Mock build | Filters as R2, then R1 | R2: no switch; R1: "Everyone's checks" switch; rows show "by {name}" | §13.4, §18.3 History |
 | TC-HIST-010 | Date range | POS | P2 | STAGE | ✋ | Staging build, backend test sheet | Filters → choose dates | Only checks in the range; the backend's day question (final.md 20.2) checked here | §13.4 |
 | TC-HIST-011 | Reset filters | POS | P3 | MOCK | ✅ `flow/history_flow_test` | Mock build | Set filters, tap **Reset** | Filters cleared; the search stays | §13.4 |
 | TC-HIST-012 | Times in Bangladesh time | I18N | P1 | STAGE | ✋ | Staging build, backend test sheet | Phone set to another time zone | Times shown in Bangladesh time | §16 |
@@ -53,8 +55,6 @@
 | TC-HIST-039 | Rows without serial, product, or batch | EDGE | P1 | AUTO | ✅ `history_contract_test`, `flow/history_edge_flow_test` | Fake backend | A `not_found` row (`serial`, `product`, `batch` `null`) and an `unassigned` row (`product`, `batch` `null`) | The `not_found` row shows its reference instead of a serial; the text "null" never shown | §13.4 |
 | TC-HIST-040 | Every reason on a row | POS | P2 | AUTO | ✅ `flow/history_edge_flow_test` | Fake backend | A warning row with `reasons: ["checked_before", "expired"]` | Both reasons shown on the row | §13.4 |
 | TC-HIST-041 | Long scroll | PERF | P3 | STAGE + DEVICE | ✋ | Staging; an official with 1 000+ checks; real phone | Scroll through 20+ pages | Smooth scrolling; no row twice; memory steady | §10 |
-| TC-HIST-042 | Everyone's checks refused | STATE | P1 | AUTO | ✅ `flow/history_edge_flow_test` | Fake backend; R1 | Turn on "Everyone's checks"; `GET checks` answers `403 forbidden`; the reloaded `GET me` has no `history:all` | Profile reloaded; the "Everyone's checks" switch hidden | §7.2, §13.4 |
-| TC-HIST-043 | Everyone's checks of one serial | POS | P2 | AUTO | ✅ `flow/history_edge_flow_test` | Fake backend; R1 | Everyone's checks on; search `1000001` | `scope=all&search=1000001`; rows with "by {name}" | §13.4.1 |
 | TC-HIST-044 | Times in Bangla digits | I18N | P3 | AUTO | ✅ `flow/language_flow_test` | Fake backend; language Bangla | Open History in Bangla | Times in Bangladesh time with Bangla digits | §16 |
 | TC-HIST-045 | No history left after logout | SEC | P1 | AUTO | ✅ `flow/history_edge_flow_test` | Fake backend; R1, then R2 | Load History as R1; log out; log in as R2; open History | None of R1's rows ever shown | §10.6, §1.3 |
 | TC-HIST-046 | Nothing kept on the phone | SEC | P2 | AUTO | ✅ `flow/history_edge_flow_test` | Fake backend | Load History; restart the app offline; open History | An error with Try again, no rows: checks are not stored | §10.6, §12.1 Local data |

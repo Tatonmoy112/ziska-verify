@@ -40,6 +40,8 @@ _build({
 }
 
 void main() {
+  // TC-SESS-003: Silent renewal after 20 minutes.
+  // TC-SESS-004: One renewal for two failing requests.
   test('two requests failing with token_expired at once cause one renewal, '
       'and each is retried once', () async {
     final renewalGate = Completer<void>();
@@ -110,6 +112,7 @@ void main() {
     expect(w.storage.values[SecureKeys.phoneId], 'phone-1');
   });
 
+  // TC-SESS-015: A retry that expires again.
   test('a request still expired after renewal is not retried again', () async {
     final api = ScriptedAdapter(
       (o) async => ScriptedAnswer(401, errorBody('token_expired')),
@@ -135,6 +138,7 @@ void main() {
     expect(refresh.requests, hasLength(1));
   });
 
+  // TC-SESS-008: Ended login lands on Login.
   test('401 unauthenticated on a logged-in route ends the session', () async {
     final api = ScriptedAdapter(
       (o) async => ScriptedAnswer(401, errorBody('unauthenticated')),
@@ -153,6 +157,7 @@ void main() {
     expect(w.session.current, isA<SessionUnauthenticated>());
   });
 
+  // TC-AUTH-019: Wrong current password keeps you logged in.
   test('401 on me/password (wrong old password) keeps the session', () async {
     final api = ScriptedAdapter(
       (o) async => ScriptedAnswer(401, errorBody('unauthenticated')),
@@ -172,6 +177,7 @@ void main() {
     expect(w.storage.values[SecureKeys.refreshToken], 'r');
   });
 
+  // TC-AUTH-010: Wrong code keeps the code screen.
   test('a wrong emailed code on verify-phone keeps the code screen', () async {
     final api = ScriptedAdapter(
       (o) async => ScriptedAnswer(401, errorBody('unauthenticated')),
@@ -188,6 +194,7 @@ void main() {
     expect(api.requests.single.headers['Authorization'], isNull);
   });
 
+  // TC-ERR-004: Rate limit countdown.
   test('429 exposes Retry-After', () async {
     final api = ScriptedAdapter(
       (o) async => ScriptedAnswer(

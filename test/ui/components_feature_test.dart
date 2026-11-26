@@ -19,8 +19,8 @@ import '../flow/harness.dart';
 import 'ui_helpers.dart';
 
 /// Section B, part 2 of docs/test-cases/15-ui.md: the result card, item
-/// details, History rows, the bulk views, the retail user picker, and the
-/// bottom bar (TC-UI-056 … -074).
+/// details, History rows, the retail user picker, and the bottom bar
+/// (TC-UI-056 … -068, -072 … -074).
 void main() {
   setUpAll(() async {
     tz_data.initializeTimeZones();
@@ -253,6 +253,7 @@ void main() {
       size: const Size(390, 600),
     );
 
+    // TC-LOOK-090: Genuine: product details and picture.
     uiTest('TC-UI-063 product details card', (tester, shot) async {
       await details(tester);
       final title = find.text(l10n.detailsProductTitle.toUpperCase());
@@ -301,6 +302,8 @@ void main() {
 
     // Audit H5: one card for every found item; the check count adds the
     // pill and the previous check, never a field less (SRS FR-LKP-06).
+    // TC-LOOK-047: Earlier checkers are never shown.
+    // TC-LOOK-092: No "Checked before by" row.
     uiTest('TC-UI-064 details card with the check count', (tester, shot) async {
       await details(
         tester,

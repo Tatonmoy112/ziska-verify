@@ -21,6 +21,7 @@ void main() {
         ),
       );
 
+  // TC-LOOK-007: Every result has its own display.
   testWidgets('every result shows its own title and the reference', (
     tester,
   ) async {
@@ -41,6 +42,7 @@ void main() {
     }
   });
 
+  // TC-LOOK-009: Unknown result is never genuine.
   testWidgets('an unknown result is never shown as genuine', (tester) async {
     await pump(
       tester,
@@ -54,6 +56,7 @@ void main() {
     expect(find.text('Unable to check'), findsOneWidget);
   });
 
+  // TC-LOOK-008: Every warning reason shown.
   testWidgets('a warning shows every reason, with the check count', (
     tester,
   ) async {

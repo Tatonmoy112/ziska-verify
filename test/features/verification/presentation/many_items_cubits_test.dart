@@ -92,6 +92,7 @@ void main() {
     return cubit;
   }
 
+  // TC-MIG-012: Scanner stores one scoped UUID v4 and starts on first QR.
   test('new scanner persists only a UUID v4 under the account key', () async {
     final cubit = scanner();
     await cubit.start();
@@ -108,6 +109,8 @@ void main() {
     await cubit.finish();
     expect(storage.values, isEmpty);
   });
+  // TC-MIG-013: Camera frames/repeat answers add no duplicate row or local
+  // counter.
   test('duplicate frames and backend repeats do not duplicate rows', () async {
     final cubit = scanner();
     await cubit.start();
@@ -152,6 +155,7 @@ void main() {
     },
   );
 
+  // TC-MIG-015: A 429 blocks more scans.
   test('a network failure can be rescanned without an offline queue', () async {
     final cubit = scanner();
     await cubit.start();
@@ -170,6 +174,7 @@ void main() {
   for (final code in ['session_full', 'session_ended']) {
     // TC-MIG-072 (UI audit 2026-11-22, 5.2): the roll-over is said, until the
     // next scan.
+    // TC-MIG-014: Full/ended sessions roll over and retry once.
     test(
       '$code rolls over, retries once, and says so until the next scan',
       () async {
@@ -227,6 +232,7 @@ void main() {
     expect(cubit.state.latest, isNull);
     expect(cubit.state.repeat, isFalse);
   });
+  // TC-MIG-016: Back sends end without blocking.
   test(
     'finish ignores a late scan answer and deletes recovery state',
     () async {
@@ -257,6 +263,7 @@ void main() {
       expect(storage.values, isEmpty);
     },
   );
+  // TC-MIG-019: Logout/account changes cannot restore old rows or recovery IDs.
   test('logout clears an active session', () async {
     final cubit = scanner();
     await cubit.start();
@@ -265,6 +272,7 @@ void main() {
     expect(storage.values, isEmpty);
     expect(cubit.state.id, isNull);
   });
+  // TC-MIG-017: Crash recovery reads summary and paginated history.
   test(
     'recovery reads summaries and pages without fabricating full results',
     () async {
@@ -306,6 +314,7 @@ void main() {
       expect(cubit.state.rows, hasLength(2));
     },
   );
+  // TC-MIG-018: Bulk-only roles work without single/history.
   test('bulk-only role resumes without history calls', () async {
     await store.save(savedId);
     final cubit = scanner();
@@ -608,6 +617,7 @@ void main() {
       expect(cubit.state.pending, 0);
     },
   );
+  // TC-MIG-020: Serial parser accepts 1-50 distinct serials.
   test(
     'stack parser preserves zeros and order and rejects overflow atomically',
     () async {
@@ -653,6 +663,8 @@ void main() {
     final over = const ParseStack()('${'0' * 40}1, 1000001', formats);
     expect(over.serials, isNot(contains('${'0' * 40}1')));
   });
+  // TC-MIG-023: Confirmed 503 retries once after one second with unchanged
+  // payload.
   test('503 retries once with the identical stack', () async {
     final sent = <List<String>>[];
     when(() => repo.serials(any())).thenAnswer((i) async {
@@ -672,6 +684,8 @@ void main() {
     expect(cubit.compose('3'), isFalse);
     await cubit.close();
   });
+  // TC-MIG-024: Lost stack response stays uncertain and is never replayed
+  // automaticall.
   test('transport loss never automatically replays a stack', () async {
     when(
       () => repo.serials(any()),
@@ -688,6 +702,7 @@ void main() {
     verify(() => repo.serials(['1'])).called(1);
     await cubit.close();
   });
+  // TC-MIG-025: Backgrounding cancels scheduled retries.
   test('backgrounding cancels a scheduled stack replay', () async {
     when(() => repo.serials(any())).thenAnswer(
       (_) async => const Err(Failure(ServiceUnavailableException())),

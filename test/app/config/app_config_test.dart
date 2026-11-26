@@ -10,6 +10,7 @@ void main() {
       );
     });
 
+    // TC-SEC-001: HTTPS only.
     test('refuses http', () {
       expect(
         () => AppConfig.validateBaseUrl('http://api.example.com'),
@@ -40,6 +41,7 @@ void main() {
       );
     });
 
+    // TC-STG-005: The server address: host alone, https.
     test('the whole API address as the base is refused, naming the host', () {
       expect(
         () => AppConfig.validateBaseUrl(
@@ -84,6 +86,7 @@ void main() {
     }
 
     for (final slug in ['ziska-test', 'ziska', 'demo-pharma', 'a1']) {
+      // TC-STG-006: The client name.
       test('the client name $slug is accepted', () {
         expect(AppConfig.validateClientSlug(slug), slug);
       });

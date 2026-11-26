@@ -38,6 +38,8 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  // TC-AUTH-011: Same message for wrong password and unknown email.
+  // TC-ERR-002: Reference on every error.
   testWidgets('a wrong password and an unknown email show the same message '
       'with the reference', (tester) async {
     when(
@@ -60,6 +62,7 @@ void main() {
     expect(find.text('Email or password is incorrect.'), findsOneWidget);
   });
 
+  // TC-AUTH-001: Email is checked before sending.
   testWidgets('nothing is sent without a valid email', (tester) async {
     await pump(tester);
     await submit(tester, 'not-an-email');

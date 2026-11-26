@@ -134,25 +134,25 @@ The cases live in one file per area in [`docs/test-cases/`](test-cases/README.md
 
 | Area | File | Cases | P1 | P2 | P3 | ✅ Auto | ⏳ To automate | ✋ Manual | ⛔ Blocked |
 |---|---|---|---|---|---|---|---|---|---|
-| AUTH | [01-auth.md](test-cases/01-auth.md) | 112 | 39 | 52 | 21 | 99 | 0 | 13 | 0 |
+| AUTH | [01-auth.md](test-cases/01-auth.md) | 110 | 39 | 50 | 21 | 94 | 3 | 13 | 0 |
 | SESS | [02-session.md](test-cases/02-session.md) | 48 | 21 | 21 | 6 | 43 | 0 | 5 | 0 |
-| ROLE and NAV | [03-roles-nav.md](test-cases/03-roles-nav.md) | 47 | 17 | 24 | 6 | 44 | 0 | 3 | 0 |
-| LOOK | [04-lookup.md](test-cases/04-lookup.md) | 102 | 42 | 43 | 17 | 89 | 0 | 13 | 0 |
+| ROLE and NAV | [03-roles-nav.md](test-cases/03-roles-nav.md) | 46 | 17 | 23 | 6 | 43 | 0 | 3 | 0 |
+| LOOK | [04-lookup.md](test-cases/04-lookup.md) | 101 | 42 | 42 | 17 | 88 | 0 | 13 | 0 |
 | BULK | [05-bulk.md](test-cases/05-bulk.md) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| HIST | [06-history.md](test-cases/06-history.md) | 60 | 18 | 32 | 10 | 57 | 0 | 3 | 0 |
+| HIST | [06-history.md](test-cases/06-history.md) | 57 | 16 | 31 | 10 | 54 | 0 | 3 | 0 |
 | REP | [07-reports.md](test-cases/07-reports.md) | 77 | 21 | 43 | 13 | 65 | 0 | 12 | 0 |
 | RTL | [08-retail-users.md](test-cases/08-retail-users.md) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| PROF | [09-profile.md](test-cases/09-profile.md) | 53 | 3 | 31 | 19 | 46 | 0 | 7 | 0 |
+| PROF | [09-profile.md](test-cases/09-profile.md) | 53 | 3 | 31 | 19 | 48 | 0 | 5 | 0 |
 | ERR | [10-errors-network.md](test-cases/10-errors-network.md) | 57 | 11 | 32 | 14 | 52 | 0 | 5 | 0 |
-| SEC | [11-security.md](test-cases/11-security.md) | 39 | 21 | 16 | 2 | 32 | 0 | 7 | 0 |
+| SEC | [11-security.md](test-cases/11-security.md) | 39 | 21 | 16 | 2 | 31 | 1 | 7 | 0 |
 | NFR | [12-device-a11y-perf.md](test-cases/12-device-a11y-perf.md) | 27 | 0 | 17 | 10 | 8 | 0 | 19 | 0 |
 | E2E | [13-e2e-journeys.md](test-cases/13-e2e-journeys.md) | 16 | 7 | 9 | 0 | 10 | 0 | 6 | 0 |
 | Exploratory | [14-exploratory-charters.md](test-cases/14-exploratory-charters.md) | 9 | 0 | 6 | 3 | 0 | 0 | 9 | 0 |
 | UI | [15-ui.md](test-cases/15-ui.md) | 164 | 27 | 88 | 49 | 150 | 0 | 14 | 0 |
 | MIG | [16-mobile-migration.md](test-cases/16-mobile-migration.md) | 91 | 49 | 38 | 4 | 90 | 0 | 1 | 0 |
 | STG | [17-test-server.md](test-cases/17-test-server.md) | 58 | 44 | 11 | 3 | 47 | 0 | 11 | 0 |
-| ARCH | [18-architecture.md](test-cases/18-architecture.md) | 103 | 3 | 43 | 57 | 103 | 0 | 0 | 0 |
-| **Total** | | **1063** | 323 | 506 | 234 | 935 | 0 | 128 | 0 |
+| ARCH | [18-architecture.md](test-cases/18-architecture.md) | 106 | 3 | 45 | 58 | 106 | 0 | 0 | 0 |
+| **Total** | | **1059** | 321 | 503 | 235 | 929 | 4 | 126 | 0 |
 
 ---
 

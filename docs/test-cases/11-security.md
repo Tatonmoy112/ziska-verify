@@ -15,7 +15,7 @@
 | TC-SEC-001 | HTTPS only | SEC | P1 | AUTO + DEVICE | ✅ `app_config_test` | Fake backend; Real phone | Build with an `http://` address; on a phone, try a cleartext request | Build refuses; Android blocks cleartext | §12.1, §18.3 Transport |
 | TC-SEC-002 | Secrets never logged | SEC | P1 | AUTO | ✅ `log_redactor_test` | Fake backend | Log a pass, password, code, hidden code, phone ID | Replaced by `***` | §12.2 |
 | TC-SEC-003 | Passes in secure storage | SEC | P1 | DEVICE | ✋ | Real phone | Inspect app storage on a rooted test phone or backup | No pass in shared preferences or files | §12.1 |
-| TC-SEC-004 | No sensitive value in routes | SEC | P1 | AUTO | ✅ `flow/lookup_flow_test` | Fake backend | Every route with parameters | Only `check_ref`, a serial search, or `extra` entities; no code or password | §9.5, §18.3 Navigation |
+| TC-SEC-004 | No sensitive value in routes | SEC | P1 | AUTO | ⏳ no test checks the route locations yet (production audit P-55) | Fake backend | Every route with parameters | Only `check_ref`, a serial search, or `extra` entities; no code or password | §9.5, §18.3 Navigation |
 | TC-SEC-005 | QR link never opened | SEC | P1 | DEVICE | ✋ | Real phone | Scan a product QR | No browser opens | §12.1 |
 | TC-SEC-006 | Release build obfuscated | SEC | P2 | DEVICE | ✋ | Real phone | Build release with `--obfuscate`; inspect | Class names obfuscated | §12.1 |
 | TC-SEC-007 | No secret in the logs of a whole session | SEC | P1 | AUTO | ✅ `flow/security_flow_test` | Fake backend | Log in with a code; look up by hidden code; change the password; add a retail user; read every log line | No pass, password, emailed code, hidden code, or phone ID; only `request_id`, the route, and the status | §12.2 |

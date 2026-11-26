@@ -19,6 +19,7 @@ void main() {
       expect(app.backend.sent('GET', 'formats'), hasLength(1));
     });
 
+    // TC-LOOK-054: Masked code shown as received.
     testWidgets('TC-LOOK-006 a valid result shows the item and reference', (
       tester,
     ) async {

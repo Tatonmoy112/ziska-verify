@@ -19,7 +19,7 @@ import '../flow/harness.dart';
 
 /// Step 7 of the test-server integration (docs/staging-integration-
 /// 2026-11-22.md): scanner sessions, on the server's real answers replayed
-/// offline (TC-STG-036 … -040).
+/// offline (TC-STG-036 … -039).
 ///
 /// The real answers carry the session the checker made. The server echoes
 /// the session it was sent, so the fake server puts the app's own session

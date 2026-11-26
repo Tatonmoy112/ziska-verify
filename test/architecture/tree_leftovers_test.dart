@@ -80,14 +80,17 @@ void main() {
 
     test('the retired UI cases are gone, and their IDs not reused', () {
       final ui = cases['docs/test-cases/15-ui.md']!.join('\n');
-      for (final id in [
+      // Built, not written: a retired ID written whole would read as a
+      // citation (TC-ARCH-104).
+      const retired = [
         '069', '070', '071', '101', '102', '103', '104', '105', '106', //
         '113', '121', '122', '123', '124', '125', '126', '127', '128',
         '129',
-      ]) {
-        expect(ui, isNot(contains('| TC-UI-$id |')), reason: 'TC-UI-$id');
+      ];
+      for (final id in retired) {
+        expect(ui, isNot(contains('| TC-UI-$id |')), reason: id);
       }
-      expect(ui, contains('TC-UI-069'), reason: 'named as retired');
+      expect(ui, contains('TC-UI-${retired.first}'), reason: 'the note');
     });
   });
 }

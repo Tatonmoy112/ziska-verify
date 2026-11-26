@@ -10,6 +10,9 @@
 | Automated in | `test/flow/role_nav_flow_test.dart`, `main_shell_test`, `route_guard_test` |
 | Format | [Case format and type tags](README.md#3-case-format) |
 
+
+> **Retired 2026-11-26 (production audit P-55):** TC-ROLE-015 covered `history:all`, which the 2026-11-16 baseline removed. Its ID is not reused.
+
 ## ROLE — Roles
 
 | ID | Title | Type | Pri | Run on | Auto | Pre-conditions / Data | Steps | Expected | Source |
@@ -28,7 +31,6 @@
 | TC-ROLE-012 | Permissions missing or `null` | WORST | P2 | AUTO | ✅ `flow/roles_edge_flow_test` | Fake backend; `GET me` without `permissions`, then with `permissions: null` | Log in | Spec gap 9. No crash; no feature shown that the profile does not list | §7.2 |
 | TC-ROLE-013 | Bulk lookup only | EDGE | P2 | AUTO | ✅ `flow/roles_edge_flow_test` | Fake backend; `permissions: ["item:bulk_lookup"]` | Log in | Tabs Check, Profile; the Bulk lookup tile; no lookup form, no Scan QR | §7.2, §13.7 |
 | TC-ROLE-014 | History only | EDGE | P2 | AUTO | ✅ `flow/roles_edge_flow_test` | Fake backend; `permissions: ["history:own"]` | Log in | Tabs Check, History, Profile; the Check tab shows the no-features empty state | §9.3.1, §13.7 |
-| TC-ROLE-015 | `history:all` without `history:own` | EDGE | P2 | AUTO | ✅ `flow/roles_edge_flow_test` | Fake backend; `permissions: ["history:all"]` | Log in; open History; open Filters | History tab shown; "Everyone's checks" switch shown | §9.3.1, §13.4 |
 | TC-ROLE-016 | Retail users only | EDGE | P2 | AUTO | ✅ `flow/roles_edge_flow_test` | Fake backend; `permissions: ["retail_user:add"]` | Log in | The Retail users tile only; no lookup form, no reports, no History | §13.7 |
 | TC-ROLE-017 | Reporter without lookup picks a retail user | EDGE | P2 | AUTO | ✅ `flow/roles_edge_flow_test` | Fake backend; R6 | **Report incident** → **Choose a retail user** | The picker lists retail users (`incident:report` opens `GET retail-users`) | §7.1, §13.6 |
 | TC-ROLE-018 | Permission lost while on its screen | STATE | P1 | AUTO | ✅ `flow/roles_edge_flow_test` | Fake backend; R2 | Open Bulk lookup; a request answers `403 forbidden`; the reloaded `GET me` no longer lists `item:bulk_lookup` | Profile reloaded; moved to the Check tab; the Bulk lookup tile gone | §7.2, §9.4 |

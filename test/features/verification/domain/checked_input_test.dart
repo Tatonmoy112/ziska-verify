@@ -5,8 +5,9 @@ import 'package:ziska_verify/core/services/picture/picture_image_service.dart';
 import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
 
 /// What the result screen shows of the input, and which picture addresses
-/// may be loaded (final.md §12, §13.1; TC-LOOK-095, -112).
+/// may be loaded (final.md §12, §13.1; TC-LOOK-112).
 void main() {
+  // TC-MIG-001: formats parses without hidden_code.
   test('submission ways exclude hidden codes', () {
     expect(LookupWay.values.map((w) => w.wire), ['serial', 'qr']);
   });

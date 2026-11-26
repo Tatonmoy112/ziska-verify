@@ -58,6 +58,8 @@ void main() {
   Future<void> settle() =>
       Future<void>.delayed(const Duration(milliseconds: 5));
 
+  // TC-REP-001: Report from a result carries the reference.
+  // TC-REP-004: Filed once.
   blocTest<ReportIncidentBloc, ReportIncidentState>(
     'a report from a lookup result carries its ref as check_ref, and is '
     'filed once',
@@ -111,6 +113,7 @@ void main() {
     },
   );
 
+  // TC-REP-005: Photos sent one at a time after filing.
   blocTest<ReportIncidentBloc, ReportIncidentState>(
     'photos are sent one at a time after the report, in order',
     setUp: () => photoAnswers([const Success(1), const Success(2)]),
@@ -136,6 +139,7 @@ void main() {
     },
   );
 
+  // TC-REP-006: Lost photo sent again, report not filed again.
   blocTest<ReportIncidentBloc, ReportIncidentState>(
     'a photo lost on 503 is kept and sent again; the report is not filed '
     'again',
@@ -170,6 +174,7 @@ void main() {
     },
   );
 
+  // TC-REP-007: Refused photo not offered again.
   blocTest<ReportIncidentBloc, ReportIncidentState>(
     'a refused photo (400) is not offered again',
     setUp: () => photoAnswers([const Err(Failure(ValidationException()))]),
@@ -186,6 +191,7 @@ void main() {
     },
   );
 
+  // TC-REP-008: At most 3 photos.
   blocTest<ReportIncidentBloc, ReportIncidentState>(
     'at most 3 photos',
     build: build,
@@ -198,6 +204,7 @@ void main() {
     verify: (bloc) => expect(bloc.state.photos, hasLength(3)),
   );
 
+  // TC-REP-009: Nothing after one hour.
   blocTest<ReportIncidentBloc, ReportIncidentState>(
     'nothing is sent again after the hour',
     setUp: () => photoAnswers([const Err(Failure(NetworkException()))]),
@@ -223,6 +230,7 @@ void main() {
     },
   );
 
+  // TC-REP-002: Note is required.
   blocTest<ReportIncidentBloc, ReportIncidentState>(
     'an empty note is not sent',
     build: build,

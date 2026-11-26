@@ -11,7 +11,8 @@ import 'harness.dart';
 
 /// Flow tests: screen sizes, font sizes, accessibility guidelines, and
 /// loading states on every main screen (docs/test-cases/
-/// 12-device-a11y-perf.md: TC-NFR-011 … -019, TC-UI-011).
+/// 12-device-a11y-perf.md: TC-NFR-011, -013 … -017, -019; 15-ui.md:
+/// TC-UI-011).
 void main() {
   /// Visits every main screen; [check] runs on each, named.
   Future<void> tour(

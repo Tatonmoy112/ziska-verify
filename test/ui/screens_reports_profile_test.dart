@@ -14,9 +14,8 @@ import '../flow/harness.dart';
 import 'ui_helpers.dart';
 
 /// Section C, part 3 of docs/test-cases/15-ui.md: Report incident, My
-/// reports, Retail users, Add retail user, Profile, and the bottom bar in
-/// each state, through the flow harness and the fake backend
-/// (TC-UI-114 … -133).
+/// reports, Profile, and the bottom bar in each state, through the flow
+/// harness and the fake backend (TC-UI-114 … -120, -130 … -133).
 void main() {
   setUpAll(loadUiFonts);
   hideFlavourRibbon();

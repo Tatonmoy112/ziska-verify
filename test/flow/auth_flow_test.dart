@@ -8,6 +8,8 @@ import 'package:ziska_verify/core/services/storage/secure_storage_service.dart';
 import 'harness.dart';
 
 /// Flow tests: AUTH and SESS (docs/test-cases/01-auth.md, 02-session.md).
+// TC-MIG-030: login, renewal and their errors behave as before the
+// 2026-11-16 baseline (with reports_edge_flow_test and security_flow_test).
 void main() {
   bool enabled(WidgetTester tester, Key key) =>
       tester

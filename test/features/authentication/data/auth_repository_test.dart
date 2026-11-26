@@ -142,6 +142,7 @@ void main() {
     expect(session.current, isA<SessionUnauthenticated>());
   });
 
+  // TC-SESS-009: Logout works offline.
   test('logout ends the session even when the server fails', () async {
     await session.saveLogin(
       accessToken: 'a',

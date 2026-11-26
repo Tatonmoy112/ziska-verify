@@ -7,7 +7,8 @@ import '../fakes/roles.dart';
 import 'harness.dart';
 
 /// The language switch, English and Bangla (final.md §13.7, §16;
-/// docs/test-cases/09-profile.md TC-PROF-006, -019 … -035; TC-HIST-044;
+/// docs/test-cases/09-profile.md TC-PROF-006, -019 … -031, -033, -035;
+/// TC-HIST-044;
 /// TC-ERR-046).
 void main() {
   final banglaDigit = RegExp('[০-৯]');

@@ -33,6 +33,7 @@ void main() {
     return (await service.lookup(way: 'qr', value: 'Q8F2KD91XA7M')).toEntity();
   }
 
+  // TC-MIG-001: formats parses without hidden_code.
   test('GET formats', () async {
     next = example(200, 'Input formats', '200 The formats');
     final formats = (await service.getFormats()).toEntity();
@@ -81,6 +82,7 @@ void main() {
     }
   });
 
+  // TC-LOOK-014: App being prepared.
   test('503 app_preparing is its own error', () async {
     next = example(
       503,
@@ -94,6 +96,7 @@ void main() {
   });
 
   group('fail-safe (final.md Section 13.1.5)', () {
+    // TC-LOOK-009: Unknown result is never genuine.
     test('an unknown result is never valid', () {
       const dto = LookupResultDto(ref: 'R', result: 'counterfeit');
       expect(dto.toEntity().outcome, LookupOutcome.unknown);

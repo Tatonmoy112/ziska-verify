@@ -13,7 +13,7 @@
 | ID | Title | Type | Pri | Run on | Auto | Pre-conditions / Data | Steps | Expected | Source |
 |---|---|---|---|---|---|---|---|---|---|
 | TC-LOOK-001 | Formats load | POS | P1 | MOCK | ✅ `flow/lookup_flow_test` | Mock build | Open the Check tab | Serial hint "Up to 19 digits" | §13.1.3 |
-| TC-LOOK-002 | Serial accepts digits only | NEG | P1 | MOCK | ✅ `input_preparation_test` | Mock build | Type letters in Serial | Letters not entered | §13.1 |
+| TC-LOOK-002 | Serial accepts digits only | NEG | P1 | MOCK | ✅ `serial_input_formatter_test` | Mock build | Type letters in Serial | Letters not entered | §13.1 |
 | TC-LOOK-003 | Too-long serial refused | BVA | P1 | AUTO | ✅ `input_preparation_test` | Fake backend | 20 digits | "A serial has digits only, up to 19 digits."; nothing sent | §13.1.3 |
 | TC-LOOK-006 | Valid result screen | POS | P1 | MOCK | ✅ `flow/lookup_flow_test` | Mock build | Serial `1000001`, **Check** | "Genuine product"; product, serial, masked code, batch, dates; reference `MA-2026-000123` | §13.1.4, §18.3 Lookup |
 | TC-LOOK-007 | Every result has its own display | POS | P1 | AUTO + STAGE | ✅ `result_card_test` | Fake backend; Staging build, backend test sheet | Look up the test-sheet item for each result | Valid / Genuine, needs attention / Not found / Not in a batch, each with its own colour and icon | §13.1.4, §18.3 Lookup |
@@ -40,7 +40,6 @@
 | TC-LOOK-030 | Serial pasted with a letter | WORST | P2 | AUTO | ✅ `input_preparation_test`, `serial_input_formatter_test`, `flow/lookup_edge_flow_test` | Fake backend | Paste `10O0001` (the letter O) | Refused with "A serial has digits only, up to 19 digits."; nothing sent (never silently checked as `100001`) | §13.1.2 |
 | TC-LOOK-031 | Empty input | NEG | P3 | AUTO | ✅ `input_preparation_test`, `flow/lookup_edge_flow_test` | Fake backend | Leave the field empty | **Check** disabled; nothing sent | §13.1.2 |
 | TC-LOOK-032 | Serial `0` | EDGE | P3 | AUTO | ✅ `input_preparation_test` | Fake backend | Serial `0`; Check | Sent; the answer decides (a value matching no item is `not_found`) | API guide §4.2 |
-| TC-LOOK-037 | Value over 64 characters | BVA | P2 | AUTO | ✅ `input_preparation_test` | Fake backend | Paste 65 characters into Hidden code | The field keeps 64, or the input is refused; nothing over 64 characters sent | §12.1 Input safety |
 | TC-LOOK-038 | QR link variants | EDGE | P1 | AUTO | ✅ `input_preparation_test` | Fake backend | Scan `https://www.ziskaverify.com/q/Q8F2KD91XA7M`, `http://…/q/Q8F2KD91XA7M`, `https://example.org/q/Q8F2KD91XA7M`, with `?utm=1`, with `#top`, with a trailing `/` | Each sends `{ "way": "qr", "value": "Q8F2KD91XA7M" }`; no link opened | §13.1.1, §13.1.2 |
 | TC-LOOK-039 | Two `/q/` in one link | EDGE | P2 | AUTO | ✅ `input_preparation_test` | Fake backend | Scan `https://a.example/q/AAAAAAAAAAAA/q/Q8F2KD91XA7M` | Sends `Q8F2KD91XA7M` (after the last `/q/`) | §13.1.2 |
 | TC-LOOK-040 | QR value one short and one long | BVA | P1 | AUTO | ✅ `input_preparation_test` | Fake backend; QR 12 characters | Scan a link whose value has 11, then 13 characters | "This QR code is not a product code of this company."; nothing sent | §13.1.3 |
@@ -57,7 +56,7 @@
 | TC-LOOK-051 | Very high check number | EDGE | P3 | AUTO | ✅ `flow/lookup_edge_flow_test` | Fake backend | `checked_before` with `this_check: 99999` | "This is check number 99999 of this item." fits on a phone screen | §13.1.4 |
 | TC-LOOK-052 | Last check time in Bangladesh time | I18N | P1 | AUTO | ✅ `flow/lookup_edge_flow_test` | Fake backend; phone time zone UTC | `count.last_at: "2026-10-12T20:30:00Z"` | Shown as 13 Oct 2026, 02:30 (Bangladesh time, the next day) | §16 |
 | TC-LOOK-053 | Expiry on the day itself | EDGE | P2 | STAGE | ✋ | Staging; a batch expiring today (Bangladesh date) | Look the item up today; again tomorrow | Today: no "Expired"; tomorrow: "Expired" | §13.1.4 (DEC-330) |
-| TC-LOOK-054 | Masked code shown as received | SEC | P2 | AUTO | ✅ `flow/lookup_edge_flow_test` | Fake backend | Look up by hidden code; the answer has `item.code: "*****7K2"` | `*****7K2` shown exactly; the typed hidden code is nowhere on the result | §12.1, §13.1.4 |
+| TC-LOOK-054 | Masked code shown as received | SEC | P2 | AUTO | ✅ `flow/lookup_flow_test` | Fake backend | Look up by hidden code; the answer has `item.code: "*****7K2"` | `*****7K2` shown exactly as received | §12.1, §13.1.4 |
 | TC-LOOK-055 | Unknown fields in the answer | EDGE | P2 | AUTO | ✅ `flow/lookup_edge_flow_test` | Fake backend | Lookup answer with extra fields (`"new_field": {}` in `data` and in `item`) | Result shown normally | §13.1.5 |
 | TC-LOOK-056 | Lookup answered 400 | NET | P2 | AUTO | ✅ `flow/lookup_edge_flow_test` | Fake backend | `POST lookups` answers `400 validation_failed` | "Something went wrong. Try again." with "Reference: …" | §13.1.6 |
 | TC-LOOK-057 | Lookup rate limited | NET | P1 | AUTO | ✅ `flow/lookup_edge_flow_test` | Fake backend | `POST lookups` answers `429` with `Retry-After: 15` | "Too many attempts. Try again in 15 s." counting down; a lookup is possible again at 0 | §13.1.6 |
@@ -168,6 +167,7 @@ Not counted and not run: kept so the IDs stay traceable. IDs are not reused.
 - TC-LOOK-013 · Hidden code cleared after use
 - TC-LOOK-023 · Several hidden-code formats
 - TC-LOOK-033 · Hidden code one short and one long
+- TC-LOOK-037 · Value over 64 characters, pasted into the hidden-code field (withdrawn 2026-11-26, production audit P-55)
 - TC-LOOK-034 · Hidden code in lowercase
 - TC-LOOK-035 · Hidden code with a character outside its format
 - TC-LOOK-036 · Hidden code pasted with a line break or tab

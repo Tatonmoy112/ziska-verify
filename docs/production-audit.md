@@ -8,7 +8,7 @@ The production-grade review of the app, done on the `production` branch one area
 | 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11). **All fixed** (2026-11-25) |
 | 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-45. Fixed: P-20 … P-45 |
 | 5 | Dead code | Checked 2026-11-25: P-46 … P-53. **All fixed** (2026-11-26) |
-| 6 | Comments | Checked 2026-11-26: P-54 … P-60. Fixed: P-54 |
+| 6 | Comments | Checked 2026-11-26: P-54 … P-60. Fixed: P-54, P-55 |
 | 7+ | Data layer, UI components, state and lifecycle, security, build and release, monitoring, tests, localisation, performance, docs | To do |
 
 **Severity:**
@@ -1722,6 +1722,17 @@ The other way round:
 - **normal:** every ✅ row's ID is cited by the file it names, and every ID a test cites is defined;
 - **edge:** ranges, IDs over wrapped comment lines and IDs built from a data table are read;
 - **worst:** a ✅ row no test cites, an undefined ID, a ✋ row cited as automated and an ID without `TC-` are each reported.
+
+**✅ Fixed 2026-11-26:**
+- **Tests first:** TC-ARCH-104 … -106 (`architecture/traceability_test`, with `traceability.dart`). A test cites a case by its ID in a name or a comment, a list, a range over wrapped lines, or an ID it builds from a data table; a bare number belongs to the last area named. Every ✅ case must be cited by a file its Auto cell names (a test, or the CI workflow); every ID a test cites must be an automated case; every ID needs its `TC-`. On the real files it found 141 problems.
+- **Cited:** 87 cases had a test that proves them but did not name them. Each test now carries the case's ID and title in a comment right above it (97 comments: ten cases are proved in two places) (for example `// TC-AUTH-001: Email is checked before sending.` above `login_screen_test`'s "nothing is sent without a valid email").
+- **Retired, as P-53's:** six cases described removed features: TC-AUTH-022 and -083 (Request access before the baseline, sending nothing to the backend), TC-HIST-009, -042, -043 and TC-ROLE-015 (everyone's checks, `history:all`). TC-LOOK-037 (65 characters in the hidden-code field) joins the hidden-code cases withdrawn in `04-lookup.md`. Each file names its retired IDs once; none is reused.
+- **Not ✅ after all:** four cases no test proves are now ⏳ (to automate), each saying why: TC-SEC-004 (no test reads the route locations), TC-AUTH-025 and -084 (the "No email app" and "No phone app" messages), TC-AUTH-050 (an old code after a resend: TC-AUTH-049 checks only the new one).
+- **Corrected rows:** TC-PROF-002 and -006 have tests named after them and are ✅ (the mail app on a phone stays ✋ for PROF-002); TC-LOOK-002, -054 and TC-MIG-031 name the file that tests them (TC-LOOK-054 no longer mentions the hidden code); TC-MIG-030 names its suites; TC-PROF-020 and -021 were right (a folder with a digit in its name).
+- **Ranges and prefixes:** the ranges that spanned retired or manual cases are narrowed (`components_feature_test`, `screens_verify_history_test`, `screens_reports_profile_test`, `device_a11y_flow_test`, `language_flow_test`, `step7_scan_test`, `checked_input_test`, `result_screen_flow_test`; the input-boundaries group relies on its table's IDs); `'MIG-031'` and "NFR-004" have their `TC-`. With them, P-57's headers for the three UI files and `device_a11y_flow_test` are corrected; `history_contract_test`'s "scope only when all" is now "never a scope".
+- **The counts, recounted from the files:** 1,059 cases (1,063 before: 7 retired or withdrawn, 3 added); 929 automated (935 before), 4 to automate, 126 manual (128 before).
+- **A rule** in the test-cases README: a ✅ case names its test, the test cites its ID.
+- **Every test passes.**
 
 #### P-56 (should): stale comments in `lib/`
 **Evidence:**

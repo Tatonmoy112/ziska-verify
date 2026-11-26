@@ -80,6 +80,7 @@ void main() {
     }
   });
 
+  // TC-NAV-001: Tabs hidden by permission.
   testWidgets('hides History without history permission', (
     tester,
   ) async {
@@ -96,6 +97,7 @@ void main() {
     expect(find.text('/history'), findsOneWidget);
   });
 
+  // TC-NAV-002: A route without its permission goes Home.
   test('the guard sends /history to Home without permission', () {
     final guard = RouteGuard(permissionByPath: routePermissions);
     String? go(String path, Set<Permission> p) => guard.redirect(

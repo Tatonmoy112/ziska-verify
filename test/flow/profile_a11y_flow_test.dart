@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import '../fakes/roles.dart';
 import 'harness.dart';
 
-/// Flow tests: PROF and NFR-004 (docs/test-cases/09-profile.md,
+/// Flow tests: PROF and TC-NFR-004 (docs/test-cases/09-profile.md,
 /// 12-device-a11y-perf.md).
 void main() {
   Future<void> openProfile(FlowApp app) => app.tap(

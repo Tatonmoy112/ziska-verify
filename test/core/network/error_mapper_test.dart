@@ -26,6 +26,7 @@ void main() {
     ];
 
     for (final (status, code, type) in cases) {
+      // TC-ERR-001: One typed error per code.
       test('$status $code → $type, carrying code and request_id', () {
         final e = ErrorMapper.fromResponse(
           statusCode: status,
@@ -90,6 +91,7 @@ void main() {
       });
     });
 
+    // TC-ERR-005: Proxy HTML error page.
     test('a non-JSON 503 from a proxy is service unavailable', () {
       final e = ErrorMapper.fromResponse(statusCode: 503, body: '<html>');
       expect(e, isA<ServiceUnavailableException>());

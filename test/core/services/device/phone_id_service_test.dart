@@ -23,6 +23,7 @@ void main() {
       expect(storage.writes, isEmpty);
     });
 
+    // TC-SESS-001: Phone ID made once.
     test('makes it once and stores it', () async {
       final storage = FakeSecureStorageService();
       final first = await SecurePhoneIdService(storage).getOrCreate();

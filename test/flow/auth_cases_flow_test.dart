@@ -111,6 +111,7 @@ void main() {
       ('without Retry-After', null),
       ('with a date in Retry-After', 'Wed, 21 Oct 2026 07:28:00 GMT'),
     ]) {
+      // TC-MIG-029: Missing/invalid Retry-After uses a message/manual retry.
       testWidgets(
         'TC-AUTH-105 login 429 $name: manual retry, no invented countdown',
         (

@@ -11,6 +11,7 @@ This folder holds every test case of the app, one file per area. [`docs/test-pla
 - A behaviour the spec does not define is marked **Spec gap** and listed in Section 7. No expected result is invented.
 - IDs never change. A new case takes the next number of its area.
 - One behaviour per case. The expected result is checkable: an exact text, a screen, or a request.
+- A ✅ case names the test that proves it, and that test cites the case's ID in its name or a comment beside it; a test cites only cases that exist and are automated. `architecture/traceability_test` checks both ways (production audit P-55).
 
 ## 2. Files
 
@@ -18,25 +19,25 @@ Current migration acceptance: [16-mobile-migration.md](16-mobile-migration.md). 
 
 | Area | File | Cases | P1 | P2 | P3 | ✅ Auto | ⏳ To automate | ✋ Manual | ⛔ Blocked |
 |---|---|---|---|---|---|---|---|---|---|
-| AUTH | [01-auth.md](01-auth.md) | 112 | 39 | 52 | 21 | 99 | 0 | 13 | 0 |
+| AUTH | [01-auth.md](01-auth.md) | 110 | 39 | 50 | 21 | 94 | 3 | 13 | 0 |
 | SESS | [02-session.md](02-session.md) | 48 | 21 | 21 | 6 | 43 | 0 | 5 | 0 |
-| ROLE and NAV | [03-roles-nav.md](03-roles-nav.md) | 47 | 17 | 24 | 6 | 44 | 0 | 3 | 0 |
-| LOOK | [04-lookup.md](04-lookup.md) | 102 | 42 | 43 | 17 | 89 | 0 | 13 | 0 |
+| ROLE and NAV | [03-roles-nav.md](03-roles-nav.md) | 46 | 17 | 23 | 6 | 43 | 0 | 3 | 0 |
+| LOOK | [04-lookup.md](04-lookup.md) | 101 | 42 | 42 | 17 | 88 | 0 | 13 | 0 |
 | BULK | [05-bulk.md](05-bulk.md) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| HIST | [06-history.md](06-history.md) | 60 | 18 | 32 | 10 | 57 | 0 | 3 | 0 |
+| HIST | [06-history.md](06-history.md) | 57 | 16 | 31 | 10 | 54 | 0 | 3 | 0 |
 | REP | [07-reports.md](07-reports.md) | 77 | 21 | 43 | 13 | 65 | 0 | 12 | 0 |
 | RTL | [08-retail-users.md](08-retail-users.md) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| PROF | [09-profile.md](09-profile.md) | 53 | 3 | 31 | 19 | 46 | 0 | 7 | 0 |
+| PROF | [09-profile.md](09-profile.md) | 53 | 3 | 31 | 19 | 48 | 0 | 5 | 0 |
 | ERR | [10-errors-network.md](10-errors-network.md) | 57 | 11 | 32 | 14 | 52 | 0 | 5 | 0 |
-| SEC | [11-security.md](11-security.md) | 39 | 21 | 16 | 2 | 32 | 0 | 7 | 0 |
+| SEC | [11-security.md](11-security.md) | 39 | 21 | 16 | 2 | 31 | 1 | 7 | 0 |
 | NFR | [12-device-a11y-perf.md](12-device-a11y-perf.md) | 27 | 0 | 17 | 10 | 8 | 0 | 19 | 0 |
 | E2E | [13-e2e-journeys.md](13-e2e-journeys.md) | 16 | 7 | 9 | 0 | 10 | 0 | 6 | 0 |
 | Exploratory | [14-exploratory-charters.md](14-exploratory-charters.md) | 9 | 0 | 6 | 3 | 0 | 0 | 9 | 0 |
 | UI | [15-ui.md](15-ui.md) | 164 | 27 | 88 | 49 | 150 | 0 | 14 | 0 |
 | MIG | [16-mobile-migration.md](16-mobile-migration.md) | 91 | 49 | 38 | 4 | 90 | 0 | 1 | 0 |
 | STG | [17-test-server.md](17-test-server.md) | 58 | 44 | 11 | 3 | 47 | 0 | 11 | 0 |
-| ARCH | [18-architecture.md](18-architecture.md) | 103 | 3 | 43 | 57 | 103 | 0 | 0 | 0 |
-| **Total** | | **1063** | 323 | 506 | 234 | 935 | 0 | 128 | 0 |
+| ARCH | [18-architecture.md](18-architecture.md) | 106 | 3 | 45 | 58 | 106 | 0 | 0 | 0 |
+| **Total** | | **1059** | 321 | 503 | 235 | 929 | 4 | 126 | 0 |
 
 ## 3. Case Format
 

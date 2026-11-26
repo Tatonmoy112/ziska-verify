@@ -75,6 +75,7 @@ void main() {
       isA<Err<ScanResult>>(),
     );
   });
+  // TC-MIG-021: Stack order follows first occurrences.
   test(
     'serial stacks send only serials, deduplicate and map by serial',
     () async {
@@ -182,6 +183,7 @@ void main() {
     expect(stack.items.single.result.outcome, LookupOutcome.warning);
   });
 
+  // TC-MIG-022: Malformed/mismatched answers fail closed.
   test('reordered or missing stack results are rejected', () async {
     next = example('A stack of serials', '200 Three serials, one sent twice');
     expect(
@@ -254,6 +256,7 @@ void main() {
       );
     });
   });
+  // TC-MIG-026: Both session kinds browse with status/date filters.
   test('session list accepts kind and sends only documented filters', () async {
     next = example('3. My sessions', '200 Sessions');
     final result = await repository.sessions(

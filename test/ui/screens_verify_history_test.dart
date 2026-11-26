@@ -25,8 +25,8 @@ import '../flow/harness.dart';
 import 'ui_helpers.dart';
 
 /// Section C, part 2 of docs/test-cases/15-ui.md: Verify, the scanner, the
-/// result, Bulk lookup, and History in each state, through the flow harness
-/// and the fake backend (TC-UI-087 … -113).
+/// result, and History in each state, through the flow harness and the
+/// fake backend (TC-UI-087 … -100, -107 … -112).
 void main() {
   setUpAll(loadUiFonts);
   hideFlavourRibbon();
@@ -342,6 +342,7 @@ void main() {
   });
 
   group('Result', () {
+    // TC-LOOK-090: Genuine: product details and picture.
     uiTest('TC-UI-096 result: genuine', (tester, shot) async {
       await lookUp(tester, always(lookup('valid')));
       expect(find.text(l10n.resultValidTitle), findsOneWidget);
@@ -368,6 +369,7 @@ void main() {
       expect(find.text(l10n.verifyAnother), findsOneWidget);
     });
 
+    // TC-LOOK-091: Checked before: check number, no uses limit.
     uiTest('TC-UI-097 result: needs attention', (tester, shot) async {
       await lookUp(
         tester,

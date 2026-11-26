@@ -12,6 +12,7 @@ import '../fakes/scripted_adapter.dart';
 import 'harness.dart';
 
 void main() {
+  // TC-MIG-006: Form precedes code.
   testWidgets('access request: form, code, pending, then return to login', (
     tester,
   ) async {
@@ -56,6 +57,7 @@ void main() {
     expect(app.fieldText(const Key('access.name')), 'ক' * 100);
   });
 
+  // TC-MIG-008: Email edits invalidate the local code stage.
   testWidgets('an email edit requires a fresh access code', (tester) async {
     final app = await startApp(tester, loggedIn: false);
     await app.tapText('Request access');
@@ -66,6 +68,7 @@ void main() {
     expect(find.byKey(const Key('access.submit')), findsNothing);
     expect(app.backend.sent('POST', 'auth/access'), isEmpty);
   });
+  // TC-MIG-007: No requestable roles replaces the form with office fallback.
   testWidgets('empty requestable roles show office fallback without a form', (
     tester,
   ) async {
@@ -81,6 +84,7 @@ void main() {
     expect(app.launcher.emails.single.to, 'office@example.com');
     expect(app.backend.sent('POST', 'auth/access/code'), isEmpty);
   });
+  // TC-MIG-018: Bulk-only roles work without single/history.
   testWidgets(
     'bulk-only scanner shows results, suppresses frames, '
     'and ends without history',
@@ -112,6 +116,7 @@ void main() {
       expect(app.storage.values.values, isNot(contains(id)));
     },
   );
+  // TC-MIG-002: No old bulk/retail-admin requests or hidden-code entry appear.
   testWidgets(
     'serial stacks deduplicate and show details without single permission; '
     'legacy endpoints are never called',
@@ -136,6 +141,7 @@ void main() {
       expect(app.backend.sent('GET', 'checks'), isEmpty);
     },
   );
+  // TC-MIG-026: Both session kinds browse with status/date filters.
   testWidgets(
     'session browsing sends own-only session-filtered history, '
     'retaining legacy way filters',
@@ -162,6 +168,7 @@ void main() {
       );
     },
   );
+  // TC-MIG-017: Crash recovery reads summary and paginated history.
   testWidgets(
     'restored scanner reads server summary and history without persisting them',
     (tester) async {
@@ -266,6 +273,8 @@ void main() {
     await app.tap(find.byKey(const Key('session.done')));
   });
 
+  // TC-MIG-028: New screens fit narrow/large-text layouts and retain localized
+  // labels.
   testWidgets('scanner result layout fits narrow screens with large text', (
     tester,
   ) async {
@@ -297,6 +306,8 @@ void main() {
     expect(find.byKey(const Key('verify.tool.retailUsers')), findsNothing);
     expect(app.backend.sent('GET', 'retail-roles'), isEmpty);
   });
+  // TC-MIG-027: Current scanner/stack results open without requiring
+  // single-lookup per.
   testWidgets(
     'single-result permission is rechecked even when bulk remains allowed',
     (tester) async {
@@ -327,7 +338,7 @@ void main() {
   });
 
   testWidgets(
-    'MIG-031 History switches between Checks and Sessions; a session opens '
+    'TC-MIG-031 History switches between Checks and Sessions; a session opens '
     'its checks and back returns to Sessions',
     (tester) async {
       final app = await startApp(tester);

@@ -27,6 +27,7 @@ void main() {
   const inside = SessionAuthenticated();
 
   // One case per row of final.md §9.
+  // TC-NAV-003: Every session state has its screen.
   test('start-up goes to Splash', () {
     expect(go(null, RoutePaths.home), RoutePaths.splash);
     expect(go(null, RoutePaths.splash), isNull);
@@ -47,6 +48,7 @@ void main() {
     expect(go(code, RoutePaths.home), RoutePaths.verifyCode);
   });
 
+  // TC-AUTH-013: Forced password change is the only screen.
   test('password change required: only Change password', () {
     expect(go(change, RoutePaths.changePassword), isNull);
     expect(go(change, RoutePaths.home), RoutePaths.changePassword);
@@ -68,6 +70,7 @@ void main() {
     expect(go(inside, RoutePaths.changePassword), isNull);
   });
 
+  // TC-NAV-002: A route without its permission goes Home.
   test('logged in: a route without its permission goes Home', () {
     expect(go(inside, '/home/lookup'), RoutePaths.home);
     expect(

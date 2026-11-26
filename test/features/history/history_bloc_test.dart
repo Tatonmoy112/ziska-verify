@@ -202,6 +202,10 @@ void main() {
     },
   );
 
+  // TC-HIST-003: Paging to the end.
+  // TC-HIST-004: Cursor sent back unchanged.
+  // TC-HIST-029: Empty page after a full page ends the list.
+  // TC-HIST-035: Totals kept while later pages load.
   blocTest<HistoryBloc, HistoryState>(
     'next page sends the cursor unchanged; an empty last page ends the list '
     'and the totals stay',
@@ -222,6 +226,7 @@ void main() {
     },
   );
 
+  // TC-HIST-005: Filter starts from page 1.
   blocTest<HistoryBloc, HistoryState>(
     'a filter change drops the cursor and starts from the first page',
     setUp: pages,
@@ -239,6 +244,7 @@ void main() {
     },
   );
 
+  // TC-HIST-006: Next-page failure keeps items.
   blocTest<HistoryBloc, HistoryState>(
     'a next-page failure keeps the loaded items',
     setUp: () =>
@@ -256,6 +262,7 @@ void main() {
     },
   );
 
+  // TC-HIST-007: Search waits for typing to stop.
   blocTest<HistoryBloc, HistoryState>(
     'search waits until typing stops, then sends one request',
     setUp: pages,
