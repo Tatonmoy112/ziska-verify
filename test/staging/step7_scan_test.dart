@@ -341,6 +341,8 @@ void main() {
     for (final (what, summary) in [
       ('ended', 'scan_session_ended_200.json'),
       ('not found (404)', 'scan_session_unknown_404.json'),
+      // A serial stack, not a scanner session (guide §4.6).
+      ('a serial stack', 'stack_session_200.json'),
     ]) {
       testWidgets('$what: a new session, nothing of the old one', (
         tester,

@@ -78,6 +78,39 @@ void main() {
     });
   }
 
+  testWidgets('TC-STG-043 the real answer for a 3rd photo: taken, and '
+      'numbered by the server', (tester) async {
+    final app = await open(tester, const Key('verify.tool.report'), {
+      'POST incidents/3/photos': real('photo_third_201.json'),
+    });
+    await fileWithPhoto(app, 'Torn seal');
+    expect(find.text('Photo 3'), findsOneWidget);
+    expect(find.byKey(const Key('report.photoFailure')), findsNothing);
+  });
+
+  testWidgets('TC-STG-044 My reports over the real pages: by the cursor, '
+      'each report once', (tester) async {
+    final app = await open(tester, const Key('verify.tool.myReports'), {
+      'GET incidents': (r) => stagingScripted(
+        r.queryParameters['cursor'] == null
+            ? 'reports_limit1_200.json'
+            : 'reports_page2_200.json',
+      ),
+    });
+    for (final id in [3, 2, 1]) {
+      await tester.scrollUntilVisible(
+        find.byKey(Key('reports.row.$id')),
+        200,
+        scrollable: find.byType(Scrollable).last,
+      );
+      expect(find.byKey(Key('reports.row.$id')), findsOneWidget);
+    }
+    final cursors = app.backend
+        .sent('GET', 'incidents')
+        .map((r) => r.queryParameters['cursor']);
+    expect(cursors, [null, '3']);
+  });
+
   testWidgets('TC-STG-043 the real 409 for a 4th photo says why', (
     tester,
   ) async {

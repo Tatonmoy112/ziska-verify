@@ -7,7 +7,7 @@ The production-grade review of the app, done on the `production` branch one area
 | 2 | High-level architecture | Checked 2026-11-24: P-1 … P-15. **All fixed**; P-10 on for staging, live waits for its production project |
 | 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11). **All fixed** (2026-11-25) |
 | 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-45. Fixed: P-20 … P-45 |
-| 5 | Dead code | Checked 2026-11-25: P-46 … P-53. Fixed: P-46 … P-50 |
+| 5 | Dead code | Checked 2026-11-25: P-46 … P-53. Fixed: P-46 … P-51 |
 | 6+ | Comments, data layer, UI components, state and lifecycle, security, build and release, monitoring, tests, localisation, performance, docs | To do |
 
 **Severity:**
@@ -1600,6 +1600,16 @@ Read only. Three reviewers searched in parallel, and every finding below was the
 **Proposal:** delete the screenshots. For each answer, replay it in a contract test where it covers something not yet replayed; otherwise delete it.
 
 **Tests:** a check that every screenshot is produced by a test and every recorded answer is loaded, by its literal name.
+
+**✅ Fixed 2026-11-26:**
+- **Tests first:** TC-ARCH-092 … -094 (`architecture/test_material_test`, with `test_material.dart`): a screenshot counts as taken when its name is written whole, or as a written prefix with an interpolated suffix (`'bn'` and `'${name}_login'`); a recorded answer when its file name is written. Comments do not count. On the real tests it found exactly the 21 screenshots and the 5 answers.
+- **The screenshots:** the 21 are deleted.
+- **The answers:** each covered something not yet replayed, so each is now replayed through the whole app:
+  - `checks_result_valid_200`: History filtered to valid lists the one real check, and the chips still count every result (TC-STG-026);
+  - `photo_third_201`: a third photo is taken and shown as "Photo 3", numbered by the server (TC-STG-043);
+  - `reports_limit1_200` and `reports_page2_200`: My reports over two real pages, asked by the cursor, each report once (TC-STG-044);
+  - `stack_session_200`: a saved session that is a serial stack starts a new scanner session (TC-STG-039).
+- **Every other screenshot still matches.**
 
 #### P-52 (nice): the staging tool
 **Evidence:** `tool/staging_check/staging_check.dart`:

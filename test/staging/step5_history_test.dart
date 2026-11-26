@@ -45,6 +45,31 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('TC-STG-026 the real "valid" filter: its one check, the '
+      'chips still counting every result', (tester) async {
+    final app = await openHistory(
+      tester,
+      // The page for the filter; the chips are counted without it.
+      checks: (r) => stagingScripted(
+        r.queryParameters['result'] == 'valid'
+            ? 'checks_result_valid_200.json'
+            : 'checks_first_page_200.json',
+      ),
+    );
+    await app.tap(find.byKey(const Key('history.chip.valid')));
+    expect(
+      app.backend.sent('GET', 'checks').map((r) => r.queryParameters['result']),
+      contains('valid'),
+    );
+    expect(find.text('MA-2026-000013'), findsNothing);
+    // Only the real valid check is listed.
+    expect(find.byKey(const Key('checkTile.ref')), findsOneWidget);
+    expect(find.text('MA-2026-000005'), findsOneWidget);
+    expect(historyChipCount(tester, 'all'), 13);
+    expect(historyChipCount(tester, 'valid'), 1);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('TC-STG-027 the real pages and cursors: every check once, '
       'then no more', (tester) async {
     final app = await openHistory(
