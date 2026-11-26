@@ -102,8 +102,9 @@ class ApiClient {
   }
 }
 
-/// Builds the two Dio instances: the main one with interceptors, and the
-/// renewal one without them (final.md §6).
+/// The options both Dio clients start from: the main one and the renewal
+/// one, which has no auth interceptor (`network_module.dart`; final.md
+/// §6).
 abstract final class DioFactory {
   static BaseOptions options(String apiRoot) => BaseOptions(
     baseUrl: apiRoot,

@@ -14,7 +14,7 @@ abstract final class ApiData {
 
   /// [data] as a list of JSON objects. Its items are checked as they are
   /// read: one that is not an object is a `TypeError`, which `guard` reports
-  /// as `answer_shape`.
+  /// as `CoreReason.answerShape`.
   static List<Map<String, dynamic>> list(Object? data, ApiAnswer answer) {
     if (data is List) return data.cast<Map<String, dynamic>>();
     throw _shape(answer);

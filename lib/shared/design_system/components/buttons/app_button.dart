@@ -68,8 +68,8 @@ class AppButton extends StatelessWidget {
         ? SizedBox.square(
             dimension: 22,
             child: CircularProgressIndicator(
-              // A screen reader still hears what the button does (or is
-              // doing: "Checking 3 items…").
+              // A screen reader still hears what the button does, or is
+              // doing.
               semanticsLabel: label,
               strokeWidth: 2.5,
               color: foreground,

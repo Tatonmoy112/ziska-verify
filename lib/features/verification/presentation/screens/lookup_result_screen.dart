@@ -142,8 +142,8 @@ class LookupResultScreen extends StatelessWidget {
     );
   }
 
-  /// Emails the client's support with the reference and what was entered (a
-  /// hidden code stays masked), or calls when only a phone is set.
+  /// Emails the client's support with the reference and what was entered
+  /// (a serial or a QR value), or calls when only a phone is set.
   Future<void> _contactSupport(BuildContext context, Profile profile) async {
     final l10n = AppLocalizations.of(context);
     final email = profile.supportEmail;

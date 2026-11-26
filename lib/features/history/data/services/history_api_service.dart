@@ -26,8 +26,9 @@ class DioHistoryApiService implements HistoryApiService {
     return ChecksPageDto.fromJson(ApiData.map(data, ApiAnswer.checks));
   }
 
-  /// Only documented parameters; empty filters are left out, and so is
-  /// No scope parameter is supported. Session filters are explicit.
+  /// Only documented parameters; empty filters are left out, and there is
+  /// no scope: History is the official's own checks. Session filters are
+  /// explicit.
   static Map<String, Object?> checksQuery(CheckQuery query, PageRequest page) {
     final search = query.search?.trim();
     return {

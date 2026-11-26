@@ -1,5 +1,5 @@
-/// Route names used by features to navigate (final.md §9). Paths
-/// live in `app/router/` only.
+/// Route names used by features to navigate (final.md §9). Paths live
+/// in `app/router/`, read by it and the tabs of `app/shell/` only.
 abstract final class RouteNames {
   static const splash = 'splash';
   static const login = 'login';

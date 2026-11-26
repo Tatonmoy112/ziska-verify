@@ -69,7 +69,7 @@ abstract class ScanSessionSummary with _$ScanSessionSummary {
   }) = _ScanSessionSummary;
 }
 
-/// The filters of `GET scan-sessions` (final.md §10): copied with
+/// The filters of `GET lookups/sessions` (final.md §10): copied with
 /// [copyWith], equal by value (production audit P-42).
 @freezed
 abstract class SessionQuery with _$SessionQuery {

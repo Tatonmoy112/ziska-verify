@@ -9,9 +9,10 @@ import 'package:ziska_verify/core/services/monitoring/crash_reporting_service.da
 /// [ReportedError].
 ///
 /// Lines are printed to the phone's log only when `printing` is on, which
-/// `bootstrap` sets for debug builds alone: a release build prints nothing
-/// (final.md §12; production audit P-12). The switch is the app's own, not
-/// the package's global default filter, which any code could change.
+/// `startMonitoring` sets for debug builds alone: a release build prints
+/// nothing (final.md §12; production audit P-12). The switch is the app's
+/// own, not the package's global default filter, which any code could
+/// change.
 class ConsoleLoggerService implements LoggerService {
   ConsoleLoggerService(
     this._crash, {

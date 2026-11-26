@@ -50,8 +50,8 @@ class AppTextField extends StatelessWidget {
   /// Key of the inner [TextField], for tests.
   final Key? fieldKey;
 
-  /// Lets the screen move the keyboard focus to the field (the scanner's
-  /// "Enter manually" returns to the Check tab with the field focused).
+  /// The field's focus, when the screen owns it (the Check tab's serial
+  /// field).
   final FocusNode? focusNode;
 
   /// A note over several lines (Report incident).

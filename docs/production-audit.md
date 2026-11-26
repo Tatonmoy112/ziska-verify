@@ -8,7 +8,7 @@ The production-grade review of the app, done on the `production` branch one area
 | 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11). **All fixed** (2026-11-25) |
 | 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-45. Fixed: P-20 … P-45 |
 | 5 | Dead code | Checked 2026-11-25: P-46 … P-53. **All fixed** (2026-11-26) |
-| 6 | Comments | Checked 2026-11-26: P-54 … P-60. Fixed: P-54, P-55 |
+| 6 | Comments | Checked 2026-11-26: P-54 … P-60. Fixed: P-54 … P-56 |
 | 7+ | Data layer, UI components, state and lifecycle, security, build and release, monitoring, tests, localisation, performance, docs | To do |
 
 **Severity:**
@@ -1756,6 +1756,11 @@ The other way round:
 **Proposal:** correct each to what the code does.
 
 **Tests:** a source check that no `lib/` comment names `PermissionGate`, "Enter manually", "hidden code", "Retail users", "Scan card", "scan-sessions" or "answer_shape".
+
+**✅ Fixed 2026-11-26:**
+- **Tests first:** TC-ARCH-107 … -109 (`architecture/stale_comments_test`): the corrected comments name what is there now; two uses stay allowed ("the hidden code as the API sends it", for the masked code an item carries, and the retail users feature's own section in `register.dart`), so the check bans the stale phrases, not the words; none of the 17 phrases is left in a `lib/` comment. Red before the change on all 17.
+- **The change:** each comment says what the code does: History sends no scope at all; `DioFactory` gives the options both clients start from; the focus node is the Check tab's; the profile is read by the router, the shell and the screens; the route is `GET lookups/sessions`; the support email carries a serial or a QR value; the search field serves History and the two pickers; route paths are read by the router and the shell's tabs; secure storage also holds a scanner session's ID under `ActiveScanStore`'s key; `onPrimaryFaint` is the honeycomb only; the button's spoken label has no bulk-lookup example; `startMonitoring` turns printing on; `guard` reports `CoreReason.answerShape`; `ValidationException` is also the phone's own refusal; the hints are a serial's digits and the QR; the 400 ms is the callers'.
+- **Every test passes.**
 
 #### P-57 (should): stale comments and headers in `test/`
 **Evidence:**

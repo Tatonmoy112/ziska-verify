@@ -1,5 +1,5 @@
-/// Route paths (final.md §9). Used only inside `app/router/`;
-/// features navigate by `RouteNames`.
+/// Route paths (final.md §9). Used only by `app/router/` and the tabs of
+/// `app/shell/`; features navigate by `RouteNames`.
 abstract final class RoutePaths {
   static const splash = '/splash';
   static const login = '/login';

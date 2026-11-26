@@ -26,8 +26,9 @@ abstract class ProfileState with _$ProfileState {
 }
 
 /// App-scoped profile (final.md §11). Loads when the official is
-/// logged in, clears on logout. Read by the router guard and
-/// `PermissionGate`.
+/// logged in, clears on logout. Read by the router (its guard and the
+/// route builders), the shell's tabs, and the screens that show what the
+/// role may do.
 class ProfileCubit extends Cubit<ProfileState> {
   ProfileCubit(
     this._getProfile,

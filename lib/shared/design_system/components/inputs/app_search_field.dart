@@ -4,7 +4,7 @@ import 'package:ziska_verify/l10n/generated/app_localizations.dart';
 
 /// A search field (final.md §14.1): a search icon, the [hint], and,
 /// when [onClear] is set, a labelled clear button while there is text.
-/// History, Retail users, and the retail user picker.
+/// History, the check picker, and the retail user picker.
 class AppSearchField extends StatelessWidget {
   const AppSearchField({
     required this.hint,

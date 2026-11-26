@@ -8,8 +8,7 @@ abstract final class AppColors {
   static const primaryDark = Color(0xFF0F1E5A);
   static const onPrimary = Color(0xFFFFFFFF);
 
-  /// White at 10 %: decoration on navy (the Check header's honeycomb, the
-  /// Scan card's QR corner).
+  /// White at 10 %: decoration on navy (the Check header's honeycomb).
   static const onPrimaryFaint = Color(0x1AFFFFFF);
 
   // Text

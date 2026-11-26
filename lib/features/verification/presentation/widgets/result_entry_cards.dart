@@ -70,9 +70,8 @@ class EnteredCard extends StatelessWidget {
 }
 
 /// **HINTS** for a `not_found` result, built from `GET formats` (final.md
-/// §13.1; backend D41: no fixed lengths): the serial's digits and
-/// length, and
-/// scanning the QR code when it was not scanned.
+/// §13.1; backend D41: no fixed lengths): how many digits a serial has,
+/// and scanning the QR code when it was not scanned.
 class HintsCard extends StatelessWidget {
   const HintsCard({required this.way, this.formats, super.key});
 

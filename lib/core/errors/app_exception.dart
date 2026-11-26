@@ -37,7 +37,9 @@ sealed class AppException implements Exception {
       'requestId: $requestId)';
 }
 
-/// 400 / 413 / 415 `validation_failed`: an app defect, logged.
+/// Input refused: by the use case before anything is sent (production
+/// audit P-33), or by the server as 400 / 413 / 415 `validation_failed`,
+/// which means the app sent what it should have refused.
 final class ValidationException extends AppException {
   const ValidationException({
     super.statusCode,
