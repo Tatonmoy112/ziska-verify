@@ -4,8 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import '../fakes/roles.dart';
 import 'harness.dart';
 
-/// Flow tests: LOOK, BULK, ERR, SEC (docs/test-cases/04-lookup.md,
-/// 05-bulk.md, 10-errors-network.md, 11-security.md).
+/// Flow tests: LOOK and ERR (docs/test-cases/04-lookup.md,
+/// 10-errors-network.md).
 void main() {
   Future<void> lookUpSerial(FlowApp app, String serial) async {
     await app.enter(const Key('verify.input'), serial);

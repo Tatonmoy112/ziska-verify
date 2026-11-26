@@ -4,7 +4,8 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'harness.dart';
 
-/// Flow tests: REP and RTL (docs/test-cases/07-reports.md, 08-retail-users.md).
+/// Flow tests: REP (docs/test-cases/07-reports.md), the retail user picker
+/// among them.
 void main() {
   Future<void> openTile(FlowApp app, Key key) async {
     await app.tester.drag(

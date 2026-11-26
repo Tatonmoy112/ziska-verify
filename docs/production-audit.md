@@ -8,7 +8,7 @@ The production-grade review of the app, done on the `production` branch one area
 | 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11). **All fixed** (2026-11-25) |
 | 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-45. Fixed: P-20 … P-45 |
 | 5 | Dead code | Checked 2026-11-25: P-46 … P-53. **All fixed** (2026-11-26) |
-| 6 | Comments | Checked 2026-11-26: P-54 … P-60. Fixed: P-54 … P-56 |
+| 6 | Comments | Checked 2026-11-26: P-54 … P-60. Fixed: P-54 … P-57 |
 | 7+ | Data layer, UI components, state and lifecycle, security, build and release, monitoring, tests, localisation, performance, docs | To do |
 
 **Severity:**
@@ -1773,6 +1773,11 @@ The other way round:
 **Proposal:** correct each; the ranges with P-55.
 
 **Tests:** P-55's check covers the IDs; a source check that no test header names `05-bulk.md` or `08-retail-users.md`.
+
+**✅ Fixed 2026-11-26** (with P-55, which corrected the three UI headers, `device_a11y_flow_test`'s and the input-boundaries range):
+- **Tests first:** TC-ARCH-110 … -112 (`architecture/stale_test_comments_test`): each corrected comment says what its test does; the serial stack's labels name it; no test names a retired area's file, the hidden-code lookup, a retail user added, the old count, or "Bulk lookup" as a label. Red before the change.
+- **The change:** `security_flow_test`'s whole session is described as it runs (an access request, a login with a code, a serial lookup, a password change); `lookup_flow_test` covers LOOK and ERR, `reports_retail_flow_test` REP with the retail user picker; the History flow says what it checks (each row says who checked it; the server sends one's own), as the fake backend's officials are the Postman examples', not the role's; the verify screen's field shows the serial's #, a hidden code never being typed; `roles.dart` names the roles of `docs/USER.md` and the test variants, without a count; the device and fit tests' labels say "Serial stack".
+- **Every test passes.**
 
 #### P-58 (should): docs that mislead
 **Evidence:**

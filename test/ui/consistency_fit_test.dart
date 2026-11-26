@@ -278,7 +278,7 @@ void main() {
       app = await start(tester, profile: Roles.supervisor);
       labels(['verify.input'], 'Check');
       await openTile(app, const Key('verify.tool.serials'));
-      labels(['serials.input'], 'Bulk lookup');
+      labels(['serials.input'], 'Serial stack');
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
       await openTile(app, const Key('verify.tool.report'));
@@ -325,8 +325,8 @@ void main() {
     test('TC-UI-139 one empty state look', () {
       // Every "nothing here" text is the title or body of an empty state
       // (AppEmptyState, or AppPaginatedList's emptyTitle and emptyBody,
-      // which builds one). Bulk lookup's empty-list text is the form's
-      // instruction under the field, not a list.
+      // which builds one). The serial stack's empty-list text is the
+      // form's instruction under the field, not a list.
       final key = RegExp(
         r'l10n\.([a-zA-Z]*(Empty[A-Za-z]*|NoAttention|noFeatures[A-Za-z]*|NoRoles))',
       );

@@ -183,8 +183,9 @@ void main() {
         expect(request.queryParameters.containsKey('scope'), isFalse);
       }
 
-      // Only one's own checks: the name on every row is the official's
-      // (SRS FR-HIS-04), and there is no "Everyone's checks".
+      // Own checks only (SRS FR-HIS-04): every row says who checked it, the
+      // server sends the official's own, and there is no "Everyone's
+      // checks".
       final names = find.byKey(const Key('checkTile.official'));
       expect(names, findsWidgets);
       for (final name in tester.widgetList<Text>(names)) {

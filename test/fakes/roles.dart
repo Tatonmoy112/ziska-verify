@@ -1,5 +1,5 @@
-/// The 7 role profiles of `docs/USER.md`, as `GET me` → `data`
-/// (test plan Section 7).
+/// The roles of `docs/USER.md`, and the variants the tests need (no
+/// history, no support contact), as `GET me` → `data` (test plan §7).
 abstract final class Roles {
   static Map<String, dynamic> _profile(
     String id,

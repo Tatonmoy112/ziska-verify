@@ -138,7 +138,8 @@ void main() {
       );
       expect(pattern.kind, PatternKind.hexagons);
       expect(pattern.color, AppColors.onPrimaryFaint);
-      // The serial's # and the hidden code's tag (the Figma "Label ID").
+      // The serial's # (the Figma "Label ID"); a hidden code is never
+      // typed (backend D62).
       Finder fieldIcon(IconData icon) => find.descendant(
         of: find.byKey(const Key('verify.input')),
         matching: find.byIcon(icon),

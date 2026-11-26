@@ -12,8 +12,9 @@ import 'harness.dart';
 /// Flow tests: security (docs/test-cases/11-security.md, TC-SEC-007 and
 /// later).
 void main() {
-  /// A whole session: login with a code, a hidden-code lookup, a password
-  /// change, a retail user added. Returns the secrets typed or received.
+  /// A whole session: a request for access with its emailed code, a login
+  /// with a code, a serial lookup, a password change. Returns the secrets
+  /// typed or received.
   Future<({FlowApp app, Set<String> secrets})> wholeSession(
     WidgetTester tester,
   ) async {

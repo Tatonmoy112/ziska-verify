@@ -71,9 +71,9 @@ void main() {
 
     await openTile('verify.tool.serials');
     await app.enter(const Key('serials.input'), '1000001,1000002,1000003');
-    await check('Bulk lookup list');
+    await check('Serial stack list');
     await app.tap(find.byKey(const Key('serials.submit')));
-    await check('Bulk results');
+    await check('Serial stack results');
     await back();
 
     await openTile('verify.tool.report');
