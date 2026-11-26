@@ -14,7 +14,7 @@ void main() {
         tester,
         history: true,
         lookupForm: true,
-        tileNames: {'bulk', 'serials', 'report', 'myReports'},
+        tileNames: {'scanner', 'serials', 'report', 'myReports'},
       );
     });
 
@@ -24,7 +24,7 @@ void main() {
         tester,
         history: true,
         lookupForm: true,
-        tileNames: {'bulk', 'serials', 'report', 'myReports'},
+        tileNames: {'scanner', 'serials', 'report', 'myReports'},
       );
     });
 
@@ -34,7 +34,7 @@ void main() {
       expect(find.text('MORE'), findsNothing);
     });
 
-    testWidgets('TC-ROLE-004 Senior seller: bulk lookup and own history', (
+    testWidgets('TC-ROLE-004 Senior seller: many items and own history', (
       tester,
     ) async {
       await startApp(tester, profile: Roles.seniorSeller);
@@ -42,7 +42,7 @@ void main() {
         tester,
         history: true,
         lookupForm: true,
-        tileNames: {'bulk', 'serials'},
+        tileNames: {'scanner', 'serials'},
       );
     });
 

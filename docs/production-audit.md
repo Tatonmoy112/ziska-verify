@@ -8,7 +8,7 @@ The production-grade review of the app, done on the `production` branch one area
 | 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11). **All fixed** (2026-11-25) |
 | 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-45. Fixed: P-20 … P-45 |
 | 5 | Dead code | Checked 2026-11-25: P-46 … P-53. **All fixed** (2026-11-26) |
-| 6 | Comments | Checked 2026-11-26: P-54 … P-60. Fixed: P-54 … P-57 |
+| 6 | Comments | Checked 2026-11-26: P-54 … P-61. Fixed: P-54 … P-58 |
 | 7+ | Data layer, UI components, state and lifecycle, security, build and release, monitoring, tests, localisation, performance, docs | To do |
 
 **Severity:**
@@ -1790,6 +1790,22 @@ The other way round:
 
 **Tests:** P-54's extended check reads README and AGENTS.md; a check that no test case names Bulk lookup, Retail users or Hidden code as a screen or field.
 
+**✅ Fixed 2026-11-26.** Read row by row, the four cases were many more: the same retired screens stood in 49 case rows, four rows of the request matrix, one of the component table and four of the test plan's roles. TC-LOOK-037 had already been withdrawn with P-55.
+- **Tests first:** TC-ARCH-113 … -115 (`architecture/stale_test_cases_test`):
+  - the README names the client `ziska-test` and says iOS has no flavors; AGENTS.md has no "No commits exist yet"; each rewritten case says what its test does;
+  - nine rows (and this check's own two) keep a retired name on purpose, to say the feature is gone or that the backend still sends it (a hidden code's format, an old check's way, `history:all` granting nothing), and each is checked to still say so; a role with `item:bulk_lookup` only is no retired feature;
+  - no case row, request matrix row, component row or role row names bulk lookup, the retail users screens, adding a retail user, everyone's checks or a hidden code typed, and no test is named after them or goes to `/home/bulk-lookup`.
+  Red before the change.
+- **The change:**
+  - **README:** the staging client is `ziska-test`; iOS has one scheme and no flavors, so it runs without `--flavor` (iOS flavors stay a build-and-release item). **AGENTS.md:** "No commits exist yet" removed. **Test plan:** the staging client; the roles of §7 as `test/fakes/roles.dart` has them (no `history:all`; Scanner mode and Serial stack for `item:bulk_lookup`; own checks only).
+  - **Automated cases rewritten to their tests:** ROLE-010, -013, -016, -018, -020; NAV-010, -011, -014, -018; LOOK-054, -089, -096, -098 … -100; HIST-014; ERR-015, -037; SEC-002, -007, -013; NFR-011, -013 … -017; E2E-001 … -005; UI-011, -111, -143. Each now lists the screens and requests its test uses (the device tour, for one, opens the serial stack and scanner mode). Five said more than their tests do: E2E-005 expected a cleared field, and the test checks the serial is kept; UI-011 named five screens, and the test checks My reports and History; SEC-013 named Set a new password, which the test does not open, and left out Request access, which it does; LOOK-099's email carried a masked hidden code, and the test checks the reference and the serial; ERR-015 named the bulk list's **Send again**, on a screen that is gone.
+  - **The request matrix** loses the three retail-administration requests the app no longer has (`GET retail-roles`, `POST retail-users`, its password), and `POST lookups/bulk` is `POST lookups/serials`. The matrix test never ran them.
+  - **Manual cases:** ROLE-019, SEC-008, -010, -012, NFR-005, -007, -018, -021, -022, -024, -027 and E2E-010, -013 describe the serial stack, the picker and the portal. **TC-E2E-011 is retired:** it handed over a password after adding a retail user in the app, which only the office portal does now. Its checklist entry went with it.
+  - **The tests:** the tile label `'bulk'` is `'scanner'`; TC-ROLE-004, -013 and -016 are named for what they check; TC-NAV-014 goes to `/home/serial-stack`, a route the app has (the retired `/home/bulk-lookup` proved nothing).
+  - **Totals:** E2E 15; ARCH 115; overall 1,067.
+- **Every test passes.**
+- **Left for P-61:** the manual checklist's own sections for the retired screens, and the test plan's other tables.
+
 #### P-59 (nice): small notes
 - `pubspec.yaml:47`: `image` is pinned "for the development-only QR-sheet generator". The QR sheet imports only `pdf`; `image`'s user is `tool/staging_check`;
 - `ci.yml:48-49`: an accepted finding "goes in `osv-scanner.toml`", which does not exist (an instruction, but it reads as if the file were there);
@@ -1809,7 +1825,31 @@ The other way round:
 - **edge:** a Source cell citing two documents ("§13.1; Guide §4.2"), and a range;
 - **worst:** a v1.6 section in a test case is reported with its file and line.
 
+#### P-61 (should): the manual checklist and the test plan still walk retired screens
+**Evidence:** found while fixing P-58, whose check reads the case rows only.
+- `docs/manual-test-checklist.md`, sections A12 "Bulk lookup" (line 439), A14 "Retail users" (488), C5 "Bulk lookup" (1129), C8 "Retail users" (1183);
+- the checklist's steps for cases P-58 rewrote: TC-NFR-005, -007, -018, -021, -022, -024, -027, TC-SEC-008, -010, TC-ROLE-019, TC-E2E-013;
+- `docs/test-plan.md`:
+  - §1's scope lists "bulk" and "retail users" as build steps;
+  - §4.1's mock table answers `POST lookups/bulk` and `GET retail-roles`, which the app no longer sends;
+  - §5 makes "bulk" and "retail users" P2 features;
+- `docs/test-cases/README.md`'s coverage table rows "Bulk building", "Bulk sending and results" and "Add retail user", which cite retired BULK and RTL IDs.
+
+**Why:** a tester following the checklist looks for screens the app does not have, and the checklist disagrees with its own cases.
+
+**Proposal:**
+- rewrite the checklist's steps to the cases as P-58 left them;
+- replace A12, A14, C5 and C8 with the serial stack, scanner mode and the picker, or retire them;
+- correct §1, §4.1 (against the mock as it answers now) and §5;
+- move the coverage rows to the TC-MIG cases that replaced them;
+- extend P-58's check to the checklist.
+
+**Tests:**
+- **normal:** each checklist entry names the screens its case row names;
+- **edge:** the retired-case notes keep their names;
+- **worst:** no checklist step opens a retired screen.
+
 ### Suggested order
 1. **P-54 and P-55** first: they add the checks that keep the rest honest.
 2. **P-56 … P-58**, and **P-60** (a large docs change, best on its own).
-3. **P-59** at any time.
+3. **P-59** at any time; **P-61** after P-58.

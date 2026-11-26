@@ -84,7 +84,7 @@ Default answers of the mock (checked 2026-11-11). The app cannot ask for another
 | Item | Value |
 |---|---|
 | Build | `flutter run --flavor staging --dart-define-from-file=config/staging.json` |
-| Server | Backend test server, client `demo-pharma` |
+| Server | Backend test server, client `ziska-test` |
 | Data | The backend's test sheet: 10 logins (inspectors, supervisors, a trainee, retail users, one with a forced password change, one blocked), a serial, QR value, and hidden code for every result and reason; the mail page for emailed codes |
 | Rule | Never test on a live client: every check is kept for good |
 
@@ -117,10 +117,10 @@ Each case has: **ID**, **Title**, **Type**, **Priority**, **Run on**, **Auto**, 
 
 | Role (`docs/USER.md`) | Permissions | Expected |
 |---|---|---|
-| R1 Supervisor | all six | Tabs Check, History, Profile; tiles Bulk lookup, Report incident, My reports, Retail users; History filter "Everyone's checks" |
-| R2 Field inspector | `history:own`, `incident:report`, `item:bulk_lookup`, `item:lookup` | Tabs Check, History, Profile; tiles Bulk lookup, Report incident, My reports; no "Everyone's checks" |
-| R3 Head office auditor | `history:all`, `history:own`, `item:lookup` | Tabs Check, History, Profile; no MORE section; "Everyone's checks"; no Report button on a result |
-| R4 Senior seller | `history:own`, `item:bulk_lookup`, `item:lookup` | Tabs Check, History, Profile; tile Bulk lookup only; History shows own checks only |
+| R1 Supervisor | `history:own`, `incident:report`, `item:bulk_lookup`, `item:lookup` | Tabs Check, History, Profile; tiles Scanner mode, Serial stack, Report incident, My reports; History shows own checks only |
+| R2 Field inspector | `history:own`, `incident:report`, `item:bulk_lookup`, `item:lookup` | As R1 |
+| R3 Head office auditor | `history:own`, `item:lookup` | Tabs Check, History, Profile; no MORE section; no Report button on a result; History shows own checks only |
+| R4 Senior seller | `history:own`, `item:bulk_lookup`, `item:lookup` | Tabs Check, History, Profile; tiles Scanner mode and Serial stack only; History shows own checks only |
 | R5 Retail seller | `history:own`, `item:lookup` (the portal's default for a retail role, backend D53) | Tabs Check, History, Profile; lookup form and Scan QR only; History shows own checks only |
 | R6 Incident reporter | `incident:report` | Tabs Check, Profile; no lookup form; tiles Report incident, My reports |
 | R7 Trainee | none | Tabs Check, Profile; "No features yet" |
@@ -146,13 +146,13 @@ The cases live in one file per area in [`docs/test-cases/`](test-cases/README.md
 | ERR | [10-errors-network.md](test-cases/10-errors-network.md) | 57 | 11 | 32 | 14 | 52 | 0 | 5 | 0 |
 | SEC | [11-security.md](test-cases/11-security.md) | 39 | 21 | 16 | 2 | 31 | 1 | 7 | 0 |
 | NFR | [12-device-a11y-perf.md](test-cases/12-device-a11y-perf.md) | 27 | 0 | 17 | 10 | 8 | 0 | 19 | 0 |
-| E2E | [13-e2e-journeys.md](test-cases/13-e2e-journeys.md) | 16 | 7 | 9 | 0 | 10 | 0 | 6 | 0 |
+| E2E | [13-e2e-journeys.md](test-cases/13-e2e-journeys.md) | 15 | 7 | 8 | 0 | 10 | 0 | 5 | 0 |
 | Exploratory | [14-exploratory-charters.md](test-cases/14-exploratory-charters.md) | 9 | 0 | 6 | 3 | 0 | 0 | 9 | 0 |
 | UI | [15-ui.md](test-cases/15-ui.md) | 164 | 27 | 88 | 49 | 150 | 0 | 14 | 0 |
 | MIG | [16-mobile-migration.md](test-cases/16-mobile-migration.md) | 91 | 49 | 38 | 4 | 90 | 0 | 1 | 0 |
 | STG | [17-test-server.md](test-cases/17-test-server.md) | 58 | 44 | 11 | 3 | 47 | 0 | 11 | 0 |
-| ARCH | [18-architecture.md](test-cases/18-architecture.md) | 112 | 3 | 46 | 63 | 112 | 0 | 0 | 0 |
-| **Total** | | **1065** | 321 | 504 | 240 | 935 | 4 | 126 | 0 |
+| ARCH | [18-architecture.md](test-cases/18-architecture.md) | 115 | 3 | 47 | 65 | 115 | 0 | 0 | 0 |
+| **Total** | | **1067** | 321 | 504 | 242 | 938 | 4 | 125 | 0 |
 
 ---
 
@@ -202,7 +202,7 @@ Every acceptance check has test cases. Two need a real phone or the test server 
 | Retail users | REP-013, MIG-030 | 2: 2 ✅ |
 | Password rule | AUTH-015, -016, -031, -065, -068 … -074 | 11: 11 ✅ |
 
-Not an acceptance check, but tracked the same way: the start screen and logo (`final.md` §9.4, §14) are covered by UI-001 … -012; device, accessibility, and performance by NFR-001 … -027; journeys by E2E-001 … -016; exploration by CH-01 … -09.
+Not an acceptance check, but tracked the same way: the start screen and logo (`final.md` §9.4, §14) are covered by UI-001 … -012; device, accessibility, and performance by NFR-001 … -027; journeys by E2E-001 … -010 and -012 … -016; exploration by CH-01 … -09.
 
 ## 11. Running and Reporting
 

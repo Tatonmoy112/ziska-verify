@@ -31,13 +31,13 @@ Current migration acceptance: [16-mobile-migration.md](16-mobile-migration.md). 
 | ERR | [10-errors-network.md](10-errors-network.md) | 57 | 11 | 32 | 14 | 52 | 0 | 5 | 0 |
 | SEC | [11-security.md](11-security.md) | 39 | 21 | 16 | 2 | 31 | 1 | 7 | 0 |
 | NFR | [12-device-a11y-perf.md](12-device-a11y-perf.md) | 27 | 0 | 17 | 10 | 8 | 0 | 19 | 0 |
-| E2E | [13-e2e-journeys.md](13-e2e-journeys.md) | 16 | 7 | 9 | 0 | 10 | 0 | 6 | 0 |
+| E2E | [13-e2e-journeys.md](13-e2e-journeys.md) | 15 | 7 | 8 | 0 | 10 | 0 | 5 | 0 |
 | Exploratory | [14-exploratory-charters.md](14-exploratory-charters.md) | 9 | 0 | 6 | 3 | 0 | 0 | 9 | 0 |
 | UI | [15-ui.md](15-ui.md) | 164 | 27 | 88 | 49 | 150 | 0 | 14 | 0 |
 | MIG | [16-mobile-migration.md](16-mobile-migration.md) | 91 | 49 | 38 | 4 | 90 | 0 | 1 | 0 |
 | STG | [17-test-server.md](17-test-server.md) | 58 | 44 | 11 | 3 | 47 | 0 | 11 | 0 |
-| ARCH | [18-architecture.md](18-architecture.md) | 112 | 3 | 46 | 63 | 112 | 0 | 0 | 0 |
-| **Total** | | **1065** | 321 | 504 | 240 | 935 | 4 | 126 | 0 |
+| ARCH | [18-architecture.md](18-architecture.md) | 115 | 3 | 47 | 65 | 115 | 0 | 0 | 0 |
+| **Total** | | **1067** | 321 | 504 | 242 | 938 | 4 | 125 | 0 |
 
 ## 3. Case Format
 
@@ -136,7 +136,7 @@ Each spec rule, the cases that cover it today, and what is missing. The step is 
 | Device and accessibility | §14 | NFR-001 … -027 | — | 6 ✓ |
 | UI: tokens, components, screens, look | §14, §9.3.1, §13, §16 | UI-001 … -159 (15-ui.md) | — | UI ✓ |
 | Language | §16 | AUTH-017, HIST-012, -018, -044 (⛔), PROF-006 (⛔), -008, -018 … -035 (⛔), ERR-019, CH-09 | — | 6 ✓ |
-| Journeys and exploration | — | E2E-001 … -016, CH-01 … -09 | — | 6 ✓ |
+| Journeys and exploration | — | E2E-001 … -010, -012 … -016, CH-01 … -09 | — | 6 ✓ |
 
 ## 7. Open Questions (Spec Gaps)
 

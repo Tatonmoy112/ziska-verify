@@ -34,7 +34,7 @@ Name tests `*_test.dart`. Use `flutter_test`, `bloc_test`, and existing fakes/mo
 
 ## Commit & Pull Request Guidelines
 
-No commits exist yet. Use concise, imperative commit subjects, optionally scoped (e.g., `fix(auth): prevent duplicate submissions`). PRs should explain behavior changes, link relevant issues/spec sections, include test results, and attach screenshots for UI changes. Pass CI formatting, analysis, tests, and mock-build checks.
+Use concise, imperative commit subjects, optionally scoped (e.g., `fix(auth): prevent duplicate submissions`). PRs should explain behavior changes, link relevant issues/spec sections, include test results, and attach screenshots for UI changes. Pass CI formatting, analysis, tests, and mock-build checks.
 
 ## Security & Configuration
 

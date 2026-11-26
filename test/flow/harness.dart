@@ -703,7 +703,7 @@ Finder tab(String label) => find.descendant(
 );
 
 const tiles = {
-  'bulk': Key('verify.tool.bulk'),
+  'scanner': Key('verify.tool.bulk'),
   'serials': Key('verify.tool.serials'),
   'report': Key('verify.tool.report'),
   'myReports': Key('verify.tool.myReports'),

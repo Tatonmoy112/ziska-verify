@@ -56,7 +56,7 @@ void main() {
         tester,
         history: false,
         lookupForm: true,
-        tileNames: {'bulk', 'serials'},
+        tileNames: {'scanner', 'serials'},
       );
     });
 
@@ -90,13 +90,13 @@ void main() {
       });
     }
 
-    testWidgets('TC-ROLE-013 bulk lookup only', (tester) async {
+    testWidgets('TC-ROLE-013 item:bulk_lookup only', (tester) async {
       await startApp(tester, profile: Roles.only(['item:bulk_lookup']));
       await expectRole(
         tester,
         history: false,
         lookupForm: false,
-        tileNames: {'bulk', 'serials'},
+        tileNames: {'scanner', 'serials'},
       );
       expect(find.byKey(const Key('verify.camera')), findsNothing);
     });
@@ -112,7 +112,7 @@ void main() {
       );
     });
 
-    testWidgets('TC-ROLE-016 retail users only', (tester) async {
+    testWidgets('TC-ROLE-016 a withdrawn permission only', (tester) async {
       await startApp(tester, profile: Roles.only(['retail_user:add']));
       await expectRole(
         tester,
@@ -256,7 +256,7 @@ void main() {
       tester,
     ) async {
       await startApp(tester, loggedIn: false);
-      for (final path in ['/home/bulk-lookup', '/history']) {
+      for (final path in ['/home/serial-stack', '/history']) {
         await go(tester, path);
         expect(find.text(loginTitle), findsOneWidget, reason: path);
       }

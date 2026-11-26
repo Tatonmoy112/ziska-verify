@@ -1214,20 +1214,11 @@ Expected: My reports lists it with 2 photos and the reference; the office sees t
 - [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
 
 #### TC-E2E-010 · A new retail user's first day · P1
-*Needs:* Staging; a supervisor login; a second phone.
+*Needs:* Staging; portal access; a second phone.
 
-Supervisor adds a retail user (switch on); on the second phone the retail user logs in with the emailed first password; code; new password; looks up an item; opens History.
+The office adds the new retail user in the portal; on the phone the retail user logs in with the emailed first password; code; new password; looks up an item; opens History.
 
 Expected: Code screen, then the forced change, then Home; History lists that check only.
-
-- [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
-
-#### TC-E2E-011 · Password handed over in person · P2
-*Needs:* Staging; a supervisor login; a second phone.
-
-Add a retail user with the switch off; give the shown password; the retail user logs in with it.
-
-Expected: No mail sent; the login works; the forced change follows.
 
 - [ ] Pass - [ ] Fail - [ ] Blocked — Notes:
 

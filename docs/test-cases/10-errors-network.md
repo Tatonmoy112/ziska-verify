@@ -26,7 +26,7 @@
 | TC-ERR-012 | `409` where the route has no 409 case | WORST | P3 | AUTO | ✅ `flow/errors_edge_flow_test` | Fake backend | `GET checks` and `GET formats` answer `409 conflict` with a message | History shows the server's message (guide §1: "Show the message"), with its reference; formats show their own text; no crash | §15.4; guide §1 |
 | TC-ERR-013 | `429` on every request | NET | P1 | AUTO | ✅ `flow/error_matrix_flow_test` | Fake backend | Each request of the matrix below answers `429` with `Retry-After: 30` | "Too many attempts. Try again in 30 s." counting down; never retried by itself | §15.5, §12.1 API protection |
 | TC-ERR-014 | `503 app_preparing` outside lookups | NET | P2 | AUTO | ✅ `flow/errors_edge_flow_test` | Fake backend | `GET checks` and `GET incidents` answer `503 app_preparing` | "The app is being prepared. Try again later." | §15.4 |
-| TC-ERR-015 | `503 service_unavailable` on every request | NET | P2 | AUTO | ✅ `flow/error_matrix_flow_test` | Fake backend | Each request of the matrix below answers `503 service_unavailable` | "The service is busy. Try again shortly."; resent only where the route allows (bulk **Send again**, a photo) | §15.4 |
+| TC-ERR-015 | `503 service_unavailable` on every request | NET | P2 | AUTO | ✅ `flow/error_matrix_flow_test` | Fake backend | Each request of the matrix below answers `503 service_unavailable` | "The service is busy. Try again shortly."; resent only where the route allows (a photo) | §15.4 |
 | TC-ERR-016 | `500`, `502`, and `504` | NET | P2 | AUTO | ✅ `flow/error_matrix_flow_test`, `flow/errors_edge_flow_test` | Fake backend | `GET checks` answers `500 internal_error`, then `502` and `504` without an envelope | "Something went wrong. Try again." with "Reference: …" (no reference line when the answer has none) | §15.4 |
 | TC-ERR-017 | Unknown error code | EDGE | P2 | AUTO | ✅ `flow/errors_edge_flow_test` | Fake backend | `POST lookups` answers `400` with `error.code: "brand_new"` and a server message | The server message is shown (the fallback for an unknown code) with the reference; never a result | §16 |
 | TC-ERR-018 | Error without a reference | EDGE | P3 | AUTO | ✅ `flow/errors_edge_flow_test` | Fake backend | An error envelope without `request_id` | The message without a reference line (never "Reference: null" or an empty one) | §14.1 |
@@ -55,7 +55,7 @@
 | ID | Title | Type | Pri | Run on | Auto | Pre-conditions / Data | Steps | Expected | Source |
 |---|---|---|---|---|---|---|---|---|---|
 | TC-ERR-036 | Offline banner | NET | P2 | DEVICE | ✋ | Real phone | Airplane mode on any screen; then off | The offline banner shows, then goes | §14.2 |
-| TC-ERR-037 | The banner on every main screen | NET | P2 | AUTO | ✅ `flow/offline_banner_flow_test` | `FakeConnectivityService` | Set offline on Check, a result, Bulk lookup, History, Report incident, My reports, Retail users, Profile | The banner shows on each | §14.2 |
+| TC-ERR-037 | The banner on every main screen | NET | P2 | AUTO | ✅ `flow/offline_banner_flow_test` | `FakeConnectivityService` | Set offline on Check, History, Profile, and each Check tile's screen (Scanner mode, Serial stack, Report incident, My reports) | The banner shows on each | §14.2 |
 | TC-ERR-038 | The banner goes when back online | NET | P2 | AUTO | ✅ `flow/offline_banner_flow_test` | Fake backend; `FakeConnectivityService` | Set offline, then online | The banner shows, then goes | §14.2 |
 | TC-ERR-039 | The banner on the login screens | NET | P3 | AUTO | ✅ `flow/offline_banner_flow_test` | logged out | Set offline on Login, Check your email, Forgot password | The banner shows on each | §14.2 |
 | TC-ERR-040 | The banner never blocks | STATE | P2 | AUTO | ✅ `flow/offline_banner_flow_test` | offline | Type a serial; Check | The lookup is tried and shows its own connection message; every button still works | §13.1.6, §14.2 |
@@ -92,17 +92,14 @@ ERR-007 … -016 run every request below. "Own handling" is where the route has 
 | 7 | `GET me` | Splash; after a `403` | `401`: Login |
 | 8 | `GET formats` | Check tab | "Could not load the code formats." |
 | 9 | `POST lookups` | Check tab | `503 app_preparing`; no connection: "Unable to check…" |
-| 10 | `POST lookups/bulk` | Bulk lookup | `503`, `429`: the same list again |
+| 10 | `POST lookups/serials` | Serial stack | — |
 | 11 | `GET checks` | History | — |
 | 12 | `POST incidents` | Report incident | `404`: remove the link; no connection: "The report may have been filed…" |
 | 13 | `POST incidents/{id}/photos` | Report incident | `400`, `404`, `409`: refused; `429`, `503`, `5xx`, no connection: send again |
 | 14 | `GET incidents` | My reports | — |
-| 15 | `GET retail-users` | Retail users, the picker | — |
-| 16 | `GET retail-roles` | Add retail user | — |
-| 17 | `POST retail-users` | Add retail user | `409`: email used; `404`: role gone |
-| 18 | `POST retail-users/{id}/password` | Retail users | `409`: own password set; `404`: not found or blocked |
-| 19 | `POST auth/logout` | Profile | Any failure: Login anyway |
-| 20 | `POST auth/refresh` | (renewal) | SESS-003, -004, -011 … -017 |
+| 15 | `GET retail-users` | The retail user picker | — |
+| 16 | `POST auth/logout` | Profile | Any failure: Login anyway |
+| 17 | `POST auth/refresh` | (renewal) | SESS-003, -004, -011 … -017 |
 
 ## Spec gaps in this file
 
