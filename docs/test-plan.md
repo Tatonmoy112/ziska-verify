@@ -6,20 +6,20 @@
 | Field | Value |
 |---|---|
 | App | Track & Trace (Ziska Pharma), Flutter, Android and iOS |
-| Spec | `final.md` (v1.6 and later), Sections 6–18 |
+| Spec | `final.md` v2.0, Sections 6–18 |
 | Backend contract | `docs/protectb-api/app-api-guide.md`, `app-build-guide.md`, Postman collection |
 | Version | 2.0 — 2026-11-14: 543 cases in `docs/test-cases/` (positive, negative, boundary, edge, worst case, network, security, device, journeys, charters) |
-| Status | `flutter analyze` clean; 1336 automated tests passing; 767 of 895 cases automated (Section 12) |
+| Status | `flutter analyze` clean; 1336 automated tests passing; 767 of 895 cases automated (test plan §12) |
 
 ---
 
 ## 1. Purpose and Scope
 
-This plan lists every test needed before the app is released, says **where** each one runs, and links each one to the rule it proves. The cases themselves are in [`docs/test-cases/`](test-cases/README.md), one file per area (Section 8). What is left before a release (the dependency scan, the blocked features, the open questions, and the manual runs) is planned in [`remaining-work-test-plan.md`](remaining-work-test-plan.md).
+This plan lists every test needed before the app is released, says **where** each one runs, and links each one to the rule it proves. The cases themselves are in [`docs/test-cases/`](test-cases/README.md), one file per area (test plan §8). What is left before a release (the dependency scan, the blocked features, the open questions, and the manual runs) is planned in [`remaining-work-test-plan.md`](remaining-work-test-plan.md).
 
 In scope: the 8 build steps of the backend build guide (login, session, lookup, bulk, history, reports and photos, retail users), navigation and permissions, errors, security rules, and the device checks a person must do.
 
-Out of scope: the backend itself, the client portal, and the future features of `final.md` Section 20.4 (dashboard, product list, access request form).
+Out of scope: the backend itself and the client portal.
 
 ## 2. Sources of Truth
 
@@ -27,7 +27,7 @@ Every test case names its source. Expected results come only from these:
 
 | Source | Used for |
 |---|---|
-| `final.md` §18.3 Acceptance Checks | The main list; every row is covered (Section 10) |
+| `final.md` §18 (Verification) | The main list; every row is covered (test plan §10) |
 | `final.md` §6–13 | Screen behaviour, rules, messages |
 | `app-build-guide.md` §5 | The backend team's checklist per build step |
 | `app-api-guide.md` | Status codes, error codes, permissions |
@@ -111,7 +111,7 @@ Each case has: **ID**, **Title**, **Type**, **Priority**, **Run on**, **Auto**, 
 - One behaviour per case.
 - The expected result is checkable: an exact text, a screen, or a request.
 - Steps can be followed by someone who did not write them.
-- A case that needs a specific role names it (Section 4.1, `docs/USER.md`).
+- A case that needs a specific role names it (test plan §4.1, `docs/USER.md`).
 
 ## 7. Roles
 
@@ -151,8 +151,8 @@ The cases live in one file per area in [`docs/test-cases/`](test-cases/README.md
 | UI | [15-ui.md](test-cases/15-ui.md) | 164 | 27 | 88 | 49 | 150 | 0 | 14 | 0 |
 | MIG | [16-mobile-migration.md](test-cases/16-mobile-migration.md) | 91 | 49 | 38 | 4 | 90 | 0 | 1 | 0 |
 | STG | [17-test-server.md](test-cases/17-test-server.md) | 58 | 44 | 11 | 3 | 47 | 0 | 11 | 0 |
-| ARCH | [18-architecture.md](test-cases/18-architecture.md) | 118 | 3 | 47 | 68 | 118 | 0 | 0 | 0 |
-| **Total** | | **1070** | 321 | 504 | 245 | 941 | 4 | 125 | 0 |
+| ARCH | [18-architecture.md](test-cases/18-architecture.md) | 121 | 3 | 48 | 70 | 121 | 0 | 0 | 0 |
+| **Total** | | **1073** | 321 | 505 | 247 | 944 | 4 | 125 | 0 |
 
 ---
 
@@ -172,7 +172,7 @@ The backend team's checklist (`app-build-guide.md` §5) mapped to test cases. **
 | 7. Reports and photos | `check_ref` from a result; photos shrunk, raw, retried, never duplicated; never re-filed; My reports | REP-001 … -049 | 49: 37 ✅, 12 ✋ |
 | 8. Retail users | Picker only: search by name or whole email, masked emails, cursor paging; hidden without `incident:report`; adding withdrawn (404) | REP-013, MIG-002, -030 | 3: 3 ✅ |
 
-## 10. Traceability: final.md §18.3 Acceptance Checks
+## 10. Traceability: the acceptance checks (final.md §18)
 
 Every acceptance check has test cases. Two need a real phone or the test server by nature: photo metadata (REP-010) and Bangladesh time on a phone set to another zone (HIST-012). Certificates are withdrawn by the backend (SRS v1.2 FR-LKP-13).
 
@@ -202,7 +202,7 @@ Every acceptance check has test cases. Two need a real phone or the test server 
 | Retail users | REP-013, MIG-030 | 2: 2 ✅ |
 | Password rule | AUTH-015, -016, -031, -065, -068 … -074 | 11: 11 ✅ |
 
-Not an acceptance check, but tracked the same way: the start screen and logo (`final.md` §9.4, §14) are covered by UI-001 … -012; device, accessibility, and performance by NFR-001 … -027; journeys by E2E-001 … -010 and -012 … -016; exploration by CH-01 … -09.
+Not an acceptance check, but tracked the same way: the start screen and logo (`final.md` §9, §14) are covered by UI-001 … -012; device, accessibility, and performance by NFR-001 … -027; journeys by E2E-001 … -010 and -012 … -016; exploration by CH-01 … -09.
 
 ## 11. Running and Reporting
 
@@ -223,7 +223,7 @@ One line per run:
 | Title | Short, the behaviour that is wrong |
 | Test case | ID and title |
 | Build and environment | Version, flavor, server, device, Android version |
-| Role | Which profile (Section 7) |
+| Role | Which profile (test plan §7) |
 | Steps | Numbered, from the test case |
 | Expected | From the test case |
 | Actual | What happened |
@@ -236,7 +236,7 @@ One line per run:
 - `flutter analyze` clean and every AUTO test passing.
 - All **P1** cases pass on MOCK, STAGE, and DEVICE.
 - No open crash or wrong-data bug.
-- Every row of Section 10 has a passed test case.
+- Every row of test plan §10 has a passed test case.
 
 ## 12. Status (2026-11-22)
 
@@ -262,23 +262,23 @@ Remaining work (the dependency scan, the blocked features, the open questions, t
 | TC-UI-001 | Splash: logo, title, and progress sat on the left while loading (the content shrank to the logo's width; only the full-width Try again button hid it in the error state) | The content always spans the full width |
 | TC-UI-004 | Splash: overflowed on a small phone at font size 2× (no scrolling) | The splash scrolls when the content does not fit; at least the screen height otherwise |
 | TC-UI-008 | Logo: "ZISKA" wrapped and the mark grew with the phone's font size | The logo ignores the system font size (drawn at its set width) |
-| TC-AUTH-039, -054, -056, -057 | Login, Forgot password, Reset password, and Change password showed a `429` as a fixed "Try again in N s." that never counted down and did not stop a new request (§6.2, §15.4) | `FailureBanner` counts down from `Retry-After`; `SubmitState.retryAt` blocks a new request until 0; time read through `clock` |
+| TC-AUTH-039, -054, -056, -057 | Login, Forgot password, Reset password, and Change password showed a `429` as a fixed "Try again in N s." that never counted down and did not stop a new request (§6, §15) | `FailureBanner` counts down from `Retry-After`; `SubmitState.retryAt` blocks a new request until 0; time read through `clock` |
 | TC-AUTH-066 (PROF-015) | After a voluntary password change the app stayed on the change screen and loaded the profile again | The session state is announced only when it changes (a forced change), so the router no longer rebuilds the screens |
-| TC-AUTH-072 | Password fields removed a pasted tab without telling, so another password than the one pasted was set (§6.6: refused) | Control characters are kept and the rule refuses them; a line break never enters a one-line field (Flutter removes it) |
+| TC-AUTH-072 | Password fields removed a pasted tab without telling, so another password than the one pasted was set (§6: refused) | Control characters are kept and the rule refuses them; a line break never enters a one-line field (Flutter removes it) |
 | TC-SESS-024 | With only one of the two passes stored, requests went out without a pass and the start screen stayed on "Something went wrong" | A login needs both passes: with one left, both are cleared and Login shows; the phone stays trusted |
 | TC-SESS-030 | Log out could be confirmed twice while the first logout ran: two `auth/logout` | One logout at a time; a second press joins the first |
-| TC-ROLE-018, -020 | A `403 forbidden` never reloaded the profile (§7.2), and a screen whose permission was gone stayed open (go_router checks only the base location) | `ForbiddenSignal` → background profile reload (no splash, one at a time); every pushed screen is checked against the guard and the official goes Home |
+| TC-ROLE-018, -020 | A `403 forbidden` never reloaded the profile (§7), and a screen whose permission was gone stayed open (go_router checks only the base location) | `ForbiddenSignal` → background profile reload (no splash, one at a time); every pushed screen is checked against the guard and the official goes Home |
 | TC-ROLE-012 | `GET me` with `permissions: null` crashed the profile parsing | Missing or `null` reads as no permission ("No features yet") |
-| TC-LOOK-030 | A serial pasted with a letter (`10O0001`) was silently changed to `100001`, then looked up and recorded (§13.1.2: refused) | `SerialInputFormatter`: a typed letter does not enter; a paste stays as it is and is refused with its message |
+| TC-LOOK-030 | A serial pasted with a letter (`10O0001`) was silently changed to `100001`, then looked up and recorded (§13.1: refused) | `SerialInputFormatter`: a typed letter does not enter; a paste stays as it is and is refused with its message |
 | TC-LOOK-050 | A long product or generic name overflowed the result screen by 2 809 px | Detail values take the remaining width and wrap |
-| TC-HIST-032 | A failed next page (a `429`, or offline) was asked for again on every rebuild: 28 requests in 15 s (§10.6: never retried in a loop) | A next page is asked for by itself only after a page that arrived; a failed one waits for Retry |
+| TC-HIST-032 | A failed next page (a `429`, or offline) was asked for again on every rebuild: 28 requests in 15 s (§10: never retried in a loop) | A next page is asked for by itself only after a page that arrived; a failed one waits for Retry |
 | TC-HIST-032, TC-ERR-013 | History, My reports, Retail users, and the picker showed a `429` as a fixed "Try again in N s." and Retry sent at once | `PaginatedState.retryAt`: the shared list counts down and Retry sends nothing before 0 |
 | TC-REP-026 | Report incident showed a fixed `429` text and filed again on the next press | Countdown from `Retry-After`; no filing before it ends |
 | TC-RTL-023, -034 | Add retail user and "Email a new first password": a fixed `429` text and a new request on the next press | Countdown (in the form, and in the message); no request before it ends |
 | TC-ERR-007, -016 | "Email a new first password" errors showed no reference (§14.1: every error) | The message carries "Reference: …" |
 | TC-ERR-028, -026 | A lookup was sent again during a `429` countdown, and the countdown stayed on screen as "0 s" | No lookup before the countdown ends; the message goes at 0 |
 | TC-ERR-017 | An unknown `error.code` showed the general text, hiding the server message (§16: the fallback for an unknown code) | The server message for unknown codes only; known codes keep the app text |
-| TC-SEC-014 | The hidden code field let the keyboard learn and suggest hidden codes (§12.1: never stored) | `AppTextField.secret`: no suggestions on the hidden code field (Check and Bulk lookup) |
+| TC-SEC-014 | The hidden code field let the keyboard learn and suggest hidden codes (§12: never stored) | `AppTextField.secret`: no suggestions on the hidden code field (Check and Bulk lookup) |
 | TC-NFR-014, -015 | Layout overflow on a 320 px phone and at font size 2× and 3×: password rules, result details, Profile rows, the role list (136 px), the Login divider, the Bulk lookup counter (136 px), Clear list, and the way label | The texts wrap or scale down; the role list takes the field width |
 | TC-NFR-017 | The role list on Add retail user had no name for a screen reader | It shows and reads "Role" until a role is chosen |
 | TC-UI-020, -021 | Small text under the WCAG 4.5:1 minimum: success (#16A34A, 3.30:1) and warning (#D97706, 3.19:1) in check badges, reasons, password rules, and the email notes; danger on the error banner (#DC2626, 4.41:1); muted grey on the grey screens (#64748B, 4.40:1); the Sign up panel title and icons (#0EA5E9, 2.42:1, under 3:1 for icons too) | Tokens darkened: `success` #15803D, `warning` #B45309, `danger` #C81E1E, `textMuted` #5F6E84, `infoAccent` #0369A1 (each 4.5:1 or more on white, the grey screens, and its own background) |

@@ -7,7 +7,8 @@ enum Doc {
   apiGuide('app API guide'),
   buildGuide('app build guide'),
   testPlan('test plan'),
-  uiAudit('UI audit 2026-11-22')
+  uiAudit('UI audit 2026-11-22'),
+  casesReadme('test cases README')
   ;
 
   const Doc(this.label);
@@ -29,10 +30,12 @@ class BadReference {
 
 // The longest names first, so "app build guide" is not read as "guide".
 final _token = RegExp(
-  '(app build guide|build guide|app API guide|API guide|guide|test plan|'
-  r'final\.md|UI audit 2026-11-22,?|audit)'
+  '(app build guide|build guide|app API guide|API guide|guide|test[ -]plan|'
+  r'README|final\.md|UI audit 2026-11-22,?|audit)'
   r'|(§ ?|Sections? )(\d+(?:\.\d+)*)'
-  r'((?:(?:,? and |, |–|-)\d+(?:\.\d+)*)*)',
+  r'((?:(?:,? and |, |–|-)\d+(?:\.\d+)*)*)'
+  // A Markdown table's cell border.
+  r'|(\|)',
   caseSensitive: false,
 );
 
@@ -163,6 +166,12 @@ List<BadReference> badReferences(
 
       var doc = Doc.finalMd;
       for (final m in _token.allMatches(comment)) {
+        // In a Markdown table each cell starts again from final.md: a
+        // Source cell's § is never the guide's of the cell before.
+        if (m.group(5) != null) {
+          if (file.endsWith('.md')) doc = Doc.finalMd;
+          continue;
+        }
         final name = m.group(1)?.toLowerCase();
         final at = lineAt(m.start);
         if (name != null) {
@@ -194,8 +203,10 @@ List<BadReference> badReferences(
             doc = Doc.buildGuide;
           } else if (name.contains('guide')) {
             doc = Doc.apiGuide;
-          } else if (name == 'test plan') {
+          } else if (name == 'test plan' || name == 'test-plan') {
             doc = Doc.testPlan;
+          } else if (name == 'readme') {
+            doc = Doc.casesReadme;
           } else {
             doc = Doc.finalMd;
           }
@@ -260,6 +271,18 @@ Map<Doc, Set<String>> readSections() => {
   Doc.uiAudit: findings(
     File('docs/ui-backend-audit-2026-11-22.md').readAsStringSync(),
   ),
+  Doc.casesReadme: headings(
+    File('docs/test-cases/README.md').readAsStringSync(),
+  ),
+};
+
+/// The test cases and the test plan, which cite `final.md` in every
+/// case's Source (production audit P-60).
+Map<String, String> readCaseSources() => {
+  for (final f in Directory('docs/test-cases').listSync().whereType<File>())
+    if (f.path.endsWith('.md'))
+      f.path.replaceAll(r'\', '/'): f.readAsStringSync(),
+  'docs/test-plan.md': File('docs/test-plan.md').readAsStringSync(),
 };
 
 /// Every file whose comments may cite the documents: the code, the tests,

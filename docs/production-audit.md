@@ -8,7 +8,7 @@ The production-grade review of the app, done on the `production` branch one area
 | 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11). **All fixed** (2026-11-25) |
 | 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-45. Fixed: P-20 … P-45 |
 | 5 | Dead code | Checked 2026-11-25: P-46 … P-53. **All fixed** (2026-11-26) |
-| 6 | Comments | Checked 2026-11-26: P-54 … P-61. Fixed: P-54 … P-59 |
+| 6 | Comments | Checked 2026-11-26: P-54 … P-61. Fixed: P-54 … P-60 |
 | 7+ | Data layer, UI components, state and lifecycle, security, build and release, monitoring, tests, localisation, performance, docs | To do |
 
 **Severity:**
@@ -1837,6 +1837,24 @@ The other way round:
 - **normal:** every citation in the test cases and the test plan resolves;
 - **edge:** a Source cell citing two documents ("§13.1; Guide §4.2"), and a range;
 - **worst:** a v1.6 section in a test case is reported with its file and line.
+
+**✅ Fixed 2026-11-26.** 648 citations led nowhere when the fix began (655 when P-54 counted them; P-58 had rewritten some of the rows since).
+- **Tests first:** TC-ARCH-119 … -121 (`architecture/doc_references_test`):
+  - every citation in `docs/test-cases/` and the test plan resolves; the Profile rows do not cite §13.8 nor the Request access rows §13.9, the two numbers v1.6 gave them, which the current final.md still has for other subjects;
+  - in a table each cell starts again from final.md; `test-plan §N` is the test plan and `README §N` the cases README, a new document of the check;
+  - a v1.6 section, an old number after a guide cell, and a section the plan or the README lacks are each reported with file and line.
+  Red before the change.
+- **The change:**
+  - **558 lines moved by a script** that reads them as the check does. A v1.6 subsection becomes the current section holding it (§6.2 → §6, §13.1.4 → §13.1, §9.3.1 → §9, §15.4 → §15), and repeats in a cell collapse (`§6.1–6.2, §6.6` → `§6`). Four numbers that still exist but changed subject were moved by what the row is about: §13.8 (Profile) → §13.7, except TC-AUTH-121, which already meant access requests; §13.9 (Request access) → §13.8; §13.2 (bulk) → §13.3 for the two serial stack rows; §20.2 → §20.1.
+  - **By hand:**
+    - v1.6 §18.3 named an acceptance check (`§18.3 Login`); the current §18 has no such list, so the 29 citations are `test plan §10, Login`, the table that kept them;
+    - eleven `audit N.N` are `UI audit 2026-11-22, N.N`;
+    - three final.md sections written after the guide name final.md;
+    - the test plan's references to itself are `test plan §N`, and the cases README's `README §N`;
+    - the test plan's scope no longer sends the access request form to v1.6's "future" §20.4 (it is built), and its Spec row names final.md v2.0;
+    - the lookup file's Certificate section says it is withdrawn, not "blocked until built"; the offline banner's says it was built on 2026-11-19.
+- **Every test passes.**
+- **Left for P-61:** the cases README's coverage rows for the certificate and bulk lookup still cite §13.2 and §13.3, which resolve but now mean scanner sessions and serial stacks.
 
 #### P-61 (should): the manual checklist and the test plan still walk retired screens
 **Evidence:** found while fixing P-58, whose check reads the case rows only.

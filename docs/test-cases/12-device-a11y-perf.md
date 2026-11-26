@@ -5,7 +5,7 @@
 
 | Field | Value |
 |---|---|
-| Spec | final.md §9.4, §14, §16 |
+| Spec | final.md §9, §14, §16 |
 | API | — |
 | Automated in | `test/flow/profile_a11y_flow_test.dart`, `splash_screen_test`, `app_logo_test` |
 | Format | [Case format and type tags](README.md#3-case-format) |
@@ -18,10 +18,10 @@
 | TC-NFR-002 | Large text | A11Y | P2 | DEVICE | ✋ | Real phone | System font size largest | Text wraps; no overflow stripes | §14 |
 | TC-NFR-003 | Screen reader | A11Y | P2 | DEVICE | ✋ | Real phone | TalkBack on Login, Check, Result | Every button and field read with a label | §14 |
 | TC-NFR-004 | Contrast and tap targets | A11Y | P2 | AUTO | ✅ `flow/profile_a11y_flow_test` | Fake backend | Flutter accessibility guidelines on main screens | Text contrast and 48 px tap targets pass | §14 |
-| TC-NFR-005 | Slow network | PERF | P2 | DEVICE | ✋ | Real phone | 3G or throttled network; a lookup and a serial stack | Loading shown; no duplicate checks | §8.3 |
+| TC-NFR-005 | Slow network | PERF | P2 | DEVICE | ✋ | Real phone | 3G or throttled network; a lookup and a serial stack | Loading shown; no duplicate checks | §8 |
 | TC-NFR-006 | Start time | PERF | P3 | DEVICE | ✋ | Real phone | Cold start, logged in | Home within 3 s on the main device | — |
-| TC-NFR-007 | A full serial stack | PERF | P3 | DEVICE | ✋ | Real phone | Type or paste 50 serials; scroll; send | Smooth scrolling; results shown | §13.2 |
-| TC-NFR-008 | Rotation and resume | COMPAT | P3 | DEVICE | ✋ | Real phone | Rotate, background and return on each screen | State kept; a missing `extra` returns to the parent screen | §9.5 |
+| TC-NFR-007 | A full serial stack | PERF | P3 | DEVICE | ✋ | Real phone | Type or paste 50 serials; scroll; send | Smooth scrolling; results shown | §13.3 |
+| TC-NFR-008 | Rotation and resume | COMPAT | P3 | DEVICE | ✋ | Real phone | Rotate, background and return on each screen | State kept; a missing `extra` returns to the parent screen | §9 |
 | TC-NFR-009 | Oldest supported Android | COMPAT | P2 | DEVICE | ✋ | A phone on the build's minimum Android version (Android 8 if available) | Install; log in; look up; scan a QR; file a report with a photo; log out | Everything works as on the main phone | §14 |
 | TC-NFR-010 | Newest Android | COMPAT | P2 | DEVICE | ✋ | A phone on the newest Android | Repeat NFR-009; look at the top and bottom edges of every main screen | Everything works; nothing hidden under the status bar or the navigation bar | §14 |
 | TC-NFR-011 | Tablet width | COMPAT | P3 | AUTO + DEVICE | ✅ `flow/device_a11y_flow_test` | Fake backend at 1280 × 800; a tablet | Open Login, Check your email, Check, a result, Serial stack with results, Report incident, My reports, Scanner mode, History, Profile, Change password | No overflow; text readable; no button stretched across the whole screen | §14 |
@@ -32,14 +32,14 @@
 | TC-NFR-016 | Contrast and tap targets on every screen | A11Y | P2 | AUTO | ✅ `flow/device_a11y_flow_test` | Fake backend | Run the text contrast and tap target guidelines on Login, Check your email, Check, a result, Serial stack with results, Report incident, My reports, Scanner mode, History, Profile, Change password | All pass (NFR-004 covers the first screens) | §14 |
 | TC-NFR-017 | Every control has a label | A11Y | P2 | AUTO | ✅ `flow/device_a11y_flow_test` | Fake backend | Run the labelled tap target guideline on Login, Check your email, Check, a result, Serial stack with results, Report incident, My reports, Scanner mode, History, Profile, Change password | Every button, icon button, and field has a label | §14 |
 | TC-NFR-018 | TalkBack on every screen | A11Y | P2 | DEVICE | ✋ | Real phone; TalkBack on | Swipe through Check, a result, Scanner mode, Serial stack, Report incident, My reports, History, Profile; cause one error on each | Every item read with a clear name; errors read when they appear | §14 |
-| TC-NFR-019 | Results are not told by colour alone | A11Y | P2 | AUTO | ✅ `flow/device_a11y_flow_test` | Fake backend | A result of each kind; History rows of each kind | Each has its own text and icon as well as its colour | §13.1.4, §14 |
-| TC-NFR-020 | System dark mode | COMPAT | P3 | DEVICE | ✋ | Real phone | Turn on the phone's dark mode; open every main screen | Spec gap 15. Every text readable | §12.1 Local data, §14 |
-| TC-NFR-021 | Process death on every screen | WORST | P2 | DEVICE | ✋ | Real phone; Developer options → "Don't keep activities" on | On each main screen, press Home and return | No crash; a screen whose `extra` is gone returns to its parent; no password restored | §9.5 |
-| TC-NFR-022 | Incoming call during a request | WORST | P3 | DEVICE | ✋ | Two phones | Call the test phone during a lookup, a serial stack's send, and a report filing; return after the call | One result, one stack's answers, one report; nothing lost or doubled | §8.3 |
+| TC-NFR-019 | Results are not told by colour alone | A11Y | P2 | AUTO | ✅ `flow/device_a11y_flow_test` | Fake backend | A result of each kind; History rows of each kind | Each has its own text and icon as well as its colour | §13.1, §14 |
+| TC-NFR-020 | System dark mode | COMPAT | P3 | DEVICE | ✋ | Real phone | Turn on the phone's dark mode; open every main screen | Spec gap 15. Every text readable | §12 Local data, §14 |
+| TC-NFR-021 | Process death on every screen | WORST | P2 | DEVICE | ✋ | Real phone; Developer options → "Don't keep activities" on | On each main screen, press Home and return | No crash; a screen whose `extra` is gone returns to its parent; no password restored | §9 |
+| TC-NFR-022 | Incoming call during a request | WORST | P3 | DEVICE | ✋ | Two phones | Call the test phone during a lookup, a serial stack's send, and a report filing; return after the call | One result, one stack's answers, one report; nothing lost or doubled | §8 |
 | TC-NFR-023 | Battery and data saver | COMPAT | P3 | DEVICE | ✋ | Real phone | Turn on battery saver and data saver; log in, look up, open History | Everything works | §14 |
-| TC-NFR-024 | A full serial stack's results | PERF | P2 | STAGE + DEVICE | ✋ | Staging; real phone; 50 serials from the test sheet | Send 50 serials; scroll the results; open 10 rows | No crash; smooth scrolling; rows open at once | §13.2 |
-| TC-NFR-025 | One-hour session | PERF | P2 | STAGE + DEVICE | ✋ | Staging; real phone | Use the app for an hour (at least 4 renewals): lookups, History, reports | No Login screen; no slowdown; memory steady | §6.4 |
-| TC-NFR-026 | Almost no free storage | WORST | P3 | DEVICE | ✋ | Real phone with under 100 MB free | Add a large photo to a report; file | No crash; the photo is sent, or a photo message is shown | §13.5.2 |
+| TC-NFR-024 | A full serial stack's results | PERF | P2 | STAGE + DEVICE | ✋ | Staging; real phone; 50 serials from the test sheet | Send 50 serials; scroll the results; open 10 rows | No crash; smooth scrolling; rows open at once | §13.3 |
+| TC-NFR-025 | One-hour session | PERF | P2 | STAGE + DEVICE | ✋ | Staging; real phone | Use the app for an hour (at least 4 renewals): lookups, History, reports | No Login screen; no slowdown; memory steady | §6 |
+| TC-NFR-026 | Almost no free storage | WORST | P3 | DEVICE | ✋ | Real phone with under 100 MB free | Add a large photo to a report; file | No crash; the photo is sent, or a photo message is shown | §13.5 |
 | TC-NFR-027 | Keyboard never hides the field | UI | P2 | DEVICE | ✋ | A small phone | Type in every field of Login, Set a new password, Request access, Serial stack, Report incident | The field in use and its button can be seen above the keyboard (by scrolling) | §14 |
 
 UI cases (the start screen, the logo, components, screens): [15-ui.md](15-ui.md).
