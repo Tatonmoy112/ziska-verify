@@ -10,7 +10,6 @@ import 'package:ziska_verify/app/di/register.dart';
 import 'package:ziska_verify/app/router/app_router.dart';
 import 'package:ziska_verify/core/locale/locale_cubit.dart';
 import 'package:ziska_verify/core/network/api_client.dart';
-import 'package:ziska_verify/core/services/monitoring/no_op_crash_reporting_service.dart';
 import 'package:ziska_verify/core/services/session/session_service.dart';
 import 'package:ziska_verify/features/profile/domain/repositories/profile_repository.dart';
 import 'package:ziska_verify/features/profile/domain/usecases/profile_usecases.dart';
@@ -58,7 +57,6 @@ void main() {
     session = FakeSessionService();
     registerCore(
       config: testConfig,
-      crash: const NoOpCrashReportingService(),
       logger: FakeLoggerService(),
       platform: PlatformServices(storage: FakeSecureStorageService()),
       httpAdapter: transport,

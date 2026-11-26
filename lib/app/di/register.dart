@@ -19,7 +19,6 @@ import 'package:ziska_verify/core/services/launcher/url_launcher_service.dart';
 import 'package:ziska_verify/core/services/logging/logger_service.dart';
 import 'package:ziska_verify/core/services/media/image_picker_photo_service.dart';
 import 'package:ziska_verify/core/services/media/photo_service.dart';
-import 'package:ziska_verify/core/services/monitoring/crash_reporting_service.dart';
 import 'package:ziska_verify/core/services/permission/permission_handler_service.dart';
 import 'package:ziska_verify/core/services/permission/permission_service.dart';
 import 'package:ziska_verify/core/services/picture/network_picture_image_service.dart';
@@ -68,7 +67,6 @@ import 'package:ziska_verify/features/verification/domain/usecases/verification_
 /// real ones, made when first used.
 void registerCore({
   required AppConfig config,
-  required CrashReportingService crash,
   required LoggerService logger,
   PlatformServices platform = const PlatformServices(),
 
@@ -84,7 +82,6 @@ void registerCore({
   );
   locator
     ..registerSingleton<AppConfig>(config)
-    ..registerSingleton<CrashReportingService>(crash)
     ..registerSingleton<LoggerService>(logger)
     ..registerSingleton<SecureStorageService>(storage)
     ..registerSingleton(

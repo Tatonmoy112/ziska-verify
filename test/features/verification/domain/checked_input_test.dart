@@ -2,7 +2,6 @@ import 'package:flutter/painting.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ziska_verify/core/services/picture/network_picture_image_service.dart';
 import 'package:ziska_verify/core/services/picture/picture_image_service.dart';
-import 'package:ziska_verify/features/verification/domain/entities/checked_input.dart';
 import 'package:ziska_verify/features/verification/domain/entities/lookup.dart';
 
 /// What the result screen shows of the input, and which picture addresses
@@ -11,17 +10,7 @@ void main() {
   test('submission ways exclude hidden codes', () {
     expect(LookupWay.values.map((w) => w.wire), ['serial', 'qr']);
   });
-  group('CheckedInput.of', () {
-    final at = DateTime.utc(2026, 11, 15, 4);
-
-    test('a serial and a QR value are shown as sent', () {
-      expect(CheckedInput.of(LookupWay.serial, '1000001', at).shown, '1000001');
-      expect(
-        CheckedInput.of(LookupWay.qr, 'Q8F2KD91XA7M', at).shown,
-        'Q8F2KD91XA7M',
-      );
-    });
-  });
+  // A lookup shows its value as sent: TC-ARCH-089.
 
   group('pictureAddress', () {
     test('an https address with a host is accepted', () {

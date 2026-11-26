@@ -18,10 +18,10 @@ Future<void> bootstrap() async {
   final config = AppConfig.fromEnvironment();
   tz_data.initializeTimeZones();
 
-  final (:crash, :logger) = await startMonitoring(config);
+  final logger = await startMonitoring(config);
   installErrorHandlers(logger);
 
-  registerCore(config: config, crash: crash, logger: logger);
+  registerCore(config: config, logger: logger);
   registerFeatures();
 
   await prepareSession();

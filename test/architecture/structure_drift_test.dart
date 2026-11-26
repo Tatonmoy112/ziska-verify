@@ -8,7 +8,6 @@ import 'package:ziska_verify/app/di/register.dart';
 import 'package:ziska_verify/app/router/route_paths.dart';
 import 'package:ziska_verify/app/router/route_permissions.dart';
 import 'package:ziska_verify/core/locale/locale_cubit.dart';
-import 'package:ziska_verify/core/services/monitoring/no_op_crash_reporting_service.dart';
 import 'package:ziska_verify/core/services/scanner/active_scan_store.dart';
 import 'package:ziska_verify/core/services/storage/secure_storage_service.dart';
 import 'package:ziska_verify/features/profile/domain/entities/profile.dart';
@@ -76,7 +75,6 @@ void main() {
         final preferences = FakePreferencesService();
         registerCore(
           config: testConfig,
-          crash: const NoOpCrashReportingService(),
           logger: FakeLoggerService(),
           platform: PlatformServices(preferences: preferences),
           httpAdapter: ScriptedAdapter(

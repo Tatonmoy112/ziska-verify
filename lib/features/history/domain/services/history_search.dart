@@ -36,9 +36,9 @@ class HistorySearch {
   }
 
   /// The longest serial the backend reads; over it answers 400 (guide §4).
-  static const maxSerialLength = 64;
+  static const _maxSerialLength = 64;
 
-  static final _serial = RegExp('^[0-9]{1,$maxSerialLength}\$');
+  static final _serial = RegExp('^[0-9]{1,$_maxSerialLength}\$');
   static final _reference = RegExp(r'^MA-[0-9]{4}-[0-9]{6,}$');
 
   final SearchStatus status;

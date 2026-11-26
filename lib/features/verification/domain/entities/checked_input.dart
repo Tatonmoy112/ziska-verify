@@ -12,8 +12,4 @@ abstract class CheckedInput with _$CheckedInput {
     required String shown,
     required DateTime at,
   }) = _CheckedInput;
-
-  /// Preserve the value as sent, including serial leading zeros.
-  factory CheckedInput.of(LookupWay way, String value, DateTime at) =>
-      CheckedInput(way: way, shown: value, at: at);
 }

@@ -7,7 +7,7 @@ The production-grade review of the app, done on the `production` branch one area
 | 2 | High-level architecture | Checked 2026-11-24: P-1 … P-15. **All fixed**; P-10 on for staging, live waits for its production project |
 | 3 | The central API | Checked 2026-11-24: P-16 … P-19 (P-16 follows up step 2's P-11). **All fixed** (2026-11-25) |
 | 4 | Low-level architecture | Checked 2026-11-25: P-20 … P-45. Fixed: P-20 … P-45 |
-| 5 | Dead code | Checked 2026-11-25: P-46 … P-53. Fixed: P-46 … P-49 |
+| 5 | Dead code | Checked 2026-11-25: P-46 … P-53. Fixed: P-46 … P-50 |
 | 6+ | Comments, data layer, UI components, state and lifecycle, security, build and release, monitoring, tests, localisation, performance, docs | To do |
 
 **Severity:**
@@ -1580,6 +1580,17 @@ Read only. Three reviewers searched in parallel, and every finding below was the
 **Proposal:** the callers use the constructor; drop the registration; make the constant private.
 
 **Tests:** the startup-modules test no longer expects the crash service in the locator; the suites pass.
+
+**✅ Fixed 2026-11-26:**
+- **Tests first:** TC-ARCH-089 … -091 (`architecture/duplicates_exposure_test`):
+  - a lookup of a serial with leading zeros shows exactly the value sent, with its way and time;
+  - the core registered without crash reporting: the logger is the one handed in, and crash reporting is not in the locator; History's search still takes 64 digits and refuses 65;
+  - the sources: no `CheckedInput.of`, no crash reporting in `register.dart`, the serial limit private. Red before the change (`registerCore` still required `crash`).
+- **The change:**
+  - `CheckedInput.of` is gone; the lookup, the scanner session and the serial stack use the constructor. Its own test, which only checked that `.of` keeps the value, went with it: TC-ARCH-089 checks the same through a lookup;
+  - `registerCore` no longer takes crash reporting, and `startMonitoring` returns only the logger, which holds it: the app reaches crash reporting only through the logger. The four test set-ups that handed in a no-op reporter no longer do;
+  - `HistorySearch.maxSerialLength` is private.
+- **Every screenshot and flow test passes unchanged.**
 
 #### P-51 (nice): test material nothing uses
 **Evidence:**

@@ -16,7 +16,6 @@ import 'package:ziska_verify/core/services/connectivity/connectivity_service.dar
 import 'package:ziska_verify/core/services/device/app_info_service.dart';
 import 'package:ziska_verify/core/services/launcher/launcher_service.dart';
 import 'package:ziska_verify/core/services/media/photo_service.dart';
-import 'package:ziska_verify/core/services/monitoring/no_op_crash_reporting_service.dart';
 import 'package:ziska_verify/core/services/permission/permission_service.dart';
 import 'package:ziska_verify/core/services/scanner/scanner_service.dart';
 import 'package:ziska_verify/core/services/storage/secure_storage_service.dart';
@@ -619,7 +618,6 @@ Future<FlowApp> startApp(
 
   registerCore(
     config: testConfig,
-    crash: const NoOpCrashReportingService(),
     logger: logger,
     // The fakes are handed in; no registration is replaced (P-35).
     platform: PlatformServices(

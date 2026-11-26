@@ -7,7 +7,6 @@ import 'package:ziska_verify/app/di/register.dart';
 import 'package:ziska_verify/core/services/connectivity/connectivity_service.dart';
 import 'package:ziska_verify/core/services/launcher/launcher_service.dart';
 import 'package:ziska_verify/core/services/media/photo_service.dart';
-import 'package:ziska_verify/core/services/monitoring/no_op_crash_reporting_service.dart';
 import 'package:ziska_verify/core/services/picture/picture_image_service.dart';
 import 'package:ziska_verify/core/services/scanner/scanner_service.dart';
 import 'package:ziska_verify/core/services/storage/preferences_service.dart';
@@ -34,7 +33,6 @@ void main() {
 
   void register(PlatformServices platform) => registerCore(
     config: testConfig,
-    crash: const NoOpCrashReportingService(),
     logger: FakeLoggerService(),
     platform: platform,
     httpAdapter: ScriptedAdapter(

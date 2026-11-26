@@ -434,7 +434,11 @@ class ScanSessionCubit extends Cubit<ScanSessionState> {
           product: value.result.item?.product.name,
         );
         _inFlight = null;
-        final checked = CheckedInput.of(LookupWay.qr, sent, clock.now());
+        final checked = CheckedInput(
+          way: LookupWay.qr,
+          shown: sent,
+          at: clock.now(),
+        );
         emit(
           state.copyWith(
             busy: false,

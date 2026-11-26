@@ -152,7 +152,8 @@ class LookupBloc extends Bloc<LookupEvent, LookupState> {
       Success(:final value) => state.copyWith(
         status: LookupStatus.completed,
         result: value,
-        checked: CheckedInput.of(ready.way, ready.value, _now()),
+        // The value as sent, leading zeros included.
+        checked: CheckedInput(way: ready.way, shown: ready.value, at: _now()),
       ),
       Err(:final failure) => state.copyWith(
         status: LookupStatus.failed,

@@ -153,10 +153,10 @@ class _SerialStackScreenState extends State<SerialStackScreen>
                             context,
                             ResultView(
                               result: row.result,
-                              input: CheckedInput.of(
-                                LookupWay.serial,
-                                row.serial,
-                                state.checkedAt!,
+                              input: CheckedInput(
+                                way: LookupWay.serial,
+                                shown: row.serial,
+                                at: state.checkedAt!,
                               ),
                               origin: ResultOrigin.manyItems,
                               formats: state.formats,
